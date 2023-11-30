@@ -395,7 +395,7 @@ namespace Archipelago.APChessV
     private List<PieceType> filterPiecesByArmy(List<PieceType> pieces)
     {
       List<PieceType> newPieces = new List<PieceType>();
-      List<int> army = ApmwConfig.getInstance().Army;
+      List<int> army = new List<int>();
       if (army.Count == 0)
         return pieces;
       HashSet<PieceType> armiesPieces = new HashSet<PieceType>();

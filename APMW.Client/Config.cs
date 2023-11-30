@@ -66,7 +66,7 @@ namespace Archipelago.APChessV
     public int majorTypeLimit = -1;
     public int queenTypeLimit = -1;
     public int pocketLimit = -1;
-    public List<int> Army = new List<int>();
+    public int Army = -1;
 
     private Goal goal;
     public Goal Goal { get { return goal; } }
@@ -102,6 +102,15 @@ namespace Archipelago.APChessV
       set
       {
         enemyTypes = (PieceTypes)value;
+      }
+    }
+    private FairyTypes fairy;
+    public FairyTypes Fairy { get { return fairy; } }
+    public int FairyInt
+    {
+      set
+      {
+        fairy = (FairyTypes)value;
       }
     }
     private FairyArmy fairyArmy;
@@ -151,8 +160,8 @@ namespace Archipelago.APChessV
       // Army-Constrained Material
       FairyArmyInt = Convert.ToInt32(SlotData.GetValueOrDefault(
         "fairy_chess_army", FairyArmy.Chaos));
-      Army = ((JArray)SlotData.GetValueOrDefault(
-        "army", new JArray())).ToObject<int[]>().ToList();
+      Army = Convert.ToInt32(SlotData.GetValueOrDefault(
+        "army", -1));
 
       // Non-Fairy Chess
       PawnsInt = Convert.ToInt32(SlotData.GetValueOrDefault(
