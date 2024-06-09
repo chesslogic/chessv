@@ -78,6 +78,7 @@ Locations:
 
 Randomizer options and features:
 
+ - Silly vs Serious Location and Item Names. Some people have laughed at some of the names I've come up with, and others are rather utilitarian in wanting to know the specific requirements of locations and benefits of items. With some work to update the location and item trackers, as well as an expanded redundant set of items from Items.py, a player should be able to use either set of names.
  - Simplified Fairy Pieces option: only standard Chess pieces / all fairy armies / customize armies. The last option would lead to the current behaviour. This is only necessary because OptionSets don't show up on the settings menu on the Archipelago website, unless you navigate to the advanced Weighted Settings page.
  - Progressive Goal option. Your enemy's pieces are also scattered across the multiworld! (The current design can make progression too easy.)
  - Non-Progressive Material option. Pieces will not be selected progressively from a set, but instead placed with specific names in your world. This means you would find a Bishop or Cleric rather than a Progressive Minor Piece or Progressive Major Piece. (They are unlikely to come with pre-determined locations.)
