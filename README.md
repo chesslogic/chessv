@@ -15,7 +15,6 @@ As you complete the following objectives, you will gain access to additional mat
    - Sacrificial forks merely require such an attack, but a True fork additionally requires that the piece will live to attack, and that each target is: not defended, worth more, or is the king.
  - Move your King each of: forward one space; to the A file; to the center 4 squares; to the opposing home rank; and to capture a piece
  - Short/Long "Castle" where you castle.
- - Perform the French move
 
 Unlike ordinary Chess, the victory condition in this client is King extinction, not checkmate. This means when a player has had their last King captured, they lose. (A player ordinarily has 1 King piece.) This was chosen in order to enable the player to simplify whether various objectives are accessible.
 
@@ -33,6 +32,14 @@ This client implements the ChecksMate protocol for ArchipelagoMW by modifying th
    - It may be inconvenient to exclude certain pieces under this mode...
  - Piece Limits. Under some mindsets, it can be taxing to find 6 minor pieces and no Queen. By adding certain rails to the experience, one can have a more personalized approach to a Chess randomizer, where one's army bears some resemblance to a traditional game.
  - Extra Kings. The player loses when their King is extinct, and the AI loses by checkmate. But what if you had a backup King?
+
+### Strategic notes
+
+This is not Chess. It's an asymmetric, multi-round experience involving the rules of Chess. You only need to checkmate once - and your opponent is too shortsighted to stop you from coming back stronger.
+
+Don't hesitate to put your King into checkmate to capture a new piece - you can just play again, now with another item.
+
+Choose one specific location each round. Invest all your tools toward that task alone.
 
 ## ChessV
 
@@ -59,18 +66,25 @@ https://archipelago.gg/
 
 Bugs:
 
-No bugs currently reproducible.
+ - Generation fails due to lack of items in item pool for goal. (Should be fixed in existing commits, but not released at time of writing.)
+ - Engine Elo reduction item is incorrectly named. (It's a person's name, not an acronym.)
+ - Draw by repetition happens in 2 moves, not 3. (Honestly, I think this is a problem in the base ChessV client. If true, I'm inclined to believe that fixing it would be quite difficult.)
 
 Locations:
 
  - "Discovered Attack" where a piece which was not under attack becomes under attack but not by the piece you moved
  - "Pin" and "Skewer" where a piece would be under attack if not for another piece on the same side. If the higher value piece is attacked, it's a skewer, otheerwise it's a pin
+ - A location for which one performs the French move
 
-Randomizer options:
+Randomizer options and features:
 
- - Progressive Goal. Your enemy's pieces are also scattered across the multiworld! (The current design can make progression too easy.)
- - Non-Progressive Material. Pieces will not be selected progressively from a set, but instead placed with specific names in your world. This means you would find a Bishop or Cleric rather than a Progressive Minor Piece or Progressive Major Piece. (They are unlikely to come with pre-determined locations.)
+ - Simplified Fairy Pieces option: only standard Chess pieces / all fairy armies / customize armies. The last option would lead to the current behaviour. This is only necessary because OptionSets don't show up on the settings menu on the Archipelago website, unless you navigate to the advanced Weighted Settings page.
+ - Progressive Goal option. Your enemy's pieces are also scattered across the multiworld! (The current design can make progression too easy.)
+ - Non-Progressive Material option. Pieces will not be selected progressively from a set, but instead placed with specific names in your world. This means you would find a Bishop or Cleric rather than a Progressive Minor Piece or Progressive Major Piece. (They are unlikely to come with pre-determined locations.)
+ - Internal "difficulty" acknowledgement in the sphere generation based on certain settings. (Mixed pawns makes not only your pawn items much weaker, but also your pieces which must navigate past them. Likewise, Stable positions are easier to study but can leave the player stuck with an awkward layout.)
 
-Features:
+Client features:
 
+ - The word "CHECK" in large red text if a King the player controls is threatened.
  - Reconnect or warn user of disconnect when the computer goes to sleep.
+ - Maybe it's possible to change the seed? I think you can modify slot data during a game... this would be another alternative to the "Stable Stuck" seed problem where a player must play out a weak position.
