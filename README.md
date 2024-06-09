@@ -66,7 +66,7 @@ https://archipelago.gg/
 
 Bugs:
 
- - Generation fails due to lack of items in item pool for goal. (Should be fixed in existing commits, but not released at time of writing.)
+ - Generation rarely (5%?) fails due to lack of items in item pool for goal. (Should be fixed in existing commits, but not released at time of writing.)
  - Engine Elo reduction item is incorrectly named. (It's a person's name, not an acronym.)
  - Draw by repetition happens in 2 moves, not 3. (Honestly, I think this is a problem in the base ChessV client. If true, I'm inclined to believe that fixing it would be quite difficult.)
 
