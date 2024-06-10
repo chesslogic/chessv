@@ -255,6 +255,14 @@ namespace Archipelago.APChessV
           captures = ++capturedPawns;
         if (captures > 1)
         {
+          // capture any
+          var totalCaptures = capturedPawns + capturedPieces;
+          if (totalCaptures < 15)
+          {
+            locationName = "Capture Any " + totalCaptures;
+            locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", locationName));
+          }
+          // capture piece
           if (isPiece)
           {
             locationName = "Capture " + captures + " Pieces";
@@ -264,6 +272,7 @@ namespace Archipelago.APChessV
               locationName = "Capture " + captures + " Of Each";
             }
           }
+          // capture pawn
           else
           {
             locationName = "Capture " + captures + " Pawns";
@@ -274,6 +283,7 @@ namespace Archipelago.APChessV
             }
           }
           locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", locationName));
+          // capture everything
           if (capturedPieces >= 7 && capturedPawns >= 8)
           {
             locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "Capture Everything"));
