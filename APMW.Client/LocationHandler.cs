@@ -341,6 +341,10 @@ namespace Archipelago.APChessV
             // This doesn't calculate whether a single move could defend both pieces.
             // Imagine a rook, blocked by a pawn offensively, sliding to a defensive location between two pieces
             // - or a "discovered defend" where two different pieces are used to defend the forked pieces.
+            // We have to add "true forks" at each step, because we count the target, not just the source
+            // There are conceivable moves which can protect both pieces but those are SO complicated, dude
+            // And on the other hand, forked pieces defending each other might still be a fork!
+            // A King protected by a Queen is not defended...
             bool isTrueFork =
               !match.Game.IsSquareAttacked(attackers[i].Square, humanPlayer ^ 1) && // will live to attack
               (
@@ -349,6 +353,13 @@ namespace Archipelago.APChessV
                 attackedPieceIsKing || // no king can be defended
                 !match.Game.IsSquareAttacked(square, humanPlayer ^ 1) // not defended
               );
+            if (isTrueFork)
+            {
+              if (!trueForkers.ContainsKey(attackers[i]))
+                trueForkers[attackers[i]] = 0;
+              trueForkers[attackers[i]]++;
+            }
+
             // This is used to determine if a fork is royal.
             if (attackedPieceIsKing)
               kingAttacked[attackers[i]] = (true, isTrueFork);
@@ -360,17 +371,6 @@ namespace Archipelago.APChessV
             if (++forkers[attackers[i]] > 1)
             {
               locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "Fork, Sacrificial"));
-
-              // We have to add "true forks" at each step, because we count the target, not just the source
-              // There are conceivable moves which can protect both pieces but those are SO complicated, dude
-              // And on the other hand, forked pieces defending each other might still be a fork!
-              // A King protected by a Queen is not defended...
-              if (isTrueFork)
-              {
-                if (!trueForkers.ContainsKey(attackers[i]))
-                  trueForkers[attackers[i]] = 0;
-                trueForkers[attackers[i]]++;
-              }
               if (trueForkers.ContainsKey(attackers[i]) && trueForkers[attackers[i]] > 1)
                 locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "Fork, True"));
               if (forkers[attackers[i]] > 2)
