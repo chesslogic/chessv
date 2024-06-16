@@ -20,6 +20,7 @@ some reason you need a copy, please visit <http://www.gnu.org/licenses/>.
 
 using ChessV.Games;
 using ChessV.Games.Rules;
+using ChessV.Games.Rules.Apmw;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -192,7 +193,7 @@ namespace ChessV.GUI
         if (null != label_check)
         {
           label_check.Visible = false;
-          CheckmateRule rule = (CheckmateRule)Game.FindRule(typeof(CheckmateRule));
+          ApmwStalemateRule rule = (ApmwStalemateRule)Game.FindRule(typeof(ApmwStalemateRule));
           if (rule != null) {
             foreach (Piece king in rule.RoyalPieces[whiteIsHuman ? 0 : 1])
             {
@@ -200,6 +201,7 @@ namespace ChessV.GUI
               if (Game.IsSquareAttacked(square, whiteIsHuman ? 1 : 0))
               {
                 label_check.Visible = true;
+                label_check.Update();
                 break;
               }
             }
