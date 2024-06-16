@@ -198,7 +198,7 @@ namespace ChessV.GUI
             foreach (Piece king in rule.RoyalPieces[whiteIsHuman ? 0 : 1])
             {
               int square = king.Square;
-              if (square > 0 && Game.IsSquareAttacked(square, whiteIsHuman ? 1 : 0))
+              if (square >= 0 && Game.IsSquareAttacked(square, whiteIsHuman ? 1 : 0))
               {
                 label_check.Visible = true;
                 label_check.Update();
