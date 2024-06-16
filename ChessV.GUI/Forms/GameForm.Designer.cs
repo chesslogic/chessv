@@ -117,6 +117,7 @@ namespace ChessV.GUI
       propertiesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
       timer = new System.Windows.Forms.Timer(components);
       saveFileDialog = new System.Windows.Forms.SaveFileDialog();
+      label_check = new System.Windows.Forms.Label();
       ((System.ComponentModel.ISupportInitialize)splitContainer1).BeginInit();
       splitContainer1.Panel1.SuspendLayout();
       splitContainer1.Panel2.SuspendLayout();
@@ -184,6 +185,7 @@ namespace ChessV.GUI
       // splitContainer2.Panel2
       // 
       splitContainer2.Panel2.BackColor = System.Drawing.Color.Black;
+      splitContainer2.Panel2.Controls.Add(label_check);
       splitContainer2.Panel2.Controls.Add(listThinking1);
       splitContainer2.Size = new System.Drawing.Size(499, 832);
       splitContainer2.SplitterDistance = 498;
@@ -454,14 +456,14 @@ namespace ChessV.GUI
       columnHeader3.Text = "Description";
       columnHeader3.Width = 157;
       // 
-      // tabControl1
+      // evaluationTabControl
       // 
       evaluationTabControl.Controls.Add(tabMaterial);
       evaluationTabControl.Controls.Add(tabEvalHistory);
       evaluationTabControl.Dock = System.Windows.Forms.DockStyle.Fill;
       evaluationTabControl.Location = new System.Drawing.Point(0, 0);
       evaluationTabControl.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-      evaluationTabControl.Name = "tabControl1";
+      evaluationTabControl.Name = "evaluationTabControl";
       evaluationTabControl.SelectedIndex = 0;
       evaluationTabControl.Size = new System.Drawing.Size(570, 171);
       evaluationTabControl.TabIndex = 0;
@@ -497,7 +499,7 @@ namespace ChessV.GUI
       tabEvalHistory.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
       tabEvalHistory.Name = "tabEvalHistory";
       tabEvalHistory.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-      tabEvalHistory.Size = new System.Drawing.Size(474, 142);
+      tabEvalHistory.Size = new System.Drawing.Size(558, 143);
       tabEvalHistory.TabIndex = 1;
       tabEvalHistory.Text = "Evaluation History";
       // 
@@ -507,7 +509,7 @@ namespace ChessV.GUI
       ehControl.Location = new System.Drawing.Point(4, 3);
       ehControl.Margin = new System.Windows.Forms.Padding(5, 3, 5, 3);
       ehControl.Name = "ehControl";
-      ehControl.Size = new System.Drawing.Size(466, 136);
+      ehControl.Size = new System.Drawing.Size(550, 137);
       ehControl.TabIndex = 0;
       // 
       // menuStrip1
@@ -764,6 +766,19 @@ namespace ChessV.GUI
       timer.Interval = 400;
       timer.Tick += timer_Tick;
       // 
+      // label_check
+      // 
+      label_check.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+      label_check.AutoSize = true;
+      label_check.BackColor = System.Drawing.Color.Firebrick;
+      label_check.ForeColor = System.Drawing.SystemColors.ControlLightLight;
+      label_check.Location = new System.Drawing.Point(379, 6);
+      label_check.Name = "label_check";
+      label_check.Size = new System.Drawing.Size(111, 15);
+      label_check.TabIndex = 1;
+      label_check.Text = "YOU ARE IN CHECK";
+      label_check.TextAlign = System.Drawing.ContentAlignment.TopRight;
+      // 
       // GameForm
       // 
       AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -783,6 +798,7 @@ namespace ChessV.GUI
       splitContainer1.ResumeLayout(false);
       splitContainer2.Panel1.ResumeLayout(false);
       splitContainer2.Panel2.ResumeLayout(false);
+      splitContainer2.Panel2.PerformLayout();
       ((System.ComponentModel.ISupportInitialize)splitContainer2).EndInit();
       splitContainer2.ResumeLayout(false);
       splitContainer3.Panel1.ResumeLayout(false);
@@ -875,5 +891,6 @@ namespace ChessV.GUI
 		private System.Windows.Forms.ToolStripMenuItem menuitem_ShowEngineStatisticsWindow;
 		private System.Windows.Forms.ToolStripMenuItem menuitem_StaticEvaluation;
     private System.Windows.Forms.Label gems_label;
+    public System.Windows.Forms.Label label_check;
   }
 }

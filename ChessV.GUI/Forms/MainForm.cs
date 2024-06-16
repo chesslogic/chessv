@@ -662,6 +662,7 @@ namespace ChessV.GUI
       GameForm gameForm = new GameForm(game);
       gameForm.Show();
       gameForm.boardControl.RotateBoard = player != 0;
+      gameForm.label_check.Visible = false;
     }
 
     // *** PRIVATE DATA MEMBERS *** //

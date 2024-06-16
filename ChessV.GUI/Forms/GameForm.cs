@@ -19,10 +19,12 @@ some reason you need a copy, please visit <http://www.gnu.org/licenses/>.
 ****************************************************************************/
 
 using ChessV.Games;
+using ChessV.Games.Rules;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace ChessV.GUI
@@ -184,6 +186,23 @@ namespace ChessV.GUI
             Game.Match.SetPlayerToHuman(1);
             Game.Match.GetPlayer(1).StartedThinking += ThinkingStartedPlayer1;
             Game.Match.GetPlayer(1).StoppedThinking += ThinkingStopped;
+          }
+        }
+        bool whiteIsHuman = Game.Match.GetPlayer(0).IsHuman;
+        if (null != label_check)
+        {
+          label_check.Visible = false;
+          CheckmateRule rule = (CheckmateRule)Game.FindRule(typeof(CheckmateRule));
+          if (rule != null) {
+            foreach (Piece king in rule.RoyalPieces[whiteIsHuman ? 0 : 1])
+            {
+              int square = king.Square;
+              if (Game.IsSquareAttacked(square, whiteIsHuman ? 1 : 0))
+              {
+                label_check.Visible = true;
+                break;
+              }
+            }
           }
         }
       }

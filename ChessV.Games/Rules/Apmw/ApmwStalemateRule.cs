@@ -22,8 +22,8 @@ namespace ChessV.Games.Rules.Apmw
     {
       base.PositionLoaded(fen);
       startingRoyalPieces = new HashSet<Piece>[2];
-      startingRoyalPieces[0] = new HashSet<Piece>(royalPieces[0]);
-      startingRoyalPieces[1] = new HashSet<Piece>(royalPieces[1]);
+      startingRoyalPieces[0] = new HashSet<Piece>(RoyalPieces[0]);
+      startingRoyalPieces[1] = new HashSet<Piece>(RoyalPieces[1]);
     }
 
     public override MoveEventResponse MoveBeingMade(MoveInfo move, int ply)
@@ -34,11 +34,11 @@ namespace ChessV.Games.Rules.Apmw
       if (player is HumanPlayer)
         return MoveEventResponse.NotHandled;
       if (move.MoveType.HasFlag(MoveType.CaptureProperty))
-        if (royalPieces[player.Side ^ 1].Contains(move.PieceCaptured))
-            if (royalPieces[player.Side ^ 1].Remove(move.PieceCaptured))
+        if (RoyalPieces[player.Side ^ 1].Contains(move.PieceCaptured))
+            if (RoyalPieces[player.Side ^ 1].Remove(move.PieceCaptured))
               return MoveEventResponse.NotHandled;
-      if (royalPieces[move.Player ^ 1].Count > 1 ||
-          !move.MoveType.HasFlag(MoveType.CaptureProperty) || move.PieceCaptured != royalPieces[move.Player ^ 1].First())
+      if (RoyalPieces[move.Player ^ 1].Count > 1 ||
+          !move.MoveType.HasFlag(MoveType.CaptureProperty) || move.PieceCaptured != RoyalPieces[move.Player ^ 1].First())
         return base.IllegalCheckMoves(move);
       return MoveEventResponse.NotHandled;
     }
@@ -50,7 +50,7 @@ namespace ChessV.Games.Rules.Apmw
       Player player = Game.Match.GetPlayer(move.Player);
       if (player is not HumanPlayer)
         if (move.MoveType.HasFlag(MoveType.CaptureProperty) && startingRoyalPieces[player.Side ^ 1].Contains(move.PieceCaptured))
-          royalPieces[player.Side ^ 1].Add(move.PieceCaptured);
+          RoyalPieces[player.Side ^ 1].Add(move.PieceCaptured);
       return MoveEventResponse.NotHandled;
     }
 

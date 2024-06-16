@@ -30,6 +30,8 @@ namespace ChessV.Games.Rules
 
     public MoveEventResponse StalemateResult { get; set; }
 
+    public HashSet<Piece>[] RoyalPieces;
+
     public PieceType[] RoyalPieceTypes { get; private set; }
 
     public PieceType RoyalPieceType { get { return RoyalPieceTypes.First(); } }
@@ -51,7 +53,7 @@ namespace ChessV.Games.Rules
 
     public override void Initialize(Game game)
     {
-      royalPieces = new HashSet<Piece>[game.NumPlayers];
+      RoyalPieces = new HashSet<Piece>[game.NumPlayers];
       base.Initialize(game);
       foreach (PieceType royalType in RoyalPieceTypes)
         if (royalType.FindCustomAttributes(typeof(RoyalAttribute)).Count == 0)
@@ -75,9 +77,9 @@ namespace ChessV.Games.Rules
         foreach (Piece piece in piecelist)
           if (RoyalPieceTypes.Contains(piece.PieceType))
           {
-            if (royalPieces[player] == null)
-              royalPieces[player] = new HashSet<Piece>();
-            royalPieces[player].Add(piece);
+            if (RoyalPieces[player] == null)
+              RoyalPieces[player] = new HashSet<Piece>();
+            RoyalPieces[player].Add(piece);
           }
       }
     }
@@ -87,7 +89,7 @@ namespace ChessV.Games.Rules
       //	Assert that this move doesn't capture a royal piece, 
       //	otherwise we have a fundamental problem!
       if (move.PieceCaptured != null &&
-          royalPieces.Any(playerRoyals => playerRoyals.Contains(move.PieceCaptured)))
+          RoyalPieces.Any(playerRoyals => playerRoyals.Contains(move.PieceCaptured)))
         throw new Exception("Fatal error in CheckmateRule - Royal piece captured");
       return IllegalCheckMoves(move);
     }
@@ -96,7 +98,7 @@ namespace ChessV.Games.Rules
     {
       //	Make sure that as a result of this move, no moving player's
       //	royal piece is attacked.  If it is, this move is illegal.
-      foreach (Piece royalPiece in royalPieces[move.Player])
+      foreach (Piece royalPiece in RoyalPieces[move.Player])
         if (royalPiece != null && Game.IsSquareAttacked(royalPiece.Square, move.Player ^ 1))
           return MoveEventResponse.IllegalMove;
       return MoveEventResponse.NotHandled;
@@ -104,9 +106,9 @@ namespace ChessV.Games.Rules
 
     public override MoveEventResponse NoMovesResult(int currentPlayer, int ply)
     {
-      if (royalPieces[currentPlayer].Where(p => p != null).Count() > 1)
+      if (RoyalPieces[currentPlayer].Where(p => p != null).Count() > 1)
         return 0;
-      Piece royalPiece = royalPieces[currentPlayer].First(p => p != null);
+      Piece royalPiece = RoyalPieces[currentPlayer].First(p => p != null);
       //	No moves - if the royal piece is attacked, the game is lost;
       //	Otherwise, return the StalemateResult
       if (Game.IsSquareAttacked(royalPiece.Square, currentPlayer ^ 1))
@@ -116,9 +118,9 @@ namespace ChessV.Games.Rules
 
     public override int PositionalSearchExtension(int currentPlayer, int ply)
     {
-      if (royalPieces[currentPlayer].Where(p => p != null).Count() > 1)
+      if (RoyalPieces[currentPlayer].Where(p => p != null).Count() > 1)
         return 0;
-      Piece royalPiece = royalPieces[currentPlayer].First(p => p != null);
+      Piece royalPiece = RoyalPieces[currentPlayer].First(p => p != null);
       if (Game.IsSquareAttacked(royalPiece.Square, currentPlayer ^ 1))
         //	king is in check - extend by one ply
         return Game.ONEPLY;
@@ -130,10 +132,5 @@ namespace ChessV.Games.Rules
       if (RoyalPieceTypes.Contains(type))
         notes.Add("royal");
     }
-
-
-    // *** PROTECTED DATA MEMBERS *** //
-
-    protected HashSet<Piece>[] royalPieces;
   }
 }
