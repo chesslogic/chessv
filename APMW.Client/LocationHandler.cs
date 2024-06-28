@@ -45,9 +45,12 @@ namespace Archipelago.APChessV
       Initialized = true;
       victory = () => new Task(() => Victory(session)).Start();
       deathlink = (reason) => new Task(() => Deathlink(session, reason)).Start();
+      CaptureLookup = new CaptureLookup();
     }
 
     public ILocationCheckHelper LocationCheckHelper { get; private set; }
+    public CaptureLookup CaptureLookup { get; private set; }
+    ArchipelagoSession session;
 
     public bool Initialized { get; private set; }
     private StartedEventHandler seHandler;
@@ -242,7 +245,7 @@ namespace Archipelago.APChessV
         //bool isPiece = !ApmwCore.getInstance().pawns.Contains(info.PieceCaptured.PieceType);
         string locationName;
         if (isPiece)
-          locationName = "Capture Piece " + fileNotation;
+          locationName = CaptureLookup.fileToLocation(fileNotation);
         else
           locationName = "Capture Pawn " + fileNotation;
         locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", locationName));

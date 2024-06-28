@@ -33,6 +33,7 @@ namespace ChessV.Base
     public int foundConsuls = -1;
     public int foundKingPromotions = -1;
     public int foundPawnForwardness = -1;
+    public bool isGrand = false;
 
     public PieceType king;
     public List<PieceType> kings;

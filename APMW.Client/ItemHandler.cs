@@ -8,7 +8,7 @@ using static Archipelago.MultiClient.Net.Helpers.ReceivedItemsHelper;
 
 namespace Archipelago.APChessV
 {
-  internal class ItemHandler
+  public class ItemHandler
   {
 
     public ItemHandler(ReceivedItemsHelper receivedItemsHelper)
@@ -65,6 +65,8 @@ namespace Archipelago.APChessV
         (item) => ReceivedItemsHelper.GetItemName(item.Item) == "Progressive Consul");
       core.foundKingPromotions = items.Count(
         (item) => ReceivedItemsHelper.GetItemName(item.Item) == "Progressive King Promotion");
+      core.isGrand = items.Count(
+        (item) => ReceivedItemsHelper.GetItemName(item.Item) == "Super-Size Me") > 0;
     }
 
     public void Unhook()
@@ -78,6 +80,10 @@ namespace Archipelago.APChessV
 
     public (Dictionary<KeyValuePair<int, int>, PieceType>, string) generatePlayerPieceSet()
     {
+      var core = ApmwCore.getInstance();
+      bool isGrand = core.isGrand;
+      var numFiles = isGrand ? 10 : 8;
+
       ApmwConfig.getInstance().seed();
       List<string> promotions = new List<string>();
       List<int> order;
@@ -91,9 +97,9 @@ namespace Archipelago.APChessV
 
       Dictionary<KeyValuePair<int, int>, PieceType> pieces = new Dictionary<KeyValuePair<int, int>, PieceType>();
       for (int i = 0; i < 5; i++)
-        for (int j = 0; j < 8; j++)
-          if (withPawns[i * 8 + j] != null)
-            pieces.Add(new KeyValuePair<int, int>(4 - i, j), withPawns[i * 8 + j]);
+        for (int j = 0; j < numFiles; j++)
+          if (withPawns[i * numFiles + j] != null)
+            pieces.Add(new KeyValuePair<int, int>(4 - i, j), withPawns[i * numFiles + j]);
 
       return (pieces, String.Join("", promotions));
     }
@@ -104,6 +110,10 @@ namespace Archipelago.APChessV
 
     public List<PieceType> GeneratePawns(List<PieceType> minors)
     {
+      var core = ApmwCore.getInstance();
+      bool isGrand = core.isGrand;
+      var numFiles = isGrand ? 10 : 8;
+
       List<PieceType> pawns = ApmwCore.getInstance().pawns.ToList();
       List<PieceType> thirdRank = new List<PieceType>() { null, null, null, null, null, null, null, null };
       List<PieceType> fourthRank = new List<PieceType>() { null, null, null, null, null, null, null, null };
@@ -116,7 +126,7 @@ namespace Archipelago.APChessV
       int startingPieces = pawnRank.Count((item) => item != null);
       int totalChessmen = ApmwCore.getInstance().foundPawns + startingPieces;
 
-      for (int i = startingPieces; i < Math.Min(8, totalChessmen); i++)
+      for (int i = startingPieces; i < Math.Min(numFiles, totalChessmen); i++)
       {
         PieceType piece;
         if (ApmwConfig.getInstance().Pawns == FairyPawns.Vanilla)
@@ -128,7 +138,7 @@ namespace Archipelago.APChessV
 
         chooseIndexAndPlace(pawnRank, randomLocations, piece);
       }
-      for (int i = 8; i < Math.Min(16, totalChessmen); i++)
+      for (int i = numFiles; i < Math.Min(numFiles * 2, totalChessmen); i++)
       {
         PieceType piece;
         if (ApmwConfig.getInstance().Pawns == FairyPawns.Vanilla)
@@ -140,7 +150,7 @@ namespace Archipelago.APChessV
 
         chooseIndexAndPlace(thirdRank, randomLocations, piece);
       }
-      for (int i = 16; i < Math.Min(24, totalChessmen); i++)
+      for (int i = numFiles * 2; i < Math.Min(numFiles * 3, totalChessmen); i++)
       {
         PieceType piece;
         if (ApmwConfig.getInstance().Pawns == FairyPawns.Vanilla)
@@ -152,7 +162,7 @@ namespace Archipelago.APChessV
 
         chooseIndexAndPlace(fourthRank, randomLocations, piece);
       }
-      for (int i = 24; i < Math.Min(32, totalChessmen); i++)
+      for (int i = numFiles * 3; i < Math.Min(numFiles * 4, totalChessmen); i++)
       {
         PieceType piece;
         if (ApmwConfig.getInstance().Pawns == FairyPawns.Vanilla)
@@ -201,13 +211,17 @@ namespace Archipelago.APChessV
 
     public List<PieceType> GenerateMinors(List<PieceType> queens, List<string> promotions)
     {
+      var core = ApmwCore.getInstance();
+      bool isGrand = core.isGrand;
+      var numFiles = isGrand ? 10 : 8;
+
       HashSet<string> promoPieces = new HashSet<string>();
       Dictionary<PieceType, int> chosenPieces = new Dictionary<PieceType, int>();
       List<PieceType> minors = ApmwCore.getInstance().minors.ToList();
       minors = filterPiecesByArmy(minors);
-      List<PieceType> outer = queens.Skip(8).Take(4).ToList();
-      List<PieceType> left = queens.Take(4).ToList();
-      List<PieceType> right = queens.Skip(5).Take(3).ToList();
+      List<PieceType> outer = queens.Skip(numFiles).Take(numFiles / 2).ToList();
+      List<PieceType> left = queens.Take(numFiles / 2).ToList();
+      List<PieceType> right = queens.Skip(numFiles / 2 + 1).Take(numFiles / 2 - 1).ToList();
       List<PieceType> temp = new List<PieceType>() { null, null, };
       temp.AddRange(outer);
       temp.AddRange(new List<PieceType>() { null, null, });
@@ -223,13 +237,13 @@ namespace Archipelago.APChessV
       int player = ApmwCore.getInstance().GeriProvider();
       int parity = left.Count((piece) => piece != null) - right.Count((piece) => piece != null);
       // this ends at 7 instead of 8 because the King occupies 1 space, thus 0..6 not 0..7
-      for (int i = startingPieces; i < Math.Min(7, totalPieces); i++)
+      for (int i = startingPieces; i < Math.Min(numFiles - 1, totalPieces); i++)
       {
         var piece = choosePiece(ref minors, randomPieces, chosenPieces, limit);
         promoPieces.Add(piece.Notation[player]);
         parity = placeOnBackRank(new List<int>(), left, right, randomLocations, parity, i, piece);
       }
-      for (int i = Math.Max(7, startingPieces); i < Math.Min(15, totalPieces); i++)
+      for (int i = Math.Max(numFiles - 1, startingPieces); i < Math.Min(numFiles * 2 - 1, totalPieces); i++)
       {
         var piece = choosePiece(ref minors, randomPieces, chosenPieces, limit);
         promoPieces.Add(piece.Notation[player]);
@@ -238,7 +252,7 @@ namespace Archipelago.APChessV
 
       List<PieceType> output = new List<PieceType>();
       output.AddRange(left);
-      output.Add(queens[4]);
+      output.Add(queens[numFiles / 2]);
       output.AddRange(right);
       output.AddRange(outer);
       promotions.Add(string.Join("", promoPieces));
@@ -248,6 +262,10 @@ namespace Archipelago.APChessV
 
     public List<PieceType> SubstituteQueens(List<PieceType> majors, List<int> order, List<string> promotions)
     {
+      var core = ApmwCore.getInstance();
+      bool isGrand = core.isGrand;
+      var numFiles = isGrand ? 10 : 8;
+
       /*
       IEnumerable<int> majorIndexes =
         majors.Select((major, index) => major != null ? index : -1)
@@ -258,7 +276,7 @@ namespace Archipelago.APChessV
       Dictionary<PieceType, int> chosenPieces = new Dictionary<PieceType, int>();
       List<PieceType> queens = ApmwCore.getInstance().queens.ToList();
       queens = filterPiecesByArmy(queens);
-      int kingIndex = 4; // king is on E file
+      int kingIndex = numFiles / 2; // king is on E file
 
       Random random = new Random(ApmwConfig.getInstance().queenSeed);
 
@@ -282,6 +300,10 @@ namespace Archipelago.APChessV
 
     public List<PieceType> GenerateMajors(out List<int> order, List<string> promotions)
     {
+      var core = ApmwCore.getInstance();
+      bool isGrand = core.isGrand;
+      var numFiles = isGrand ? 10 : 8;
+
       HashSet<string> promoPieces = new HashSet<string>();
       Dictionary<PieceType, int> chosenPieces = new Dictionary<PieceType, int>();
       order = new List<int>();
@@ -303,7 +325,7 @@ namespace Archipelago.APChessV
       if (numKings > 0)
       {
         List<PieceType> kings = ApmwCore.getInstance().kings;
-        left[3] = kings[0];
+        left[numFiles / 2 - 1] = kings[0];
         if (numKings > 1)
         {
           right[0] = kings[0];
@@ -314,7 +336,7 @@ namespace Archipelago.APChessV
 
       // this ends at 7 instead of 8 because the King always occupies 1 space, thus 0..6 not 0..7
       int numNonMinorPieces = ApmwCore.getInstance().foundMajors + numKings;
-      for (int i = numKings; i < Math.Min(7 - numKings, numNonMinorPieces); i++)
+      for (int i = numKings; i < Math.Min(numFiles / 2 - 1 - numKings, numNonMinorPieces); i++)
       {
         PieceType piece = null;
         if (i < numNonMinorPieces - queensToBe)
@@ -327,7 +349,7 @@ namespace Archipelago.APChessV
           randomPieces.Next();
         parity = placeOnBackRank(order, left, right, randomLocations, parity, i, piece);
       }
-      for (int i = 7; i < numNonMinorPieces; i++)
+      for (int i = numFiles / 2 - 1; i < numNonMinorPieces; i++)
       {
         PieceType piece = null;
         if (i < numNonMinorPieces - queensToBe)
