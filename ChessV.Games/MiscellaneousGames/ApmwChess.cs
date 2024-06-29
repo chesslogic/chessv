@@ -190,7 +190,7 @@ namespace ChessV.Games
       // TODO(chesslogic): the starting position dict chesslogic made uses rank=4 for back line. why? u ever heard front to back?
       int positionRank = 4;
       Location kingFrom = new Location(rank, 4);
-      for (int i = 0; i < 8; i++)
+      for (int i = 0; i < NumFiles; i++)
       {
         var rookFromPair = new KeyValuePair<int, int>(positionRank, i);
         if (!startingPosition.ContainsKey(rookFromPair))
@@ -198,7 +198,7 @@ namespace ChessV.Games
         PieceType rookPiece = startingPosition[rookFromPair];
         if (Majors.Contains(rookPiece))
         {
-          var kingMoveAmt = i < 4 ? -2 : 2;
+          var kingMoveAmt = i < (NumFiles / 2) ? -2 : 2;
           Location kingTo = new Location(rank, kingFrom.File + kingMoveAmt);
           Location rookFrom = new Location(rank, i);
           Location rookTo = new Location(rank, kingFrom.File + (kingMoveAmt / 2));

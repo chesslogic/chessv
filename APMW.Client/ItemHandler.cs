@@ -118,7 +118,15 @@ namespace Archipelago.APChessV
       List<PieceType> thirdRank = new List<PieceType>() { null, null, null, null, null, null, null, null };
       List<PieceType> fourthRank = new List<PieceType>() { null, null, null, null, null, null, null, null };
       List<PieceType> finalRank = new List<PieceType>() { null, null, null, null, null, null, null, null };
-      List<PieceType> pawnRank = minors.Skip(8).ToList();
+      List<PieceType> pawnRank = minors.Skip(numFiles).ToList();
+
+      if (isGrand)
+      {
+        thirdRank = new List<PieceType>() { null, null, null, null, null, null, null, null, null, null };
+        fourthRank = new List<PieceType>() { null, null, null, null, null, null, null, null, null, null };
+        finalRank = new List<PieceType>() { null, null, null, null, null, null, null, null, null, null };
+        pawnRank = minors;
+      }
 
       Random randomPieces = new Random(ApmwConfig.getInstance().pawnSeed);
       Random randomLocations = new Random(ApmwConfig.getInstance().pawnLocSeed);
@@ -313,6 +321,12 @@ namespace Archipelago.APChessV
       List<PieceType> left = new List<PieceType>() { null, null, null, null };
       List<PieceType> right = new List<PieceType>() { null, null, null };
 
+      if (isGrand)
+      {
+        left = new List<PieceType>() { null, null, null, null, null };
+        right = new List<PieceType>() { null, null, null, null };
+      }
+
       Random randomPieces = new Random(ApmwConfig.getInstance().majorSeed);
       Random randomLocations = new Random(ApmwConfig.getInstance().majorLocSeed);
 
@@ -336,7 +350,7 @@ namespace Archipelago.APChessV
 
       // this ends at 7 instead of 8 because the King always occupies 1 space, thus 0..6 not 0..7
       int numNonMinorPieces = ApmwCore.getInstance().foundMajors + numKings;
-      for (int i = numKings; i < Math.Min(numFiles / 2 - 1 - numKings, numNonMinorPieces); i++)
+      for (int i = numKings; i < Math.Min(numFiles - 1 - numKings, numNonMinorPieces); i++)
       {
         PieceType piece = null;
         if (i < numNonMinorPieces - queensToBe)
@@ -349,7 +363,7 @@ namespace Archipelago.APChessV
           randomPieces.Next();
         parity = placeOnBackRank(order, left, right, randomLocations, parity, i, piece);
       }
-      for (int i = numFiles / 2 - 1; i < numNonMinorPieces; i++)
+      for (int i = numFiles - 1; i < numNonMinorPieces; i++)
       {
         PieceType piece = null;
         if (i < numNonMinorPieces - queensToBe)

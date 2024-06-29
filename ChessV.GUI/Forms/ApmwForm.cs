@@ -21,6 +21,7 @@ some reason you need a copy, please visit <http://www.gnu.org/licenses/>.
 using Archipelago.APChessV;
 using Archipelago.MultiClient.Net.Helpers;
 using Archipelago.MultiClient.Net.MessageLog.Messages;
+using ChessV.Base;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -182,7 +183,17 @@ namespace ChessV.GUI
 
     private void button2_Click(object sender, EventArgs e)
     {
-      Game game = mainForm.Manager.CreateGame("Archipelago Multiworld", null);
+      // check if we've received Super-Size Me from the ItemHandler
+      ApmwCore core = ApmwCore.getInstance();
+      Game game;
+      if (core.isGrand)
+      {
+        game = mainForm.Manager.CreateGame("Archipelago Multiworld Super-Sized", null);
+      }
+      else
+      {
+        game = mainForm.Manager.CreateGame("Archipelago Multiworld", null);
+      }
       game.StartMatch();
       game.Match.Finished += (match) => { archipelagoClient.UnloadMatch(); };
       mainForm.StartChecksMate(game);

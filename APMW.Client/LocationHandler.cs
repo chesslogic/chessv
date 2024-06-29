@@ -15,6 +15,7 @@ namespace Archipelago.APChessV
   public class LocationHandler
   {
     private const string NAME_OF_ARCHIPELAGO_GAME_ATTRIBUTE = "Archipelago Multiworld";
+    private const string NAME_OF_GRAND_ARCHIPELAGO_GAME_ATTRIBUTE = "Archipelago Multiworld Super-Sized";
     public static LocationHandler _instance;
 
     public static LocationHandler GetInstance()
@@ -494,7 +495,9 @@ namespace Archipelago.APChessV
     public bool TryValidatePlayingArchipelago()
     {
       // TODO(chesslogic): Player can't "disconnect" without restarting.
-      if (Initialized && match != null && match.Game.GameAttribute.GameName != NAME_OF_ARCHIPELAGO_GAME_ATTRIBUTE)
+      if (Initialized && match != null &&
+          match.Game.GameAttribute.GameName != NAME_OF_ARCHIPELAGO_GAME_ATTRIBUTE &&
+          match.Game.GameAttribute.GameName != NAME_OF_GRAND_ARCHIPELAGO_GAME_ATTRIBUTE)
         throw new InvalidOperationException("Please disconnect from Archipelago when using other ChessV features");
       return Initialized;
     }
