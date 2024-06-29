@@ -458,7 +458,14 @@ namespace Archipelago.APChessV
     {
       if (!TryValidatePlayingArchipelago())
         return;
-      LocationCheckHelper.CompleteLocationChecks(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "Checkmate Maxima"));
+      if (ApmwCore.getInstance().isGrand)
+      {
+        LocationCheckHelper.CompleteLocationChecks(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "Checkmate Maxima"));
+      }
+      else
+      {
+        LocationCheckHelper.CompleteLocationChecks(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "Checkmate Minima"));
+      }
       var statusUpdatePacket = new StatusUpdatePacket();
       statusUpdatePacket.Status = ArchipelagoClientState.ClientGoal;
       session.Socket.SendPacket(statusUpdatePacket);

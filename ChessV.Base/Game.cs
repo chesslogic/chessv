@@ -67,7 +67,7 @@ namespace ChessV
     public int NumRanks { get; private set; }
 
     //	The number of files on the main part of the board (excludes pocket squares)
-    public int NumFiles { get; private set; }
+    public int NumFiles { get; protected set; }
 
     //	The format of the FEN for this game
     public string FENFormat

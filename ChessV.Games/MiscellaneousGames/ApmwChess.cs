@@ -463,6 +463,11 @@ namespace ChessV.Games
         }
         if (emptySpaceCount > 0)
         {
+          if (emptySpaceCount > 9)
+          {
+            emptySpaceCount -= 10;
+            notations[rank] += "1";
+          }
           notations[rank] += Convert.ToChar('0' + emptySpaceCount);
           emptySpaceCount = 0;
         }

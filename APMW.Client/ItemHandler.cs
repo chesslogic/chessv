@@ -125,8 +125,8 @@ namespace Archipelago.APChessV
         thirdRank = new List<PieceType>() { null, null, null, null, null, null, null, null, null, null };
         fourthRank = new List<PieceType>() { null, null, null, null, null, null, null, null, null, null };
         finalRank = new List<PieceType>() { null, null, null, null, null, null, null, null, null, null };
-        pawnRank.Prepend(null);
-        pawnRank.Append(null);
+        pawnRank = new List<PieceType>(pawnRank.Prepend(null));
+        pawnRank = new List<PieceType>(pawnRank.Append(null));
       }
 
       Random randomPieces = new Random(ApmwConfig.getInstance().pawnSeed);
@@ -209,7 +209,7 @@ namespace Archipelago.APChessV
       }
 
       List<PieceType> output = new List<PieceType>();
-      output.AddRange(minors.Take(8));
+      output.AddRange(minors.Take(numFiles));
       output.AddRange(pawnRank);
       output.AddRange(thirdRank);
       output.AddRange(fourthRank);
@@ -301,7 +301,7 @@ namespace Archipelago.APChessV
         if (order[i] < kingIndex)
           majors[order[i]] = piece;
         else
-          majors[order[i] + 1] = piece;
+          majors[order[i] + numKings + 1] = piece;
       }
       promotions.Add(string.Join("", promoPieces));
       return majors;

@@ -18,7 +18,10 @@ namespace ChessV.Games.MiscellaneousGames
     //	type BoardWithCards instead of Board.  This is enough to trigger the 
     //	board with cards architecture and proper rendering to the display.
     public override Board CreateBoard(int nPlayers, int nFiles, int nRanks, Symmetry symmetry)
-    { return base.CreateBoard(nPlayers, 10, nRanks, symmetry); }
+    {
+      this.NumFiles = 10;
+      return base.CreateBoard(nPlayers, 10, nRanks, symmetry);
+    }
     #endregion
 
     public override void SetOtherVariables()
