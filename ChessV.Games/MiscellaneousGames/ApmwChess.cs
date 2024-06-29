@@ -93,8 +93,8 @@ namespace ChessV.Games
     public List<HashSet<PieceType>> PocketSets;
 
 
-    private Dictionary<KeyValuePair<int, int>, PieceType> startingPosition;
-    private string promotions;
+    protected Dictionary<KeyValuePair<int, int>, PieceType> startingPosition;
+    protected string promotions;
     public int HumanPlayer;
 
     public ApmwChessGame()
