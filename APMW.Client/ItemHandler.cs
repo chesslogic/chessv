@@ -351,7 +351,7 @@ namespace Archipelago.APChessV
 
       // this ends at 7 instead of 8 because the King always occupies 1 space, thus 0..6 not 0..7
       int numNonMinorPieces = ApmwCore.getInstance().foundMajors + numKings;
-      for (int i = numKings; i < Math.Min(numFiles - 1 - numKings, numNonMinorPieces); i++)
+      for (int i = numKings; i < Math.Min(numFiles - 1, numNonMinorPieces); i++)
       {
         PieceType piece = null;
         if (i < numNonMinorPieces - queensToBe)

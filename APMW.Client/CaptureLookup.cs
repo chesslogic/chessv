@@ -28,14 +28,14 @@ namespace Archipelago.APChessV
       new Dictionary<string, string>()
       {
         { "A", "Queen's Rook" },
-        { "B", "Queen's Attendant" },
-        { "C", "Queen's Knight" },
+        { "B", "Queen's Knight" },
+        { "C", "Queen's Attendant" },
         { "D", "Queen's Bishop" },
         { "E", "Queen" },
         { "F", "Checkmate Maxima" }, // not used
-        { "G", "King's Knight" },
-        { "H", "King's Bishop" },
-        { "I", "King's Attendant" },
+        { "G", "King's Bishop" },
+        { "H", "King's Attendant" },
+        { "I", "King's Knight" },
         { "J", "King's Rook" },
       };
 
