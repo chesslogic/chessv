@@ -301,7 +301,7 @@ namespace Archipelago.APChessV
         if (order[i] < kingIndex)
           majors[order[i]] = piece;
         else
-          majors[order[i] + numKings + 1] = piece;
+          majors[order[i] + 1] = piece;
       }
       promotions.Add(string.Join("", promoPieces));
       return majors;
