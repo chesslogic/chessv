@@ -122,11 +122,9 @@ namespace Archipelago.APChessV
 
       if (isGrand)
       {
-        thirdRank = new List<PieceType>() { null, null, null, null, null, null, null, null, null, null };
-        fourthRank = new List<PieceType>() { null, null, null, null, null, null, null, null, null, null };
-        finalRank = new List<PieceType>() { null, null, null, null, null, null, null, null, null, null };
-        pawnRank = new List<PieceType>(pawnRank.Prepend(null));
-        pawnRank = new List<PieceType>(pawnRank.Append(null));
+        thirdRank = thirdRank.Prepend(null).Append(null).ToList();
+        fourthRank = fourthRank.Prepend(null).Append(null).ToList();
+        finalRank = finalRank.Prepend(null).Append(null).ToList();
       }
 
       Random randomPieces = new Random(ApmwConfig.getInstance().pawnSeed);
@@ -235,6 +233,11 @@ namespace Archipelago.APChessV
       temp.AddRange(outer);
       temp.AddRange(new List<PieceType>() { null, null, });
       outer = temp; // full row: 2 empty spaces, then 4 potential major pieces, then 2 empty spaces
+      
+      if (isGrand)
+      {
+        outer = outer.Prepend(null).Append(null).ToList();
+      }
 
       Random randomPieces = new Random(ApmwConfig.getInstance().minorSeed);
       Random randomLocations = new Random(ApmwConfig.getInstance().minorLocSeed);
@@ -324,8 +327,8 @@ namespace Archipelago.APChessV
 
       if (isGrand)
       {
-        left = new List<PieceType>() { null, null, null, null, null };
-        right = new List<PieceType>() { null, null, null, null };
+        left = left.Append(null).ToList();
+        right = right.Append(null).ToList();
       }
 
       Random randomPieces = new Random(ApmwConfig.getInstance().majorSeed);

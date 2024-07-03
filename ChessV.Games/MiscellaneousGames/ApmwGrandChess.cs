@@ -11,6 +11,7 @@ namespace ChessV.Games.MiscellaneousGames
       Invented = "2019",
       InventedBy = "Berserker",
       Tags = "Chess Variant,Multiple Boards,Popular,Different Armies")]
+  [Appearance(ColorScheme = "Sublimation")]
   internal class ApmwGrandChess : ApmwChessGame
   {
     #region CreateBoard
