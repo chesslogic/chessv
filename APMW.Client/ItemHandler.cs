@@ -226,18 +226,11 @@ namespace Archipelago.APChessV
       Dictionary<PieceType, int> chosenPieces = new Dictionary<PieceType, int>();
       List<PieceType> minors = ApmwCore.getInstance().minors.ToList();
       minors = filterPiecesByArmy(minors);
-      List<PieceType> outer = queens.Skip(numFiles).Take(numFiles - 4).ToList();
+      List<PieceType> outer = queens.Skip(numFiles).Take(numFiles - 2).ToList();
       List<PieceType> left = queens.Take(numFiles / 2).ToList();
       List<PieceType> right = queens.Skip(numFiles / 2 + 1).Take(numFiles / 2 - 1).ToList();
-      List<PieceType> temp = new List<PieceType>() { null, null, };
-      temp.AddRange(outer);
-      temp.AddRange(new List<PieceType>() { null, null, });
-      outer = temp; // full row: 2 empty spaces, then 4 potential major pieces, then 2 empty spaces
-      
-      if (isGrand)
-      {
-        outer = outer.Prepend(null).Append(null).ToList();
-      }
+      // full row: 1 empty space, then 6 potential major pieces, then 1 empty space
+      outer = outer.Prepend(null).Append(null).ToList();
 
       Random randomPieces = new Random(ApmwConfig.getInstance().minorSeed);
       Random randomLocations = new Random(ApmwConfig.getInstance().minorLocSeed);
@@ -321,7 +314,7 @@ namespace Archipelago.APChessV
       order = new List<int>();
       List<PieceType> majors = ApmwCore.getInstance().majors.ToList();
       majors = filterPiecesByArmy(majors);
-      List<PieceType> outer = new List<PieceType>() { null, null, null, null };
+      List<PieceType> outer = new List<PieceType>() { null, null, null, null, null, null };
       List<PieceType> left = new List<PieceType>() { null, null, null, null };
       List<PieceType> right = new List<PieceType>() { null, null, null };
 
@@ -329,6 +322,7 @@ namespace Archipelago.APChessV
       {
         left = left.Append(null).ToList();
         right = right.Append(null).ToList();
+        outer = outer.Append(null).Append(null).ToList();
       }
 
       Random randomPieces = new Random(ApmwConfig.getInstance().majorSeed);
