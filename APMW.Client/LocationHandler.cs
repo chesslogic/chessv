@@ -463,10 +463,16 @@ namespace Archipelago.APChessV
       if (ApmwCore.getInstance().isGrand)
       {
         LocationCheckHelper.CompleteLocationChecks(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "Checkmate Maxima"));
+        var statusUpdatePacket = new StatusUpdatePacket();
+        statusUpdatePacket.Status = ArchipelagoClientState.ClientGoal;
+        session.Socket.SendPacket(statusUpdatePacket);
       }
-      var statusUpdatePacket = new StatusUpdatePacket();
-      statusUpdatePacket.Status = ArchipelagoClientState.ClientGoal;
-      session.Socket.SendPacket(statusUpdatePacket);
+      else if (ApmwConfig.getInstance().Goal == Goal.Single)
+      {
+        var statusUpdatePacket = new StatusUpdatePacket();
+        statusUpdatePacket.Status = ArchipelagoClientState.ClientGoal;
+        session.Socket.SendPacket(statusUpdatePacket);
+      }
     }
 
     public void Deathlink(ArchipelagoSession session, string reason = null)
