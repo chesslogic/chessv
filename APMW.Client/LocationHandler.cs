@@ -257,15 +257,17 @@ namespace Archipelago.APChessV
           captures = ++capturedPieces;
         else
           captures = ++capturedPawns;
-        if (captures > 1)
-        {
-          // capture any
-          var totalCaptures = capturedPawns + capturedPieces;
+        // capture any
+        var totalCaptures = capturedPawns + capturedPieces;
+        if (totalCaptures > 1) {
           if (totalCaptures < 15 || (ApmwConfig.getInstance().Goal != Goal.Single && totalCaptures < 19))
           {
             locationName = "Capture Any " + totalCaptures;
             locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", locationName));
           }
+        }
+        if (captures > 1)
+        {
           // capture piece
           if (isPiece)
           {
