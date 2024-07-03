@@ -7,7 +7,7 @@ namespace Archipelago.APChessV
 {
   internal enum Goal
   {
-    Single = 0, Progressive = 1, OrderedProgressive = 2,
+    Single = 0, OrderedProgressive = 1, Progressive = 2, Super = 3
   }
   internal enum PieceLocations
   {

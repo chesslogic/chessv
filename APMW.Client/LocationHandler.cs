@@ -261,7 +261,7 @@ namespace Archipelago.APChessV
         {
           // capture any
           var totalCaptures = capturedPawns + capturedPieces;
-          if (totalCaptures < 15)
+          if (totalCaptures < 15 || (ApmwConfig.getInstance().Goal != Goal.Single && totalCaptures < 19))
           {
             locationName = "Capture Any " + totalCaptures;
             locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", locationName));
@@ -288,7 +288,8 @@ namespace Archipelago.APChessV
           }
           locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", locationName));
           // capture everything
-          if (capturedPieces >= 7 && capturedPawns >= 8)
+          if ((ApmwConfig.getInstance().Goal == Goal.Single && capturedPieces >= 7 && capturedPawns >= 8) ||
+            (ApmwCore.getInstance().isGrand && capturedPieces >= 9 && capturedPawns >= 10))
           {
             locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "Capture Everything"));
           }
