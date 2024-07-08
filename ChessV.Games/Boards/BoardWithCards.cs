@@ -56,6 +56,8 @@ namespace ChessV.Boards
 
     public override Location SquareToLocation(int square)
     {
+      if (square < 0)
+        return Location.NullLocation;
       if (square < NumSquares)
         return new Location(rankBySquare[square], fileBySquare[square]);
       else

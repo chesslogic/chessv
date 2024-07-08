@@ -462,7 +462,7 @@ namespace Archipelago.APChessV
       if (!TryValidatePlayingArchipelago())
         return;
       LocationCheckHelper.CompleteLocationChecks(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "Checkmate Minima"));
-      if (ApmwCore.getInstance().isGrand)
+      if (ApmwCore.getInstance().isGrand && match.Game.GameAttribute.GameName == NAME_OF_GRAND_ARCHIPELAGO_GAME_ATTRIBUTE)
       {
         LocationCheckHelper.CompleteLocationChecks(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "Checkmate Maxima"));
         var statusUpdatePacket = new StatusUpdatePacket();
