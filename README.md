@@ -27,11 +27,14 @@ This client implements the ChecksMate protocol for ArchipelagoMW by modifying th
    - You may only drop a piece by spending Gems equal to its material value. Gems are collected at a rate of 1/turn, and you start a match with your collected Pocket Gems. The Black player starts with 1 extra Gem.
    - Pocket Range allows the player to deploy pocket items one rank further from the home row, but not the opponent's home row
  - Non-Fairy Chess. Your major pieces will always be Rooks, your minor pieces will always be Bishops and Knights, and your queens will always slay. Also, no more dumb Berolina Pawns. Who even thought mixing those was a good idea?
+   - Simplified Fairy Pieces option: only standard Chess pieces / all fairy armies / customize armies.
+     - This is only necessary because OptionSets don't show up on the settings menu on the Archipelago website, unless you navigate to the advanced Weighted Settings page.
  - Chaotic Material Randomization. Every game, you get new pieces in new places! Who needs an opening book?
  - Army-Constrained Material. The material you get will always be related to each other (in that they belong in the same army): If you find a Bishop you won't find a Cannon; if you find a Cleric you won't find a Lion.
    - It may be inconvenient to exclude certain pieces under this mode...
  - Piece Limits. Under some mindsets, it can be taxing to find 6 minor pieces and no Queen. By adding certain rails to the experience, one can have a more personalized approach to a Chess randomizer, where one's army bears some resemblance to a traditional game.
  - Extra Kings. The player loses when their King is extinct, and the AI loses by checkmate. But what if you had a backup King?
+ - Internal "difficulty" acknowledgement in the sphere generation based on certain settings. (Mixed pawns makes not only your pawn items much weaker, but also your pieces which must navigate past them. Likewise, Stable positions are easier to study but can leave the player stuck with an awkward layout.)
 
 ### Strategic notes
 
@@ -54,6 +57,12 @@ Features
 
 http://www.chessv.org/
 
+### Enhancements
+
+ - Fixes to some extremely minor and/or niche bugs.
+ - The AI considering a pocket knight drop will write "Pkt1" in its node exploration log.
+ - Displays "YOU ARE IN CHECK" in large red text if a King the player controls is threatened.
+
 ## ArchipelagoMW
 
 Archipelago provides a generic framework for developing multiworld capability for game randomizers. In all cases, presently, Archipelago is also the randomizer itself.
@@ -66,9 +75,9 @@ https://archipelago.gg/
 
 Bugs:
 
- - Generation rarely (5%?) fails due to lack of items in item pool for goal. (Should be fixed in existing commits, but not released at time of writing.)
+ - Infinite generation time if player excludes almost every possible item on a very low difficulty. (This is close to a suggested preset, and therefore a higher risk.)
  - Engine Elo reduction item is incorrectly named. (It's a person's name, not an acronym.)
- - Draw by repetition happens in 2 moves, not 3. (Honestly, I think this is a problem in the base ChessV client. If true, I'm inclined to believe that fixing it would be quite difficult.)
+ - Draw by repetition happens in 2 moves, not 3. (I think this is a problem in the base ChessV client. If true, I'm inclined to believe that fixing it would be quite difficult.)
 
 Locations:
 
@@ -79,13 +88,11 @@ Locations:
 Randomizer options and features:
 
  - Silly vs Serious Location and Item Names. Some people have laughed at some of the names I've come up with, and others are rather utilitarian in wanting to know the specific requirements of locations and benefits of items. With some work to update the location and item trackers, as well as an expanded redundant set of items from Items.py, a player should be able to use either set of names.
- - Simplified Fairy Pieces option: only standard Chess pieces / all fairy armies / customize armies. The last option would lead to the current behaviour. This is only necessary because OptionSets don't show up on the settings menu on the Archipelago website, unless you navigate to the advanced Weighted Settings page.
  - Progressive Goal option. Your enemy's pieces are also scattered across the multiworld! (The current design can make progression too easy.)
  - Non-Progressive Material option. Pieces will not be selected progressively from a set, but instead placed with specific names in your world. This means you would find a Bishop or Cleric rather than a Progressive Minor Piece or Progressive Major Piece. (They are unlikely to come with pre-determined locations.)
- - Internal "difficulty" acknowledgement in the sphere generation based on certain settings. (Mixed pawns makes not only your pawn items much weaker, but also your pieces which must navigate past them. Likewise, Stable positions are easier to study but can leave the player stuck with an awkward layout.)
+ 
 
 Client features:
 
- - The word "CHECK" in large red text if a King the player controls is threatened.
  - Reconnect or warn user of disconnect when the computer goes to sleep.
  - Maybe it's possible to change the seed? I think you can modify slot data during a game... this would be another alternative to the "Stable Stuck" seed problem where a player must play out a weak position.
