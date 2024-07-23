@@ -11,7 +11,7 @@ namespace Archipelago.APChessV
   public class ItemHandler
   {
 
-    public ItemHandler(ReceivedItemsHelper receivedItemsHelper)
+    public ItemHandler(IReceivedItemsHelper receivedItemsHelper)
     {
       ReceivedItemsHelper = receivedItemsHelper;
 
@@ -24,7 +24,7 @@ namespace Archipelago.APChessV
       ApmwCore.getInstance().PlayerPocketPiecesProvider = () => generatePocketItems();
     }
 
-    private ReceivedItemsHelper ReceivedItemsHelper;
+    private IReceivedItemsHelper ReceivedItemsHelper;
     private ItemReceivedHandler irHandler;
 
     public void Hook()
@@ -36,37 +36,37 @@ namespace Archipelago.APChessV
       try
       {
         core.foundPockets = items.Count(
-          (item) => ReceivedItemsHelper.GetItemName(item.Item) == "Progressive Pocket");
+          (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Pocket");
       } catch (Exception e)
       {
         ArchipelagoClient.getInstance().nonSessionMessages.Add(e.ToString());
       }
       core.foundPocketRange = items.Count(
-        (item) => ReceivedItemsHelper.GetItemName(item.Item) == "Progressive Pocket Range");
+        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Pocket Range");
       core.foundPocketGems = items.Count(
-        (item) => ReceivedItemsHelper.GetItemName(item.Item) == "Progressive Pocket Gems");
+        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Pocket Gems");
       core.GeriProvider = () => items.Any(
-        (item) => ReceivedItemsHelper.GetItemName(item.Item) == "Play as White") ? 0 : 1;
+        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Play as White") ? 0 : 1;
       core.EngineWeakeningProvider = () => items.Count(
-        (item) => ReceivedItemsHelper.GetItemName(item.Item) == "Progressive Engine ELO Lobotomy");
+        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Engine ELO Lobotomy");
       core.foundPockets = items.Count(
-        (item) => ReceivedItemsHelper.GetItemName(item.Item) == "Progressive Pocket");
+        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Pocket");
       core.foundPawns = items.Count(
-        (item) => ReceivedItemsHelper.GetItemName(item.Item) == "Progressive Pawn");
+        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Pawn");
       core.foundMinors = items.Count(
-        (item) => ReceivedItemsHelper.GetItemName(item.Item) == "Progressive Minor Piece");
+        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Minor Piece");
       core.foundMajors = items.Count(
-        (item) => ReceivedItemsHelper.GetItemName(item.Item) == "Progressive Major Piece");
+        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Major Piece");
       core.foundQueens = items.Count(
-        (item) => ReceivedItemsHelper.GetItemName(item.Item) == "Progressive Major To Queen");
+        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Major To Queen");
       core.foundPawnForwardness = items.Count(
-        (item) => ReceivedItemsHelper.GetItemName(item.Item) == "Progressive Pawn Forwardness");
+        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Pawn Forwardness");
       core.foundConsuls = items.Count(
-        (item) => ReceivedItemsHelper.GetItemName(item.Item) == "Progressive Consul");
+        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Consul");
       core.foundKingPromotions = items.Count(
-        (item) => ReceivedItemsHelper.GetItemName(item.Item) == "Progressive King Promotion");
+        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive King Promotion");
       core.isGrand = items.Count(
-        (item) => ReceivedItemsHelper.GetItemName(item.Item) == "Super-Size Me") > 0;
+        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Super-Size Me") > 0;
     }
 
     public void Unhook()
