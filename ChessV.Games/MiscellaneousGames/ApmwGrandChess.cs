@@ -5,14 +5,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChessV.Games.MiscellaneousGames
+namespace ChessV.Games
 {
   [Game("Archipelago Multiworld Super-Sized", typeof(Geometry.Rectangular), 10, 8, 3,
       Invented = "2019",
       InventedBy = "Berserker",
       Tags = "Chess Variant,Multiple Boards,Popular,Different Armies")]
   [Appearance(ColorScheme = "Sublimation")]
-  internal class ApmwGrandChess : ApmwChessGame
+  public class ApmwGrandChess : ApmwChessGame
   {
     #region CreateBoard
     //	We override the CreateBoard function so the game uses a board of 

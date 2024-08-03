@@ -112,7 +112,8 @@ namespace ChessV.GUI
       if (Game.ComputerControlled[0])
         listThinking1.Items.Clear();
       labelTime0.Text = timeInMillisecondsToString(timeleft);
-      if (Game.GetType() == typeof(ApmwChessGame))
+      if (Game.GetType() == typeof(ApmwChessGame) ||
+        Game.GetType() == typeof(ApmwGrandChess))
       {
         gems_label.Text = "Gems: " + Game.CurrentPlayer.Gems;
       }
