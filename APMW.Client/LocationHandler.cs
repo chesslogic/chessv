@@ -215,6 +215,17 @@ namespace Archipelago.APChessV
       //
 
       //
+      // BEGIN survive ...
+      //
+
+      var currentTurn = (match.Game.GameTurnNumber + 1) / 2;
+      locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", $"Current Objective: Survive {currentTurn} Turns"));
+
+      //
+      // END survive ...
+      //
+
+      //
       // START captures ...
       //
 
