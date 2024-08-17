@@ -171,7 +171,7 @@ namespace Archipelago.APChessV
       if (ApmwCore.getInstance().kings.Contains(piece.PieceType))
       {
         // TODO(chesslogic): Math.min(match.Game.Board pieces count, 4) 
-        if (match.Game.GameTurnNumber <= 16 &&
+        if (match.Game.GameTurnNumber <= 10 &&
           match.Game.Board.GetFile(info.ToSquare) == 4 &&
           (match.Game.Board.GetRank(info.ToSquare) == 1 || match.Game.Board.GetRank(info.ToSquare) == 6))
         {
@@ -218,7 +218,7 @@ namespace Archipelago.APChessV
       // BEGIN survive ...
       //
 
-      var currentTurn = (match.Game.GameTurnNumber + 1) / 2;
+      var currentTurn = match.Game.GameTurnNumber;
       locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", $"Current Objective: Survive {currentTurn} Turns"));
 
       //
