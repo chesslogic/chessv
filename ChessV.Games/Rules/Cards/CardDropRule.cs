@@ -142,7 +142,7 @@ namespace ChessV.Games.Rules.Cards
             }
             if (gems < pieceInPocket.MidgameValue / 100)
             {
-              return;
+              continue;
             }
 
             for (int square = 0; square < Board.NumSquares; square++)
