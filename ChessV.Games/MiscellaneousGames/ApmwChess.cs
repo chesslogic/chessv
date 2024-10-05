@@ -247,13 +247,13 @@ namespace ChessV.Games
         // computer is black
         if (humanPlayer == 0)
         {
-          CastlingMove(1, "f8", "h8", "h8", "g8", 'k');
+          CastlingMove(1, "f8", "h8", "j8", "g8", 'k');
           CastlingMove(1, "f8", "d8", "a8", "e8", 'q');
         }
         // computer is white
         else
         {
-          CastlingMove(0, "f1", "h1", "h1", "g1", 'K');
+          CastlingMove(0, "f1", "h1", "j1", "g1", 'K');
           CastlingMove(0, "f1", "d1", "a1", "e1", 'Q');
         }
       }
