@@ -226,17 +226,36 @@ namespace ChessV.Games
         }
       }
       // TODO(chesslogic): support CPU different armies
-      // computer is black
-      if (humanPlayer == 0)
+      // TODO(chesslogic): name these tiles by role so the semantic is more obvious, e.g. KINGSTARTSQUARE
+      // check if grand chess is in play
+      if (NumFiles == 8)
       {
-        CastlingMove(1, "e8", "g8", "h8", "f8", 'k');
-        CastlingMove(1, "e8", "c8", "a8", "d8", 'q');
-      }
-      // computer is white
-      else
+        // computer is black
+        if (humanPlayer == 0)
+        {
+          CastlingMove(1, "e8", "g8", "h8", "f8", 'k');
+          CastlingMove(1, "e8", "c8", "a8", "d8", 'q');
+        }
+        // computer is white
+        else
+        {
+          CastlingMove(0, "e1", "g1", "h1", "f1", 'K');
+          CastlingMove(0, "e1", "c1", "a1", "d1", 'Q');
+        }
+      } else
       {
-        CastlingMove(0, "e1", "g1", "h1", "f1", 'K');
-        CastlingMove(0, "e1", "c1", "a1", "d1", 'Q');
+        // computer is black
+        if (humanPlayer == 0)
+        {
+          CastlingMove(1, "f8", "h8", "h8", "g8", 'k');
+          CastlingMove(1, "f8", "d8", "a8", "e8", 'q');
+        }
+        // computer is white
+        else
+        {
+          CastlingMove(0, "f1", "h1", "h1", "g1", 'K');
+          CastlingMove(0, "f1", "d1", "a1", "e1", 'Q');
+        }
       }
     }
     #endregion
