@@ -643,7 +643,8 @@ namespace ChessV.GUI
 
     public void StartChecksMate(Game game)
     {
-      var difficulty = Math.Pow(3, 10 - ApmwCore.getInstance().EngineWeakeningProvider());
+      var level = ApmwCore.getInstance().EngineWeakeningProvider() + Math.Max(0, ApmwForm.thisForm.comboBoxDifficulty.SelectedIndex);
+      var difficulty = Math.Pow(3, 10 - Math.Min(level, 5));
 
       TimeControl timeControl = new TimeControl();
       timeControl.Infinite = true;

@@ -39,7 +39,10 @@ namespace ChessV.GUI
       InitializeComponent();
       archipelagoClient = ArchipelagoClient.getInstance();
       this.mainForm = mainForm;
+      thisForm = this;
     }
+
+    public static ApmwForm thisForm;
 
     private ArchipelagoClient archipelagoClient;
     private Convenience convenience;
@@ -56,6 +59,12 @@ namespace ChessV.GUI
       convenience = new Convenience();
       textBox1.Text += convenience.getRecentUrl();
       textBox2.Text += convenience.getRecentSlotName();
+
+      checkBoxSuper.Enabled = ApmwCore.getInstance().isGrand;
+      if (!checkBoxSuper.Enabled)
+      {
+        checkBoxSuper.Checked = false;
+      }
     }
 
     private void timer_Tick(object sender, EventArgs e)
@@ -85,6 +94,12 @@ namespace ChessV.GUI
       txtApmwOutput.AppendText(append.ToString());
       pastMessages = new List<LogMessage>();
       linesSeen = 0;
+
+      if (!checkBoxSuper.Enabled && ApmwCore.getInstance().isGrand)
+      {
+        checkBoxSuper.Checked = true;
+      }
+      checkBoxSuper.Enabled = ApmwCore.getInstance().isGrand;
     }
 
     private void ApmwForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -186,7 +201,7 @@ namespace ChessV.GUI
       // check if we've received Super-Size Me from the ItemHandler
       ApmwCore core = ApmwCore.getInstance();
       Game game;
-      if (core.isGrand)
+      if (core.isGrand && checkBoxSuper.Enabled && checkBoxSuper.Checked)
       {
         game = mainForm.Manager.CreateGame("Archipelago Multiworld Super-Sized", null);
       }
