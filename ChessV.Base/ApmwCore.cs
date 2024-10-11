@@ -59,6 +59,6 @@ namespace ChessV.Base
     public List<Action<MoveInfo>> NewMovePlayed = new List<Action<MoveInfo>>();
     public List<Action<Match>> MatchFinished = new List<Action<Match>>();
     public Func<int> EngineWeakeningProvider = () => 0;
-
+    // TODO: Check whether the Goal is SUPER, instead of progressive, if so disable the checkbox in the GUI
   }
 }
