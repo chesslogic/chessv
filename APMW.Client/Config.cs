@@ -184,24 +184,6 @@ namespace Archipelago.APChessV
         minorSeed = Convert.ToInt32(SlotData["minor_seed"]);
         majorSeed = Convert.ToInt32(SlotData["major_seed"]);
         queenSeed = Convert.ToInt32(SlotData["queen_seed"]);
-
-        // Locations
-        if (this.Locs != PieceLocations.Chaos)
-        {
-          // TODO(chesslogic): I thought about it for a moment, and I think this is fine
-          // But maybe Mersenne twister is happier with some sort of offset
-          pawnLocSeed = pawnSeed;
-          minorLocSeed = minorSeed;
-          majorLocSeed = majorSeed;
-          queenLocSeed = majorSeed;
-        }
-        else
-        {
-          pawnLocSeed = random.Next();
-          minorLocSeed = random.Next();
-          majorLocSeed = random.Next();
-          queenLocSeed = random.Next();
-        }
       }
       else
       {
@@ -210,22 +192,24 @@ namespace Archipelago.APChessV
         minorSeed = random.Next();
         majorSeed = random.Next();
         queenSeed = random.Next();
+      }
 
-        // Locations
-        if (this.Locs != PieceLocations.Chaos)
-        {
-          pawnLocSeed = Convert.ToInt32(SlotData["pawn_seed"]);
-          minorLocSeed = Convert.ToInt32(SlotData["minor_seed"]);
-          majorLocSeed = Convert.ToInt32(SlotData["major_seed"]);
-          queenLocSeed = Convert.ToInt32(SlotData["queen_seed"]);
-        }
-        else
-        {
-          pawnLocSeed = random.Next();
-          minorLocSeed = random.Next();
-          majorLocSeed = random.Next();
-          queenLocSeed = random.Next();
-        }
+      // Locations
+      if (this.Locs != PieceLocations.Chaos)
+      {
+        // TODO(chesslogic): I thought about it for a moment, and I think this is fine
+        // But maybe Mersenne twister is happier with some sort of offset
+        pawnLocSeed = Convert.ToInt32(SlotData["pawn_seed"]);
+        minorLocSeed = Convert.ToInt32(SlotData["minor_seed"]);
+        majorLocSeed = Convert.ToInt32(SlotData["major_seed"]);
+        queenLocSeed = Convert.ToInt32(SlotData["queen_seed"]);
+      }
+      else
+      {
+        pawnLocSeed = random.Next();
+        minorLocSeed = random.Next();
+        majorLocSeed = random.Next();
+        queenLocSeed = random.Next();
       }
     }
 
