@@ -61,12 +61,12 @@ namespace Archipelago.APChessV
         (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Major To Queen");
       core.foundPawnForwardness = items.Count(
         (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Pawn Forwardness");
-      core.foundConsuls = items.Count(
-        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Consul");
-      core.foundKingPromotions = items.Count(
-        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive King Promotion");
-      core.isGrand = items.Count(
-        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Super-Size Me") > 0;
+      core.foundConsuls = Math.Min(2, items.Count(
+        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Consul"));
+      core.foundKingPromotions = Math.Min(2, items.Count(
+        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive King Promotion"));
+      core.isGrand = Math.Min(1, items.Count(
+        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Super-Size Me")) > 0;
     }
 
     public void Unhook()
