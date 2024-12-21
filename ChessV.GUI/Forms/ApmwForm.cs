@@ -27,6 +27,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using Archipelago.MultiClient.Net.BounceFeatures.DeathLink;
+using Archipelago.MultiClient.Net.Models;
 
 namespace ChessV.GUI
 {
@@ -190,6 +191,54 @@ namespace ChessV.GUI
       //messageLog.OnMessageReceived -= (message) => pastMessages.Add(message);
       archipelagoClient.OnConnect += (Archipelago.MultiClient.Net.ArchipelagoSession session) => {
         button2.Enabled = true;
+        archipelagoClient.nonSessionMessages.Add("Thank you for playing today. UI updating based on slot data ...");
+        
+        try {
+            // Get slot data from the DataStorage helper
+            DataStorageElement slotData = session.DataStorage["_read_slot_data"];
+            Dictionary<string, object> slotInfo = slotData.To<Dictionary<string, object>>();
+            bool isDeathLink = 0 < Convert.ToInt32(slotInfo["death_link"]);
+            
+            archipelagoClient.nonSessionMessages.Add($"Got slot data - death_link is {isDeathLink}");
+            
+            this.Invoke((MethodInvoker)delegate {
+                checkBoxDeathlink.Enabled = isDeathLink;
+                checkBoxDeathlink.Checked = isDeathLink;
+            });
+
+            if (isDeathLink)
+            {
+                deathLinkService = session.CreateDeathLinkService();
+                locationHandler = LocationHandler.GetInstance();
+                
+                if (checkBoxDeathlink.Checked)
+                {
+                    deathLinkService.EnableDeathLink();
+                }
+                archipelagoClient.nonSessionMessages.Add("DeathLink service initialized");
+                deathLinkService.OnDeathLinkReceived += (DeathLink deathLink) =>
+                {
+                    if (currentMatch == null || !checkBoxDeathlink.Checked)
+                        return;
+                        
+                    lock (locationHandler.DeathlinkedMatches)
+                    {
+                        if (locationHandler.DeathlinkedMatches.Contains(currentMatch))
+                            return;
+                        locationHandler.DeathlinkedMatches.Add(currentMatch);
+                    }
+                    string reason = string.Join(" due to ", deathLink.Source, deathLink.Cause);
+                    archipelagoClient.nonSessionMessages.Add(string.Join(" ", "DeathLink received:", reason));
+                    currentMatch.Death(reason);
+                };
+            }
+        }
+        catch (Exception ex) {
+            archipelagoClient.nonSessionMessages.Add($"Error in OnConnect: {ex.Message}");
+            if (ex.InnerException != null) {
+                archipelagoClient.nonSessionMessages.Add($"Inner exception: {ex.InnerException.Message}");
+            }
+        }
       };
 
       archipelagoClient.OnClientDisconnect += (code, reason, wasClean) => {
@@ -201,56 +250,15 @@ namespace ChessV.GUI
       };
 
       archipelagoClient.Connect(host, port, slot, password);
-      if (archipelagoClient.Session != null)
+      if (archipelagoClient.Session != null && messageLog != archipelagoClient.Session.MessageLog)
       {
-        var loginResult = archipelagoClient.Session.ConnectionInfo.LoginResult as Archipelago.MultiClient.Net.LoginSuccessful;
-        if (loginResult != null)
+        if (mrHandler != null)
         {
-          var slotData = loginResult.SlotData;
-          var isDeathLink = 0 < Convert.ToInt32(slotData.GetValueOrDefault("death_link", 0));
-          
-          this.Invoke((MethodInvoker)delegate {
-            checkBoxDeathlink.Enabled = isDeathLink;
-            checkBoxDeathlink.Checked = isDeathLink;
-          });
-
-          if (isDeathLink)
-          {
-            deathLinkService = archipelagoClient.Session.CreateDeathLinkService();
-            locationHandler = LocationHandler.GetInstance();
-            
-            if (checkBoxDeathlink.Checked)
-            {
-              deathLinkService.EnableDeathLink();
-            }
-            deathLinkService.OnDeathLinkReceived += (DeathLink deathLink) =>
-            {
-              if (currentMatch == null || !checkBoxDeathlink.Checked)
-                return;
-                    
-              lock (locationHandler.DeathlinkedMatches)
-              {
-                if (locationHandler.DeathlinkedMatches.Contains(currentMatch))
-                  return;
-                locationHandler.DeathlinkedMatches.Add(currentMatch);
-              }
-              string reason = string.Join(" due to ", deathLink.Source, deathLink.Cause);
-              archipelagoClient.nonSessionMessages.Add(string.Join(" ", "DeathLink received:", reason));
-              currentMatch.Death(reason);
-            };
-          }
+          messageLog.OnMessageReceived -= mrHandler;
         }
-        
-        if (messageLog != archipelagoClient.Session.MessageLog)
-        {
-          if (mrHandler != null)
-          {
-            messageLog.OnMessageReceived -= mrHandler;
-          }
-          mrHandler = (message) => pastMessages.Add(message);
-          messageLog = archipelagoClient.Session.MessageLog;
-          messageLog.OnMessageReceived += mrHandler;
-        }
+        mrHandler = (message) => pastMessages.Add(message);
+        messageLog = archipelagoClient.Session.MessageLog;
+        messageLog.OnMessageReceived += mrHandler;
       }
     }
 
