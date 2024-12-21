@@ -246,15 +246,15 @@ namespace Archipelago.APChessV
     // TODO(chesslogic): warn user to reconnect
     private void Session_SocketClosed(string reason, ArchipelagoSession session)
     {
-      if (this.Session != session)
+      bool isThisSession = this.Session == session;
+      string article = isThisSession ? "This" : "A";
+      nonSessionMessages.Add($"{article} local session ended" + (reason.Length == 0 ? "" : $": {reason}"));
+      if (isThisSession)
       {
-        nonSessionMessages.Add($"Old session ended: {reason}");
-        return;
+        Dispose();
       }
-      nonSessionMessages.Add($"{reason}");
-      Dispose();
-      // new ArchipelagoEndMessage().Send(NetworkDestination.Clients);
 
+      // new ArchipelagoEndMessage().Send(NetworkDestination.Clients);
     }
   }
 }

@@ -1,5 +1,4 @@
-﻿
-/***************************************************************************
+﻿/***************************************************************************
 
                                  ChessV
 
@@ -67,6 +66,7 @@ namespace ChessV.GUI
       comboBoxDifficulty = new System.Windows.Forms.ComboBox();
       labelDivider = new System.Windows.Forms.Label();
       label5 = new System.Windows.Forms.Label();
+      checkBoxDeathlink = new System.Windows.Forms.CheckBox();
       SuspendLayout();
       // 
       // txtApmwOutput
@@ -230,11 +230,23 @@ namespace ChessV.GUI
       label5.TabIndex = 15;
       label5.Text = "settings?";
       // 
+      // checkBoxDeathlink
+      // 
+      checkBoxDeathlink.AutoSize = true;
+      checkBoxDeathlink.Location = new System.Drawing.Point(496, 126);
+      checkBoxDeathlink.Name = "checkBoxDeathlink";
+      checkBoxDeathlink.Size = new System.Drawing.Size(124, 29);
+      checkBoxDeathlink.TabIndex = 16;
+      checkBoxDeathlink.Text = "DeathLink?";
+      checkBoxDeathlink.UseVisualStyleBackColor = true;
+      checkBoxDeathlink.CheckedChanged += new System.EventHandler(this.checkBoxDeathlink_CheckedChanged);
+      // 
       // ApmwForm
       // 
       AutoScaleDimensions = new System.Drawing.SizeF(10F, 25F);
       AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
       ClientSize = new System.Drawing.Size(1037, 752);
+      Controls.Add(checkBoxDeathlink);
       Controls.Add(label5);
       Controls.Add(labelDivider);
       Controls.Add(comboBoxDifficulty);
@@ -276,6 +288,7 @@ namespace ChessV.GUI
     private System.Windows.Forms.Label label4;
     private System.Windows.Forms.CheckBox checkBoxSuper;
     public System.Windows.Forms.ComboBox comboBoxDifficulty;
+    private System.Windows.Forms.CheckBox checkBoxDeathlink;
     private System.Windows.Forms.Label labelDivider;
     private System.Windows.Forms.Label label5;
   }
