@@ -186,36 +186,33 @@ namespace Archipelago.APChessV
 
           ItemHandler = new ItemHandler(session.Items);
 
-          var slotData = successResult.SlotData;
-          ApmwConfig.getInstance().Instantiate(slotData);
-          var isDeathLink = 0 < Convert.ToInt32(slotData.GetValueOrDefault("death_link", 0));
-          if (isDeathLink)
-          {
-            var deathLinkService = session.CreateDeathLinkService();
-            new Task(() =>
-            {
-              deathLinkService.EnableDeathLink();
-              deathLinkService.OnDeathLinkReceived += (DeathLink deathLink) =>
-              {
-                lock (LocationHandler.DeathlinkedMatches)
-                {
-                  if (LocationHandler.DeathlinkedMatches.Contains(match))
-                    return;
-                  LocationHandler.DeathlinkedMatches.Add(match);
-                }
-                string reason = string.Join(" due to ", deathLink.Source, deathLink.Cause);
-                nonSessionMessages.Add(string.Join(" ", "DeathLink received:", reason));
-                match.Death(reason);
-              };
-            }).Start();
-          }
-
           //LocationCheckBar.ItemPickupStep = ItemLogic.ItemPickupStep;
 
           //session.Socket.PacketReceived += Session_PacketReceived;
           session.Socket.SocketClosed += (reason) => Session_SocketClosed(reason, session);
 
           //OnConnect(session);
+
+          var slotData = successResult.SlotData;
+          ApmwConfig.getInstance().Instantiate(slotData);
+          var isDeathLink = 0 < Convert.ToInt32(slotData.GetValueOrDefault("death_link", 0));
+          if (isDeathLink)
+          {
+            var deathLinkService = session.CreateDeathLinkService();
+            deathLinkService.EnableDeathLink();
+            deathLinkService.OnDeathLinkReceived += (DeathLink deathLink) =>
+            {
+              lock (LocationHandler.DeathlinkedMatches)
+              {
+                if (LocationHandler.DeathlinkedMatches.Contains(match))
+                  return;
+                LocationHandler.DeathlinkedMatches.Add(match);
+              }
+              string reason = string.Join(" due to ", deathLink.Source, deathLink.Cause);
+              nonSessionMessages.Add(string.Join(" ", "DeathLink received:", reason));
+              match.Death(reason);
+            };
+          }
         });
         connectionTask.Start();
       }
@@ -250,11 +247,14 @@ namespace Archipelago.APChessV
     private void Session_SocketClosed(string reason, ArchipelagoSession session)
     {
       if (this.Session != session)
+      {
+        nonSessionMessages.Add($"Old session ended: {reason}");
         return;
+      }
+      nonSessionMessages.Add($"{reason}");
       Dispose();
       // new ArchipelagoEndMessage().Send(NetworkDestination.Clients);
 
-      nonSessionMessages.Add($"{reason}");
     }
   }
 }
