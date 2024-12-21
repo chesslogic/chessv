@@ -191,7 +191,7 @@ namespace Archipelago.APChessV
           //session.Socket.PacketReceived += Session_PacketReceived;
           session.Socket.SocketClosed += (reason) => Session_SocketClosed(reason, session);
 
-          //OnConnect(session);
+          OnConnect(session);
 
           var slotData = successResult.SlotData;
           ApmwConfig.getInstance().Instantiate(slotData);
