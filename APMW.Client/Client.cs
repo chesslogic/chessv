@@ -191,8 +191,6 @@ namespace Archipelago.APChessV
           //session.Socket.PacketReceived += Session_PacketReceived;
           session.Socket.SocketClosed += (reason) => Session_SocketClosed(reason, session);
 
-          OnConnect(session);
-
           var slotData = successResult.SlotData;
           ApmwConfig.getInstance().Instantiate(slotData);
           var isDeathLink = 0 < Convert.ToInt32(slotData.GetValueOrDefault("death_link", 0));
@@ -213,6 +211,8 @@ namespace Archipelago.APChessV
               match.Death(reason);
             };
           }
+
+          OnConnect(session);
         });
         connectionTask.Start();
       }
@@ -228,6 +228,7 @@ namespace Archipelago.APChessV
 
     public void Dispose()
     {
+      this.OnClientDisconnect(0, "Disconnecting from Archipelago, disposing of evidence", true);
       nonSessionMessages.Add("Disconnecting from Archipelago, disposing of evidence");
       if (Session != null && Session.Socket.Connected)
       {

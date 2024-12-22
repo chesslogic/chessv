@@ -5,33 +5,33 @@ using System.Linq;
 
 namespace Archipelago.APChessV
 {
-  internal enum Goal
+  public enum Goal
   {
     Single = 0, OrderedProgressive = 1, Progressive = 2, Super = 3
   }
-  internal enum PieceLocations
+  public enum PieceLocations
   {
     Chaos = 0, Stable = 1, Ordered = 2,
   }
   /** Applies to Player and Enemy */
-  internal enum PieceTypes
+  public enum PieceTypes
   {
     Chaos = 0, Stable = 1, Book = 2,
   }
-  internal enum FairyTypes
+  public enum FairyTypes
   {
     Vanilla = 0, Full = 1, CwDA = 2, Cannon = 3, Eurasian = 4,
   }
-  internal enum FairyArmy
+  public enum FairyArmy
   {
     Chaos = 0, Stable = 1, Limited = 2,
   }
-  internal enum FairyPawns
+  public enum FairyPawns
   {
     Vanilla = 0, Mixed = 1, Berolina = 2,
   }
 
-  internal class ApmwConfig
+  public class ApmwConfig
   {
     public static ApmwConfig _instance;
     public static ApmwConfig getInstance()
