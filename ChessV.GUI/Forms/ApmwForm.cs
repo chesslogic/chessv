@@ -234,7 +234,7 @@ namespace ChessV.GUI
                   return;
                 locationHandler.DeathlinkedMatches.Add(currentMatch);
               }
-              string reason = string.Join(" due to ", deathLink.Source, deathLink.Cause);
+              string reason = string.Join(" ", deathLink.Source, deathLink.Cause);
               archipelagoClient.nonSessionMessages.Add(string.Join(" ", "DeathLink received:", reason));
               currentMatch.Death(reason);
             };
