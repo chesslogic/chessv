@@ -1,5 +1,4 @@
-﻿
-/***************************************************************************
+﻿/***************************************************************************
 
                                  ChessV
 
@@ -404,7 +403,7 @@ namespace ChessV.Games
 
       earlyPopulatePieceTypes();
       (Dictionary<KeyValuePair<int, int>, PieceType>, string) pieceSet =
-        starter.PlayerPieceSetProvider();
+        starter.PlayerPieceSetProvider(NumFiles);
       startingPosition = pieceSet.Item1;
       promotions = pieceSet.Item2;
       List<PieceType> pocketPieces = ApmwCore.getInstance().PlayerPocketPiecesProvider();

@@ -20,7 +20,7 @@ namespace Archipelago.APChessV
       this.Hook();
 
       // overwrite global state
-      ApmwCore.getInstance().PlayerPieceSetProvider = () => generatePlayerPieceSet();
+      ApmwCore.getInstance().PlayerPieceSetProvider = (numFiles) => generatePlayerPieceSet(numFiles);
       ApmwCore.getInstance().PlayerPocketPiecesProvider = () => generatePocketItems();
     }
 
@@ -78,22 +78,20 @@ namespace Archipelago.APChessV
     /// GENERATE PIECES ///
     ///////////////////////
 
-    public (Dictionary<KeyValuePair<int, int>, PieceType>, string) generatePlayerPieceSet()
+    public (Dictionary<KeyValuePair<int, int>, PieceType>, string) generatePlayerPieceSet(int numFiles)
     {
       var core = ApmwCore.getInstance();
-      bool isGrand = core.isGrand;
-      var numFiles = isGrand ? 10 : 8;
 
       ApmwConfig.getInstance().seed();
       List<string> promotions = new List<string>();
       List<int> order;
       // indices 0..7 are the back rank - 8..9 can be pieces if the first rank fills up
-      List<PieceType> withMajors = GenerateMajors(out order, promotions);
+      List<PieceType> withMajors = GenerateMajors(numFiles, out order, promotions);
       // replace some or all majors with queens
-      List<PieceType> withQueens = SubstituteQueens(withMajors, order, promotions);
+      List<PieceType> withQueens = SubstituteQueens(numFiles, withMajors, order, promotions);
       // then add minor pieces until out of space
-      List<PieceType> withMinors = GenerateMinors(withQueens, promotions);
-      List<PieceType> withPawns = GeneratePawns(withMinors);
+      List<PieceType> withMinors = GenerateMinors(numFiles, withQueens, promotions);
+      List<PieceType> withPawns = GeneratePawns(numFiles, withMinors);
 
       Dictionary<KeyValuePair<int, int>, PieceType> pieces = new Dictionary<KeyValuePair<int, int>, PieceType>();
       for (int i = 0; i < 5; i++)
@@ -108,24 +106,15 @@ namespace Archipelago.APChessV
     /// GENERATE PIECES ///
     ///////////////////////
 
-    public List<PieceType> GeneratePawns(List<PieceType> minors)
+    public List<PieceType> GeneratePawns(int numFiles, List<PieceType> minors)
     {
       var core = ApmwCore.getInstance();
-      bool isGrand = core.isGrand;
-      var numFiles = isGrand ? 10 : 8;
 
       List<PieceType> pawns = ApmwCore.getInstance().pawns.ToList();
-      List<PieceType> thirdRank = new List<PieceType>() { null, null, null, null, null, null, null, null };
-      List<PieceType> fourthRank = new List<PieceType>() { null, null, null, null, null, null, null, null };
-      List<PieceType> finalRank = new List<PieceType>() { null, null, null, null, null, null, null, null };
+      List<PieceType> thirdRank = Enumerable.Repeat<PieceType>(null, numFiles).ToList();
+      List<PieceType> fourthRank = Enumerable.Repeat<PieceType>(null, numFiles).ToList();
+      List<PieceType> finalRank = Enumerable.Repeat<PieceType>(null, numFiles).ToList();
       List<PieceType> pawnRank = minors.Skip(numFiles).ToList();
-
-      if (isGrand)
-      {
-        thirdRank = thirdRank.Prepend(null).Append(null).ToList();
-        fourthRank = fourthRank.Prepend(null).Append(null).ToList();
-        finalRank = finalRank.Prepend(null).Append(null).ToList();
-      }
 
       Random randomPieces = new Random(ApmwConfig.getInstance().pawnSeed);
       Random randomLocations = new Random(ApmwConfig.getInstance().pawnLocSeed);
@@ -216,11 +205,9 @@ namespace Archipelago.APChessV
       return output;
     }
 
-    public List<PieceType> GenerateMinors(List<PieceType> queens, List<string> promotions)
+    public List<PieceType> GenerateMinors(int numFiles, List<PieceType> queens, List<string> promotions)
     {
       var core = ApmwCore.getInstance();
-      bool isGrand = core.isGrand;
-      var numFiles = isGrand ? 10 : 8;
 
       HashSet<string> promoPieces = new HashSet<string>();
       Dictionary<PieceType, int> chosenPieces = new Dictionary<PieceType, int>();
@@ -265,17 +252,9 @@ namespace Archipelago.APChessV
       return output;
     }
 
-    public List<PieceType> SubstituteQueens(List<PieceType> majors, List<int> order, List<string> promotions)
+    public List<PieceType> SubstituteQueens(int numFiles, List<PieceType> majors, List<int> order, List<string> promotions)
     {
       var core = ApmwCore.getInstance();
-      bool isGrand = core.isGrand;
-      var numFiles = isGrand ? 10 : 8;
-
-      /*
-      IEnumerable<int> majorIndexes =
-        majors.Select((major, index) => major != null ? index : -1)
-            .Where(index => index != -1);
-      */
 
       HashSet<string> promoPieces = new HashSet<string>();
       Dictionary<PieceType, int> chosenPieces = new Dictionary<PieceType, int>();
@@ -303,27 +282,19 @@ namespace Archipelago.APChessV
       return majors;
     }
 
-    public List<PieceType> GenerateMajors(out List<int> order, List<string> promotions)
+    public List<PieceType> GenerateMajors(int numFiles, out List<int> order, List<string> promotions)
     {
       var core = ApmwCore.getInstance();
-      bool isGrand = core.isGrand;
-      var numFiles = isGrand ? 10 : 8;
 
       HashSet<string> promoPieces = new HashSet<string>();
       Dictionary<PieceType, int> chosenPieces = new Dictionary<PieceType, int>();
       order = new List<int>();
       List<PieceType> majors = ApmwCore.getInstance().majors.ToList();
       majors = filterPiecesByArmy(majors);
-      List<PieceType> outer = new List<PieceType>() { null, null, null, null, null, null };
-      List<PieceType> left = new List<PieceType>() { null, null, null, null };
-      List<PieceType> right = new List<PieceType>() { null, null, null };
-
-      if (isGrand)
-      {
-        left = left.Append(null).ToList();
-        right = right.Append(null).ToList();
-        outer = outer.Append(null).Append(null).ToList();
-      }
+      // Initialize lists with appropriate size based on board size
+      List<PieceType> outer = Enumerable.Repeat<PieceType>(null, numFiles - 2).ToList();
+      List<PieceType> left = Enumerable.Repeat<PieceType>(null, numFiles / 2).ToList();
+      List<PieceType> right = Enumerable.Repeat<PieceType>(null, numFiles / 2 - 1).ToList();
 
       Random randomPieces = new Random(ApmwConfig.getInstance().majorSeed);
       Random randomLocations = new Random(ApmwConfig.getInstance().majorLocSeed);
@@ -337,12 +308,13 @@ namespace Archipelago.APChessV
       if (numKings > 0)
       {
         List<PieceType> kings = ApmwCore.getInstance().kings;
-        left[numFiles / 2 - 1] = kings[0];
+        // Center the king on D file for 8x8 or E file for 10x10
+        int centerFile = (numFiles / 2) - 1;
+        left[centerFile] = kings[0];
         if (numKings > 1)
         {
+          // Place second king on E file for 8x8 or F file for 10x10
           right[0] = kings[0];
-          // TODO(chesslogic): I think this was fixed when I started counting null spaces
-          // parity = -1; // pick left side first!
         }
       }
 

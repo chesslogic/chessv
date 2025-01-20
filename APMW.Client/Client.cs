@@ -74,7 +74,7 @@ namespace Archipelago.APChessV
       var Vao = new Vao("Vao", "V", 300, 175);
 
       var starters = (new Dictionary<KeyValuePair<int, int>, PieceType>(), "QRNB");
-      ApmwCore.getInstance().PlayerPieceSetProvider = () => starters;
+      ApmwCore.getInstance().PlayerPieceSetProvider = (numFiles) => starters;
       for (int i = 0; i < 8; i++)
       {
         starters.Item1.Add(new KeyValuePair<int, int>(1, i), Pawn);
