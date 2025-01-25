@@ -220,9 +220,11 @@ namespace Archipelago.APChessV
 
       // If no pockets found yet, return all zeros
       if (foundPockets <= 0)
-      {
         return new List<int>() { 0, 0, 0 };
-      }
+
+      // Limit number of pocket items based on player preferences, even if more got force added
+      if (pocketLimit > 0)
+        foundPockets = Math.Min(foundPockets, pocketLimit * 3);
 
       // preserve choices separate from values
       Random pocketRandom = new Random(pocketSeed);
