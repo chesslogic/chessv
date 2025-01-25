@@ -257,7 +257,7 @@ namespace Archipelago.APChessV
         //bool isPiece = !ApmwCore.getInstance().pawns.Contains(info.PieceCaptured.PieceType);
         string locationName;
         if (isPiece)
-          locationName = CaptureLookup.fileToLocation(fileNotation);
+          locationName = CaptureLookup.fileToLocation(match.Game.NumFiles, fileNotation);
         else
           locationName = "Capture Pawn " + fileNotation;
         locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", locationName));

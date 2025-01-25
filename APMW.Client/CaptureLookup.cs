@@ -39,18 +39,19 @@ namespace Archipelago.APChessV
         { "J", "King's Rook" },
       };
 
-    public string fileToLocation(string fileNotation)
+    public string fileToLocation(int numFiles, string fileNotation)
     {
-      string qualifiedName = fileToSubname(fileNotation);
+      string qualifiedName = fileToSubname(numFiles, fileNotation);
       return "Capture Piece " + qualifiedName;
     }
 
-    private string fileToSubname(string fileNotation)
+    private string fileToSubname(int numFiles, string fileNotation)
     {
       if (fileNotation == null)
         throw new ArgumentNullException(nameof(fileNotation));
-      // if we gained the Super-Size Me item, use maxima names
-      if (ApmwCore.getInstance().isGrand)
+
+      // Use maxima names for 10x10 board, minima names for 8x8
+      if (numFiles == 10)
         return MaximaNames[fileNotation];
       else
         return MinimaNames[fileNotation];

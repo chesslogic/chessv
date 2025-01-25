@@ -216,8 +216,13 @@ namespace Archipelago.APChessV
     /** Possibly not stable - will generate a different pocket distribution as the player progresses through different foundPockets - but it is uniform */
     public List<int> generatePocketValues(int foundPockets)
     {
-      if (foundPockets == 0) { return new List<int>() { 0, 0, 0 }; }
       if (pocketSeed == -1) { throw new InvalidOperationException("Please set Starter.pocket_seed"); }
+
+      // If no pockets found yet, return all zeros
+      if (foundPockets <= 0)
+      {
+        return new List<int>() { 0, 0, 0 };
+      }
 
       // preserve choices separate from values
       Random pocketRandom = new Random(pocketSeed);
@@ -225,9 +230,10 @@ namespace Archipelago.APChessV
 
       // probably not uniform... but it's within range so it works for now. will break FEN later
       Random random = new Random(pocketSeed);
-      var x = random.Next(
-        Math.Max(0, foundPockets - pocketLimit * 2),
-        Math.Min(foundPockets, pocketLimit + 1));
+      var minX = Math.Max(0, foundPockets - pocketLimit * 2);
+      var maxX = Math.Min(foundPockets, pocketLimit + 1);
+      var x = random.Next(minX, Math.Max(minX + 1, maxX));
+
       if (x == foundPockets)
       {
         return new List<int>() { x, 0, 0 };
@@ -236,9 +242,10 @@ namespace Archipelago.APChessV
       {
         return new List<int>() { x, 1, 0 };
       }
-      var y = random.Next(
-        Math.Max(0, foundPockets - pocketLimit - x),
-        Math.Min(foundPockets - x, pocketLimit + 1));
+
+      var minY = Math.Max(0, foundPockets - pocketLimit - x);
+      var maxY = Math.Min(foundPockets - x, pocketLimit + 1);
+      var y = random.Next(minY, Math.Max(minY + 1, maxY));
       var z = foundPockets - (y + x);
       if (z < 0)
       {
