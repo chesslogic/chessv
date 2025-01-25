@@ -225,7 +225,7 @@ namespace Archipelago.APChessV
       // Limit number of pocket items based on player preferences, even if more got force added
       if (pocketLimit > 0) {
         if (pocketLimit * 3 < foundPockets) {
-          double ceiling = Math.Ceiling(foundPockets / 3.0);
+          double ceiling = Math.Min(4.0, Math.Ceiling(foundPockets / 3.0));
           pocketLimit = ceiling % 1.0 == 0.0 ? (int)ceiling : 4;
         }
         foundPockets = Math.Min(foundPockets, pocketLimit * 3);
