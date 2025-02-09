@@ -246,9 +246,9 @@ namespace Archipelago.APChessV
         */
 
         // handle specific piece
-        int originalSquare = info.ToSquare;
-        if (currentSquaresToOriginalSquares.ContainsKey(info.ToSquare))
-          originalSquare = currentSquaresToOriginalSquares[info.ToSquare];
+        int originalSquare = info.PieceCaptured.Square;
+        if (currentSquaresToOriginalSquares.ContainsKey(originalSquare))
+          originalSquare = currentSquaresToOriginalSquares[originalSquare];
         int originalFile = match.Game.Board.GetFile(originalSquare);
         int originalRank = match.Game.Board.GetRank(originalSquare);
         string fileNotation = match.Game.Board.GetFileNotation(originalFile);
