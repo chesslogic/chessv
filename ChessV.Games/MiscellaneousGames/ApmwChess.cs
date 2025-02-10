@@ -50,6 +50,9 @@ namespace ChessV.Games
     //  Berolina
     public PieceType BerolinaPawn;
 
+    //  Checkers
+    public PieceType Checkers;
+
     //	Colorbound Clobberers
     public PieceType Archbishop;
     public PieceType WarElephant;
@@ -526,8 +529,10 @@ namespace ChessV.Games
       Bishop = new Bishop("Bishop", "B", 325, 350);
       Knight = new Knight("Knight", "N", 325, 325);
       Queen = new Queen("Queen", "Q", 950, 1000);
-      // Berolina
+      // Berolina pawn
       BerolinaPawn = new BerolinaPawn("Berolina Pawn", "Z", 100, 125, preferredImageName: "Ferz");
+      // Checkers pawn - register with both case variants
+      Checkers = new Checkers("Checkers", "Ç", 100, 125, preferredImageName: "Wizard");
       // Cwda
       //AddPieceType(Queen = new Queen("Queen", "Q", 950, 1000));
       //AddPieceType(Rook = new Rook("Rook", "R", 500, 550));
@@ -557,9 +562,10 @@ namespace ChessV.Games
       Kings.Add(King);
       Kings.Add(MountedKing);
       Kings.Add(HyperKing);
-
+      
       Pawns.Add(Pawn);
       Pawns.Add(BerolinaPawn);
+      Pawns.Add(Checkers);  // Add Checkers to pawns collection
 
       Minors.Add(Bishop);
       Minors.Add(Knight);

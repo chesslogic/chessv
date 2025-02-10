@@ -1347,11 +1347,14 @@ namespace ChessV
         return pieceType;
       }
       else if ((str[cursor] >= 'A' && str[cursor] <= 'Z') ||
-           (str[cursor] >= 'a' && str[cursor] <= 'z'))
+           (str[cursor] >= 'a' && str[cursor] <= 'z') ||
+           (str[cursor] >= 'À' && str[cursor] <= 'Ö') ||
+           (str[cursor] >= 'à' && str[cursor] <= 'ö'))
       {
         //	A character designates the beginning of what might be a one or two character 
         //	long notation of a piece
         int start = cursor++;
+
         //	Check to see if this character is the notation of a valid piece type.  If it is we go with it.
         //	The first character of a two-character notation can't overlap with a single character notation 
         //	unless preceeded with an underscore (handled above)
@@ -1361,7 +1364,9 @@ namespace ChessV
         if (!found &&
           ((str[cursor] >= 'A' && str[cursor] <= 'Z') ||
            (str[cursor] >= 'a' && str[cursor] <= 'z') ||
-            str[cursor] == '!' || str[cursor] == '\''))
+           (str[cursor] >= 'À' && str[cursor] <= 'Ö') ||
+           (str[cursor] >= 'à' && str[cursor] <= 'ö') ||
+           str[cursor] == '!' || str[cursor] == '\''))
         {
           found = TypesByNotation[0].TryGetValue(str.Substring(start, 2), out pieceType);
           if (!found)

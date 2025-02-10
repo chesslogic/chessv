@@ -1,5 +1,4 @@
-﻿
-/***************************************************************************
+﻿/***************************************************************************
 
                                  ChessV
 
@@ -573,13 +572,17 @@ namespace ChessV
         }
         else if ((array[cursor] >= 'A' && array[cursor] <= 'Z') ||
              (array[cursor] >= 'a' && array[cursor] <= 'z') ||
+              array[cursor] >= 'À' && array[cursor] <= 'Ö' ||
+              array[cursor] >= 'à' && array[cursor] <= 'ö' ||
               array[cursor] == '_')
         {
-          //	determine player
-          int player =
-              array[cursor] == '_' && array.Length > cursor + 1
-            ? (array[cursor + 1] >= 'A' && array[cursor + 1] <= 'Z' ? 0 : 1)
-            : (array[cursor] >= 'A' && array[cursor] <= 'Z' ? 0 : 1);
+          //	determine player based on case - uppercase (including accented) is player 0
+          int player;
+          char c = array[cursor] == '_' && array.Length > cursor + 1 ? array[cursor + 1] : array[cursor];
+          if ((c >= 'A' && c <= 'Z') || (c >= 'À' && c <= 'Ö'))
+              player = 0;
+          else
+              player = 1;
           //	ask the Game class to parse piece type from string
           newPieceType = Game.ParsePieceTypeFromString(array, ref cursor);
           //	add the piece to the map

@@ -109,7 +109,6 @@ namespace Archipelago.APChessV
     public List<PieceType> GeneratePawns(int numFiles, List<PieceType> minors)
     {
       var core = ApmwCore.getInstance();
-
       List<PieceType> pawns = ApmwCore.getInstance().pawns.ToList();
       List<PieceType> thirdRank = Enumerable.Repeat<PieceType>(null, numFiles).ToList();
       List<PieceType> fourthRank = Enumerable.Repeat<PieceType>(null, numFiles).ToList();
@@ -122,15 +121,42 @@ namespace Archipelago.APChessV
       int startingPieces = pawnRank.Count((item) => item != null);
       int totalChessmen = ApmwCore.getInstance().foundPawns + startingPieces;
 
+      var config = ApmwConfig.getInstance();
+      var standardPawn = pawns.Find(item => item.Notation[0].Equals("P"));
+      var berolinaPawn = pawns.Find(item => item.Notation[0].Equals("Z"));
+      var checkersPawn = pawns.Find(item => item.Name.Equals("Checkers"));
+
       for (int i = startingPieces; i < Math.Min(numFiles, totalChessmen); i++)
       {
         PieceType piece;
-        if (ApmwConfig.getInstance().Pawns == FairyPawns.Vanilla)
-          piece = pawns.Find(item => item.Notation[0].Equals("P"));
-        else if (ApmwConfig.getInstance().Pawns == FairyPawns.Berolina)
-          piece = pawns.Find(item => !item.Notation[0].Equals("P"));
-        else
-          piece = pawns[randomPieces.Next(pawns.Count)];
+
+        switch (config.Pawns)
+        {
+          case FairyPawns.Mixed:
+            piece = pawns[randomPieces.Next(pawns.Count)];
+            break;
+          case FairyPawns.AnyPawn:
+            piece = randomPieces.Next(2) == 0 ? standardPawn : berolinaPawn;
+            break;
+          case FairyPawns.AnyFairy:
+            piece = randomPieces.Next(2) == 0 ? berolinaPawn : checkersPawn;
+            break;
+          case FairyPawns.AnyClassical:
+            piece = randomPieces.Next(2) == 0 ? standardPawn : checkersPawn;
+            break;
+          case FairyPawns.Vanilla:
+            piece = standardPawn;
+            break;
+          case FairyPawns.Berolina:
+            piece = berolinaPawn;
+            break;
+          case FairyPawns.Checkers:
+            piece = checkersPawn;
+            break;
+          default:
+            piece = standardPawn;
+            break;
+        }
 
         chooseIndexAndPlace(pawnRank, randomLocations, piece);
       }
