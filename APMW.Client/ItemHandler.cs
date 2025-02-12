@@ -106,10 +106,48 @@ namespace Archipelago.APChessV
     /// GENERATE PIECES ///
     ///////////////////////
 
+    private PieceType GetPawnTypeForRank(List<PieceType> pawns, Random randomPieces, FairyPawns pawnConfig)
+    {
+      var standardPawn = pawns.Find(item => item.Notation[0].Equals("P"));
+      var berolinaPawn = pawns.Find(item => item.Notation[0].Equals("Z"));
+      var checkersPawn = pawns.Find(item => item.Name.Equals("Checkers"));
+
+      switch (pawnConfig)
+      {
+        case FairyPawns.Mixed:
+          return pawns[randomPieces.Next(pawns.Count)];
+        case FairyPawns.AnyPawn:
+          return randomPieces.Next(2) == 0 ? standardPawn : berolinaPawn;
+        case FairyPawns.AnyFairy:
+          return randomPieces.Next(2) == 0 ? berolinaPawn : checkersPawn;
+        case FairyPawns.AnyClassical:
+          return randomPieces.Next(2) == 0 ? standardPawn : checkersPawn;
+        case FairyPawns.Vanilla:
+          return standardPawn;
+        case FairyPawns.Berolina:
+          return berolinaPawn;
+        case FairyPawns.Checkers:
+          return checkersPawn;
+        default:
+          return standardPawn;
+      }
+    }
+
+    private void FillPawnRank(List<PieceType> targetRank, int numFiles, int startIndex, int totalChessmen, 
+        Random randomPieces, Random randomLocations)
+    {
+      for (int i = startIndex; i < Math.Min(numFiles * (startIndex/numFiles + 1), totalChessmen); i++)
+      {
+        var piece = GetPawnTypeForRank(ApmwCore.getInstance().pawns.ToList(), 
+            randomPieces, ApmwConfig.getInstance().Pawns);
+        chooseIndexAndPlace(targetRank, randomLocations, piece);
+      }
+    }
+
     public List<PieceType> GeneratePawns(int numFiles, List<PieceType> minors)
     {
       var core = ApmwCore.getInstance();
-      List<PieceType> pawns = ApmwCore.getInstance().pawns.ToList();
+      List<PieceType> pawns = core.pawns.ToList();
       List<PieceType> thirdRank = Enumerable.Repeat<PieceType>(null, numFiles).ToList();
       List<PieceType> fourthRank = Enumerable.Repeat<PieceType>(null, numFiles).ToList();
       List<PieceType> finalRank = Enumerable.Repeat<PieceType>(null, numFiles).ToList();
@@ -119,85 +157,15 @@ namespace Archipelago.APChessV
       Random randomLocations = new Random(ApmwConfig.getInstance().pawnLocSeed);
 
       int startingPieces = pawnRank.Count((item) => item != null);
-      int totalChessmen = ApmwCore.getInstance().foundPawns + startingPieces;
+      int totalChessmen = core.foundPawns + startingPieces;
 
-      var config = ApmwConfig.getInstance();
-      var standardPawn = pawns.Find(item => item.Notation[0].Equals("P"));
-      var berolinaPawn = pawns.Find(item => item.Notation[0].Equals("Z"));
-      var checkersPawn = pawns.Find(item => item.Name.Equals("Checkers"));
+      // Fill each rank
+      FillPawnRank(pawnRank, numFiles, startingPieces, totalChessmen, randomPieces, randomLocations);
+      FillPawnRank(thirdRank, numFiles, numFiles, totalChessmen, randomPieces, randomLocations);
+      FillPawnRank(fourthRank, numFiles, numFiles * 2, totalChessmen, randomPieces, randomLocations);
+      FillPawnRank(finalRank, numFiles, numFiles * 3, totalChessmen, randomPieces, randomLocations);
 
-      for (int i = startingPieces; i < Math.Min(numFiles, totalChessmen); i++)
-      {
-        PieceType piece;
-
-        switch (config.Pawns)
-        {
-          case FairyPawns.Mixed:
-            piece = pawns[randomPieces.Next(pawns.Count)];
-            break;
-          case FairyPawns.AnyPawn:
-            piece = randomPieces.Next(2) == 0 ? standardPawn : berolinaPawn;
-            break;
-          case FairyPawns.AnyFairy:
-            piece = randomPieces.Next(2) == 0 ? berolinaPawn : checkersPawn;
-            break;
-          case FairyPawns.AnyClassical:
-            piece = randomPieces.Next(2) == 0 ? standardPawn : checkersPawn;
-            break;
-          case FairyPawns.Vanilla:
-            piece = standardPawn;
-            break;
-          case FairyPawns.Berolina:
-            piece = berolinaPawn;
-            break;
-          case FairyPawns.Checkers:
-            piece = checkersPawn;
-            break;
-          default:
-            piece = standardPawn;
-            break;
-        }
-
-        chooseIndexAndPlace(pawnRank, randomLocations, piece);
-      }
-      for (int i = numFiles; i < Math.Min(numFiles * 2, totalChessmen); i++)
-      {
-        PieceType piece;
-        if (ApmwConfig.getInstance().Pawns == FairyPawns.Vanilla)
-          piece = pawns.Find(item => item.Notation[0].Equals("P"));
-        else if (ApmwConfig.getInstance().Pawns == FairyPawns.Berolina)
-          piece = pawns.Find(item => !item.Notation[0].Equals("P"));
-        else
-          piece = pawns[randomPieces.Next(pawns.Count)];
-
-        chooseIndexAndPlace(thirdRank, randomLocations, piece);
-      }
-      for (int i = numFiles * 2; i < Math.Min(numFiles * 3, totalChessmen); i++)
-      {
-        PieceType piece;
-        if (ApmwConfig.getInstance().Pawns == FairyPawns.Vanilla)
-          piece = pawns.Find(item => item.Notation[0].Equals("P"));
-        else if (ApmwConfig.getInstance().Pawns == FairyPawns.Berolina)
-          piece = pawns.Find(item => !item.Notation[0].Equals("P"));
-        else
-          piece = pawns[randomPieces.Next(pawns.Count)];
-
-        chooseIndexAndPlace(fourthRank, randomLocations, piece);
-      }
-      for (int i = numFiles * 3; i < Math.Min(numFiles * 4, totalChessmen); i++)
-      {
-        PieceType piece;
-        if (ApmwConfig.getInstance().Pawns == FairyPawns.Vanilla)
-          piece = pawns.Find(item => item.Notation[0].Equals("P"));
-        else if (ApmwConfig.getInstance().Pawns == FairyPawns.Berolina)
-          piece = pawns.Find(item => !item.Notation[0].Equals("P"));
-        else
-          piece = pawns[randomPieces.Next(pawns.Count)];
-
-        chooseIndexAndPlace(finalRank, randomLocations, piece);
-      }
-
-      int remainingForwardness = ApmwCore.getInstance().foundPawnForwardness;
+      int remainingForwardness = core.foundPawnForwardness;
       foreach ((List<PieceType>, List<PieceType>) ranks in new List<(List<PieceType>, List<PieceType>)> {
         (pawnRank, thirdRank), (thirdRank, fourthRank), (fourthRank, finalRank),
         (pawnRank, thirdRank), (thirdRank, fourthRank),

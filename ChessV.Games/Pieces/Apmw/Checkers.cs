@@ -6,7 +6,7 @@ namespace ChessV.Games.Pieces.Apmw
   public class Checkers : PieceType
 
   {
-    public Checkers(string name, string notation, int midgameValue, int endgameValue, string preferredImageName = null) :
+    public Checkers(string name, string notation, int midgameValue, int endgameValue, string preferredImageName = "Wizard") :
       base("Checkers", name, notation, midgameValue, endgameValue, preferredImageName)
     {
       IsPawn = true;

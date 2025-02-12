@@ -532,7 +532,7 @@ namespace ChessV.Games
       // Berolina pawn
       BerolinaPawn = new BerolinaPawn("Berolina Pawn", "Z", 100, 125, preferredImageName: "Ferz");
       // Checkers pawn - register with both case variants
-      Checkers = new Checkers("Checkers", "Ç", 100, 125, preferredImageName: "Wizard");
+      Checkers = new Checkers("Checkers", "Ç", 100, 125, preferredImageName: "CircleLittle");
       // Cwda
       //AddPieceType(Queen = new Queen("Queen", "Q", 950, 1000));
       //AddPieceType(Rook = new Rook("Rook", "R", 500, 550));
