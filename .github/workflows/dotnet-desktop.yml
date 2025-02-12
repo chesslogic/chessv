@@ -114,12 +114,13 @@ jobs:
         mv Graphics ${{ env.Wap_Project_Directory }}\bin\${{ matrix.configuration }}\net7.0-windows7.0\
     # TODO(chesslogic): Get "net7.0-windows7.0" from some environmental variable
 
-    # Upload the MSIX package: https://github.com/marketplace/actions/upload-a-build-artifact
+    # Upload the MSIX package: https://github.com/marketplace/actions/upload-artifact
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: APMW ChessV ${{ matrix.configuration }} ${{github.run_number}}
+        name: APMW-ChessV-${{ matrix.configuration }}-${{github.run_number}}
         path: ${{ env.Wap_Project_Directory }}\bin\${{ matrix.configuration }}
+        if-no-files-found: error # Fail if no files are found to upload
 
    # - name: Release with Notes
    #   uses: softprops/action-gh-release@v1
