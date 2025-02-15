@@ -124,7 +124,7 @@ namespace Archipelago.APChessV
         case FairyPawns.AnyClassical:
           return randomSource.Next(2) == 0 ? standardPawn : checkersPawn;
         case FairyPawns.Vanilla:
-          return standardPawn;
+          return checkersPawn;
         case FairyPawns.Berolina:
           return berolinaPawn;
         case FairyPawns.Checkers:
