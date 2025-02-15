@@ -6,6 +6,7 @@ using ChessV;
 using ChessV.Base;
 using ChessV.Games;
 using ChessV.Games.Pieces.Berolina;
+using ChessV.Games.Pieces.Apmw;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -55,7 +56,9 @@ namespace Archipelago.APChessV
       var Knight = new Knight("Knight", "N", 325, 325);
 
       // Berolina
-      var BerolinaPawn = new BerolinaPawn("Berolina Pawn", "Ƥ/ƥ", 100, 125, preferredImageName: "Ferz");
+      var BerolinaPawn = new BerolinaPawn("Berolina Pawn", "Ƥ", 100, 125, preferredImageName: "Ferz");
+      // Checkers
+      var Checkers = new Checkers("Checkers", "Ç", 100, 125, preferredImageName: "CircleLittle");
       // Cwda
       var Archbishop = new Archbishop("Archbishop", "A", 875, 875);
       var WarElephant = new WarElephant("War Elephant", "E", 475, 475);

@@ -150,12 +150,13 @@ namespace ChessV.Games
       //AddRule(new ApmwMoveCompletionRule());
       // TODO(chesslogic): conditionally remove en passant for one player only. (the Apmw provider probably knows whether the player can en passant at this point)
 
-      // *** BEROLINA PAWN PROMOTION *** //
+      // *** FAIRY PAWN PROMOTION *** //
       List<PieceType> availablePromotionTypes = ParseTypeListFromString(PromotionTypes);
       AddBasicPromotionRule(BerolinaPawn, availablePromotionTypes, (loc) => loc.Rank == Board.NumRanks - 1);
+      AddBasicPromotionRule(Checkers, availablePromotionTypes, (loc) => loc.Rank == Board.NumRanks - 1);
 
-      // *** BEROLINA PAWN DOUBLE MOVE *** //
-      if (PawnDoubleMove && BerolinaPawn.Enabled)
+      // *** FAIRY PAWN DOUBLE MOVE *** //
+      if (PawnDoubleMove)
       {
         MoveCapability doubleMoveNE = new MoveCapability();
         doubleMoveNE.MinSteps = 2;
@@ -164,7 +165,6 @@ namespace ChessV.Games
         doubleMoveNE.CanCapture = false;
         doubleMoveNE.Direction = new Direction(1, 1);
         doubleMoveNE.Condition = location => location.Rank <= 1;
-        BerolinaPawn.AddMoveCapability(doubleMoveNE);
 
         MoveCapability doubleMoveNW = new MoveCapability();
         doubleMoveNW.MinSteps = 2;
@@ -173,7 +173,15 @@ namespace ChessV.Games
         doubleMoveNW.CanCapture = false;
         doubleMoveNW.Direction = new Direction(1, -1);
         doubleMoveNW.Condition = location => location.Rank <= 1;
-        BerolinaPawn.AddMoveCapability(doubleMoveNW);
+        if (BerolinaPawn.Enabled)
+        {
+          BerolinaPawn.AddMoveCapability(doubleMoveNE);
+          BerolinaPawn.AddMoveCapability(doubleMoveNW);
+        }
+        if (Checkers.Enabled) {
+          Checkers.AddMoveCapability(doubleMoveNE);
+          Checkers.AddMoveCapability(doubleMoveNW);
+        }
       }
 
       // *** BEROLINA PAWN EN PASSANT *** //
@@ -565,7 +573,7 @@ namespace ChessV.Games
       
       Pawns.Add(Pawn);
       Pawns.Add(BerolinaPawn);
-      Pawns.Add(Checkers);  // Add Checkers to pawns collection
+      Pawns.Add(Checkers);
 
       Minors.Add(Bishop);
       Minors.Add(Knight);

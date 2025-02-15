@@ -106,22 +106,23 @@ namespace Archipelago.APChessV
     /// GENERATE PIECES ///
     ///////////////////////
 
-    private PieceType GetPawnTypeForRank(List<PieceType> pawns, Random randomPieces, FairyPawns pawnConfig)
+    private PieceType GetNextPawn(Random randomSource)
     {
-      var standardPawn = pawns.Find(item => item.Notation[0].Equals("P"));
-      var berolinaPawn = pawns.Find(item => item.Notation[0].Equals("Z"));
-      var checkersPawn = pawns.Find(item => item.Name.Equals("Checkers"));
+      var config = ApmwConfig.getInstance();
+      var standardPawn = ApmwCore.getInstance().pawns.First(item => item.Notation[0].Equals("P"));
+      var berolinaPawn = ApmwCore.getInstance().pawns.First(item => item.Notation[0].Equals("Z"));
+      var checkersPawn = ApmwCore.getInstance().pawns.First(item => item.Name.Equals("Checkers"));
 
-      switch (pawnConfig)
+      switch (config.Pawns)
       {
         case FairyPawns.Mixed:
-          return pawns[randomPieces.Next(pawns.Count)];
+          return ApmwCore.getInstance().pawns.ElementAt(randomSource.Next(ApmwCore.getInstance().pawns.Count));
         case FairyPawns.AnyPawn:
-          return randomPieces.Next(2) == 0 ? standardPawn : berolinaPawn;
+          return randomSource.Next(2) == 0 ? standardPawn : berolinaPawn;
         case FairyPawns.AnyFairy:
-          return randomPieces.Next(2) == 0 ? berolinaPawn : checkersPawn;
+          return randomSource.Next(2) == 0 ? berolinaPawn : checkersPawn;
         case FairyPawns.AnyClassical:
-          return randomPieces.Next(2) == 0 ? standardPawn : checkersPawn;
+          return randomSource.Next(2) == 0 ? standardPawn : checkersPawn;
         case FairyPawns.Vanilla:
           return standardPawn;
         case FairyPawns.Berolina:
@@ -138,8 +139,7 @@ namespace Archipelago.APChessV
     {
       for (int i = startIndex; i < Math.Min(numFiles * (startIndex/numFiles + 1), totalChessmen); i++)
       {
-        var piece = GetPawnTypeForRank(ApmwCore.getInstance().pawns.ToList(), 
-            randomPieces, ApmwConfig.getInstance().Pawns);
+        var piece = GetNextPawn(randomPieces);
         chooseIndexAndPlace(targetRank, randomLocations, piece);
       }
     }
@@ -426,28 +426,18 @@ namespace Archipelago.APChessV
       List<PieceType> pocketPieces = new List<PieceType>();
       for (int i = 0; i < 3; i++)
       {
+        Random randomPieces = new Random(ApmwConfig.getInstance().pocketChoiceSeed[i]);
         if (pockets[i] == 0)
-        {
           pocketPieces.Add(null);
-          continue;
-        }
-        HashSet<PieceType> setOfPieceType = ApmwCore.getInstance().pocketSets[pockets[i] - 1];
-        List<PieceType> listOfPieceType;
-        if (pockets[i] == 1)
-        {
-          listOfPieceType = new List<PieceType>();
-          List<PieceType> pawns = ApmwCore.getInstance().pawns.ToList();
-          if (ApmwConfig.getInstance().Pawns != FairyPawns.Berolina)
-            listOfPieceType.Add(pawns.Find(item => item.Notation[0].Equals("P")));
-          if (ApmwConfig.getInstance().Pawns != FairyPawns.Vanilla)
-            listOfPieceType.Add(pawns.Find(item => !item.Notation[0].Equals("P")));
-        }
+        else if (pockets[i] == 1)
+          pocketPieces.Add(GetNextPawn(randomPieces));
         else
-          listOfPieceType = filterPiecesByArmy(setOfPieceType);
-
-        Random random = new Random(ApmwConfig.getInstance().pocketChoiceSeed[i]);
-        int index = random.Next(listOfPieceType.Count);
-        pocketPieces.Add(listOfPieceType[index]);
+        {
+          HashSet<PieceType> setOfPieceType = ApmwCore.getInstance().pocketSets[pockets[i] - 1];
+          List<PieceType> listOfPieceType = filterPiecesByArmy(setOfPieceType);
+          int index = randomPieces.Next(listOfPieceType.Count);
+          pocketPieces.Add(listOfPieceType[index]);
+        }
       }
       return pocketPieces;
     }
