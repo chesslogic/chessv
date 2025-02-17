@@ -55,15 +55,17 @@ namespace ChessV.Games.Pieces.Apmw
     {
       int[] directions = new int[] { 
         PredefinedDirections.NE, 
-        PredefinedDirections.NW
+        PredefinedDirections.NW,
+        PredefinedDirections.SE,
+        PredefinedDirections.SW
       };
 
       foreach (var dir in directions)
       {
-        int jumpOver = Game.Board.NextSquare(Game.PlayerDirection(player, dir), currentSquare);
+        int jumpOver = Game.Board.NextSquare(player, dir, currentSquare);
         if (jumpOver < 0) continue;
 
-        int landingSquare = Game.Board.NextSquare(Game.PlayerDirection(player, dir), jumpOver);
+        int landingSquare = Game.Board.NextSquare(player, dir, jumpOver);
         if (landingSquare < 0) continue;
 
         Piece capturedPiece = Game.Board[jumpOver];
@@ -72,22 +74,26 @@ namespace ChessV.Games.Pieces.Apmw
           var nextJumps = new List<int>(jumpedSquares) { jumpOver };
 
           // Create move for this capture
-          moveList.BeginMoveAdd(MoveType.ExtraCapture, startSquare, landingSquare);
-          var thisPiece = moveList.AddPickup(startSquare);
+          moveList.BeginMoveAdd(MoveType.BaroqueCapture, startSquare, landingSquare);
+          //var thisPiece = moveList.AddPickup(startSquare);
           
           // Add all captured pieces
+          int lastSquare = startSquare;
           foreach (int square in nextJumps)
           {
-            moveList.AddPickup(square);
+            moveList.AddCapture(lastSquare, square);
+            lastSquare = square;
+            // moveList.AddPickup(square);
           }
           
-          moveList.AddDrop(thisPiece, landingSquare);
+          moveList.AddMove(lastSquare, landingSquare);
           
           // Evaluation increases with number of captures
           int materialGain = nextJumps.Sum(sq => Game.Board[sq].PieceType.MidgameValue);
           moveList.EndMoveAdd(3000 + materialGain + (nextJumps.Count * 500));
 
           // Recursively look for additional captures from the landing square
+          if (nextJumps.Count < 3)
             GenerateJumpCaptures(startSquare, landingSquare, player, moveList, nextJumps);
         }
       }
