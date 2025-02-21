@@ -1474,6 +1474,8 @@ namespace ChessV
     //	do not call this.
     public void MakeMove(MoveInfo move, bool highlightMove)
     {
+      if (move != lastMove)
+        ApmwCore.getInstance().NewMoveSetup.ForEach((handler) => handler(move));
       //	make the move
       if (!moveLists[1].MakeMove(move))
         throw new Exception("Game.PerformMove: invalid move specified");
@@ -1522,13 +1524,13 @@ namespace ChessV
         }
       }
       //	raise MoveBeingPlayed event first, then MovePlayed event
+      MoveBeingPlayed?.Invoke(move);
+      MovePlayed(move);
       if (move != lastMove)
       {
         ApmwCore.getInstance().NewMovePlayed.ForEach((handler) => handler(move));
         lastMove = move;
       }
-      MoveBeingPlayed?.Invoke(move);
-      MovePlayed(move);
 
       if (Result.IsNone)
       {

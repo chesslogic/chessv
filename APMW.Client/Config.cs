@@ -52,7 +52,7 @@ namespace Archipelago.APChessV
     public Dictionary<string, object> SlotData { get; private set; }
 
     public int pocketSeed = -1;
-    public List<int> pocketChoiceSeed { get; private set; }
+    public List<int> pocketChoiceSeed { get; private set; } = new List<int>();
     public int pawnSeed = -1;
     public int pawnLocSeed = -1;
     public int minorSeed = -1;
@@ -218,10 +218,6 @@ namespace Archipelago.APChessV
     {
       if (pocketSeed == -1) { throw new InvalidOperationException("Please set Starter.pocket_seed"); }
 
-      // If no pockets found yet, return all zeros
-      if (foundPockets <= 0)
-        return new List<int>() { 0, 0, 0 };
-
       // Limit number of pocket items based on player preferences, even if more got force added
       if (pocketLimit > 0) {
         if (pocketLimit * 3 < foundPockets) {
@@ -234,6 +230,10 @@ namespace Archipelago.APChessV
       // preserve choices separate from values
       Random pocketRandom = new Random(pocketSeed);
       pocketChoiceSeed = new List<int>() { pocketRandom.Next(), pocketRandom.Next(), pocketRandom.Next() };
+
+      // If no pockets found yet, return all zeros
+      if (foundPockets <= 0)
+        return new List<int>() { 0, 0, 0 };
 
       // probably not uniform... but it's within range so it works for now. will break FEN later
       Random random = new Random(pocketSeed);
