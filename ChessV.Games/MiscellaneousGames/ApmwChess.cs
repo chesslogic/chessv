@@ -51,7 +51,7 @@ namespace ChessV.Games
     public PieceType BerolinaPawn;
 
     //  Checkers
-    public PieceType Checkers;
+    public Checkers Checkers;
 
     //	Colorbound Clobberers
     public PieceType Archbishop;
@@ -154,6 +154,7 @@ namespace ChessV.Games
       List<PieceType> availablePromotionTypes = ParseTypeListFromString(PromotionTypes);
       AddBasicPromotionRule(BerolinaPawn, availablePromotionTypes, (loc) => loc.Rank == Board.NumRanks - 1);
       AddBasicPromotionRule(Checkers, availablePromotionTypes, (loc) => loc.Rank == Board.NumRanks - 1);
+      Checkers.SetPromotionTypes(availablePromotionTypes);
 
       // *** FAIRY PAWN DOUBLE MOVE *** //
       if (PawnDoubleMove)

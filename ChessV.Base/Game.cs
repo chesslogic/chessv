@@ -1522,13 +1522,13 @@ namespace ChessV
         }
       }
       //	raise MoveBeingPlayed event first, then MovePlayed event
-      MoveBeingPlayed?.Invoke(move);
-      MovePlayed(move);
       if (move != lastMove)
       {
         ApmwCore.getInstance().NewMovePlayed.ForEach((handler) => handler(move));
         lastMove = move;
       }
+      MoveBeingPlayed?.Invoke(move);
+      MovePlayed(move);
 
       if (Result.IsNone)
       {

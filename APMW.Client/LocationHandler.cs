@@ -31,6 +31,8 @@ namespace Archipelago.APChessV
     {
       seHandler = StartMatch;
       ApmwCore.getInstance().StartedEventHandlers.Add(seHandler);
+      msHandler = SetupMove;
+      ApmwCore.getInstance().NewMoveSetup.Add(msHandler);
       mpHandler = HandleMove;
       ApmwCore.getInstance().NewMovePlayed.Add(mpHandler);
       feHandler = HandleMatch;
@@ -56,6 +58,7 @@ namespace Archipelago.APChessV
     public bool Initialized { get; private set; }
     private StartedEventHandler seHandler;
     private Action<Match> feHandler;
+    private Action<MoveInfo> msHandler;
     private Action<MoveInfo> mpHandler;
     private Action victory;
     private Action<string> deathlink;
@@ -64,8 +67,8 @@ namespace Archipelago.APChessV
     private int humanPlayer;
     private int capturedPieces;
     private int capturedPawns;
-
     private Dictionary<int, int> currentSquaresToOriginalSquares = new Dictionary<int, int>();
+    private Dictionary<int, Piece> lastPiecesSeen = new Dictionary<int, Piece>();
 
     public void StartMatch(Match match)
     {
@@ -120,6 +123,29 @@ namespace Archipelago.APChessV
     //  info.PieceCaptured = match.Game.Board[move.ToSquare];
     //  HandleMove(info);
     //}
+
+    /// When a Checkers piece multi-captures, we need to figure out all of the captures it made.
+    /// The only way I can figure out how to do that is to manually compare every single square.
+    /// Consider that a multi-capture ending on the same file is ambiguous: did the Checkers go right or left?
+    public void SetupMove(MoveInfo info) {
+      if (!Initialized && match.Game.GameAttribute.GameName == NAME_OF_ARCHIPELAGO_GAME_ATTRIBUTE)
+        throw new InvalidOperationException("LocationHandler has not been initialized");
+      if (!TryValidatePlayingArchipelago())
+        return;
+      // Store the current board state before the move
+      Dictionary<int, Piece> preMoveState = new Dictionary<int, Piece>();
+      for (int square = 0; square < match.Game.Board.NumSquares; square++)
+      {
+          Piece boardPiece = match.Game.Board[square];
+          if (boardPiece != null)
+          {
+              preMoveState[square] = boardPiece;
+          }
+      }
+      // Store the state for comparison in HandleMove
+      lastPiecesSeen = preMoveState;
+
+    }
 
     public void HandleMove(MoveInfo info)
     {
@@ -246,7 +272,71 @@ namespace Archipelago.APChessV
         */
 
         // handle specific piece
-        int originalSquare = info.PieceCaptured.Square;
+        int moves = match.Game.BoardMoveStack.MoveCount;
+        int originalSquare = info.ToSquare;
+        // En Passant
+        if (info.MoveType.HasFlag(MoveType.EnPassant))
+          originalSquare = info.ToSquare + 2 * (1 - info.Player * 2);
+        // Checkers
+        else if (info.MoveType == MoveType.ExtraCapture ||
+            info.MoveType == (MoveType.ExtraCapture | MoveType.PromotionProperty))
+        {
+          // TODO - If this is more than two files away, it captured two or three pieces.
+          // TODO - If this is on the same file, it captured two pieces.
+          //originalSquare = info.FromSquare + (info.ToSquare - info.FromSquare) / 2;
+          // Compare board states to find captured pieces
+          var capturedSquares = new List<int>();
+          foreach (var kvp in lastPiecesSeen)
+          {
+            int square = kvp.Key;
+            Piece prePiece = kvp.Value;
+            
+            // If a piece was on this square before but isn't now, and it's not the moving piece's square
+            if (match.Game.Board[square] == null && square != info.FromSquare)
+            {
+              capturedSquares.Add(square);
+            }
+          }
+
+          // Sort captured squares by distance from start to determine capture order
+          capturedSquares.Sort((a, b) => {
+            int distA = Math.Abs(match.Game.Board.GetFile(a) - match.Game.Board.GetFile(info.FromSquare));
+            int distB = Math.Abs(match.Game.Board.GetFile(b) - match.Game.Board.GetFile(info.FromSquare));
+            return distA.CompareTo(distB);
+          });
+
+          // Generate individual capture events for each captured piece
+          int currentSquare = info.FromSquare;
+          foreach (int capturedSquare in capturedSquares)
+          {
+            // Calculate landing square after this capture
+            int fileDiff = match.Game.Board.GetFile(capturedSquare) - match.Game.Board.GetFile(currentSquare);
+            int rankDiff = match.Game.Board.GetRank(capturedSquare) - match.Game.Board.GetRank(currentSquare);
+            int nextSquare = match.Game.Board.LocationToSquare(new Location(
+              match.Game.Board.GetRank(capturedSquare) + rankDiff,
+              match.Game.Board.GetFile(capturedSquare) + fileDiff));
+
+            // Create capture move info
+            MoveInfo captureInfo = new MoveInfo();
+            captureInfo.Player = info.Player;
+            captureInfo.FromSquare = currentSquare;
+            captureInfo.ToSquare = nextSquare;
+            captureInfo.MoveType = MoveType.StandardCapture;
+            captureInfo.PieceMoved = info.PieceMoved;
+            captureInfo.PieceCaptured = lastPiecesSeen[capturedSquare];
+
+            // Update for next iteration
+            currentSquare = nextSquare;
+
+            // Process this capture
+            HandleMove(captureInfo);
+          }
+
+          // Clear the pre-move state
+          lastPiecesSeen.Clear();
+          return;
+        }
+        // Lookup starting square - this is the original square a piece started the game at
         if (currentSquaresToOriginalSquares.ContainsKey(originalSquare))
           originalSquare = currentSquaresToOriginalSquares[originalSquare];
         int originalFile = match.Game.Board.GetFile(originalSquare);

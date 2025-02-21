@@ -7,6 +7,8 @@ namespace ChessV.Games.Pieces.Apmw
   public class Checkers : PieceType
 
   {
+    public List<PieceType> PromotionTypes { get; private set; }
+
     public Checkers(string name, string notation, int midgameValue, int endgameValue, string preferredImageName = "CircleLittle") :
       base("Checkers", name, notation, midgameValue, endgameValue, preferredImageName)
     {
@@ -35,15 +37,14 @@ namespace ChessV.Games.Pieces.Apmw
       CustomMoveGenerator = GenerateMultiCaptureMoves;
     }
 
+    public void SetPromotionTypes(List<PieceType> availablePromotionTypes)
+    {
+      PromotionTypes = availablePromotionTypes;
+    }
+
     private bool GenerateMultiCaptureMoves(PieceType pieceType, Piece piece, MoveList moveList, bool capturesOnly)
     {
       if (piece.Square < 0) return false;
-
-      if (!capturesOnly)
-      {
-        // Generate non-capture moves using the standard move generator
-        return true;
-      }
 
       // Start positions for potential captures
       GenerateJumpCaptures(piece.Square, piece.Square, piece.Player, moveList, new List<int>());
@@ -55,9 +56,7 @@ namespace ChessV.Games.Pieces.Apmw
     {
       int[] directions = new int[] { 
         PredefinedDirections.NE, 
-        PredefinedDirections.NW,
-        PredefinedDirections.SE,
-        PredefinedDirections.SW
+        PredefinedDirections.NW
       };
 
       foreach (var dir in directions)
@@ -69,34 +68,55 @@ namespace ChessV.Games.Pieces.Apmw
         if (landingSquare < 0) continue;
 
         Piece capturedPiece = Game.Board[jumpOver];
-        if (capturedPiece != null && capturedPiece.Player != player && Game.Board[landingSquare] == null)
+        Piece landingPiece = Game.Board[landingSquare];
+        if (capturedPiece != null && capturedPiece.Player != player && landingPiece == null)
         {
           var nextJumps = new List<int>(jumpedSquares) { jumpOver };
 
-          // Create move for this capture
-          moveList.BeginMoveAdd(MoveType.BaroqueCapture, startSquare, landingSquare);
-          //var thisPiece = moveList.AddPickup(startSquare);
-          
-          // Add all captured pieces
-          int lastSquare = startSquare;
-          foreach (int square in nextJumps)
+          int rank = Game.Board.GetRank(landingSquare);
+          MoveType moveType;
+          if (rank == 0 || rank == 7)
           {
-            moveList.AddCapture(lastSquare, square);
-            lastSquare = square;
-            // moveList.AddPickup(square);
+            moveType = MoveType.ExtraCapture | MoveType.PromotionProperty;
+            foreach (PieceType promoteTo in PromotionTypes)
+            {
+              ListForSkipCapture(startSquare, moveList, landingSquare, nextJumps, promoteTo, moveType);
+            }
           }
-          
-          moveList.AddMove(lastSquare, landingSquare);
-          
-          // Evaluation increases with number of captures
-          int materialGain = nextJumps.Sum(sq => Game.Board[sq].PieceType.MidgameValue);
-          moveList.EndMoveAdd(3000 + materialGain + (nextJumps.Count * 500));
+          else
+          {
+            moveType = MoveType.ExtraCapture;
+            ListForSkipCapture(startSquare, moveList, landingSquare, nextJumps, null, moveType);
 
-          // Recursively look for additional captures from the landing square
-          if (nextJumps.Count < 3)
-            GenerateJumpCaptures(startSquare, landingSquare, player, moveList, nextJumps);
+            // Recursively look for additional captures from the landing square
+            int enemyPawnRank = 6 - (player * 5);
+            if (nextJumps.Count < 3 && rank != enemyPawnRank)
+              GenerateJumpCaptures(startSquare, landingSquare, player, moveList, nextJumps);
+          }
         }
       }
+    }
+
+    private void ListForSkipCapture(int startSquare, MoveList moveList, int landingSquare, List<int> nextJumps, PieceType promoteTo, MoveType moveType)
+    {
+      // Create move for this capture chain
+      moveList.BeginMoveAdd(moveType, startSquare, landingSquare);
+
+      // Pick up the moving piece
+      Piece pickedPiece = moveList.AddPickup(startSquare);
+
+      // Pick up all captured pieces in the chain
+      foreach (int square in nextJumps)
+        moveList.AddPickup(square);
+
+      if (moveType.HasFlag(MoveType.PromotionProperty))
+        moveList.AddDrop(pickedPiece, landingSquare, promoteTo);
+      else
+        moveList.AddDrop(pickedPiece, landingSquare);
+
+      // Evaluation increases with number of captures
+      int materialGain = nextJumps.Sum(sq => Game.Board[sq].PieceType.MidgameValue);
+      moveList.EndMoveAdd(3000 + materialGain + (nextJumps.Count * 500));
     }
   }
 }
