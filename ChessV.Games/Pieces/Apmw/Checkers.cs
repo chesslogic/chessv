@@ -100,7 +100,7 @@ namespace ChessV.Games.Pieces.Apmw
     private void ListForSkipCapture(int startSquare, MoveList moveList, int landingSquare, List<int> nextJumps, PieceType promoteTo, MoveType moveType)
     {
       // Create move for this capture chain
-      moveList.BeginMoveAdd(moveType, startSquare, landingSquare);
+      moveList.BeginMoveAdd(moveType, startSquare, landingSquare, nextJumps.Count > 0 ? nextJumps[0] : 0);
 
       // Pick up the moving piece
       Piece pickedPiece = moveList.AddPickup(startSquare);
