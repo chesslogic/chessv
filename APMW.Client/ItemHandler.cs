@@ -154,6 +154,7 @@ namespace Archipelago.APChessV
 
     private PieceType GetNextPawn(Random randomSource, List<PieceType> options, PawnUpgrade upgrade = PawnUpgrade.Core)
     {
+      List<PieceType> limited;
       switch (upgrade)
       {
         case PawnUpgrade.Sergeant:
@@ -161,12 +162,11 @@ namespace Archipelago.APChessV
             randomSource.Next(
               ApmwCore.getInstance().sergeants.Count));
         case PawnUpgrade.Best:
-          var limited = options.Where(item => item.MidgameValue >= WEAK_VALUE).ToList();
+          limited = options.Where(item => item.MidgameValue >= WEAK_VALUE).ToList();
           return limited.ElementAt(randomSource.Next(limited.Count));
         case PawnUpgrade.Min:
-          return options
-            .Where(item => item.MidgameValue <= options.Min(item => item.MidgameValue))
-            .ElementAt(randomSource.Next(options.Count));
+          limited = options.Where(item => item.MidgameValue <= options.Min(item => item.MidgameValue)).ToList();
+          return limited.ElementAt(randomSource.Next(limited.Count));
         case PawnUpgrade.Core:
         default:
           return options.ElementAt(randomSource.Next(options.Count));
