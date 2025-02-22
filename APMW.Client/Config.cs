@@ -28,7 +28,7 @@ namespace Archipelago.APChessV
   }
   public enum FairyPawns
   {
-    Vanilla = 0, Mixed = 1, Berolina = 2, Checkers = 3, AnyPawn = 4, AnyFairy = 5, AnyClassical = 6
+    Vanilla = 0, Mixed = 1, Berolina = 2, Checkers = 3, Reserved = 4, AnyPawn = 5, AnyFairy = 6, AnyClassical = 7
   }
 
   public class ApmwConfig

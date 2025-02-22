@@ -186,10 +186,9 @@ namespace Archipelago.APChessV
     private List<PieceType> PickPawns(Random randomPieces, int adjustedPawnValues, int remainingPawnSpaces)
     {
       List<PieceType> pawnOptions = setupPawnOptions();
-      int weakestPawnValue = pawnOptions.Min(item => item.MidgameValue);
       // Add more pawns until we have enough
       List<PieceType> workingPawns = new List<PieceType>();
-      while (workingPawns.Count < remainingPawnSpaces && adjustedPawnValues > weakestPawnValue)
+      while (workingPawns.Count < remainingPawnSpaces && adjustedPawnValues > 0)
       {
         var upgrade = adjustedPawnValues <= PAWN_VALUE ? PawnUpgrade.Min : PawnUpgrade.Core;
         workingPawns.Add(GetNextPawn(randomPieces, pawnOptions, upgrade));
