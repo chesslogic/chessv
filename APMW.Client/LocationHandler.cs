@@ -300,8 +300,8 @@ namespace Archipelago.APChessV
 
           // Sort captured squares by distance from start to determine capture order
           capturedSquares.Sort((a, b) => {
-            int distA = Math.Abs(match.Game.Board.GetFile(a) - match.Game.Board.GetFile(info.FromSquare));
-            int distB = Math.Abs(match.Game.Board.GetFile(b) - match.Game.Board.GetFile(info.FromSquare));
+            int distA = Math.Abs(match.Game.Board.GetRank(a) - match.Game.Board.GetRank(info.FromSquare));
+            int distB = Math.Abs(match.Game.Board.GetRank(b) - match.Game.Board.GetRank(info.FromSquare));
             return distA.CompareTo(distB);
           });
 

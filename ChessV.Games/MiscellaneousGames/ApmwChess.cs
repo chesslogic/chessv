@@ -147,7 +147,13 @@ namespace ChessV.Games
       var kingPromotions = ApmwCore.getInstance().foundKingPromotions;
       if (kingPromotions > 0)
       {
-        ReplaceRule(FindRule(typeof(Rules.CheckmateRule), true), new Rules.Extinction.CovenantRule("KW"));
+        var kingsString = "K";
+        if (pieceTypes.Where(pt => pt != null).Any(pt => pt.Notation[0] == "W")) {
+          kingsString += "W";
+        } else if (pieceTypes.Where(pt => pt != null).Any(pt => pt.Notation[0] == "Z")) {
+          kingsString += "Z";
+        }
+        ReplaceRule(FindRule(typeof(Rules.CheckmateRule), true), new Rules.Extinction.CovenantRule(kingsString));
         AddRule(new ApmwStalemateRule(new PieceType[] { King, Kings[kingPromotions] }));
       }
       else
