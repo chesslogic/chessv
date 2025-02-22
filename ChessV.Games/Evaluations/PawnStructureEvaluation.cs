@@ -1,5 +1,4 @@
-﻿
-/***************************************************************************
+﻿/***************************************************************************
 
                                  ChessV
 
@@ -64,21 +63,21 @@ namespace ChessV.Evaluations
     {
       base.PostInitialize();
 
-      //	Find the type numbers of the King and Pawn
-      pawnTypeNumber = -1;
+      //	Find the type numbers of the King and Pawns
+      pawnTypeNumbers = new List<int>();
       kingTypeNumber = -1;
       PieceType[] pieceTypes;
       int pieceTypeCount = game.GetPieceTypes(out pieceTypes);
       for (int nPieceType = 0; nPieceType < pieceTypeCount; nPieceType++)
       {
         if (pieceTypes[nPieceType].IsPawn)
-          pawnTypeNumber = pieceTypes[nPieceType].TypeNumber;
+          pawnTypeNumbers.Add(pieceTypes[nPieceType].TypeNumber);
         if (pieceTypes[nPieceType] is King &&
           pieceTypes[nPieceType].GetCustomAttributes(typeof(Games.RoyalAttribute)).Length > 0)
           kingTypeNumber = pieceTypes[nPieceType].TypeNumber;
       }
-      if (pawnTypeNumber == -1)
-        throw new Exception("Fatal error in PawnStructureEvaluation: Pawn type not found");
+      if (pawnTypeNumbers.Count == 0)
+        throw new Exception("Fatal error in PawnStructureEvaluation: No pawn types found");
       //			if( kingTypeNumber == -1 )
       //				throw new Exception( "Fatal error in PawnStructureEvaluation: Royal piece type not found" );
       Adjustments = new PawnStructureAdjustments();
@@ -216,9 +215,14 @@ namespace ChessV.Evaluations
         player1backPawn[file] = 0;
       }
 
-      //  loop through player 0's pawns
-      BitBoard p0pawns = board.GetPieceTypeBitboard(0, pawnTypeNumber);
-      while (p0pawns)
+      //  loop through player 0's pawns for each pawn type
+      BitBoard p0pawns = new BitBoard(board.NumSquares);
+      foreach (int pawnTypeNumber in pawnTypeNumbers)
+      {
+        BitBoard typePawns = board.GetPieceTypeBitboard(0, pawnTypeNumber);
+        p0pawns = p0pawns | typePawns;
+      }
+      while (p0pawns.BitCount > 0)
       {
         int square = p0pawns.ExtractLSB();
         int file = board.GetFile(square);
@@ -228,9 +232,14 @@ namespace ChessV.Evaluations
           player0backPawn[file + 1] = rank;
       }
 
-      //  loop through player 1's pawns
-      BitBoard p1pawns = board.GetPieceTypeBitboard(1, pawnTypeNumber);
-      while (p1pawns)
+      //  loop through player 1's pawns for each pawn type
+      BitBoard p1pawns = new BitBoard(board.NumSquares);
+      foreach (int pawnTypeNumber in pawnTypeNumbers)
+      {
+        BitBoard typePawns = board.GetPieceTypeBitboard(1, pawnTypeNumber);
+        p1pawns = p1pawns | typePawns;
+      }
+      while (p1pawns.BitCount > 0)
       {
         int square = p1pawns.ExtractLSB();
         int file = board.GetFile(square);
@@ -257,8 +266,13 @@ namespace ChessV.Evaluations
 
       // *** APPLY THIS INFO TO EACH PAWN TO DETERMINE STATUS *** //
 
-      //  lopp through player 0's pawns
-      p0pawns = board.GetPieceTypeBitboard(0, pawnTypeNumber);
+      //  loop through player 0's pawns
+      p0pawns = new BitBoard(board.NumSquares);
+      foreach (int pawnTypeNumber in pawnTypeNumbers)
+      {
+        BitBoard typePawns = board.GetPieceTypeBitboard(0, pawnTypeNumber);
+        p0pawns = p0pawns | typePawns;
+      }
       while (p0pawns)
       {
         int square = p0pawns.ExtractLSB();
@@ -322,7 +336,12 @@ namespace ChessV.Evaluations
       }
 
       //  loop through player 1's pawns
-      p1pawns = board.GetPieceTypeBitboard(1, pawnTypeNumber);
+      p1pawns = new BitBoard(board.NumSquares);
+      foreach (int pawnTypeNumber in pawnTypeNumbers)
+      {
+        BitBoard typePawns = board.GetPieceTypeBitboard(1, pawnTypeNumber);
+        p1pawns = p1pawns | typePawns;
+      }
       while (p1pawns)
       {
         int square = p1pawns.ExtractLSB();
@@ -408,7 +427,7 @@ namespace ChessV.Evaluations
     #region GetNotesForPieceType
     public override void GetNotesForPieceType(PieceType type, List<string> notes)
     {
-      if (type.TypeNumber == pawnTypeNumber)
+      if (pawnTypeNumbers.Contains(type.TypeNumber))
         notes.Add("pawn structure evaluation");
     }
     #endregion
@@ -463,7 +482,7 @@ namespace ChessV.Evaluations
 
     // *** PROTECTED DATA MEMBERS *** //
 
-    protected int pawnTypeNumber;
+    protected List<int> pawnTypeNumbers;
     protected int kingTypeNumber;
     protected int[] player0pawns;
     protected int[] player1pawns;

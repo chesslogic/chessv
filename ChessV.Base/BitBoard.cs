@@ -399,6 +399,11 @@ namespace ChessV
     {
       return new BitBoard(b1.capacity, b1.bits0 & b2.bits0, b1.bits1 & b2.bits1, b1.bits2 & b2.bits2);
     }
+
+    public static BitBoard operator |(BitBoard b1, BitBoard b2)
+    {
+      return new BitBoard(b1.capacity, b1.bits0 | b2.bits0, b1.bits1 | b2.bits1, b1.bits2 | b2.bits2);
+    }
     #endregion
 
 
