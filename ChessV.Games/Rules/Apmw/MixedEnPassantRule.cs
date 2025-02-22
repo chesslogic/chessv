@@ -60,6 +60,9 @@ namespace ChessV.Games.Rules.Apmw
       //	want to set the ep square
       if (Game.CurrentSide == Game.NextSide)
         return MoveEventResponse.NotHandled;
+      // Exclude ExtraCapture moves (like Checkers multi-jumps) from triggering en passant
+      if (move.MoveType == MoveType.ExtraCapture || (move.MoveType & MoveType.ExtraCapture) == MoveType.ExtraCapture)
+        return MoveEventResponse.NotHandled;
       if (move.PieceMoved != null && ((IMultipawnGame)Game).Pawns.Contains(move.PieceMoved.PieceType))
         if (move.FromSquare >= Board.NumSquares) // pocket pawns would check outside of board
           return MoveEventResponse.NotHandled;
@@ -126,6 +129,7 @@ namespace ChessV.Games.Rules.Apmw
               //	and can still be captured e.p.
               int captureSquare = Board.NextSquare(nd, epSquare);
               while (Board[captureSquare] == null)
+                //captureSquare =
                 captureSquare = Board.NextSquare(nd, captureSquare);
 
               //	this piece can capture en passant 
@@ -133,6 +137,7 @@ namespace ChessV.Games.Rules.Apmw
               list.AddPickup(nextSquare);
               list.AddPickup(captureSquare);
               list.AddDrop(piece, epSquare, null);
+
               list.EndMoveAdd(3000);
             }
           }
