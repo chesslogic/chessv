@@ -24,8 +24,8 @@ namespace ChessV.Games.Pieces.OdinsRune
 {
   public class OdinPawn : PieceType
   {
-    public OdinPawn(string name, string notation, int midgameValue, int endgameValue) :
-      base("Odin Pawn", name, notation, midgameValue, endgameValue)
+    public OdinPawn(string name, string notation, int midgameValue, int endgameValue, string preferredImageName = null) :
+      base("Odin Pawn", name, notation, midgameValue, endgameValue, preferredImageName)
     {
       AddMoves(this);
     }

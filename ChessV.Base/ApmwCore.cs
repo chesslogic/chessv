@@ -37,6 +37,7 @@ namespace ChessV.Base
     public PieceType king;
     public List<PieceType> kings;
     public HashSet<PieceType> pawns;
+    public HashSet<PieceType> sergeants;
     public HashSet<PieceType> minors;
     public HashSet<PieceType> majors;
     public HashSet<PieceType> queens;

@@ -21,6 +21,7 @@ using ChessV.Base;
 using ChessV.Evaluations;
 using ChessV.Games.Pieces.Apmw;
 using ChessV.Games.Pieces.Berolina;
+using ChessV.Games.Pieces.OdinsRune;
 using ChessV.Games.Rules.Apmw;
 using ChessV.Games.Rules.Cards;
 using System;
@@ -52,6 +53,10 @@ namespace ChessV.Games
 
     //  Checkers
     public Checkers Checkers;
+
+    //  Sergeant
+    public PieceType Sergeant;
+    public PieceType OdinPawn;
 
     //	Colorbound Clobberers
     public PieceType Archbishop;
@@ -87,6 +92,7 @@ namespace ChessV.Games
 
     public List<PieceType> Kings;
     public HashSet<PieceType> Pawns { get; set; }
+    public HashSet<PieceType> Sergeants;
     public HashSet<PieceType> Minors;
     public HashSet<PieceType> Majors;
     public HashSet<PieceType> Queens;
@@ -103,6 +109,7 @@ namespace ChessV.Games
     {
       Kings = new List<PieceType>();
       Pawns = new HashSet<PieceType>();
+      Sergeants = new HashSet<PieceType>();
       Minors = new HashSet<PieceType>();
       Majors = new HashSet<PieceType>();
       Queens = new HashSet<PieceType>();
@@ -113,6 +120,7 @@ namespace ChessV.Games
       ApmwCore apmwCore = ApmwCore.getInstance();
       apmwCore.kings = Kings;
       apmwCore.pawns = Pawns;
+      apmwCore.sergeants = Sergeants;
       apmwCore.minors = Minors;
       apmwCore.majors = Majors;
       apmwCore.queens = Queens;
@@ -154,6 +162,8 @@ namespace ChessV.Games
       List<PieceType> availablePromotionTypes = ParseTypeListFromString(PromotionTypes);
       AddBasicPromotionRule(BerolinaPawn, availablePromotionTypes, (loc) => loc.Rank == Board.NumRanks - 1);
       AddBasicPromotionRule(Checkers, availablePromotionTypes, (loc) => loc.Rank == Board.NumRanks - 1);
+      AddBasicPromotionRule(Sergeant, availablePromotionTypes, (loc) => loc.Rank == Board.NumRanks - 1);
+      AddBasicPromotionRule(OdinPawn, availablePromotionTypes, (loc) => loc.Rank == Board.NumRanks - 1);
       Checkers.SetPromotionTypes(availablePromotionTypes);
 
       // *** FAIRY PAWN DOUBLE MOVE *** //
@@ -182,6 +192,11 @@ namespace ChessV.Games
         if (Checkers.Enabled) {
           Checkers.AddMoveCapability(doubleMoveNE);
           Checkers.AddMoveCapability(doubleMoveNW);
+        }
+        if (Sergeant.Enabled)
+        {
+          Sergeant.AddMoveCapability(doubleMoveNE);
+          Sergeant.AddMoveCapability(doubleMoveNW);
         }
       }
 
@@ -383,6 +398,8 @@ namespace ChessV.Games
         AddPieceType(Kings[ApmwCore.getInstance().foundKingPromotions]);
       foreach (PieceType piece in Pawns)
         AddPieceType(piece);
+      foreach (PieceType piece in Sergeants)
+        AddPieceType(piece);
       foreach (PieceType piece in Minors)
         if (loadableTypes.Contains(piece.Notation[HumanPlayer]))
           AddPieceType(piece);
@@ -532,16 +549,19 @@ namespace ChessV.Games
     {
       King = new King("King", "K", 325, 325);
       MountedKing = new MountedKing("Mounted King", "W", 700, 700, preferredImageName: "Champion");
-      HyperKing = new HyperKing("Hyper King", "W", 1175, 1175, preferredImageName: "Frog");
+      HyperKing = new HyperKing("Hyper King", "Z", 1175, 1175, preferredImageName: "Frog");
       Pawn = new Pawn("Pawn", "P", 100, 125);
       Rook = new Rook("Rook", "R", 500, 550);
       Bishop = new Bishop("Bishop", "B", 325, 350);
       Knight = new Knight("Knight", "N", 325, 325);
       Queen = new Queen("Queen", "Q", 950, 1000);
       // Berolina pawn
-      BerolinaPawn = new BerolinaPawn("Berolina Pawn", "Z", 100, 125, preferredImageName: "Ferz");
+      BerolinaPawn = new BerolinaPawn("Berolina Pawn", "Ŕ", 85, 120, preferredImageName: "Ferz");
       // Checkers pawn - register with both case variants
-      Checkers = new Checkers("Checkers", "Ç", 100, 125, preferredImageName: "CircleLittle");
+      Checkers = new Checkers("Checkers", "Ç", 50, 105, preferredImageName: "CircleLittle");
+      // Sergeant
+      Sergeant = new Sergeant("Sergeant", "Ŝ", 200, 225, preferredImageName: "General");
+      OdinPawn = new OdinPawn("Odin Pawn", "Ó", 150, 200, preferredImageName: "Wizard");
       // Cwda
       //AddPieceType(Queen = new Queen("Queen", "Q", 950, 1000));
       //AddPieceType(Rook = new Rook("Rook", "R", 500, 550));
@@ -575,6 +595,9 @@ namespace ChessV.Games
       Pawns.Add(Pawn);
       Pawns.Add(BerolinaPawn);
       Pawns.Add(Checkers);
+      
+      Sergeants.Add(Sergeant);
+      Sergeants.Add(OdinPawn);
 
       Minors.Add(Bishop);
       Minors.Add(Knight);

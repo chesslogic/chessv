@@ -1,5 +1,4 @@
-﻿
-/***************************************************************************
+﻿/***************************************************************************
 
                                  ChessV
 
@@ -1349,7 +1348,8 @@ namespace ChessV
       else if ((str[cursor] >= 'A' && str[cursor] <= 'Z') ||
            (str[cursor] >= 'a' && str[cursor] <= 'z') ||
            (str[cursor] >= 'À' && str[cursor] <= 'Ö') ||
-           (str[cursor] >= 'à' && str[cursor] <= 'ö'))
+           (str[cursor] >= 'à' && str[cursor] <= 'ö') ||
+           (str[cursor] >= 'Ā' && str[cursor] <= 'ž'))
       {
         //	A character designates the beginning of what might be a one or two character 
         //	long notation of a piece
@@ -1366,6 +1366,7 @@ namespace ChessV
            (str[cursor] >= 'a' && str[cursor] <= 'z') ||
            (str[cursor] >= 'À' && str[cursor] <= 'Ö') ||
            (str[cursor] >= 'à' && str[cursor] <= 'ö') ||
+           (str[cursor] >= 'Ā' && str[cursor] <= 'ž') ||
            str[cursor] == '!' || str[cursor] == '\''))
         {
           found = TypesByNotation[0].TryGetValue(str.Substring(start, 2), out pieceType);

@@ -574,12 +574,15 @@ namespace ChessV
              (array[cursor] >= 'a' && array[cursor] <= 'z') ||
               array[cursor] >= 'À' && array[cursor] <= 'Ö' ||
               array[cursor] >= 'à' && array[cursor] <= 'ö' ||
+              array[cursor] >= 'Ā' && array[cursor] <= 'ž' ||
               array[cursor] == '_')
         {
           //	determine player based on case - uppercase (including accented) is player 0
           int player;
           char c = array[cursor] == '_' && array.Length > cursor + 1 ? array[cursor + 1] : array[cursor];
-          if ((c >= 'A' && c <= 'Z') || (c >= 'À' && c <= 'Ö'))
+          if ((c >= 'A' && c <= 'Z') || 
+              (c >= 'À' && c <= 'Ö') ||
+              (c >= 'Ā' && c <= 'Ž' && char.IsUpper(c)))
               player = 0;
           else
               player = 1;
