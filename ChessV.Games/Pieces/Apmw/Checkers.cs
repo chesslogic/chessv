@@ -64,7 +64,8 @@ namespace ChessV.Games.Pieces.Apmw
         int jumpOver = Game.Board.NextSquare(player, dir, currentSquare);
         if (jumpOver < 0) continue;
 
-        int landingSquare = Game.Board.NextSquare(player, dir, jumpOver);
+        // Get the landing square, allowing for wrapping
+        int landingSquare = GetWrappingLandingSquare(jumpOver, dir, player);
         if (landingSquare < 0) continue;
 
         Piece capturedPiece = Game.Board[jumpOver];
@@ -95,6 +96,36 @@ namespace ChessV.Games.Pieces.Apmw
           }
         }
       }
+    }
+
+    private int GetWrappingLandingSquare(int jumpOverSquare, int direction, int player)
+    {
+      // Get the standard next square first
+      int standardLanding = Game.Board.NextSquare(player, direction, jumpOverSquare);
+      
+      // If it's valid, return it
+      if (standardLanding >= 0) return standardLanding;
+
+      // If we're jumping over a piece on file 0 or NUM_FILES-1, we need to wrap
+      int jumpOverFile = Game.Board.GetFile(jumpOverSquare);
+      if (jumpOverFile == 0 || jumpOverFile == Game.Board.NumFiles - 1)
+      {
+        // Calculate the wrapped file
+        int jumpOverRank = Game.Board.GetRank(jumpOverSquare);
+        int directionOffset = direction == PredefinedDirections.NE ? 1 : -1;
+        int wrappedFile = (jumpOverFile + directionOffset + Game.Board.NumFiles) % Game.Board.NumFiles;
+        
+        // Calculate the wrapped rank based on player and direction
+        int wrappedRank = jumpOverRank + (player == 0 ? 1 : -1);
+        
+        // If the wrapped rank is valid, return the wrapped square
+        if (wrappedRank >= 0 && wrappedRank < Game.Board.NumRanks)
+        {
+          return Game.Board.LocationToSquare(new Location(wrappedRank, wrappedFile));
+        }
+      }
+      
+      return -1;
     }
 
     private void ListForSkipCapture(int startSquare, MoveList moveList, int landingSquare, List<int> nextJumps, PieceType promoteTo, MoveType moveType)
