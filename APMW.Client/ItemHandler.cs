@@ -163,6 +163,8 @@ namespace Archipelago.APChessV
               ApmwCore.getInstance().sergeants.Count));
         case PawnUpgrade.Best:
           limited = options.Where(item => item.MidgameValue >= WEAK_VALUE).ToList();
+          if (limited.Count == 0)
+            return GetNextPawn(randomSource, options, PawnUpgrade.Sergeant);
           return limited.ElementAt(randomSource.Next(limited.Count));
         case PawnUpgrade.Min:
           limited = options.Where(item => item.MidgameValue <= options.Min(item => item.MidgameValue)).ToList();
@@ -176,7 +178,11 @@ namespace Archipelago.APChessV
     private void FillPawnRank(List<PieceType> targetRank, int numFiles, int startIndex, Queue<PieceType> adjustedPawns, 
         Random randomLocations)
     {
-      for (int i = startIndex; i < numFiles * (startIndex/numFiles + 1) && adjustedPawns.Count > 0; i++)
+      for (int i = startIndex;
+        i < numFiles * (startIndex/numFiles + 1)
+          && adjustedPawns.Count > 0
+          && targetRank.Where(item => item == null).Count() > 0;
+        i++)
       {
         var piece = adjustedPawns.Dequeue();
         chooseIndexAndPlace(targetRank, randomLocations, piece);
@@ -440,7 +446,7 @@ namespace Archipelago.APChessV
           randomPieces.Next();
         parity = placeOnBackRank(order, left, right, randomLocations, parity, i, piece);
       }
-      for (int i = numFiles - 1; i < numNonMinorPieces; i++)
+      for (int i = numFiles - 1; i < Math.Min(numFiles * 2 - 1, numNonMinorPieces); i++)
       {
         PieceType piece = null;
         if (i < numNonMinorPieces - queensToBe)
@@ -456,6 +462,7 @@ namespace Archipelago.APChessV
           randomPieces.Next();
         order.Add(chooseIndexAndPlace(outer, randomLocations, piece) + 8);
       }
+      spare_material += Math.Max(0, numNonMinorPieces - numFiles * 2) * MAJOR_VALUE;
 
       List<PieceType> output = new List<PieceType>();
       output.AddRange(left);
