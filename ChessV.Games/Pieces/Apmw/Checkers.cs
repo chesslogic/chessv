@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace ChessV.Games.Pieces.Apmw
 {
-  [PieceType("Checkers", "Chess")]
+  [PieceType("Checkers", "APMW Custom Pieces")]
   public class Checkers : PieceType
 
   {

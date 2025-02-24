@@ -86,6 +86,11 @@ namespace ChessV.Games
     public Nightrider Nightrider;
     public Scout Scout;
 
+    //  Petal
+    public Oliphant Oliphant;
+    public Ribbon Ribbon;
+    public Petal Petal;
+
     //  Fairy Kings
     public PieceType MountedKing;
     public PieceType HyperKing;
@@ -368,6 +373,8 @@ namespace ChessV.Games
         OutpostEval.AddOutpostBonus(Bishop, 10, 2, 5, 5);
       if (loadableTypes.Contains(Tower.Notation[HumanPlayer]))
         OutpostEval.AddOutpostBonus(Tower, 10, 2, 5, 5);
+      if (loadableTypes.Contains(Petal.Notation[HumanPlayer]))
+        OutpostEval.AddOutpostBonus(Petal, 10, 2, 5, 5);
     }
     #endregion
 
@@ -615,6 +622,8 @@ namespace ChessV.Games
       Minors.Add(Vao); // very weak
       Minors.Add(Cannon); // unusually powerful
       Minors.Add(Scout); // slightly weak
+      Minors.Add(Petal);
+      Minors.Add(Ribbon);
 
       Majors.Add(Rook);
       Majors.Add(WarElephant);
@@ -622,6 +631,7 @@ namespace ChessV.Games
       Majors.Add(Lion);
       Majors.Add(ChargingRook);
       Majors.Add(Nightrider);
+      Majors.Add(Oliphant);
 
       Queens.Add(Queen);
       Queens.Add(Archbishop);
@@ -644,6 +654,7 @@ namespace ChessV.Games
         // new HashSet<PieceType>() { Vao, Cannon, Rook, Colonel });
         new HashSet<PieceType>() { Vao, Cannon, Rook, Queennon },
         new HashSet<PieceType>() { NarrowKnight, Nightrider, Scout, Herald },
+        new HashSet<PieceType>() { Petal, Ribbon, Oliphant, Queen },
       });
     }
   }
