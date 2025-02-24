@@ -165,10 +165,10 @@ namespace ChessV.Games.Pieces.Apmw
       // It also moves along these as paths, meaning it's not a leaper. It's like a bent rook.
 
       // A wazir moves 1 square, a dabbabah moves 2 squares, and a tribbabah moves 3 squares - but it's not a leaper
-      type.Slide(new Direction(1, 1), maxSteps: 3);
-      type.Slide(new Direction(1, -1), maxSteps: 3);
-      type.Slide(new Direction(-1, 1), maxSteps: 3);
-      type.Slide(new Direction(-1, -1), maxSteps: 3);
+      type.Slide(new Direction(1, 0), maxSteps: 3);
+      type.Slide(new Direction(-1, 0), maxSteps: 3);
+      type.Slide(new Direction(0, 1), maxSteps: 3);
+      type.Slide(new Direction(0, -1), maxSteps: 3);
 
       // First Y, Then X
       MoveCapability move = MoveCapability.Step(new Direction(3, 1));
