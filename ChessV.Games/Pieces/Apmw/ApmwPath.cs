@@ -5,10 +5,26 @@ using System.Text;
 
 namespace ChessV.Games.Pieces.Apmw
 {
+  [PieceType("Unbound Ribbon", "APMW Custom Pieces")]
+  public class UnboundRibbon : PieceType
+  {
+    public UnboundRibbon(string name, string notation, int midgameValue, int endgameValue, string preferredImageName = "SquirrelGeneral") :
+      base("Unbound Ribbon", name, notation, midgameValue, endgameValue, preferredImageName)
+    {
+      AddMoves(this);
+    }
+
+    public static new void AddMoves(PieceType type)
+    {
+      Ribbon.AddMoves(type);
+      Wazir.AddMoves(type);
+    }
+  }
+
   [PieceType("Ribbon", "APMW Custom Pieces")]
   public class Ribbon : PieceType
   {
-    public Ribbon(string name, string notation, int midgameValue, int endgameValue, string preferredImageName = "Butterfly") :
+    public Ribbon(string name, string notation, int midgameValue, int endgameValue, string preferredImageName = "Squirrel") :
       base("Ribbon", name, notation, midgameValue, endgameValue, preferredImageName)
     {
       AddMoves(this);

@@ -87,9 +87,9 @@ namespace ChessV.Games
     public Scout Scout;
 
     //  Petal
-    public Oliphant Oliphant;
-    public Ribbon Ribbon;
-    public Petal Petal;
+    public PieceType UnboundRibbon;
+    public PieceType Ribbon;
+    public PieceType Petal;
 
     //  Fairy Kings
     public PieceType MountedKing;
@@ -605,7 +605,8 @@ namespace ChessV.Games
       // Ribbon
       Ribbon = new Ribbon("Ribbon", "Ŋ", 300, 300);
       // Oliphant
-      Oliphant = new Oliphant("Oliphant", "Œ", 500, 500);
+      //Oliphant = new Oliphant("Oliphant", "Œ", 500, 500);
+      UnboundRibbon = new UnboundRibbon("Unbound Ribbon", "Ř", 300, 300);
 
       Kings.Add(King);
       Kings.Add(MountedKing);
@@ -637,7 +638,7 @@ namespace ChessV.Games
       Majors.Add(Lion);
       Majors.Add(ChargingRook);
       Majors.Add(Nightrider);
-      Majors.Add(Oliphant);
+      Majors.Add(UnboundRibbon);
 
       Queens.Add(Queen);
       Queens.Add(Archbishop);
@@ -660,7 +661,7 @@ namespace ChessV.Games
         // new HashSet<PieceType>() { Vao, Cannon, Rook, Colonel });
         new HashSet<PieceType>() { Vao, Cannon, Rook, Queennon },
         new HashSet<PieceType>() { NarrowKnight, Nightrider, Scout, Herald },
-        new HashSet<PieceType>() { Petal, Ribbon, Oliphant, Queen },
+        new HashSet<PieceType>() { Petal, Ribbon, UnboundRibbon, Queen },
       });
     }
   }
