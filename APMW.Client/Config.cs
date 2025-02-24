@@ -20,7 +20,7 @@ namespace Archipelago.APChessV
   }
   public enum FairyTypes
   {
-    Vanilla = 0, Full = 1, CwDA = 2, Cannon = 3, Eurasian = 4,
+    Vanilla = 0, Full = 1, CwDA = 2, Cannon = 3, Eurasian = 4, // not used I guess
   }
   public enum FairyArmy
   {
