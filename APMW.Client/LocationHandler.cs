@@ -228,7 +228,7 @@ namespace Archipelago.APChessV
           MoveInfo captureInfo = new MoveInfo();
           captureInfo.Player = info.Player;
           captureInfo.FromSquare = currentSquare;
-          captureInfo.ToSquare = nextSquare;
+          captureInfo.ToSquare = capturedSquare; // we don't actually move to this square, but we need it for the capture lookup
           captureInfo.MoveType = MoveType.StandardCapture;
           captureInfo.PieceMoved = info.PieceMoved;
           captureInfo.PieceCaptured = lastPiecesSeen[capturedSquare];
