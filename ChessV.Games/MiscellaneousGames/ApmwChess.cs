@@ -600,6 +600,12 @@ namespace ChessV.Games
       Nightrider = new Nightrider("Nightrider", "J", 550, 550, "Knightsrider");
       Scout = new Scout("Scout", "U", 300, 300);
       Queennon = new Queennon("Queennon", "F", 1025, 720);
+      // Petal
+      Petal = new Petal("Petal", "Ă", 300, 325);
+      // Ribbon
+      Ribbon = new Ribbon("Ribbon", "Ŋ", 300, 300);
+      // Oliphant
+      Oliphant = new Oliphant("Oliphant", "Œ", 500, 500);
 
       Kings.Add(King);
       Kings.Add(MountedKing);
