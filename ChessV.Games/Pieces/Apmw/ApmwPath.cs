@@ -5,6 +5,22 @@ using System.Text;
 
 namespace ChessV.Games.Pieces.Apmw
 {
+  [PieceType("Miracle", "APMW Custom Pieces")]
+  public class Miracle : PieceType
+  {
+    public Miracle(string name, string notation, int midgameValue, int endgameValue, string preferredImageName = "Butterfly") :
+      base("Miracle", name, notation, midgameValue, endgameValue, preferredImageName)
+    {
+      AddMoves(this);
+    }
+
+    public static new void AddMoves(PieceType type)
+    {
+      Ribbon.AddMoves(type);
+      Petal.AddMoves(type);
+    }
+  }
+  
   [PieceType("Unbound Ribbon", "APMW Custom Pieces")]
   public class UnboundRibbon : PieceType
   {

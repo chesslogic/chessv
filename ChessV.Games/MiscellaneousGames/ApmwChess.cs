@@ -90,6 +90,7 @@ namespace ChessV.Games
     public PieceType UnboundRibbon;
     public PieceType Ribbon;
     public PieceType Petal;
+    public PieceType Miracle;
 
     //  Fairy Kings
     public PieceType MountedKing;
@@ -375,6 +376,12 @@ namespace ChessV.Games
         OutpostEval.AddOutpostBonus(Tower, 10, 2, 5, 5);
       if (loadableTypes.Contains(Petal.Notation[HumanPlayer]))
         OutpostEval.AddOutpostBonus(Petal, 10, 2, 5, 5);
+      if (loadableTypes.Contains(Ribbon.Notation[HumanPlayer]))
+        OutpostEval.AddOutpostBonus(Ribbon, 10, 2, 5, 5);
+      if (loadableTypes.Contains(UnboundRibbon.Notation[HumanPlayer]))
+        OutpostEval.AddOutpostBonus(UnboundRibbon, 10, 2, 5, 5);
+      if (loadableTypes.Contains(Miracle.Notation[HumanPlayer]))
+        OutpostEval.AddOutpostBonus(Miracle, 10, 2, 5, 5);
     }
     #endregion
 
@@ -596,7 +603,7 @@ namespace ChessV.Games
       Cannon = new Cannon("Cannon", "O", 400, 275);
       Vao = new Vao("Vao", "V", 300, 175);
       // Misc
-      Herald = new Herald("Herald", "D", 890, 900);
+      Herald = new Herald("Herald", "D", 940, 900);
       Nightrider = new Nightrider("Nightrider", "J", 550, 550, "Knightsrider");
       Scout = new Scout("Scout", "U", 300, 300);
       Queennon = new Queennon("Queennon", "F", 1025, 720);
@@ -607,6 +614,7 @@ namespace ChessV.Games
       // Oliphant
       //Oliphant = new Oliphant("Oliphant", "Œ", 500, 500);
       UnboundRibbon = new UnboundRibbon("Unbound Ribbon", "Ř", 300, 300);
+      Miracle = new Miracle("Miracle", "Ħ", 900, 950);
 
       Kings.Add(King);
       Kings.Add(MountedKing);
@@ -646,6 +654,7 @@ namespace ChessV.Games
       Queens.Add(Colonel);
       Queens.Add(Queennon); // hilarious comedy option
       Queens.Add(Herald); // hilarious comedy option
+      Queens.Add(Miracle);
 
       Colorbounds.Add(Bishop);
       Colorbounds.Add(WarElephant);
@@ -661,7 +670,7 @@ namespace ChessV.Games
         // new HashSet<PieceType>() { Vao, Cannon, Rook, Colonel });
         new HashSet<PieceType>() { Vao, Cannon, Rook, Queennon },
         new HashSet<PieceType>() { NarrowKnight, Nightrider, Scout, Herald },
-        new HashSet<PieceType>() { Petal, Ribbon, UnboundRibbon, Queen },
+        new HashSet<PieceType>() { Petal, Ribbon, UnboundRibbon, Miracle },
       });
     }
   }
