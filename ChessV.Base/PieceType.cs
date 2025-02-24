@@ -30,7 +30,7 @@ namespace ChessV
     // *** CONSTANTS *** //
 
     #region Constants
-    const int MAX_MOVE_CAPABILITIES = 32;
+    const int MAX_MOVE_CAPABILITIES = 64;
     #endregion
 
 
