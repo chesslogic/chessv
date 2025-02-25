@@ -87,7 +87,7 @@ namespace ChessV.Games
     public Scout Scout;
 
     //  Petal
-    public PieceType UnboundRibbon;
+    public PieceType Gardener;
     public PieceType Ribbon;
     public PieceType Petal;
     public PieceType Miracle;
@@ -364,6 +364,10 @@ namespace ChessV.Games
         OutpostEval.AddOutpostBonus(MountedKing);
       if (loadableTypes.Contains(Nightrider.Notation[HumanPlayer]))
         OutpostEval.AddOutpostBonus(Nightrider);
+      if (loadableTypes.Contains(Ribbon.Notation[HumanPlayer]))
+        OutpostEval.AddOutpostBonus(Ribbon);
+      if (loadableTypes.Contains(Gardener.Notation[HumanPlayer]))
+        OutpostEval.AddOutpostBonus(Gardener);
       if (loadableTypes.Contains(WarElephant.Notation[HumanPlayer]))
         OutpostEval.AddOutpostBonus(WarElephant, 10, 2, 5, 5);
       if (loadableTypes.Contains(Cleric.Notation[HumanPlayer]))
@@ -376,10 +380,6 @@ namespace ChessV.Games
         OutpostEval.AddOutpostBonus(Tower, 10, 2, 5, 5);
       if (loadableTypes.Contains(Petal.Notation[HumanPlayer]))
         OutpostEval.AddOutpostBonus(Petal, 10, 2, 5, 5);
-      if (loadableTypes.Contains(Ribbon.Notation[HumanPlayer]))
-        OutpostEval.AddOutpostBonus(Ribbon, 10, 2, 5, 5);
-      if (loadableTypes.Contains(UnboundRibbon.Notation[HumanPlayer]))
-        OutpostEval.AddOutpostBonus(UnboundRibbon, 10, 2, 5, 5);
       if (loadableTypes.Contains(Miracle.Notation[HumanPlayer]))
         OutpostEval.AddOutpostBonus(Miracle, 10, 2, 5, 5);
     }
@@ -608,13 +608,13 @@ namespace ChessV.Games
       Scout = new Scout("Scout", "U", 300, 300);
       Queennon = new Queennon("Queennon", "F", 1025, 720);
       // Petal
-      Petal = new Petal("Petal", "Ă", 300, 325);
+      Petal = new Petal("Petal", "Ă", 475, 575);
       // Ribbon
-      Ribbon = new Ribbon("Ribbon", "Ŋ", 300, 300);
+      Ribbon = new Ribbon("Ribbon", "Ŋ", 275, 375);
       // Oliphant
       //Oliphant = new Oliphant("Oliphant", "Œ", 500, 500);
-      UnboundRibbon = new UnboundRibbon("Unbound Ribbon", "Ř", 300, 300);
-      Miracle = new Miracle("Miracle", "Ħ", 900, 950);
+      Gardener = new Gardener("Gardener", "Ř", 250, 250);
+      Miracle = new Miracle("Miracle", "Ħ", 960, 1050);
 
       Kings.Add(King);
       Kings.Add(MountedKing);
@@ -637,7 +637,7 @@ namespace ChessV.Games
       Minors.Add(Vao); // very weak
       Minors.Add(Cannon); // unusually powerful
       Minors.Add(Scout); // slightly weak
-      Minors.Add(Petal);
+      Minors.Add(Gardener);
       Minors.Add(Ribbon);
 
       Majors.Add(Rook);
@@ -646,7 +646,7 @@ namespace ChessV.Games
       Majors.Add(Lion);
       Majors.Add(ChargingRook);
       Majors.Add(Nightrider);
-      Majors.Add(UnboundRibbon);
+      Majors.Add(Petal);
 
       Queens.Add(Queen);
       Queens.Add(Archbishop);
@@ -670,7 +670,7 @@ namespace ChessV.Games
         // new HashSet<PieceType>() { Vao, Cannon, Rook, Colonel });
         new HashSet<PieceType>() { Vao, Cannon, Rook, Queennon },
         new HashSet<PieceType>() { NarrowKnight, Nightrider, Scout, Herald },
-        new HashSet<PieceType>() { Petal, Ribbon, UnboundRibbon, Miracle },
+        new HashSet<PieceType>() { Ribbon, Gardener, Petal, Miracle },
       });
     }
   }

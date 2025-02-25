@@ -37,10 +37,74 @@ namespace ChessV.Games.Pieces.Apmw
     }
   }
 
+  [PieceType("Gardener", "APMW Custom Pieces")]
+  public class Gardener : PieceType
+  {
+    public Gardener(string name, string notation, int midgameValue, int endgameValue, string preferredImageName = "WateringCan") :
+      base("Gardener", name, notation, midgameValue, endgameValue, preferredImageName)
+    {
+      AddMoves(this);
+    }
+
+    public static new void AddMoves(PieceType type)
+    {
+      Elephant.AddMoves(type);
+
+      // Move 1 square inward from each elephant space
+      MoveCapability move = MoveCapability.StepMoveOnly(new Direction(2, 1));
+      MovePathInfo movePath = new MovePathInfo();
+      movePath.AddPath(new List<Direction>() { new Direction(2, 2), new Direction(0, -1) });
+      move.PathInfo = movePath;
+      type.AddMoveCapability(move);
+
+      move = MoveCapability.StepMoveOnly(new Direction(1, 2));
+      movePath = new MovePathInfo();
+      movePath.AddPath(new List<Direction>() { new Direction(2, 2), new Direction(-1, 0) });
+      move.PathInfo = movePath;
+      type.AddMoveCapability(move);
+
+      move = MoveCapability.StepMoveOnly(new Direction(-2, 1));
+      movePath = new MovePathInfo();
+      movePath.AddPath(new List<Direction>() { new Direction(-2, 2), new Direction(0, -1) });
+      move.PathInfo = movePath;
+      type.AddMoveCapability(move);
+
+      move = MoveCapability.StepMoveOnly(new Direction(-1, 2));
+      movePath = new MovePathInfo();
+      movePath.AddPath(new List<Direction>() { new Direction(-2, 2), new Direction(1, 0) });
+      move.PathInfo = movePath;
+      type.AddMoveCapability(move);
+
+      move = MoveCapability.StepMoveOnly(new Direction(2, -1));
+      movePath = new MovePathInfo();
+      movePath.AddPath(new List<Direction>() { new Direction(2, -2), new Direction(0, 1) });
+      move.PathInfo = movePath;
+      type.AddMoveCapability(move);
+      
+      move = MoveCapability.StepMoveOnly(new Direction(1, -2));
+      movePath = new MovePathInfo();
+      movePath.AddPath(new List<Direction>() { new Direction(2, -2), new Direction(-1, 0) });
+      move.PathInfo = movePath;
+      type.AddMoveCapability(move);
+      
+      move = MoveCapability.StepMoveOnly(new Direction(-2, -1));
+      movePath = new MovePathInfo();
+      movePath.AddPath(new List<Direction>() { new Direction(-2, -2), new Direction(0, 1) });
+      move.PathInfo = movePath;
+      type.AddMoveCapability(move);
+      
+      move = MoveCapability.StepMoveOnly(new Direction(-1, -2));
+      movePath = new MovePathInfo();
+      movePath.AddPath(new List<Direction>() { new Direction(-2, -2), new Direction(1, 0) });
+      move.PathInfo = movePath;
+      type.AddMoveCapability(move);
+    }
+  }
+
   [PieceType("Ribbon", "APMW Custom Pieces")]
   public class Ribbon : PieceType
   {
-    public Ribbon(string name, string notation, int midgameValue, int endgameValue, string preferredImageName = "Squirrel") :
+    public Ribbon(string name, string notation, int midgameValue, int endgameValue, string preferredImageName = "Ribbon") :
       base("Ribbon", name, notation, midgameValue, endgameValue, preferredImageName)
     {
       AddMoves(this);
@@ -49,11 +113,6 @@ namespace ChessV.Games.Pieces.Apmw
     public static new void AddMoves(PieceType type)
     {
       Ferz.AddMoves(type);
-
-      type.Step(new Direction(1, 1));
-      type.Step(new Direction(1, -1));
-      type.Step(new Direction(-1, 1));
-      type.Step(new Direction(-1, -1));
 
       // Each location we step to allows us to move 1 or 2 squares in both perpendicular directions.
 
@@ -144,7 +203,6 @@ namespace ChessV.Games.Pieces.Apmw
       movePath.AddPath(new List<Direction>() { new Direction(1, -1), new Direction(-1, -1), new Direction(-1, -1) });
       move.PathInfo = movePath;
       type.AddMoveCapability(move);
-      
     }
   }
 
@@ -152,7 +210,7 @@ namespace ChessV.Games.Pieces.Apmw
   [PieceType("Petal", "APMW Custom Pieces")]
   public class Petal : PieceType
   {
-    public Petal(string name, string notation, int midgameValue, int endgameValue, string preferredImageName = "Bird") :
+    public Petal(string name, string notation, int midgameValue, int endgameValue, string preferredImageName = "Flower") :
       base("Petal", name, notation, midgameValue, endgameValue, preferredImageName)
     {
       AddMoves(this);
