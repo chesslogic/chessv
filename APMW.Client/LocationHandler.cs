@@ -374,7 +374,7 @@ namespace Archipelago.APChessV
         int originalSquare = info.ToSquare;
         // En Passant
         if (info.MoveType.HasFlag(MoveType.EnPassant))
-          originalSquare = info.ToSquare + 2 * (1 - info.Player * 2);
+          originalSquare = info.ToSquare + (1 - info.Player * 2);
         // Checkers
         else if (info.MoveType == MoveType.ExtraCapture ||
             info.MoveType == (MoveType.ExtraCapture | MoveType.PromotionProperty))
