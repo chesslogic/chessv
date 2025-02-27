@@ -158,9 +158,12 @@ namespace Archipelago.APChessV
       switch (upgrade)
       {
         case PawnUpgrade.Sergeant:
-          return ApmwCore.getInstance().sergeants.ElementAt(
-            randomSource.Next(
-              ApmwCore.getInstance().sergeants.Count));
+          if (ApmwConfig.getInstance().Pawns == FairyPawns.Vanilla)
+            return ApmwCore.getInstance().sergeants.First(s => s.Name == "Sergeant");
+          else
+            return ApmwCore.getInstance().sergeants.ElementAt(
+              randomSource.Next(
+                ApmwCore.getInstance().sergeants.Count));
         case PawnUpgrade.Best:
           limited = options.Where(item => item.MidgameValue >= WEAK_VALUE).ToList();
           if (limited.Count == 0)
