@@ -28,6 +28,7 @@ namespace ChessV.Base
     public int foundPawns = -1;
     public int foundMinors = -1;
     public int foundMajors = -1;
+    public int foundJacks = -1;
     public int foundQueens = -1;
     public int foundConsuls = -1;
     public int foundKingPromotions = -1;
@@ -40,6 +41,7 @@ namespace ChessV.Base
     public HashSet<PieceType> sergeants;
     public HashSet<PieceType> minors;
     public HashSet<PieceType> majors;
+    public HashSet<PieceType> jacks;
     public HashSet<PieceType> queens;
     public HashSet<PieceType> colorbound;
     public List<HashSet<PieceType>> armies;

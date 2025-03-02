@@ -17,6 +17,7 @@ namespace Archipelago.APChessV
     private static readonly int MINOR_VALUE = 300;
     private static readonly int PAWN_VALUE = 100;
     private static readonly int WEAK_VALUE = 75;
+    private static readonly int JACK_VALUE = 700;
     private static readonly int QUEEN_VALUE = 900;
 
     public ItemHandler(IReceivedItemsHelper receivedItemsHelper)
@@ -65,6 +66,8 @@ namespace Archipelago.APChessV
         (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Minor Piece");
       core.foundMajors = items.Count(
         (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Major Piece");
+      core.foundJacks = items.Count(
+        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Jack");
       core.foundQueens = items.Count(
         (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Major To Queen");
       core.foundPawnForwardness = items.Count(
@@ -403,13 +406,16 @@ namespace Archipelago.APChessV
       Dictionary<PieceType, int> chosenPieces = new Dictionary<PieceType, int>();
       order = new List<int>();
       List<PieceType> majors = ApmwCore.getInstance().majors.ToList();
+      List<PieceType> jacks = ApmwCore.getInstance().jacks.ToList();
       majors = filterPiecesByArmy(majors);
+      jacks = filterPiecesByArmy(jacks);
       // Initialize lists with appropriate size based on board size
       List<PieceType> outer = Enumerable.Repeat<PieceType>(null, numFiles - 2).ToList();
       List<PieceType> left = Enumerable.Repeat<PieceType>(null, numFiles / 2).ToList();
       List<PieceType> right = Enumerable.Repeat<PieceType>(null, numFiles / 2 - 1).ToList();
 
       Random randomPieces = new Random(ApmwConfig.getInstance().majorSeed);
+      Random randomJackPieces = new Random(ApmwConfig.getInstance().majorSeed);
       Random randomLocations = new Random(ApmwConfig.getInstance().majorLocSeed);
 
       int limit = ApmwConfig.getInstance().majorTypeLimit;
@@ -432,11 +438,18 @@ namespace Archipelago.APChessV
       }
 
       // this ends at 7 instead of 8 because the King always occupies 1 space, thus 0..6 not 0..7
-      int numNonMinorPieces = ApmwCore.getInstance().foundMajors + numKings;
+      int numJacks = ApmwCore.getInstance().foundJacks;
+      int numNonMinorPieces = ApmwCore.getInstance().foundMajors + numKings + numJacks;
       for (int i = numKings; i < Math.Min(numFiles - 1, numNonMinorPieces); i++)
       {
         PieceType piece = null;
-        if (i < numNonMinorPieces - queensToBe)
+        if (i < numJacks)
+        {
+          piece = choosePiece(ref jacks, randomJackPieces, chosenPieces, limit);
+          promoPieces.Add(piece.Notation[player]);
+          spare_material += JACK_VALUE - piece.MidgameValue; // Track difference from expected major value
+        }
+        else if (i < numNonMinorPieces - queensToBe)
         {
           piece = choosePiece(ref majors, randomPieces, chosenPieces, limit);
           if (piece != null)
@@ -452,7 +465,13 @@ namespace Archipelago.APChessV
       for (int i = numFiles - 1; i < Math.Min(numFiles * 2 - 1, numNonMinorPieces); i++)
       {
         PieceType piece = null;
-        if (i < numNonMinorPieces - queensToBe)
+        if (i < numJacks)
+        {
+          piece = choosePiece(ref jacks, randomJackPieces, chosenPieces, limit);
+          promoPieces.Add(piece.Notation[player]);
+          spare_material += JACK_VALUE - piece.MidgameValue; // Track difference from expected major value
+        }
+        else if (i < numNonMinorPieces - queensToBe)
         {
           piece = choosePiece(ref majors, randomPieces, chosenPieces, limit);
           if (piece != null)

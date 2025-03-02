@@ -131,6 +131,7 @@ namespace ChessV.Games
       apmwCore.sergeants = Sergeants;
       apmwCore.minors = Minors;
       apmwCore.majors = Majors;
+      apmwCore.jacks = Jacks;
       apmwCore.queens = Queens;
       apmwCore.colorbound = Colorbounds;
       apmwCore.armies = Armies;
