@@ -101,6 +101,7 @@ namespace ChessV.Games
     public HashSet<PieceType> Sergeants;
     public HashSet<PieceType> Minors;
     public HashSet<PieceType> Majors;
+    public HashSet<PieceType> Jacks;
     public HashSet<PieceType> Queens;
     public HashSet<PieceType> Colorbounds;
     public List<HashSet<PieceType>> Armies;
@@ -118,6 +119,7 @@ namespace ChessV.Games
       Sergeants = new HashSet<PieceType>();
       Minors = new HashSet<PieceType>();
       Majors = new HashSet<PieceType>();
+      Jacks = new HashSet<PieceType>();
       Queens = new HashSet<PieceType>();
       Colorbounds = new HashSet<PieceType>();
       Armies = new List<HashSet<PieceType>>();
