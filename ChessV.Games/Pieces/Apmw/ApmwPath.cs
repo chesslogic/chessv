@@ -125,24 +125,28 @@ namespace ChessV.Games.Pieces.Apmw
     }
   }
 
-  [PieceType("Ribbon", "APMW Custom Pieces")]
-  public class Ribbon : PieceType
+  public class CloseRibbon : PieceType
   {
-    public Ribbon(string name, string notation, int midgameValue, int endgameValue, string preferredImageName = "Ribbon") :
-      base("Ribbon", name, notation, midgameValue, endgameValue, preferredImageName)
+    public CloseRibbon(string name, string notation, int midgameValue, int endgameValue, string preferredImageName = "CloseRibbon") :
+      base("Close Ribbon", name, notation, midgameValue, endgameValue, preferredImageName)
     {
       AddMoves(this);
     }
 
+    /// <summary>
+    /// Implements the first step of the "bent path" movement for Ribbon (minor) and for Grazer (jack).
+    /// </summary>
+    /// <param name="type"></param>
     public static new void AddMoves(PieceType type)
     {
-      Ferz.AddMoves(type);
-
       // Each location we step to allows us to move 1 or 2 squares in both perpendicular directions.
 
+      MoveCapability move;
+      MovePathInfo movePath;
+
       // Positive X
-      MoveCapability move = MoveCapability.Step(new Direction(2, 0));
-      MovePathInfo movePath = new MovePathInfo();
+      move = MoveCapability.Step(new Direction(2, 0));
+      movePath = new MovePathInfo();
       movePath.AddPath(new List<Direction>() { new Direction(1, 1), new Direction(1, -1) });
       movePath.AddPath(new List<Direction>() { new Direction(1, -1), new Direction(1, 1) });
       move.PathInfo = movePath;
@@ -171,6 +175,25 @@ namespace ChessV.Games.Pieces.Apmw
       movePath.AddPath(new List<Direction>() { new Direction(-1, -1), new Direction(1, -1) });
       move.PathInfo = movePath;
       type.AddMoveCapability(move);
+    }
+  }
+
+  [PieceType("Ribbon", "APMW Custom Pieces")]
+  public class Ribbon : PieceType
+  {
+    public Ribbon(string name, string notation, int midgameValue, int endgameValue, string preferredImageName = "Ribbon") :
+      base("Ribbon", name, notation, midgameValue, endgameValue, preferredImageName)
+    {
+      AddMoves(this);
+    }
+
+    public static new void AddMoves(PieceType type)
+    {
+      Ferz.AddMoves(type);
+      CloseRibbon.AddMoves(type);
+
+      MoveCapability move;
+      MovePathInfo movePath;
 
       // Big Y, Positive X
       move = MoveCapability.Step(new Direction(3, 1));

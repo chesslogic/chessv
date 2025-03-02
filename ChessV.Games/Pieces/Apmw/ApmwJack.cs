@@ -243,7 +243,8 @@ namespace ChessV.Games.Pieces.Apmw
 
     public static new void AddMoves(PieceType type)
     {
-      Ribbon.AddMoves(type);
+      Wazir.AddMoves(type);
+      CloseRibbon.AddMoves(type);
 
       // Enhanced Ribbon moves - can move 1 further step before rotating
       type.Slide(new Direction(1, 1), maxSteps: 2);
@@ -255,16 +256,125 @@ namespace ChessV.Games.Pieces.Apmw
       MoveCapability move;
       MovePathInfo movePath;
 
-      // First Y, Then X
-      move = MoveCapability.Step(new Direction(4, 1));
+      // Positive X
+      move = MoveCapability.Step(new Direction(4, 0));
       movePath = new MovePathInfo();
-      movePath.AddPath(new List<Direction>() { 
-        new Direction(1, 1), new Direction(1, 1), new Direction(1, -1), new Direction(1, 0), new Direction(0, 1) });
+      movePath.AddPath(new List<Direction>() {
+        new Direction(1, 1), new Direction(1, 1), new Direction(1, -1), new Direction(1, -1) });
+      movePath.AddPath(new List<Direction>() {
+        new Direction(1, -1), new Direction(1, -1), new Direction(1, 1), new Direction(1, 1) });
       move.PathInfo = movePath;
       type.AddMoveCapability(move);
 
-      // Add similar moves for other directions...
-      // (Additional move patterns would be added following the same pattern as the Ribbon class)
+      // Negative X
+      move = MoveCapability.Step(new Direction(-4, 0));
+      movePath = new MovePathInfo();
+      movePath.AddPath(new List<Direction>() {
+        new Direction(-1, 1), new Direction(-1, 1), new Direction(-1, -1), new Direction(-1, -1) });
+      movePath.AddPath(new List<Direction>() {
+        new Direction(-1, -1), new Direction(-1, -1), new Direction(-1, 1), new Direction(-1, 1) });
+      move.PathInfo = movePath;
+      type.AddMoveCapability(move);
+
+      // Positive Y
+      move = MoveCapability.Step(new Direction(0, 4));
+      movePath = new MovePathInfo();
+      movePath.AddPath(new List<Direction>() {
+        new Direction(1, 1), new Direction(1, 1), new Direction(-1, 1), new Direction(-1, 1) });
+      movePath.AddPath(new List<Direction>() {
+        new Direction(-1, 1), new Direction(-1, 1), new Direction(1, 1), new Direction(1, 1) });
+      move.PathInfo = movePath;
+      type.AddMoveCapability(move);
+
+      // Negative Y
+      move = MoveCapability.Step(new Direction(0, -4));
+      movePath = new MovePathInfo();
+      movePath.AddPath(new List<Direction>() {
+        new Direction(1, -1), new Direction(1, -1), new Direction(-1, -1), new Direction(-1, -1) });
+      movePath.AddPath(new List<Direction>() {
+        new Direction(-1, -1), new Direction(-1, -1), new Direction(1, -1), new Direction(1, -1) });
+      move.PathInfo = movePath;
+      type.AddMoveCapability(move);
+
+      // Big Y, Positive X
+      move = MoveCapability.Step(new Direction(3, 1));
+      movePath = new MovePathInfo();
+      movePath.AddPath(new List<Direction>() { 
+        new Direction(1, 1), new Direction(1, 1), new Direction(1, -1) });
+      movePath.AddPath(new List<Direction>() {
+        new Direction(1, -1), new Direction(1, 1), new Direction(1, 1) });
+      move.PathInfo = movePath;
+      type.AddMoveCapability(move);
+
+      // Big Y, Negative X
+      move = MoveCapability.Step(new Direction(3, -1));
+      movePath = new MovePathInfo();
+      movePath.AddPath(new List<Direction>() { 
+        new Direction(1, 1), new Direction(1, -1), new Direction(1, -1) });
+      movePath.AddPath(new List<Direction>() {
+        new Direction(1, -1), new Direction(1, -1), new Direction(1, 1) });
+      move.PathInfo = movePath;
+      type.AddMoveCapability(move);
+
+      // Tiny Y, Positive X 
+      move = MoveCapability.Step(new Direction(-3, 1));
+      movePath = new MovePathInfo();
+      movePath.AddPath(new List<Direction>() { 
+        new Direction(-1, -1), new Direction(-1, 1), new Direction(-1, 1) });
+      movePath.AddPath(new List<Direction>() {
+        new Direction(-1, 1), new Direction(-1, 1), new Direction(-1, -1) });
+      move.PathInfo = movePath;
+      type.AddMoveCapability(move);
+      
+      // Tiny Y, Negative X
+      move = MoveCapability.Step(new Direction(-3, -1));
+      movePath = new MovePathInfo();
+      movePath.AddPath(new List<Direction>() { 
+        new Direction(-1, 1), new Direction(-1, -1), new Direction(-1, -1) });
+      movePath.AddPath(new List<Direction>() {
+        new Direction(-1, -1), new Direction(-1, -1), new Direction(-1, 1) });
+      move.PathInfo = movePath;
+      type.AddMoveCapability(move);
+
+      // Positive Y, Big X
+      move = MoveCapability.Step(new Direction(1, 3));
+      movePath = new MovePathInfo();
+      movePath.AddPath(new List<Direction>() { 
+        new Direction(-1, 1), new Direction(1, 1), new Direction(1, 1) });
+      movePath.AddPath(new List<Direction>() {
+        new Direction(1, 1), new Direction(1, 1), new Direction(-1, 1) });
+      move.PathInfo = movePath;
+      type.AddMoveCapability(move);
+
+      // Positive Y, Tiny X
+      move = MoveCapability.Step(new Direction(1, -3));
+      movePath = new MovePathInfo();
+      movePath.AddPath(new List<Direction>() { 
+        new Direction(-1, -1), new Direction(1, -1), new Direction(1, -1) });
+      movePath.AddPath(new List<Direction>() {
+        new Direction(1, -1), new Direction(1, -1), new Direction(-1, -1) });
+      move.PathInfo = movePath;
+      type.AddMoveCapability(move);
+
+      // Negative Y, Big X
+      move = MoveCapability.Step(new Direction(-1, 3));
+      movePath = new MovePathInfo();
+      movePath.AddPath(new List<Direction>() { 
+        new Direction(1, 1), new Direction(-1, 1), new Direction(-1, 1) });
+      movePath.AddPath(new List<Direction>() {
+        new Direction(-1, 1), new Direction(-1, 1), new Direction(1, 1) });
+      move.PathInfo = movePath;
+      type.AddMoveCapability(move);
+
+      // Negative Y, Tiny X
+      move = MoveCapability.Step(new Direction(-1, -3));
+      movePath = new MovePathInfo();
+      movePath.AddPath(new List<Direction>() { 
+        new Direction(1, -1), new Direction(-1, -1), new Direction(-1, -1) });
+      movePath.AddPath(new List<Direction>() {
+        new Direction(-1, -1), new Direction(-1, -1), new Direction(1, -1) });
+      move.PathInfo = movePath;
+      type.AddMoveCapability(move);
     }
   }
 }
