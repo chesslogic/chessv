@@ -50,11 +50,11 @@ namespace ChessV.Games.Pieces.Apmw
     }
   }
 
-  [PieceType("Colorbound Jack", "APMW Custom Pieces")]
-  public class ColorboundJack : PieceType
+  [PieceType("Mullah", "APMW Custom Pieces")]
+  public class Mullah : PieceType
   {
-    public ColorboundJack(string name, string notation, int midgameValue, int endgameValue, string preferredImageName = null) :
-      base("Colorbound Jack", name, notation, midgameValue, endgameValue, preferredImageName == null ? "DragonHorse" : preferredImageName)
+    public Mullah(string name, string notation, int midgameValue, int endgameValue, string preferredImageName = null) :
+      base("Mullah", name, notation, midgameValue, endgameValue, preferredImageName == null ? "CamelBishop" : preferredImageName)
     {
       AddMoves(this);
     }
@@ -79,11 +79,11 @@ namespace ChessV.Games.Pieces.Apmw
     }
   }
 
-  [PieceType("Rookie Jack", "APMW Custom Pieces")]
-  public class RookieJack : PieceType
+  [PieceType("Zealot", "APMW Custom Pieces")]
+  public class Zealot : PieceType
   {
-    public RookieJack(string name, string notation, int midgameValue, int endgameValue, string preferredImageName = null) :
-      base("Rookie Jack", name, notation, midgameValue, endgameValue, preferredImageName == null ? "Rook" : preferredImageName)
+    public Zealot(string name, string notation, int midgameValue, int endgameValue, string preferredImageName = null) :
+      base("Zealot", name, notation, midgameValue, endgameValue, preferredImageName == null ? "DragonHorse" : preferredImageName)
     {
       AddMoves(this);
     }
@@ -91,10 +91,7 @@ namespace ChessV.Games.Pieces.Apmw
     public static new void AddMoves(PieceType type)
     {
       // Rook moves
-      type.Slide(new Direction(1, 0));
-      type.Slide(new Direction(-1, 0));
-      type.Slide(new Direction(0, 1));
-      type.Slide(new Direction(0, -1));
+      Rook.AddMoves(type);
 
       // Non-leaping Camel moves (slide 3, then step 1 sideways)
       MoveCapability move;
@@ -103,7 +100,7 @@ namespace ChessV.Games.Pieces.Apmw
       // Vertical moves with side-steps
       move = MoveCapability.Step(new Direction(3, 1));
       movePath = new MovePathInfo();
-      movePath.AddPath(new List<Direction>() { new Direction(1, 0), new Direction(1, 0), new Direction(1, 0),new Direction(0, 1) });
+      movePath.AddPath(new List<Direction>() { new Direction(1, 0), new Direction(1, 0), new Direction(1, 0), new Direction(0, 1) });
       move.PathInfo = movePath;
       type.AddMoveCapability(move);
 
@@ -152,11 +149,11 @@ namespace ChessV.Games.Pieces.Apmw
     }
   }
 
-  [PieceType("Knight Jack", "APMW Custom Pieces")]
-  public class KnightJack : PieceType
+  [PieceType("Great Camel", "APMW Custom Pieces")]
+  public class GreatCamel : PieceType
   {
-    public KnightJack(string name, string notation, int midgameValue, int endgameValue, string preferredImageName = null) :
-      base("Knight Jack", name, notation, midgameValue, endgameValue, preferredImageName == null ? "Knight" : preferredImageName)
+    public GreatCamel(string name, string notation, int midgameValue, int endgameValue, string preferredImageName = null) :
+      base("Great Camel", name, notation, midgameValue, endgameValue, preferredImageName == null ? "KnightGeneral" : preferredImageName)
     {
       AddMoves(this);
     }
@@ -185,11 +182,11 @@ namespace ChessV.Games.Pieces.Apmw
     }
   }
 
-  [PieceType("Cannon Jack", "APMW Custom Pieces")]
-  public class CannonJack : PieceType
+  [PieceType("Dragon Cannon", "APMW Custom Pieces")]
+  public class DragonCannon : PieceType
   {
-    public CannonJack(string name, string notation, int midgameValue, int endgameValue, string preferredImageName = null) :
-      base("Cannon Jack", name, notation, midgameValue, endgameValue, preferredImageName == null ? "Cannon" : preferredImageName)
+    public DragonCannon(string name, string notation, int midgameValue, int endgameValue, string preferredImageName = null) :
+      base("Dragon Cannon", name, notation, midgameValue, endgameValue, preferredImageName == null ? "DragonHorse" : preferredImageName)
     {
       AddMoves(this);
     }
@@ -210,7 +207,7 @@ namespace ChessV.Games.Pieces.Apmw
   public class Mameluk : PieceType
   {
     public Mameluk(string name, string notation, int midgameValue, int endgameValue, string preferredImageName = null) :
-      base("Mameluk", name, notation, midgameValue, endgameValue, preferredImageName == null ? "Camel" : preferredImageName)
+      base("Mameluk", name, notation, midgameValue, endgameValue, preferredImageName == null ? "Wildebeest" : preferredImageName)
     {
       AddMoves(this);
     }

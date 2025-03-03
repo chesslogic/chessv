@@ -92,6 +92,15 @@ namespace ChessV.Games
     public PieceType Petal;
     public PieceType Miracle;
 
+    // Jacks
+    public PieceType AgileRook;
+    public PieceType Mullah;
+    public PieceType Zealot;
+    public PieceType GreatCamel;
+    public PieceType DragonCannon;
+    public PieceType Mameluk;
+    public PieceType Grazer;
+
     //  Fairy Kings
     public PieceType MountedKing;
     public PieceType HyperKing;
@@ -619,6 +628,15 @@ namespace ChessV.Games
       Gardener = new Gardener("Gardener", "Ř", 250, 250);
       Miracle = new Miracle("Miracle", "Ħ", 960, 1050);
 
+      // Jacks
+      AgileRook = new AgileRook("Agile Rook", "Ø", 700, 700);
+      Mullah = new Mullah("Mullah", "Ơ", 700, 700);
+      Zealot = new Zealot("Zealot", "Ʀ", 700, 700);
+      GreatCamel = new GreatCamel("Great Camel", "Ƹ", 700, 700);
+      DragonCannon = new DragonCannon("Dragon Cannon", "Ð", 700, 700);
+      Mameluk = new Mameluk("Mameluk", "Ə", 700, 700);
+      Grazer = new Grazer("Grazer", "Ŧ", 700, 700);
+
       Kings.Add(King);
       Kings.Add(MountedKing);
       Kings.Add(HyperKing);
@@ -651,6 +669,14 @@ namespace ChessV.Games
       Majors.Add(Nightrider);
       Majors.Add(Petal);
 
+      Jacks.Add(AgileRook);
+      Jacks.Add(Mullah);
+      Jacks.Add(Zealot);
+      Jacks.Add(GreatCamel);
+      Jacks.Add(DragonCannon);
+      Jacks.Add(Mameluk);
+      Jacks.Add(Grazer);
+
       Queens.Add(Queen);
       Queens.Add(Archbishop);
       Queens.Add(Chancellor);
@@ -664,16 +690,16 @@ namespace ChessV.Games
       Colorbounds.Add(Cleric);
 
       Armies.AddRange(new HashSet<PieceType>[] {
-        new HashSet<PieceType>() { Bishop, Knight, Rook, Queen },
-        new HashSet<PieceType>() { WarElephant, Phoenix, Cleric, Archbishop }, // has 2 major pieces and 1 minor piece
-        new HashSet<PieceType>() { Tower, ShortRook, Lion, Chancellor },
-        new HashSet<PieceType>() { ChargingKnight, NarrowKnight, ChargingRook, Colonel },
-        // TODO(chesslogic): Decide breadth of Eurasian army
-        // new HashSet<PieceType>() { Bishop, Cannon, Rook, Colonel });
-        // new HashSet<PieceType>() { Vao, Cannon, Rook, Colonel });
-        new HashSet<PieceType>() { Vao, Cannon, Rook, Queennon },
-        new HashSet<PieceType>() { NarrowKnight, Nightrider, Scout, Herald },
-        new HashSet<PieceType>() { Ribbon, Gardener, Petal, Miracle },
+        new HashSet<PieceType>() { Bishop, Knight, Rook, Queen, AgileRook },
+        new HashSet<PieceType>() { WarElephant, Phoenix, Cleric, Archbishop, Mullah },
+        new HashSet<PieceType>() { Tower, ShortRook, Lion, Chancellor, Zealot },
+        new HashSet<PieceType>() { ChargingKnight, NarrowKnight, ChargingRook, Colonel, Mameluk },
+        // Eurasian army
+        new HashSet<PieceType>() { Vao, Cannon, Herald, Queennon, DragonCannon },
+        // Camel army
+        new HashSet<PieceType>() { Scout, Nightrider, Miracle, Colonel, Mameluk },
+        // Petal army
+        new HashSet<PieceType>() { Gardener, Ribbon, Petal, Miracle, Grazer }
       });
     }
   }
