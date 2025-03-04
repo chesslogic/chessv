@@ -246,7 +246,7 @@ namespace ChessV.Games
         if (!startingPosition.ContainsKey(rookFromPair))
           continue;
         PieceType rookPiece = startingPosition[rookFromPair];
-        if (Majors.Contains(rookPiece))
+        if (Majors.Contains(rookPiece) || Jacks.Contains(rookPiece))
         {
           var kingMoveAmt = i < (NumFiles / 2) ? -2 : 2;
           Location kingTo = new Location(rank, kingFrom.File + kingMoveAmt);
