@@ -36,7 +36,7 @@ namespace ChessV.Games
 
       string humanPrefix = "Black";
       string cpuPrefix = "White";
-      string pawns = "pppppppp";
+      string pawns = "pppppppppp";
       string pieces = "rnabqkbcnr";
       
       string enemyArmy = (string)GetCustomProperty("EnemyArmy");
