@@ -29,7 +29,7 @@ namespace ChessV.Games.Rules.Apmw
     public override MoveEventResponse MoveBeingMade(MoveInfo move, int ply)
     {
       if (Game == null || Game.Match == null)
-        return base.IllegalCheckMoves(move);
+        return IllegalCheckMoves(move);
       Player player = Game.Match.GetPlayer(move.Player);
       if (player is HumanPlayer)
         return MoveEventResponse.NotHandled;
@@ -39,7 +39,7 @@ namespace ChessV.Games.Rules.Apmw
               return MoveEventResponse.NotHandled;
       if (RoyalPieces[move.Player ^ 1].Count > 1 ||
           !move.MoveType.HasFlag(MoveType.CaptureProperty) || move.PieceCaptured != RoyalPieces[move.Player ^ 1].First())
-        return base.IllegalCheckMoves(move);
+        return IllegalCheckMoves(move);
       return MoveEventResponse.NotHandled;
     }
 

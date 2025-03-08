@@ -162,6 +162,7 @@ namespace ChessV.Games
     {
       base.AddRules();
       AddRule(new CardDropRule(ApmwCore.getInstance().foundPocketRange));
+      AddRule(new ApmwFirstTurnRule());
       var kingPromotions = ApmwCore.getInstance().foundKingPromotions;
       if (kingPromotions > 0)
       {

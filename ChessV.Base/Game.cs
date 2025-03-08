@@ -820,7 +820,8 @@ namespace ChessV
       }
     }
 
-    public void HandleDefinitions(Dictionary<string, string> definitions)
+    // TODO(chesslogic): This shouldn't need to be virtual, but I don't want to figure out custom attributes
+    public virtual void HandleDefinitions(Dictionary<string, string> definitions)
     {
       if (definitions != null)
       {
