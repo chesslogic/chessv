@@ -479,6 +479,32 @@ namespace ChessV.Games
 
       string humanPrefix = "Black";
       string cpuPrefix = "White";
+      string pawns = "pppppppp";
+      // Standard (FIDE)
+      //new HashSet<PieceType>() { Bishop, Knight, Rook, Queen, AgileRook },
+      string pieces = "rnbqkbnr";
+      string enemyArmy = (string)GetCustomProperty("EnemyArmy");
+      if (enemyArmy != null)
+      {
+        // Colourbound Clobberers (Betza)
+        //new HashSet<PieceType>() { WarElephant, Phoenix, Cleric, Archbishop, Mullah },
+        if (enemyArmy == "Colourbound Clobberers (Betza)")
+        {
+          pieces = "gxeakexg";
+        }
+        // Remarkable Rookies (Betza)
+        //new HashSet<PieceType>() { Tower, ShortRook, Lion, Chancellor, Zealot },
+        else if (enemyArmy == "Remarkable Rookies (Betza)")
+        {
+          pieces = "stickits";
+        }
+        // Nutty Knights (Betza)
+        //new HashSet<PieceType>() { ChargingKnight, NarrowKnight, ChargingRook, Colonel, Mameluk },
+        else if (enemyArmy == "Nutty Knights (Betza)")
+        {
+          pieces = "hlmykmlh";
+        }
+      }
       if (humanPlayer == 0)
       {
         (humanPrefix, cpuPrefix) = (cpuPrefix, humanPrefix);
@@ -486,16 +512,16 @@ namespace ChessV.Games
         // TODO(chesslogic): CPU gets 1 piece per checkmate (as location?), Goal is to checkmate a "full" CPU army
         // TODO(chesslogic): CPU different armies
         SetCustomProperty("BlackOuter", "8");
-        SetCustomProperty("BlackPawns", "pppppppp");
-        SetCustomProperty("BlackPieces", "rnbqkbnr");
-        PromotionTypes += "qrbn";
+        SetCustomProperty("BlackPawns", pawns);
+        SetCustomProperty("BlackPieces", pieces);
+        PromotionTypes += pieces.Substring(0, 4);
       }
       else
       {
         SetCustomProperty("WhiteOuter", "8");
-        SetCustomProperty("WhitePawns", "PPPPPPPP");
-        SetCustomProperty("WhitePieces", "RNBQKBNR");
-        PromotionTypes += "QRBN";
+        SetCustomProperty("WhitePawns", pawns.ToUpper());
+        SetCustomProperty("WhitePieces", pieces.ToUpper());
+        PromotionTypes += pieces.Substring(0, 4);
       }
 
       //	determine player's board
@@ -580,6 +606,15 @@ namespace ChessV.Games
       SetCustomProperty(humanPrefix + "Pieces", notations[4]);
     }
     #endregion
+
+    public override void HandleDefinitions(Dictionary<string, string> definitions)
+    {
+      if (definitions != null && definitions.ContainsKey("enemy_army"))
+      {
+        SetCustomProperty("EnemyArmy", definitions["enemy_army"]);
+      }
+      base.HandleDefinitions(definitions);
+    }
 
     public void earlyPopulatePieceTypes()
     {

@@ -274,13 +274,22 @@ namespace ChessV.GUI
       // check if we've received Super-Size Me from the ItemHandler
       ApmwCore core = ApmwCore.getInstance();
       Game game;
+      Dictionary<string, string> options = null;
+      if (comboBoxEnemyArmy.SelectedItem != null)
+      {
+        options = new Dictionary<string, string>();
+        options["enemy_army"] = comboBoxEnemyArmy.SelectedItem.ToString();
+        
+        // TODO(chesslogic): Apparently if I pass the player army here it'll be stored in save files?
+        // This would mean calling out to ItemHandler from external to the ApmwChess instance.
+      }
       if (core.isGrand && checkBoxSuper.Enabled && checkBoxSuper.Checked)
       {
-        game = mainForm.Manager.CreateGame("Archipelago Multiworld Super-Sized", null);
+        game = mainForm.Manager.CreateGame("Archipelago Multiworld Super-Sized", options);
       }
       else
       {
-        game = mainForm.Manager.CreateGame("Archipelago Multiworld", null);
+        game = mainForm.Manager.CreateGame("Archipelago Multiworld", options);
       }
       game.StartMatch();
       currentMatch = game.Match;

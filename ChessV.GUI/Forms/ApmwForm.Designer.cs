@@ -67,6 +67,7 @@ namespace ChessV.GUI
       labelDivider = new System.Windows.Forms.Label();
       label5 = new System.Windows.Forms.Label();
       checkBoxDeathlink = new System.Windows.Forms.CheckBox();
+      comboBoxEnemyArmy = new System.Windows.Forms.ComboBox();
       SuspendLayout();
       // 
       // txtApmwOutput
@@ -239,13 +240,24 @@ namespace ChessV.GUI
       checkBoxDeathlink.TabIndex = 16;
       checkBoxDeathlink.Text = "DeathLink?";
       checkBoxDeathlink.UseVisualStyleBackColor = true;
-      checkBoxDeathlink.CheckedChanged += new System.EventHandler(this.checkBoxDeathlink_CheckedChanged);
+      checkBoxDeathlink.CheckedChanged += checkBoxDeathlink_CheckedChanged;
+      // 
+      // comboBoxEnemyArmy
+      // 
+      comboBoxEnemyArmy.FormattingEnabled = true;
+      comboBoxEnemyArmy.Items.AddRange(new object[] { "Standard (FIDE)", "Colourbound Clobberers (Betza)", "Remarkable Rookies (Betza)", "Nutty Knights (Betza)" });
+      comboBoxEnemyArmy.Location = new System.Drawing.Point(634, 121);
+      comboBoxEnemyArmy.Name = "comboBoxEnemyArmy";
+      comboBoxEnemyArmy.Size = new System.Drawing.Size(218, 33);
+      comboBoxEnemyArmy.TabIndex = 17;
+      comboBoxEnemyArmy.Text = "Change Enemy Army";
       // 
       // ApmwForm
       // 
       AutoScaleDimensions = new System.Drawing.SizeF(10F, 25F);
       AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
       ClientSize = new System.Drawing.Size(1037, 752);
+      Controls.Add(comboBoxEnemyArmy);
       Controls.Add(checkBoxDeathlink);
       Controls.Add(label5);
       Controls.Add(labelDivider);
@@ -291,5 +303,7 @@ namespace ChessV.GUI
     private System.Windows.Forms.CheckBox checkBoxDeathlink;
     private System.Windows.Forms.Label labelDivider;
     private System.Windows.Forms.Label label5;
+    public System.Windows.Forms.ComboBox comboBox1;
+    public System.Windows.Forms.ComboBox comboBoxEnemyArmy;
   }
 }

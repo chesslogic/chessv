@@ -34,9 +34,31 @@ namespace ChessV.Games
 
       List<PieceType> pocketPieces = ApmwCore.getInstance().PlayerPocketPiecesProvider();
 
-
       string humanPrefix = "Black";
       string cpuPrefix = "White";
+      string pawns = "pppppppp";
+      string pieces = "rnabqkbcnr";
+      
+      string enemyArmy = (string)GetCustomProperty("EnemyArmy");
+      if (enemyArmy != null)
+      {
+        // Colourbound Clobberers (Betza)
+        if (enemyArmy == "Colourbound Clobberers (Betza)")
+        {
+          pieces = "gxqeakecxg";
+        }
+        // Remarkable Rookies (Betza)
+        else if (enemyArmy == "Remarkable Rookies (Betza)")
+        {
+          pieces = "staickiqts";
+        }
+        // Nutty Knights (Betza)
+        else if (enemyArmy == "Nutty Knights (Betza)")
+        {
+          pieces = "hlamykmclh";
+        }
+      }
+
       if (humanPlayer == 0)
       {
         (humanPrefix, cpuPrefix) = (cpuPrefix, humanPrefix);
@@ -44,18 +66,18 @@ namespace ChessV.Games
         // TODO(chesslogic): CPU gets 1 piece per checkmate (as location?), Goal is to checkmate a "full" CPU army
         // TODO(chesslogic): CPU different armies
         SetCustomProperty("BlackOuter", "10");
-        SetCustomProperty("BlackPawns", "pppppppppp");
-        SetCustomProperty("BlackPieces", "rnabqkbcnr");
-        PromotionTypes += "ac";
-        promotions += "ac";
+        SetCustomProperty("BlackPawns", pawns);
+        SetCustomProperty("BlackPieces", pieces);
+        PromotionTypes += pieces.Substring(2, 1);
+        PromotionTypes += pieces.Substring(7, 1);
       }
       else
       {
         SetCustomProperty("WhiteOuter", "10");
-        SetCustomProperty("WhitePawns", "PPPPPPPPPP");
-        SetCustomProperty("WhitePieces", "RNABQKBCNR");
-        PromotionTypes += "AC";
-        promotions += "AC";
+        SetCustomProperty("WhitePawns", pawns.ToUpper());
+        SetCustomProperty("WhitePieces", pieces.ToUpper());
+        PromotionTypes += pieces.Substring(2, 1);
+        PromotionTypes += pieces.Substring(7, 1);
       }
     }
   }
