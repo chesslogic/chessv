@@ -31,7 +31,9 @@ namespace ChessV
 
     public Game Game { get; private set; }
 
-    public const int MAX_MOVES = 256;
+    // This is the maximum number of moves that can be stored, but the implementation of nonstandard moves ("Special Moves")
+    // means that the actual number of turns we can look forward can be less. A pickup and drop is 2 moves, in 1 ply.
+    public const int MAX_MOVES = 2048;
 
     public bool LegalMovesOnly { get; set; }
 

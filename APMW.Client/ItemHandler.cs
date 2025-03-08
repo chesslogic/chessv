@@ -326,7 +326,10 @@ namespace Archipelago.APChessV
       Random randomPieces = new Random(ApmwConfig.getInstance().minorSeed);
       Random randomLocations = new Random(ApmwConfig.getInstance().minorLocSeed);
 
-      int startingPieces = ApmwCore.getInstance().foundMajors + ApmwCore.getInstance().foundConsuls;
+      int startingPieces =
+        ApmwCore.getInstance().foundMajors
+        + ApmwCore.getInstance().foundConsuls
+        + ApmwCore.getInstance().foundJacks;
       int totalPieces = startingPieces + ApmwCore.getInstance().foundMinors;
 
       int limit = ApmwConfig.getInstance().minorTypeLimit;
