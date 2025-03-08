@@ -239,7 +239,8 @@ namespace ChessV.Games
       int rank = humanPlayer * 7;
       // TODO(chesslogic): the starting position dict chesslogic made uses rank=4 for back line. why? u ever heard front to back?
       int positionRank = 4;
-      Location kingFrom = new Location(rank, ApmwCore.getInstance().isGrand ? 5 : 4);
+      bool isGrand = NumFiles > 8;
+      Location kingFrom = new Location(rank, isGrand ? 5 : 4);
       for (int i = 0; i < NumFiles; i++)
       {
         var rookFromPair = new KeyValuePair<int, int>(positionRank, i);
