@@ -443,7 +443,7 @@ namespace Archipelago.APChessV
       for (int i = numKings; i < Math.Min(numFiles - 1, numNonMinorPieces); i++)
       {
         PieceType piece = null;
-        if (i < numJacks)
+        if (i < numJacks + numKings)
         {
           piece = choosePiece(ref jacks, randomJackPieces, chosenPieces, limit);
           promoPieces.Add(piece.Notation[player]);
