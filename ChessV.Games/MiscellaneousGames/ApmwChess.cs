@@ -438,6 +438,9 @@ namespace ChessV.Games
       foreach (PieceType piece in Majors)
         if (loadableTypes.Contains(piece.Notation[HumanPlayer]))
           AddPieceType(piece);
+      foreach (PieceType piece in Jacks)
+        if (loadableTypes.Contains(piece.Notation[HumanPlayer]))
+          AddPieceType(piece);
       foreach (PieceType piece in Queens)
         if (loadableTypes.Contains(piece.Notation[HumanPlayer]))
           AddPieceType(piece);
@@ -630,7 +633,7 @@ namespace ChessV.Games
 
       // Jacks
       AgileRook = new AgileRook("Agile Rook", "Ø", 700, 700);
-      Mullah = new Mullah("Mullah", "Ơ", 700, 700);
+      Mullah = new Mullah("Mullah", "Ŏ", 700, 700);
       Zealot = new Zealot("Zealot", "Ʀ", 700, 700);
       GreatCamel = new GreatCamel("Great Camel", "Ƹ", 700, 700);
       DragonCannon = new DragonCannon("Dragon Cannon", "Ð", 700, 700);

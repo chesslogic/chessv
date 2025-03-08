@@ -284,7 +284,11 @@ namespace ChessV.Games.Rules
               {
                 //	required squares are empty and not attacked so the move is legal - add it
                 if (Board[castlingMoves[Game.CurrentSide, x].KingFromSquare] == null)
-                  throw new Exception("!");
+                  throw new Exception("No king to pick up from "
+                  + castlingMoves[Game.CurrentSide, x].KingFromSquare
+                  + " at "
+                  + Board.GetDefaultSquareNotation(castlingMoves[Game.CurrentSide, x].KingFromSquare)
+                  + "!");
                 list.BeginMoveAdd(MoveType.Castling, castlingMoves[Game.CurrentSide, x].KingFromSquare,
                   castlingMoves[Game.CurrentSide, x].KingToSquare);
                 Piece king = list.AddPickup(castlingMoves[Game.CurrentSide, x].KingFromSquare);
