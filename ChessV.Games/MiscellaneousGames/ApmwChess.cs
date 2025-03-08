@@ -633,12 +633,12 @@ namespace ChessV.Games
       Miracle = new Miracle("Miracle", "Ħ", 960, 1050);
 
       // Jacks
-      AgileRook = new AgileRook("Agile Rook", "Ø", 700, 700);
+      AgileRook = new AgileRook("Agile Rook", "Ŗ", 700, 700);
       Mullah = new Mullah("Mullah", "Ŏ", 700, 700);
-      Zealot = new Zealot("Zealot", "Ʀ", 700, 700);
-      GreatCamel = new GreatCamel("Great Camel", "Ƹ", 700, 700);
+      Zealot = new Zealot("Zealot", "Ż", 700, 700);
+      GreatCamel = new GreatCamel("Great Camel", "Č", 700, 700);
       DragonCannon = new DragonCannon("Dragon Cannon", "Ð", 700, 700);
-      Mameluk = new Mameluk("Mameluk", "Ə", 700, 700);
+      Mameluk = new Mameluk("Mameluk", "Ē", 700, 700);
       Grazer = new Grazer("Grazer", "Ŧ", 700, 700);
 
       Kings.Add(King);

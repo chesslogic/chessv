@@ -29,7 +29,7 @@ namespace ChessV.Games.Pieces.Apmw
   public class AgileRook : PieceType
   {
     public AgileRook(string name, string notation, int midgameValue, int endgameValue, string preferredImageName = null) :
-      base("Agile Rook", name, notation, midgameValue, endgameValue, preferredImageName == null ? "Minister" : preferredImageName)
+      base("Agile Rook (Too swole to fit in frame)", name, notation, midgameValue, endgameValue, preferredImageName == null ? "SwoleRook" : preferredImageName)
     {
       AddMoves(this);
     }
