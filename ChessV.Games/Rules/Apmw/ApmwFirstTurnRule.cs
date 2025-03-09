@@ -16,7 +16,7 @@ namespace ChessV.Games.Rules.Apmw
         public override void GenerateSpecialMoves(MoveList list, bool capturesOnly, int ply)
         {
             // Only apply this rule in the first two turns (ply <= 3)
-            if (ply > 3)
+            if (Game.GameTurnNumber > 2)
                 return;
 
             // Get the current player's king square
