@@ -1109,6 +1109,7 @@ namespace ChessV
 
 
       //	max depth?
+      // TODO(chesslogic): I think I can collect the "most steps" seen in a special move this game and limit by that instead of - 1
       if (depth == MAX_PLY - 1)
         return score;
 
