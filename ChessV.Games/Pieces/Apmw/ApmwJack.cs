@@ -110,17 +110,19 @@ namespace ChessV.Games.Pieces.Apmw
       move.PathInfo = movePath;
       type.AddMoveCapability(move);
 
-      move = MoveCapability.Step(new Direction(-3, 1));
-      movePath = new MovePathInfo();
-      movePath.AddPath(new List<Direction>() { new Direction(-1, 0), new Direction(-1, 0), new Direction(-1, 0), new Direction(0, 1) });
-      move.PathInfo = movePath;
-      type.AddMoveCapability(move);
+      // But zealots can't move backward! Wow!
 
-      move = MoveCapability.Step(new Direction(-3, -1));
-      movePath = new MovePathInfo();
-      movePath.AddPath(new List<Direction>() { new Direction(-1, 0), new Direction(-1, 0), new Direction(-1, 0), new Direction(0, -1) });
-      move.PathInfo = movePath;
-      type.AddMoveCapability(move);
+      //move = MoveCapability.Step(new Direction(-3, 1));
+      //movePath = new MovePathInfo();
+      //movePath.AddPath(new List<Direction>() { new Direction(-1, 0), new Direction(-1, 0), new Direction(-1, 0), new Direction(0, 1) });
+      //move.PathInfo = movePath;
+      //type.AddMoveCapability(move);
+
+      //move = MoveCapability.Step(new Direction(-3, -1));
+      //movePath = new MovePathInfo();
+      //movePath.AddPath(new List<Direction>() { new Direction(-1, 0), new Direction(-1, 0), new Direction(-1, 0), new Direction(0, -1) });
+      //move.PathInfo = movePath;
+      //type.AddMoveCapability(move);
 
       // Horizontal moves with side-steps
       move = MoveCapability.Step(new Direction(1, 3));
@@ -129,11 +131,11 @@ namespace ChessV.Games.Pieces.Apmw
       move.PathInfo = movePath;
       type.AddMoveCapability(move);
 
-      move = MoveCapability.Step(new Direction(-1, 3));
-      movePath = new MovePathInfo();
-      movePath.AddPath(new List<Direction>() { new Direction(0, 1), new Direction(0, 1), new Direction(0, 1), new Direction(-1, 0) });
-      move.PathInfo = movePath;
-      type.AddMoveCapability(move);
+      //move = MoveCapability.Step(new Direction(-1, 3));
+      //movePath = new MovePathInfo();
+      //movePath.AddPath(new List<Direction>() { new Direction(0, 1), new Direction(0, 1), new Direction(0, 1), new Direction(-1, 0) });
+      //move.PathInfo = movePath;
+      //type.AddMoveCapability(move);
 
       move = MoveCapability.Step(new Direction(1, -3));
       movePath = new MovePathInfo();
@@ -141,11 +143,11 @@ namespace ChessV.Games.Pieces.Apmw
       move.PathInfo = movePath;
       type.AddMoveCapability(move);
 
-      move = MoveCapability.Step(new Direction(-1, -3));
-      movePath = new MovePathInfo();
-      movePath.AddPath(new List<Direction>() { new Direction(0, -1), new Direction(0, -1), new Direction(0, -1), new Direction(-1, 0) });
-      move.PathInfo = movePath;
-      type.AddMoveCapability(move);
+      //move = MoveCapability.Step(new Direction(-1, -3));
+      //movePath = new MovePathInfo();
+      //movePath.AddPath(new List<Direction>() { new Direction(0, -1), new Direction(0, -1), new Direction(0, -1), new Direction(-1, 0) });
+      //move.PathInfo = movePath;
+      //type.AddMoveCapability(move);
     }
   }
 
@@ -186,7 +188,7 @@ namespace ChessV.Games.Pieces.Apmw
   public class DragonCannon : PieceType
   {
     public DragonCannon(string name, string notation, int midgameValue, int endgameValue, string preferredImageName = null) :
-      base("Dragon Cannon", name, notation, midgameValue, endgameValue, preferredImageName == null ? "DragonHorse" : preferredImageName)
+      base("Dragon Cannon", name, notation, midgameValue, endgameValue, preferredImageName == null ? "Vaonnon" : preferredImageName)
     {
       AddMoves(this);
     }
@@ -233,7 +235,7 @@ namespace ChessV.Games.Pieces.Apmw
   public class Grazer : PieceType
   {
     public Grazer(string name, string notation, int midgameValue, int endgameValue, string preferredImageName = null) :
-      base("Grazer", name, notation, midgameValue, endgameValue, preferredImageName == null ? "Ram" : preferredImageName)
+      base("Grazer", name, notation, midgameValue, endgameValue, preferredImageName == null ? "RibbonDuplicant" : preferredImageName)
     {
       AddMoves(this);
     }
