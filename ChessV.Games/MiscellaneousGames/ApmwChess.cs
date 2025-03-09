@@ -473,10 +473,6 @@ namespace ChessV.Games
       startingPosition = pieceSet.Item1;
       promotions = pieceSet.Item2;
       List<PieceType> pocketPieces = ApmwCore.getInstance().PlayerPocketPiecesProvider();
-      promotions += string.Join("", pocketPieces
-        .Select(p => p != null ? p.Notation[humanPlayer] : "")
-        .Where(p => !promotions.Contains(p) && !Pawns.Select(pn => pn.Notation[humanPlayer]).Contains(p)));
-      PromotionTypes += promotions;
 
       string humanPrefix = "Black";
       string cpuPrefix = "White";
@@ -515,15 +511,28 @@ namespace ChessV.Games
         SetCustomProperty("BlackOuter", "8");
         SetCustomProperty("BlackPawns", pawns);
         SetCustomProperty("BlackPieces", pieces);
-        PromotionTypes += pieces.Substring(0, 4);
       }
       else
       {
         SetCustomProperty("WhiteOuter", "8");
         SetCustomProperty("WhitePawns", pawns.ToUpper());
         SetCustomProperty("WhitePieces", pieces.ToUpper());
-        PromotionTypes += pieces.Substring(0, 4);
       }
+
+      // Handle all promotion-related logic in one place
+      var basePromotions = pieceSet.Item2;
+      var pocketPromotions = string.Join("", pocketPieces
+        .Select(p => p != null ? p.Notation[humanPlayer] : "")
+        .Where(p => !basePromotions.Contains(p) && !Pawns.Select(pn => pn.Notation[humanPlayer]).Contains(p)));
+      var armyPromotions = "";
+      if (enemyArmy != null)
+      {
+        // Add the army's specific pieces to promotions
+        armyPromotions = pieces.Substring(0, 4);
+      }
+      
+      promotions = basePromotions + pocketPromotions + armyPromotions;
+      PromotionTypes += promotions;
 
       //	determine player's board
       // TODO(chesslogic): incorporate ApmwCore

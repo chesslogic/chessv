@@ -32,10 +32,6 @@ namespace ChessV.Games
       ApmwCore starter = ApmwCore.getInstance();
       int humanPlayer = starter.GeriProvider();
 
-      List<PieceType> pocketPieces = ApmwCore.getInstance().PlayerPocketPiecesProvider();
-
-      string humanPrefix = "Black";
-      string cpuPrefix = "White";
       string pawns = "pppppppppp";
       string pieces = "rnabqkbcnr";
       
@@ -61,24 +57,21 @@ namespace ChessV.Games
 
       if (humanPlayer == 0)
       {
-        (humanPrefix, cpuPrefix) = (cpuPrefix, humanPrefix);
-
         // TODO(chesslogic): CPU gets 1 piece per checkmate (as location?), Goal is to checkmate a "full" CPU army
-        // TODO(chesslogic): CPU different armies
         SetCustomProperty("BlackOuter", "10");
         SetCustomProperty("BlackPawns", pawns);
         SetCustomProperty("BlackPieces", pieces);
-        PromotionTypes += pieces.Substring(2, 1);
-        PromotionTypes += pieces.Substring(7, 1);
       }
       else
       {
         SetCustomProperty("WhiteOuter", "10");
         SetCustomProperty("WhitePawns", pawns.ToUpper());
         SetCustomProperty("WhitePieces", pieces.ToUpper());
-        PromotionTypes += pieces.Substring(2, 1);
-        PromotionTypes += pieces.Substring(7, 1);
       }
+
+      // Add the army's attendant pieces to promotions (positions 2 and 7)
+      string attendantPromotions = pieces.Substring(2, 1) + pieces.Substring(7, 1);
+      PromotionTypes += attendantPromotions;
     }
   }
 }
