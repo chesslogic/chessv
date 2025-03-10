@@ -610,7 +610,7 @@ namespace ChessV
     {
       Piece piece = squares[square];
       if (piece == null)
-        throw new Exception("!");
+        throw new Exception(string.Format("No piece to clear at {0} ({1})!", square, GetDefaultSquareNotation(square)));
       squares[square] = null;
       piece.Square = -1;
       playerMaterial[piece.Player] -= piece.PieceType.MidgameValue;

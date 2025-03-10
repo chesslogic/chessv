@@ -189,7 +189,20 @@ namespace ChessV
     #region PerformPickup
     protected void PerformPickup(int index)
     {
-      pickups[index].Piece = Board.ClearSquare(pickups[index].Square);
+      try {
+        pickups[index].Piece = Board.ClearSquare(pickups[index].Square);
+      } catch (Exception ex) {
+        throw new Exception(
+          string.Format("Error performing pickup at {0} ({1}) during move {2} ({3}) following move {4} ({5})!",
+            pickups[index].Square,
+            Board.GetDefaultSquareNotation(pickups[index].Square),
+            moveCursor,
+            moves[moveCursor].ToString(),
+            moveCursor - 1,
+            moveCursor > 0 ? moves[moveCursor - 1].ToString() : "none"),
+          ex
+        );
+      }
     }
     #endregion
 

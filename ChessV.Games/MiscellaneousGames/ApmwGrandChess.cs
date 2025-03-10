@@ -71,6 +71,7 @@ namespace ChessV.Games
 
       // Add the army's attendant pieces to promotions (positions 2 and 7)
       string attendantPromotions = pieces.Substring(2, 1) + pieces.Substring(7, 1);
+      promotions += attendantPromotions;
       PromotionTypes += attendantPromotions;
     }
   }
