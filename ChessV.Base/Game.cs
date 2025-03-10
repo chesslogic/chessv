@@ -35,7 +35,7 @@ namespace ChessV
     // *** CONSTANTS *** //
 
     #region Constants
-    public const int MAX_DIRECTIONS = 48;
+    public const int MAX_DIRECTIONS = 96;
     public const int MAX_PIECE_TYPES = 24; // necessary maximum when hashing MoveInfo Tag functionality
     public const int MAX_PIECES = 64;
     public const int MAX_PLY = 128;
@@ -605,6 +605,8 @@ namespace ChessV
         //	and slices (i.e., determination of colorbinding)
         for (int x = 0; x < nPieceTypes; x++)
         {
+          if (x >= pieceTypes.Length)
+            throw new Exception("Unable to initialize " + x + "th piece type out of " + nPieceTypes + " types.");
           PieceType piecetype = pieceTypes[x];
           piecetype.Initialize(this);
         }

@@ -557,6 +557,8 @@ namespace Archipelago.APChessV
     {
       var index = 0;
       var skips = random.Next(items.Count(item => item == null));
+      if (skips == items.Count)
+        throw new Exception("No space to place piece in " + string.Join(", ", items.Select(item => item?.Notation[0])));
       while (items[index] != null || skips > 0)
       {
         if (items[index] == null)
