@@ -171,7 +171,23 @@ namespace ChessV
             tryMove = !Board.Game.StaticExchangeEvaluation || Board.Game.SEE_GE(moves[moveOrder[bestMoveIndex]].FromSquare, moves[moveOrder[bestMoveIndex]].ToSquare, 0);
           if (tryMove)
           {
-            succeeded = MakeMove(moveOrder[bestMoveIndex]);
+            try
+            {
+              succeeded = MakeMove(moveOrder[bestMoveIndex]);
+            }
+            catch (Exception ex)
+            {
+              throw new Exception(
+                string.Format("Error making move {0} ({1}) during move {2} ({3}) considering move {4} ({5})!",
+                  moveOrder[bestMoveIndex],
+                  moves[moveOrder[bestMoveIndex]].ToString(),
+                  currentMoveIndex,
+                  moves[currentMoveIndex].ToString(),
+                  moveCursor,
+                  moves[moveCursor].ToString()),
+                ex
+              );
+            }
             currentMoveIndex = moveOrder[bestMoveIndex];
             if (!succeeded)
               UnmakeMove();

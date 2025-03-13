@@ -74,7 +74,9 @@ namespace ChessV
 
     public override string ToString()
     {
-      return string.Format("{0} {1} {2} {3}", MoveType, FromSquare, ToSquare, PromotionType);
+      string fromSquare = $"{(char)('a' + (FromSquare % 8))}{8 - (FromSquare / 8)}";
+      string toSquare = $"{(char)('a' + (ToSquare % 8))}{8 - (ToSquare / 8)}";
+      return string.Format("{0} {1} {2} {3}", MoveType, fromSquare, toSquare, PieceMoved.PieceType.Notation[Player]);
     }
   }
 }

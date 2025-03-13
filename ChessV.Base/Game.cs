@@ -492,6 +492,9 @@ namespace ChessV
                     }
                   if (isNew)
                   {
+                    if (nDirections >= MAX_DIRECTIONS)
+                      // TODO(chesslogic): List all piece notations loaded: so far, currently, and not yet
+                      throw new Exception("Too many directions");
                     directions[nDirections++] = dir;
                     if (moves[y].MaxSteps > 1)
                       nSlidingDirections++;

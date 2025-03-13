@@ -248,6 +248,8 @@ namespace Archipelago.APChessV
     }
 
     // TODO(chesslogic): warn user to reconnect
+    // TODO(chesslogic): Figure out the thread where this exception is thrown:
+    // Archipelago.MultiClient.Net.Exceptions.ArchipelagoSocketClosedException
     private void Session_SocketClosed(string reason, ArchipelagoSession session)
     {
       bool isThisSession = this.Session == session;
