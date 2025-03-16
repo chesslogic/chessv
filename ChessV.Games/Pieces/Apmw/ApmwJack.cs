@@ -83,7 +83,7 @@ namespace ChessV.Games.Pieces.Apmw
   public class Zealot : PieceType
   {
     public Zealot(string name, string notation, int midgameValue, int endgameValue, string preferredImageName = null) :
-      base("Zealot", name, notation, midgameValue, endgameValue, preferredImageName == null ? "DragonHorse" : preferredImageName)
+      base("Zealot", name, notation, midgameValue, endgameValue, preferredImageName == null ? "DragonKing" : preferredImageName)
     {
       AddMoves(this);
     }

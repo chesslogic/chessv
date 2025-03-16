@@ -42,13 +42,6 @@ namespace ChessV.Games.Rules.Apmw
     }
     #endregion
 
-    #region MoveBeingPlayedHandler
-    public void MoveBeingPlayedHandler(MoveInfo move)
-    {
-      gameHistory[Game.GameMoveNumber] = epSquares[1];
-    }
-    #endregion
-
     #region MoveBeingMade
     public override MoveEventResponse MoveBeingMade(MoveInfo move, int ply)
     {
@@ -114,8 +107,6 @@ namespace ChessV.Games.Rules.Apmw
       if (epSquare > 0)
       {
         int nd = Game.PlayerDirection(Game.CurrentSide ^ 1, NDirection);
-        int sq = Board.NextSquare(nd, epSquare);
-        Piece pawn = Board[sq];
         for (int ndir = 0; ndir < nAttackDirections; ndir++)
         {
           int nextSquare = Board.NextSquare(attackDirections[Game.CurrentSide ^ 1, ndir], epSquare);
@@ -128,17 +119,31 @@ namespace ChessV.Games.Rules.Apmw
               //	steps for large-board games where pawns make more than two steps 
               //	and can still be captured e.p.
               int captureSquare = Board.NextSquare(nd, epSquare);
-              while (Board[captureSquare] == null)
-                //captureSquare =
-                captureSquare = Board.NextSquare(nd, captureSquare);
+              int steps = 1;
+              // Add maximum step limit and validate capture square
+              while (Board[captureSquare] == null && steps < Board.NumRanks && captureSquare >= 0)
+              {
+                int nextCaptureSquare = Board.NextSquare(nd, captureSquare);
+                if (nextCaptureSquare < 0)
+                    break;
+                captureSquare = nextCaptureSquare;
+                steps++;
+              }
 
-              //	this piece can capture en passant 
-              list.BeginMoveAdd(MoveType.EnPassant, nextSquare, epSquare);
-              list.AddPickup(nextSquare);
-              list.AddPickup(captureSquare);
-              list.AddDrop(piece, epSquare, null);
+              // Verify there is actually a pawn to capture
+              Piece capturedPiece = Board[captureSquare];
+              if (captureSquare >= 0 && capturedPiece != null && 
+                  ((IMultipawnGame)Game).Pawns.Contains(capturedPiece.PieceType) &&
+                  capturedPiece.Player == (Game.CurrentSide ^ 1))
+              {
+                //	this piece can capture en passant 
+                list.BeginMoveAdd(MoveType.EnPassant, nextSquare, epSquare);
+                list.AddPickup(nextSquare);
+                list.AddPickup(captureSquare);
+                list.AddDrop(piece, epSquare, null);
 
-              list.EndMoveAdd(3000);
+                list.EndMoveAdd(3000);
+              }
             }
           }
         }
