@@ -207,12 +207,12 @@ namespace ChessV.GUI
       // comboBoxDifficulty
       // 
       comboBoxDifficulty.FormattingEnabled = true;
-      comboBoxDifficulty.Items.AddRange(new object[] { "Default Difficulty", "Difficulty -1", "Difficulty -2", "Difficulty -3", "Difficulty -4", "Difficulty -5" });
+      comboBoxDifficulty.Items.AddRange(new object[] { "Default AI Intelligence", "AI Intelligence -1", "AI Intelligence -2", "AI Intelligence -3", "AI Intelligence -4", "AI Intelligence -5" });
       comboBoxDifficulty.Location = new System.Drawing.Point(250, 121);
       comboBoxDifficulty.Name = "comboBoxDifficulty";
       comboBoxDifficulty.Size = new System.Drawing.Size(218, 33);
       comboBoxDifficulty.TabIndex = 13;
-      comboBoxDifficulty.Text = "Choose Difficulty";
+      comboBoxDifficulty.Text = "Reduce AI Intelligence";
       // 
       // labelDivider
       // 
