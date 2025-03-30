@@ -57,7 +57,7 @@ namespace Archipelago.APChessV
       core.GeriProvider = () => items.Any(
         (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Play as White") ? 0 : 1;
       core.EngineWeakeningProvider = () => Math.Min(5, items.Count(
-        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Engine ELO Lobotomy"));
+        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive AI Intelligence Malus"));
       core.foundPockets = Math.Min(12, items.Count(
         (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Pocket"));
       core.foundPawns = items.Count(
