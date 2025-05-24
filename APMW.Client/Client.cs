@@ -153,7 +153,7 @@ namespace Archipelago.APChessV
             "ChecksMate",
             slotName,
             itemsHandlingFlags: ItemsHandlingFlags.AllItems,
-            new Version(0, 2, 14),
+            new Version(0, 3, 0),
             tags: new string[] { "ChecksMate V" },
             password: password,
             requestSlotData: true);
