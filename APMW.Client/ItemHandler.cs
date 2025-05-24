@@ -584,6 +584,7 @@ namespace Archipelago.APChessV
           pocketPieces.Add(GetNextPawn(randomPieces, pawnOptions));
         else
         {
+          // TODO(chesslogic): Try to remove very low material pieces like Gardener, unless it leaves set empty
           HashSet<PieceType> setOfPieceType = ApmwCore.getInstance().pocketSets[pockets[i] - 1];
           List<PieceType> listOfPieceType = filterPiecesByArmy(setOfPieceType);
           int index = randomPieces.Next(listOfPieceType.Count);

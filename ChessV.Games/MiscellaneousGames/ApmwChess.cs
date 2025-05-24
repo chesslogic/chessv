@@ -639,7 +639,7 @@ namespace ChessV.Games
       // Berolina pawn
       BerolinaPawn = new BerolinaPawn("Berolina Pawn", "Ŕ", 85, 120, preferredImageName: "Ferz");
       // Checkers pawn - register with both case variants
-      Checkers = new Checkers("Checkers", "Ç", 50, 105, preferredImageName: "CircleLittle");
+      Checkers = new Checkers("Checkers", "Ç", 40, 95, preferredImageName: "CircleLittle");
       // Sergeant
       Sergeant = new Sergeant("Sergeant", "Ŝ", 200, 225, preferredImageName: "General");
       OdinPawn = new OdinPawn("Odin Pawn", "Ó", 150, 200, preferredImageName: "Wizard");
