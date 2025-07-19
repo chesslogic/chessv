@@ -1177,10 +1177,71 @@ namespace ChessV
     {
       UInt32 countermove = ply == 1 ? 0 : countermoves[SearchPath[ply - 1].FromSquare, SearchPath[ply - 1].ToSquare];
       moveLists[ply].Reset(movehash, countermove);
+      
+      // Track how many pieces have custom move generators to better manage capacity
+      int customMoveGeneratorCount = 0;
       for (int nPiece = 0; nPiece < nPieces[player]; nPiece++)
+      {
+        if (pieces[player, nPiece].Square >= 0 && pieces[player, nPiece].PieceType.CustomMoveGenerator != null)
+          customMoveGeneratorCount++;
+      }
+      
+      // Calculate safe move limits based on number of custom generators
+      int safeMoveLimitPerPiece = customMoveGeneratorCount > 0 ? 
+        Math.Max(50, (MoveList.MAX_MOVES - 200) / (nPieces[player] + customMoveGeneratorCount * 2)) : 
+        MoveList.MAX_MOVES - 100;
+      
+      for (int nPiece = 0; nPiece < nPieces[player]; nPiece++)
+      {
         if (pieces[player, nPiece].Square >= 0)
+        {
+          // Check if we're approaching move list capacity before generating moves for this piece
+          if (moveLists[ply].Count > MoveList.MAX_MOVES - MoveList.MAX_MOVES_TRY_STOP_DELTA)
+          {
+            // Log warning and stop generating moves to prevent crash
+            if (MessageLog != null)
+            {
+              MessageLog.DebugMessage($"Move generation stopped early: {moveLists[ply].Count} moves already generated. " +
+                $"Piece: {pieces[player, nPiece].PieceType.Name}, " +
+                $"Player: {player}, Ply: {ply}, CustomGens: {customMoveGeneratorCount}");
+            }
+            break;
+          }
+          
+          // For pieces with custom move generators, be more conservative
+          if (pieces[player, nPiece].PieceType.CustomMoveGenerator != null && 
+              moveLists[ply].Count > safeMoveLimitPerPiece)
+          {
+                         if (MessageLog != null)
+             {
+               MessageLog.DebugMessage($"Skipping custom move generator for {pieces[player, nPiece].PieceType.Name} " +
+                 $"due to move count {moveLists[ply].Count} exceeding safe limit {safeMoveLimitPerPiece}");
+             }
+            continue;
+          }
+          
+          int moveCountBefore = moveLists[ply].Count;
           pieces[player, nPiece].GenerateMoves(moveLists[ply], capturesOnly);
-      GenerateSpecialMoves(moveLists[ply], capturesOnly);
+          int movesGenerated = moveLists[ply].Count - moveCountBefore;
+          
+                     // Log excessive move generation
+           if (movesGenerated > 200 && MessageLog != null)
+           {
+             MessageLog.DebugMessage($"Piece {pieces[player, nPiece].PieceType.Name} generated {movesGenerated} moves " +
+               $"(total: {moveLists[ply].Count})");
+           }
+        }
+      }
+      
+      // Only generate special moves if we still have capacity
+      if (moveLists[ply].Count < MoveList.MAX_MOVES - MoveList.MAX_MOVES_TRY_STOP_DELTA)
+      {
+        GenerateSpecialMoves(moveLists[ply], capturesOnly);
+      }
+             else if (MessageLog != null)
+       {
+         MessageLog.DebugMessage($"Skipping special moves generation due to high move count: {moveLists[ply].Count}");
+       }
     }
     #endregion
 

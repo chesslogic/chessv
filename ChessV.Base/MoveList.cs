@@ -1,5 +1,4 @@
-﻿
-/***************************************************************************
+﻿/***************************************************************************
 
                                  ChessV
 
@@ -34,12 +33,20 @@ namespace ChessV
     // This is the maximum number of moves that can be stored, but the implementation of nonstandard moves ("Special Moves")
     // means that the actual number of turns we can look forward can be less. A pickup and drop is 2 moves, in 1 ply.
     public const int MAX_MOVES = 2048;
+    public const int MAX_MOVES_TRY_STOP_DELTA = 100;
+    public const int MAX_MOVES_HARD_STOP_DELTA = 50;
+    public const int MAX_MOVES_CRASH_STOP_DELTA = 5;
 
     public bool LegalMovesOnly { get; set; }
 
     public int Count { get { return moveCursor; } }
 
-    public MoveInfo CurrentMove { get { return moves[currentMoveIndex]; } }
+    public int MoveCursor
+    { get { return moveCursor; } }
+
+    // The current move being made, if any
+    public MoveInfo CurrentMove
+    { get { return currentMoveIndex >= 0 && currentMoveIndex < moveCursor ? moves[currentMoveIndex] : default(MoveInfo); } }
 
 
     // *** CONSTRUCTION *** //
@@ -205,9 +212,22 @@ namespace ChessV
     #region PerformPickup
     protected void PerformPickup(int index)
     {
-      try {
+      try
+      {
         pickups[index].Piece = Board.ClearSquare(pickups[index].Square);
-      } catch (Exception ex) {
+      }
+      catch (InvalidBoardStateException ex)
+      {
+        // Add move context to the exception
+        throw new InvalidBoardStateException(
+          ex.Message,
+          ex.Square,
+          ex.SquareNotation,
+          ex.Game,
+          moves[moveCursor]);
+      }
+      catch (Exception ex)
+      {
         throw new Exception(
           string.Format("Error performing pickup at {0} ({1}) during move {2} ({3}) following move {4} ({5})!",
             pickups[index].Square,
@@ -265,6 +285,12 @@ namespace ChessV
     #region AddMove
     public void AddMove(int fromSquare, int toSquare, bool direct = false)
     {
+      // Check for move list overflow before proceeding
+      if (moveCursor >= MAX_MOVES - MAX_MOVES_CRASH_STOP_DELTA)
+      {
+        throw new Exception($"Move list overflow: {moveCursor} moves already generated, cannot add more. From: {Board.GetDefaultSquareNotation(fromSquare)}, To: {Board.GetDefaultSquareNotation(toSquare)}");
+      }
+
       if (!direct && Board.Game.MoveBeingGenerated(this, fromSquare, toSquare, MoveType.StandardMove))
         return;
 
@@ -279,6 +305,10 @@ namespace ChessV
             return;
 
       Piece pieceBeingMoved = Board[fromSquare];
+      if (pieceBeingMoved == null)
+      {
+        throw new Exception($"No piece to move from square {Board.GetDefaultSquareNotation(fromSquare)} (square {fromSquare})");
+      }
 
       //	initialize pickups and drops
       pickups[pickupCursor].Piece = null;
@@ -345,6 +375,12 @@ namespace ChessV
     #region AddCapture
     public void AddCapture(int fromSquare, int toSquare, bool direct = false)
     {
+      // Check for move list overflow before proceeding
+      if (moveCursor >= MAX_MOVES - MAX_MOVES_CRASH_STOP_DELTA)
+      {
+        throw new Exception($"Move list overflow during capture: {moveCursor} moves already generated, cannot add more. From: {Board.GetDefaultSquareNotation(fromSquare)}, To: {Board.GetDefaultSquareNotation(toSquare)}");
+      }
+
       if (!direct && Board.Game.MoveBeingGenerated(this, fromSquare, toSquare, MoveType.StandardCapture))
         return;
 
@@ -360,6 +396,16 @@ namespace ChessV
 
       Piece pieceBeingMoved = Board[fromSquare];
       Piece pieceBeingCaptured = Board[toSquare];
+
+      if (pieceBeingMoved == null)
+      {
+        throw new Exception($"No piece to move from square {Board.GetDefaultSquareNotation(fromSquare)} (square {fromSquare}) during capture");
+      }
+
+      if (pieceBeingCaptured == null)
+      {
+        throw new Exception($"No piece to capture at square {Board.GetDefaultSquareNotation(toSquare)} (square {toSquare})");
+      }
 
       //	initialize pickups and drops
       pickups[pickupCursor].Piece = null;
@@ -471,16 +517,37 @@ namespace ChessV
         int toSquare,
         int tag = 0)
     {
+      // Check for move list overflow before proceeding
+      if (moveCursor >= MAX_MOVES - MAX_MOVES_HARD_STOP_DELTA)
+      {
+        throw new Exception($"Move list overflow in BeginMoveAdd: {moveCursor} moves already generated, cannot add more. MoveType: {moveType}, From: {fromSquare}, To: {toSquare}");
+      }
+
+      // Validate square bounds
+      if (fromSquare != -1 && (fromSquare < 0 || fromSquare >= Board.NumSquaresExtended))
+      {
+        throw new Exception($"Invalid fromSquare {fromSquare} in BeginMoveAdd (valid range: 0-{Board.NumSquaresExtended - 1})");
+      }
+      if (toSquare < 0 || toSquare >= Board.NumSquaresExtended)
+      {
+        throw new Exception($"Invalid toSquare {toSquare} in BeginMoveAdd (valid range: 0-{Board.NumSquaresExtended - 1})");
+      }
+
       moves[moveCursor].MoveType = moveType;
       moves[moveCursor].Tag = tag;
 
       if (fromSquare != -1)
       {
-        moves[moveCursor].Player = Board[fromSquare].Player;
+        Piece pieceBeingMoved = Board[fromSquare];
+        if (pieceBeingMoved == null)
+        {
+          throw new Exception($"No piece to move from square {Board.GetDefaultSquareNotation(fromSquare)} (square {fromSquare}) in BeginMoveAdd");
+        }
+        moves[moveCursor].Player = pieceBeingMoved.Player;
         moves[moveCursor].FromSquare = fromSquare;
         moves[moveCursor].ToSquare = toSquare;
-        moves[moveCursor].OriginalType = Board[fromSquare].PieceType.TypeNumber;
-        moves[moveCursor].PieceMoved = Board[fromSquare];
+        moves[moveCursor].OriginalType = pieceBeingMoved.PieceType.TypeNumber;
+        moves[moveCursor].PieceMoved = pieceBeingMoved;
       }
       else
       {
@@ -511,9 +578,26 @@ namespace ChessV
     #region AddPickup
     public Piece AddPickup(int square)
     {
+      // Validate square bounds
+      if (square < 0 || square >= Board.NumSquaresExtended)
+      {
+        throw new Exception($"Invalid square {square} in AddPickup (valid range: 0-{Board.NumSquaresExtended - 1})");
+      }
+
+      // Check pickup capacity
+      if (pickupCursor >= MAX_MOVES - MAX_MOVES_CRASH_STOP_DELTA)
+      {
+        throw new Exception($"Pickup list overflow: {pickupCursor} pickups already registered, cannot add more at square {Board.GetDefaultSquareNotation(square)}");
+      }
+
+      Piece pieceOnSquare = Board[square];
+      if (pieceOnSquare == null)
+      {
+        throw new Exception($"No piece to pick up at square {Board.GetDefaultSquareNotation(square)} (square {square})");
+      }
+
       pickups[pickupCursor].Piece = null;
       pickups[pickupCursor++].Square = square;
-      Piece pieceOnSquare = Board[square];
       moves[moveCursor].PieceCaptured = pieceOnSquare;
       if (pieceOnSquare.Player != Board.Game.CurrentSide)
         moves[moveCursor].PieceCaptured = pieceOnSquare;
@@ -527,6 +611,22 @@ namespace ChessV
         int square,
         PieceType newType)
     {
+      // Validate inputs
+      if (piece == null)
+      {
+        throw new Exception("Cannot drop null piece in AddDrop");
+      }
+      if (square < 0 || square >= Board.NumSquaresExtended)
+      {
+        throw new Exception($"Invalid square {square} in AddDrop (valid range: 0-{Board.NumSquaresExtended - 1})");
+      }
+
+      // Check drop capacity
+      if (dropCursor >= MAX_MOVES - MAX_MOVES_CRASH_STOP_DELTA)
+      {
+        throw new Exception($"Drop list overflow: {dropCursor} drops already registered, cannot add more at square {Board.GetDefaultSquareNotation(square)}");
+      }
+
       if (moves[moveCursor].PieceCaptured == piece)
         moves[moveCursor].PieceCaptured = null;
       drops[dropCursor].NewType = newType;
@@ -547,6 +647,16 @@ namespace ChessV
     #region EndMoveAdd
     public void EndMoveAdd(int evaluation)
     {
+      // Validate that we have consistent pickup and drop counts
+      int pickupCount = pickupCursor - tempPickupCursor;
+      int dropCount = dropCursor - tempDropCursor;
+      
+      // For most moves, we should have equal pickups and drops, but some special moves might differ
+      if (pickupCount == 0 && dropCount == 0)
+      {
+        throw new Exception($"EndMoveAdd called with no pickups or drops for move {moveCursor}");
+      }
+
       moves[moveCursor].PickupCursor = pickupCursor;
       moves[moveCursor].DropCursor = dropCursor;
       moves[moveCursor].Evaluation = evaluation;
@@ -557,6 +667,12 @@ namespace ChessV
       else if (moves[moveCursor].Hash == countermove)
         moves[moveCursor].Evaluation += 250;
       moveCursor++;
+
+      // Final bounds check
+      if (moveCursor >= MAX_MOVES)
+      {
+        throw new Exception($"Move list overflow after EndMoveAdd: {moveCursor} moves generated (max: {MAX_MOVES})");
+      }
 
       if (LegalMovesOnly)
       {
@@ -575,32 +691,46 @@ namespace ChessV
     #region MakeMove
     public bool MakeMove(int index)
     {
-      int firstPickup = 0;
-      int firstDrop = 0;
-      if (index > 0)
+      bool succeeded = false;
+      if (index >= 0 && index < moveCursor)
       {
-        firstPickup = moves[index - 1].PickupCursor;
-        firstDrop = moves[index - 1].DropCursor;
-      }
-      int nCaptures = (moves[index].PickupCursor - firstPickup) - (moves[index].DropCursor - firstDrop);
+        //	store temporary cursor values, in case this move turns out to be 
+        //	illegal, in which case we need to restore the original values
+        tempPickupCursor = pickupCursor;
+        tempDropCursor = dropCursor;
 
-      //	perform all pickups
-      for (int pickup = firstPickup; pickup < moves[index].PickupCursor; pickup++)
-      {
-        PerformPickup(pickup);
-        if (moves[index].PickupCursor - pickup <= nCaptures)
+        //	ok, now pass message to the Game class, so it can update any info
+        //	it may need to as a result of this move.  this also gives the Game
+        //	class the chance to return false, indicating that the move is illegal
+        try
         {
+          succeeded = Board.Game.MoveBeingMade(moves[index]);
+        }
+        catch (InvalidBoardStateException ex)
+        {
+          // Add move context to the exception
+          throw new InvalidBoardStateException(
+            ex.Message,
+            ex.Square,
+            ex.SquareNotation,
+            ex.Game,
+            moves[index]);
+        }
+        catch (Exception ex)
+        {
+          throw new Exception(
+            string.Format("Error making move {0} ({1}) during move {2} ({3}) considering move {4} ({5})!",
+              index,
+              moves[index].ToString(),
+              currentMoveIndex,
+              moves[currentMoveIndex].ToString(),
+              moveCursor,
+              moves[moveCursor].ToString()),
+            ex
+          );
         }
       }
-
-      //	perform all drops (normally only one, but Castling is one exception)
-      for (int drop = firstDrop; drop < moves[index].DropCursor; drop++)
-        PerformDrop(drop);
-
-      //	ok, now pass message to the Game class, so it can update any info
-      //	it may need to as a result of this move.  this also gives the Game
-      //	class the chance to return false, indicating that the move is illegal
-      return Board.Game.MoveBeingMade(moves[index]);
+      return succeeded;
     }
 
     public bool MakeMove(MoveInfo move)

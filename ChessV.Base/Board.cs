@@ -22,6 +22,74 @@ using System.Collections.Generic;
 
 namespace ChessV
 {
+  public class InvalidBoardStateException : Exception
+  {
+    public int Square { get; private set; }
+    public string SquareNotation { get; private set; }
+    public Game Game { get; private set; }
+    public MoveInfo CurrentMove { get; private set; }
+
+    // Static field to track current move during operations
+    private static MoveInfo currentMove = new MoveInfo();
+
+    public InvalidBoardStateException(string message, int square, string squareNotation, Game game)
+      : base(BuildErrorMessage(message, square, squareNotation, game))
+    {
+      Square = square;
+      SquareNotation = squareNotation;
+      Game = game;
+      CurrentMove = currentMove;
+    }
+
+    public InvalidBoardStateException(string message, int square, string squareNotation, Game game, MoveInfo move)
+      : base(BuildErrorMessage(message, square, squareNotation, game, move))
+    {
+      Square = square;
+      SquareNotation = squareNotation;
+      Game = game;
+      CurrentMove = move;
+    }
+
+    public static void SetCurrentMove(MoveInfo move)
+    {
+      currentMove = move;
+    }
+
+    private static string BuildErrorMessage(string message, int square, string squareNotation, Game game, MoveInfo move = default(MoveInfo))
+    {
+      var sb = new System.Text.StringBuilder();
+      sb.AppendLine(message);
+      sb.AppendLine();
+      sb.AppendLine("Board State Details:");
+      sb.AppendLine($"Square: {square} ({squareNotation})");
+      sb.AppendLine($"Current Player: {game.CurrentSide}");
+      sb.AppendLine($"Game Move Number: {game.GameMoveNumber}");
+      sb.AppendLine();
+
+      MoveInfo currentMoveInfo = move.MoveType != MoveType.Invalid ? move : currentMove;
+      if (currentMoveInfo.MoveType != MoveType.Invalid)
+      {
+        sb.AppendLine("Current Move:");
+        sb.AppendLine($"  From: {game.Board.GetDefaultSquareNotation(currentMoveInfo.FromSquare)}");
+        sb.AppendLine($"  To: {game.Board.GetDefaultSquareNotation(currentMoveInfo.ToSquare)}");
+        sb.AppendLine($"  Type: {currentMoveInfo.MoveType}");
+        if (currentMoveInfo.PieceMoved != null)
+        {
+          sb.AppendLine($"  Piece: {currentMoveInfo.PieceMoved.PieceType.Name}");
+          sb.AppendLine($"  Player: {currentMoveInfo.PieceMoved.Player}");
+          sb.AppendLine($"  Square: {game.Board.GetDefaultSquareNotation(currentMoveInfo.PieceMoved.Square)}");
+        }
+        if (currentMoveInfo.PieceCaptured != null)
+        {
+          sb.AppendLine($"  Captured Piece: {currentMoveInfo.PieceCaptured.PieceType.Name}");
+          sb.AppendLine($"  Captured Player: {currentMoveInfo.PieceCaptured.Player}");
+        }
+      }
+
+      return sb.ToString();
+    }
+  }
+
   public class Board
   {
     // *** CONSTANTS *** //
@@ -608,9 +676,44 @@ namespace ChessV
     #region ClearSquare
     public Piece ClearSquare(int square)
     {
+      // Validate square bounds
+      if (square < 0 || square >= NumSquaresExtended)
+      {
+        throw new Exception($"Invalid square {square} in ClearSquare (valid range: 0-{NumSquaresExtended - 1})");
+      }
+
       Piece piece = squares[square];
       if (piece == null)
-        throw new Exception(string.Format("No piece to clear at {0} ({1})!", square, GetDefaultSquareNotation(square)));
+      {
+        // Provide detailed board state information
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine($"No piece to clear at square {square} ({GetDefaultSquareNotation(square)})");
+        sb.AppendLine("Board state around the target square:");
+        
+        // Show a 3x3 area around the target square if possible
+        var targetLocation = SquareToLocation(square);
+        for (int r = targetLocation.Rank - 1; r <= targetLocation.Rank + 1; r++)
+        {
+          for (int f = targetLocation.File - 1; f <= targetLocation.File + 1; f++)
+          {
+            if (r >= 0 && r < NumRanks && f >= 0 && f < NumFiles)
+            {
+              int sq = LocationToSquare(new Location(r, f));
+              Piece p = squares[sq];
+              string pieceInfo = p != null ? $"{p.PieceType.Name[0]}{p.Player}" : "..";
+              sb.Append($"{GetDefaultSquareNotation(sq)}:{pieceInfo} ");
+            }
+          }
+          sb.AppendLine();
+        }
+        
+        throw new InvalidBoardStateException(
+          sb.ToString(),
+          square, 
+          GetDefaultSquareNotation(square),
+          Game);
+      }
+      
       squares[square] = null;
       piece.Square = -1;
       playerMaterial[piece.Player] -= piece.PieceType.MidgameValue;
@@ -633,8 +736,22 @@ namespace ChessV
     #region SetSquare
     public void SetSquare(Piece piece, int square)
     {
+      // Validate inputs
+      if (piece == null)
+      {
+        throw new Exception($"Cannot set null piece at square {square} ({GetDefaultSquareNotation(square)})");
+      }
+      if (square < 0 || square >= NumSquaresExtended)
+      {
+        throw new Exception($"Invalid square {square} in SetSquare (valid range: 0-{NumSquaresExtended - 1})");
+      }
+
       if (squares[square] != null)
-        throw new Exception("Error in SetSquare - square is already occupied");
+      {
+        Piece existingPiece = squares[square];
+        throw new Exception($"Error in SetSquare - square {GetDefaultSquareNotation(square)} is already occupied by {existingPiece.PieceType.Name} (Player {existingPiece.Player}). Trying to place {piece.PieceType.Name} (Player {piece.Player})");
+      }
+      
       squares[square] = piece;
       piece.Square = square;
       playerMaterial[piece.Player] += piece.PieceType.MidgameValue;
