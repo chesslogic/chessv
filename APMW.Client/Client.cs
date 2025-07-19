@@ -15,6 +15,7 @@ namespace Archipelago.APChessV
 {
   public class ArchipelagoClient
   {
+    private const string CLIENT_VERSION = "0.3.1";
     public static ArchipelagoClient _instance;
     public static ArchipelagoClient getInstance()
     {
@@ -153,7 +154,6 @@ namespace Archipelago.APChessV
             "ChecksMate",
             slotName,
             itemsHandlingFlags: ItemsHandlingFlags.AllItems,
-            new Version(0, 3, 0),
             tags: new string[] { "ChecksMate V" },
             password: password,
             requestSlotData: true);
@@ -195,6 +195,19 @@ namespace Archipelago.APChessV
           session.Socket.SocketClosed += (reason) => Session_SocketClosed(reason, session);
 
           var slotData = successResult.SlotData;
+          
+          // Check client version compatibility
+          var requiredClientVersion = slotData.GetValueOrDefault("required_client_version", "0.1.0").ToString();
+          var currentClientVersion = CLIENT_VERSION;
+          
+          if (!IsClientVersionCompatible(requiredClientVersion))
+          {
+            nonSessionMessages.Add($"Client version mismatch: This client is version {currentClientVersion}, but the world requires version {requiredClientVersion} or higher");
+            nonSessionMessages.Add("Please update your ChecksMate client or ask the world generator to use an older APMW world version");
+            session.Socket.DisconnectAsync();
+            return;
+          }
+          
           ApmwConfig.getInstance().Instantiate(slotData);
           var isDeathLink = 0 < Convert.ToInt32(slotData.GetValueOrDefault("death_link", 0));
           if (isDeathLink)
@@ -261,6 +274,22 @@ namespace Archipelago.APChessV
       }
 
       // new ArchipelagoEndMessage().Send(NetworkDestination.Clients);
+    }
+
+    private bool IsClientVersionCompatible(string requiredVersion)
+    {
+      try
+      {
+        var current = new Version(CLIENT_VERSION);
+        var required = new Version(requiredVersion);
+        return current >= required;
+      }
+      catch (Exception)
+      {
+        // If version parsing fails, assume compatible to avoid blocking connections
+        nonSessionMessages.Add($"Warning: Could not parse version strings (current: {CLIENT_VERSION}, required: {requiredVersion}). Assuming compatible.");
+        return true;
+      }
     }
   }
 }
