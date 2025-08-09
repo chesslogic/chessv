@@ -45,7 +45,8 @@ namespace ChessV.Games.Rules.Alice
                 file <= Board.GetFile(castlingMoves[Game.CurrentSide, x].OtherFromSquare)); file++)
               {
                 int sq = file * Board.NumRanks + Board.GetRank(castlingMoves[Game.CurrentSide, x].KingFromSquare);
-                if (sq != castlingMoves[Game.CurrentSide, x].OtherFromSquare && Board[sq] != null)
+                if (sq >= 0 && sq < Board.NumSquaresExtended && 
+                    sq != castlingMoves[Game.CurrentSide, x].OtherFromSquare && Board[sq] != null)
                   squaresEmpty = false;
               }
               if (squaresEmpty)
@@ -63,31 +64,39 @@ namespace ChessV.Games.Rules.Alice
                   if (castlingMoves[Game.CurrentSide, x].KingToSquare < nSquaresFirstBoard)
                   {
                     //	moving from first board to second board
-                    if (Board[castlingMoves[Game.CurrentSide, x].KingToSquare + nSquaresFirstBoard] == null &&
-                      Board[castlingMoves[Game.CurrentSide, x].KingToSquare - Board.NumRanks + nSquaresFirstBoard] == null)
+                    int kingTarget = castlingMoves[Game.CurrentSide, x].KingToSquare + nSquaresFirstBoard;
+                    int otherTarget = castlingMoves[Game.CurrentSide, x].KingToSquare - Board.NumRanks + nSquaresFirstBoard;
+                    if (kingTarget >= 0 && kingTarget < Board.NumSquaresExtended &&
+                        otherTarget >= 0 && otherTarget < Board.NumSquaresExtended &&
+                        Board[kingTarget] == null && Board[otherTarget] == null)
                     {
-                      list.BeginMoveAdd(MoveType.Castling, castlingMoves[Game.CurrentSide, x].KingFromSquare,
-                        castlingMoves[Game.CurrentSide, x].KingToSquare + nSquaresFirstBoard);
-                      Piece king = list.AddPickup(castlingMoves[Game.CurrentSide, x].KingFromSquare);
-                      Piece other = list.AddPickup(castlingMoves[Game.CurrentSide, x].OtherFromSquare);
-                      list.AddDrop(king, castlingMoves[Game.CurrentSide, x].KingToSquare + nSquaresFirstBoard, null);
-                      list.AddDrop(other, castlingMoves[Game.CurrentSide, x].KingToSquare - Board.NumRanks + nSquaresFirstBoard, null);
-                      list.EndMoveAdd(1000);
+                      if (list.BeginMoveAdd(MoveType.Castling, castlingMoves[Game.CurrentSide, x].KingFromSquare, kingTarget))
+                      {
+                        Piece king = list.AddPickup(castlingMoves[Game.CurrentSide, x].KingFromSquare);
+                        Piece other = list.AddPickup(castlingMoves[Game.CurrentSide, x].OtherFromSquare);
+                        list.AddDrop(king, kingTarget, null);
+                        list.AddDrop(other, otherTarget, null);
+                        list.EndMoveAdd(1000);
+                      }
                     }
                   }
                   else
                   {
                     //	moving from second board to first board
-                    if (Board[castlingMoves[Game.CurrentSide, x].KingToSquare - nSquaresFirstBoard] == null &&
-                      Board[castlingMoves[Game.CurrentSide, x].OtherToSquare - nSquaresFirstBoard] == null)
+                    int kingTarget = castlingMoves[Game.CurrentSide, x].KingToSquare - nSquaresFirstBoard;
+                    int otherTarget = castlingMoves[Game.CurrentSide, x].OtherToSquare - nSquaresFirstBoard;
+                    if (kingTarget >= 0 && kingTarget < Board.NumSquaresExtended &&
+                        otherTarget >= 0 && otherTarget < Board.NumSquaresExtended &&
+                        Board[kingTarget] == null && Board[otherTarget] == null)
                     {
-                      list.BeginMoveAdd(MoveType.Castling, castlingMoves[Game.CurrentSide, x].KingFromSquare,
-                        castlingMoves[Game.CurrentSide, x].KingToSquare - nSquaresFirstBoard);
-                      Piece king = list.AddPickup(castlingMoves[Game.CurrentSide, x].KingFromSquare);
-                      Piece other = list.AddPickup(castlingMoves[Game.CurrentSide, x].OtherFromSquare);
-                      list.AddDrop(king, castlingMoves[Game.CurrentSide, x].KingToSquare - nSquaresFirstBoard, null);
-                      list.AddDrop(other, castlingMoves[Game.CurrentSide, x].KingToSquare - Board.NumRanks - nSquaresFirstBoard, null);
-                      list.EndMoveAdd(1000);
+                      if (list.BeginMoveAdd(MoveType.Castling, castlingMoves[Game.CurrentSide, x].KingFromSquare, kingTarget))
+                      {
+                        Piece king = list.AddPickup(castlingMoves[Game.CurrentSide, x].KingFromSquare);
+                        Piece other = list.AddPickup(castlingMoves[Game.CurrentSide, x].OtherFromSquare);
+                        list.AddDrop(king, kingTarget, null);
+                        list.AddDrop(other, otherTarget, null);
+                        list.EndMoveAdd(1000);
+                      }
                     }
                   }
 
@@ -101,29 +110,39 @@ namespace ChessV.Games.Rules.Alice
                       if (castlingMoves[Game.CurrentSide, x].KingToSquare < nSquaresFirstBoard)
                       {
                         //	moving from first board to second board
-                        if (Board[sq + nSquaresFirstBoard] == null &&
-                          Board[sq - Board.NumRanks + nSquaresFirstBoard] == null)
+                        int kingTarget = sq + nSquaresFirstBoard;
+                        int otherTarget = sq - Board.NumRanks + nSquaresFirstBoard;
+                        if (kingTarget >= 0 && kingTarget < Board.NumSquaresExtended &&
+                            otherTarget >= 0 && otherTarget < Board.NumSquaresExtended &&
+                            Board[kingTarget] == null && Board[otherTarget] == null)
                         {
-                          list.BeginMoveAdd(MoveType.Castling, castlingMoves[Game.CurrentSide, x].KingFromSquare, sq + nSquaresFirstBoard);
-                          Piece king = list.AddPickup(castlingMoves[Game.CurrentSide, x].KingFromSquare);
-                          Piece other = list.AddPickup(castlingMoves[Game.CurrentSide, x].OtherFromSquare);
-                          list.AddDrop(king, sq + nSquaresFirstBoard, null);
-                          list.AddDrop(other, sq - Board.NumRanks + nSquaresFirstBoard, null);
-                          list.EndMoveAdd(1000);
+                          if (list.BeginMoveAdd(MoveType.Castling, castlingMoves[Game.CurrentSide, x].KingFromSquare, kingTarget))
+                          {
+                            Piece king = list.AddPickup(castlingMoves[Game.CurrentSide, x].KingFromSquare);
+                            Piece other = list.AddPickup(castlingMoves[Game.CurrentSide, x].OtherFromSquare);
+                            list.AddDrop(king, kingTarget, null);
+                            list.AddDrop(other, otherTarget, null);
+                            list.EndMoveAdd(1000);
+                          }
                         }
                       }
                       else
                       {
                         //	moving from second board to first board
-                        if (Board[sq - nSquaresFirstBoard] == null &&
-                          Board[sq - Board.NumRanks - nSquaresFirstBoard] == null)
+                        int kingTarget = sq - nSquaresFirstBoard;
+                        int otherTarget = sq - Board.NumRanks - nSquaresFirstBoard;
+                        if (kingTarget >= 0 && kingTarget < Board.NumSquaresExtended &&
+                            otherTarget >= 0 && otherTarget < Board.NumSquaresExtended &&
+                            Board[kingTarget] == null && Board[otherTarget] == null)
                         {
-                          list.BeginMoveAdd(MoveType.Castling, castlingMoves[Game.CurrentSide, x].KingFromSquare, sq - nSquaresFirstBoard);
-                          Piece king = list.AddPickup(castlingMoves[Game.CurrentSide, x].KingFromSquare);
-                          Piece other = list.AddPickup(castlingMoves[Game.CurrentSide, x].OtherFromSquare);
-                          list.AddDrop(king, sq - nSquaresFirstBoard, null);
-                          list.AddDrop(other, sq - Board.NumRanks - nSquaresFirstBoard, null);
-                          list.EndMoveAdd(1000);
+                          if (list.BeginMoveAdd(MoveType.Castling, castlingMoves[Game.CurrentSide, x].KingFromSquare, kingTarget))
+                          {
+                            Piece king = list.AddPickup(castlingMoves[Game.CurrentSide, x].KingFromSquare);
+                            Piece other = list.AddPickup(castlingMoves[Game.CurrentSide, x].OtherFromSquare);
+                            list.AddDrop(king, kingTarget, null);
+                            list.AddDrop(other, otherTarget, null);
+                            list.EndMoveAdd(1000);
+                          }
                         }
                       }
                     }
@@ -139,7 +158,8 @@ namespace ChessV.Games.Rules.Alice
                 file >= Board.GetFile(castlingMoves[Game.CurrentSide, x].OtherFromSquare)); file--)
               {
                 int sq = file * Board.NumRanks + Board.GetRank(castlingMoves[Game.CurrentSide, x].KingFromSquare);
-                if (sq != castlingMoves[Game.CurrentSide, x].OtherFromSquare && Board[sq] != null)
+                if (sq >= 0 && sq < Board.NumSquaresExtended && 
+                    sq != castlingMoves[Game.CurrentSide, x].OtherFromSquare && Board[sq] != null)
                   squaresEmpty = false;
               }
               if (squaresEmpty)
@@ -157,31 +177,39 @@ namespace ChessV.Games.Rules.Alice
                   if (castlingMoves[Game.CurrentSide, x].KingToSquare < nSquaresFirstBoard)
                   {
                     //	moving from first board to second board
-                    if (Board[castlingMoves[Game.CurrentSide, x].KingToSquare + nSquaresFirstBoard] == null &&
-                      Board[castlingMoves[Game.CurrentSide, x].KingToSquare + Board.NumRanks + nSquaresFirstBoard] == null)
+                    int kingTarget = castlingMoves[Game.CurrentSide, x].KingToSquare + nSquaresFirstBoard;
+                    int otherTarget = castlingMoves[Game.CurrentSide, x].KingToSquare + Board.NumRanks + nSquaresFirstBoard;
+                    if (kingTarget >= 0 && kingTarget < Board.NumSquaresExtended &&
+                        otherTarget >= 0 && otherTarget < Board.NumSquaresExtended &&
+                        Board[kingTarget] == null && Board[otherTarget] == null)
                     {
-                      list.BeginMoveAdd(MoveType.Castling, castlingMoves[Game.CurrentSide, x].KingFromSquare,
-                        castlingMoves[Game.CurrentSide, x].KingToSquare + nSquaresFirstBoard);
-                      Piece king = list.AddPickup(castlingMoves[Game.CurrentSide, x].KingFromSquare);
-                      Piece other = list.AddPickup(castlingMoves[Game.CurrentSide, x].OtherFromSquare);
-                      list.AddDrop(king, castlingMoves[Game.CurrentSide, x].KingToSquare + nSquaresFirstBoard, null);
-                      list.AddDrop(other, castlingMoves[Game.CurrentSide, x].KingToSquare + Board.NumRanks + nSquaresFirstBoard, null);
-                      list.EndMoveAdd(1000);
+                      if (list.BeginMoveAdd(MoveType.Castling, castlingMoves[Game.CurrentSide, x].KingFromSquare, kingTarget))
+                      {
+                        Piece king = list.AddPickup(castlingMoves[Game.CurrentSide, x].KingFromSquare);
+                        Piece other = list.AddPickup(castlingMoves[Game.CurrentSide, x].OtherFromSquare);
+                        list.AddDrop(king, kingTarget, null);
+                        list.AddDrop(other, otherTarget, null);
+                        list.EndMoveAdd(1000);
+                      }
                     }
                   }
                   else
                   {
                     //	moving from second board to first board
-                    if (Board[castlingMoves[Game.CurrentSide, x].KingToSquare - nSquaresFirstBoard] == null &&
-                      Board[castlingMoves[Game.CurrentSide, x].KingToSquare + Board.NumRanks - nSquaresFirstBoard] == null)
+                    int kingTarget = castlingMoves[Game.CurrentSide, x].KingToSquare - nSquaresFirstBoard;
+                    int otherTarget = castlingMoves[Game.CurrentSide, x].KingToSquare + Board.NumRanks - nSquaresFirstBoard;
+                    if (kingTarget >= 0 && kingTarget < Board.NumSquaresExtended &&
+                        otherTarget >= 0 && otherTarget < Board.NumSquaresExtended &&
+                        Board[kingTarget] == null && Board[otherTarget] == null)
                     {
-                      list.BeginMoveAdd(MoveType.Castling, castlingMoves[Game.CurrentSide, x].KingFromSquare,
-                        castlingMoves[Game.CurrentSide, x].KingToSquare + nSquaresFirstBoard);
-                      Piece king = list.AddPickup(castlingMoves[Game.CurrentSide, x].KingFromSquare);
-                      Piece other = list.AddPickup(castlingMoves[Game.CurrentSide, x].OtherFromSquare);
-                      list.AddDrop(king, castlingMoves[Game.CurrentSide, x].KingToSquare - nSquaresFirstBoard, null);
-                      list.AddDrop(other, castlingMoves[Game.CurrentSide, x].KingToSquare + Board.NumRanks - nSquaresFirstBoard, null);
-                      list.EndMoveAdd(1000);
+                      if (list.BeginMoveAdd(MoveType.Castling, castlingMoves[Game.CurrentSide, x].KingFromSquare, kingTarget))
+                      {
+                        Piece king = list.AddPickup(castlingMoves[Game.CurrentSide, x].KingFromSquare);
+                        Piece other = list.AddPickup(castlingMoves[Game.CurrentSide, x].OtherFromSquare);
+                        list.AddDrop(king, kingTarget, null);
+                        list.AddDrop(other, otherTarget, null);
+                        list.EndMoveAdd(1000);
+                      }
                     }
                   }
 
@@ -195,29 +223,39 @@ namespace ChessV.Games.Rules.Alice
                       if (castlingMoves[Game.CurrentSide, x].KingToSquare < nSquaresFirstBoard)
                       {
                         //	moving from first board to second board
-                        if (Board[sq + nSquaresFirstBoard] == null &&
-                          Board[sq + Board.NumRanks + nSquaresFirstBoard] == null)
+                        int kingTarget = sq + nSquaresFirstBoard;
+                        int otherTarget = sq + Board.NumRanks + nSquaresFirstBoard;
+                        if (kingTarget >= 0 && kingTarget < Board.NumSquaresExtended &&
+                            otherTarget >= 0 && otherTarget < Board.NumSquaresExtended &&
+                            Board[kingTarget] == null && Board[otherTarget] == null)
                         {
-                          list.BeginMoveAdd(MoveType.Castling, castlingMoves[Game.CurrentSide, x].KingFromSquare, sq + nSquaresFirstBoard);
-                          Piece king = list.AddPickup(castlingMoves[Game.CurrentSide, x].KingFromSquare);
-                          Piece other = list.AddPickup(castlingMoves[Game.CurrentSide, x].OtherFromSquare);
-                          list.AddDrop(king, sq + nSquaresFirstBoard, null);
-                          list.AddDrop(other, sq + Board.NumRanks + nSquaresFirstBoard, null);
-                          list.EndMoveAdd(1000);
+                          if (list.BeginMoveAdd(MoveType.Castling, castlingMoves[Game.CurrentSide, x].KingFromSquare, kingTarget))
+                          {
+                            Piece king = list.AddPickup(castlingMoves[Game.CurrentSide, x].KingFromSquare);
+                            Piece other = list.AddPickup(castlingMoves[Game.CurrentSide, x].OtherFromSquare);
+                            list.AddDrop(king, kingTarget, null);
+                            list.AddDrop(other, otherTarget, null);
+                            list.EndMoveAdd(1000);
+                          }
                         }
                       }
                       else
                       {
                         //	moving from second board to first board
-                        if (Board[sq - nSquaresFirstBoard] == null &&
-                          Board[sq + Board.NumRanks - nSquaresFirstBoard] == null)
+                        int kingTarget = sq - nSquaresFirstBoard;
+                        int otherTarget = sq + Board.NumRanks - nSquaresFirstBoard;
+                        if (kingTarget >= 0 && kingTarget < Board.NumSquaresExtended &&
+                            otherTarget >= 0 && otherTarget < Board.NumSquaresExtended &&
+                            Board[kingTarget] == null && Board[otherTarget] == null)
                         {
-                          list.BeginMoveAdd(MoveType.Castling, castlingMoves[Game.CurrentSide, x].KingFromSquare, sq - nSquaresFirstBoard);
-                          Piece king = list.AddPickup(castlingMoves[Game.CurrentSide, x].KingFromSquare);
-                          Piece other = list.AddPickup(castlingMoves[Game.CurrentSide, x].OtherFromSquare);
-                          list.AddDrop(king, sq - nSquaresFirstBoard, null);
-                          list.AddDrop(other, sq + Board.NumRanks - nSquaresFirstBoard, null);
-                          list.EndMoveAdd(1000);
+                          if (list.BeginMoveAdd(MoveType.Castling, castlingMoves[Game.CurrentSide, x].KingFromSquare, kingTarget))
+                          {
+                            Piece king = list.AddPickup(castlingMoves[Game.CurrentSide, x].KingFromSquare);
+                            Piece other = list.AddPickup(castlingMoves[Game.CurrentSide, x].OtherFromSquare);
+                            list.AddDrop(king, kingTarget, null);
+                            list.AddDrop(other, otherTarget, null);
+                            list.EndMoveAdd(1000);
+                          }
                         }
                       }
                     }

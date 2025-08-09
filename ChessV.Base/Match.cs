@@ -24,6 +24,8 @@ using ChessV.Base;
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using System.IO;
+using System.Text;
 
 namespace ChessV
 {
@@ -403,21 +405,56 @@ namespace ChessV
       Moves.AddRange(moves);
       addPGNMove(moves, evalString(sender.Evaluation));
 
+      // Debug: Track board state before temporary moves
+      string boardStateBefore = GetBoardDebugInfo("Before temporary moves");
+      
       // Get the result before sending the move to the opponent
-      foreach (Movement move in moves)
-        Game.MakeMove(move, true);
-      if (Result.IsNone)
+      try
       {
-        Adjudicator.AddEval(Game, sender.Evaluation);
-        if (Adjudicator.Result != null)
-          Result = Adjudicator.Result;
+        foreach (Movement move in moves)
+        {
+          string moveDesc = $"{Game.GetSquareNotation(move.FromSquare)} to {Game.GetSquareNotation(move.ToSquare)}";
+          Game.MakeMove(move, true);
+        }
+        
+        // Debug: Track board state after temporary moves
+        string boardStateAfter = GetBoardDebugInfo("After temporary moves");
+        
+        if (Result.IsNone)
+        {
+          Adjudicator.AddEval(Game, sender.Evaluation);
+          if (Adjudicator.Result != null)
+            Result = Adjudicator.Result;
+        }
+        else
+        {
+          int q = 0;
+        }
+        
+        // Debug: Track board state before undo
+        string boardStateBeforeUndo = GetBoardDebugInfo("Before undo");
+        
+        for (int x = 0; x < moves.Count; x++)
+        {
+          try
+          {
+            Game.UndoMove();
+          }
+          catch (Exception ex)
+          {
+            // Enhanced error with debug info
+            throw new Exception($"Failed to undo move {x + 1} of {moves.Count}. " +
+              $"Move was: {Game.GetSquareNotation(moves[moves.Count - 1 - x].FromSquare)} to {Game.GetSquareNotation(moves[moves.Count - 1 - x].ToSquare)}\n" +
+              $"{boardStateBefore}\n{boardStateAfter}\n{boardStateBeforeUndo}\n" +
+              $"BoardMoveStack count: {Game.BoardMoveStack.MoveCount}\n" +
+              $"Original error: {ex.Message}", ex);
+          }
+        }
       }
-      else
+      catch (Exception ex)
       {
-        int q = 0;
+        throw new Exception($"Error in Match.OnMoveMade during move validation sequence.\n{boardStateBefore}\nOriginal error: {ex.Message}", ex);
       }
-      for (int x = 0; x < moves.Count; x++)
-        Game.UndoMove();
 
       Player player = PlayerToWait;
       player.MakeMove(moves);
@@ -754,6 +791,30 @@ namespace ChessV
       str += ((double)t / 1000.0).ToString("F" + precision.ToString()) + 's';
 
       return str;
+    }
+
+    private string GetBoardDebugInfo(string context)
+    {
+      var sb = new System.Text.StringBuilder();
+      sb.AppendLine($"=== {context} ===");
+      sb.AppendLine($"Current Player: {Game.CurrentSide}, Move #: {Game.GameMoveNumber}, Ply: {Game.Ply}");
+      sb.AppendLine($"BoardMoveStack moves: {Game.BoardMoveStack.MoveCount}");
+      
+      // Show key squares around e4 (where the error occurred)
+      sb.AppendLine("Board state around e4:");
+      for (int rank = 5; rank >= 2; rank--)
+      {
+        for (int file = 3; file <= 5; file++)
+        {
+          var loc = new ChessV.Location(rank, file);
+          int square = Game.Board.LocationToSquare(loc);
+          var piece = Game.Board[square];
+          string pieceInfo = piece != null ? $"{piece.PieceType.Name[0]}{piece.Player}" : "..";
+          sb.Append($"{Game.Board.GetDefaultSquareNotation(square)}:{pieceInfo} ");
+        }
+        sb.AppendLine();
+      }
+      return sb.ToString();
     }
 
 

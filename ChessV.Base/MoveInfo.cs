@@ -76,6 +76,7 @@ namespace ChessV
     {
       string fromSquare = $"{(char)('a' + (FromSquare % 8))}{8 - (FromSquare / 8)}";
       string toSquare = $"{(char)('a' + (ToSquare % 8))}{8 - (ToSquare / 8)}";
+      if (PieceMoved == null) return string.Format("{0} {1} {2}", MoveType, fromSquare, toSquare);
       return string.Format("{0} {1} {2} {3}", MoveType, fromSquare, toSquare, PieceMoved.PieceType.Notation[Player]);
     }
   }

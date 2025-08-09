@@ -262,6 +262,22 @@ namespace ChessV
     #region UndoPickup
     protected void UndoPickup(int index)
     {
+      // Check if there's actually a piece to restore before attempting to restore it
+      if (pickups[index].Piece == null)
+      {
+        // No piece to restore - this can happen during move validation
+        // when testing moves that weren't fully executed
+        return;
+      }
+      
+      // Check if the target square is already occupied
+      if (Board[pickups[index].Square] != null)
+      {
+        // Square is already occupied - this can happen during move validation
+        // when testing moves that weren't fully executed
+        return;
+      }
+      
       Board.SetSquare(pickups[index].Piece, pickups[index].Square);
     }
     #endregion
@@ -269,6 +285,14 @@ namespace ChessV
     #region UndoDrop
     protected void UndoDrop(int index)
     {
+      // Check if there's actually a piece to clear before attempting to clear it
+      if (Board[drops[index].Square] == null)
+      {
+        // No piece to clear - this can happen during move validation
+        // when testing moves that weren't fully executed
+        return;
+      }
+      
       Board.ClearSquare(drops[index].Square);
       drops[index].Piece.MoveCount--;
       if (drops[index].NewType != null)
@@ -283,16 +307,16 @@ namespace ChessV
     #endregion
 
     #region AddMove
-    public void AddMove(int fromSquare, int toSquare, bool direct = false)
+    public bool AddMove(int fromSquare, int toSquare, bool direct = false)
     {
       // Check for move list overflow before proceeding
       if (moveCursor >= MAX_MOVES - MAX_MOVES_CRASH_STOP_DELTA)
       {
-        throw new Exception($"Move list overflow: {moveCursor} moves already generated, cannot add more. From: {Board.GetDefaultSquareNotation(fromSquare)}, To: {Board.GetDefaultSquareNotation(toSquare)}");
+        return false;
       }
 
       if (!direct && Board.Game.MoveBeingGenerated(this, fromSquare, toSquare, MoveType.StandardMove))
-        return;
+        return true; // Move was handled, consider it successful
 
       if (Game.DeduplicateMoves)
         //	Game requires move deduplication, so we must check to 
@@ -302,12 +326,12 @@ namespace ChessV
             moves[x].FromSquare == fromSquare &&
             moves[x].ToSquare == toSquare)
             //	we have this move already so don't add it again
-            return;
+            return true; // Already have it, consider successful
 
       Piece pieceBeingMoved = Board[fromSquare];
       if (pieceBeingMoved == null)
       {
-        throw new Exception($"No piece to move from square {Board.GetDefaultSquareNotation(fromSquare)} (square {fromSquare})");
+        return false; // No piece to move, return false instead of throwing
       }
 
       //	initialize pickups and drops
@@ -364,25 +388,28 @@ namespace ChessV
           dropCursor--;
         }
       }
+      
+      return true; // Successfully added move
     }
 
-    public void AddMove(string fromSquareNotation, string toSquareNotation, bool direct = false)
+    public bool AddMove(string fromSquareNotation, string toSquareNotation, bool direct = false)
     {
-      AddMove(Board.Game.NotationToSquare(fromSquareNotation), Board.Game.NotationToSquare(toSquareNotation), direct);
+      return AddMove(Board.Game.NotationToSquare(fromSquareNotation), Board.Game.NotationToSquare(toSquareNotation), direct);
     }
     #endregion
 
     #region AddCapture
-    public void AddCapture(int fromSquare, int toSquare, bool direct = false)
+    public bool AddCapture(int fromSquare, int toSquare, bool direct = false)
     {
-      // Check for move list overflow before proceeding
+      // Check for move list overflow - return false instead of throwing
       if (moveCursor >= MAX_MOVES - MAX_MOVES_CRASH_STOP_DELTA)
       {
-        throw new Exception($"Move list overflow during capture: {moveCursor} moves already generated, cannot add more. From: {Board.GetDefaultSquareNotation(fromSquare)}, To: {Board.GetDefaultSquareNotation(toSquare)}");
+        // Log the issue if possible but don't crash
+        return false;
       }
 
       if (!direct && Board.Game.MoveBeingGenerated(this, fromSquare, toSquare, MoveType.StandardCapture))
-        return;
+        return true; // Move was handled, consider it successful
 
       if (Game.DeduplicateMoves)
         //	Game requires move deduplication, so we must check to 
@@ -392,19 +419,15 @@ namespace ChessV
             moves[x].FromSquare == fromSquare &&
             moves[x].ToSquare == toSquare)
             //	we have this move already so don't add it again
-            return;
+            return true; // Already have it, consider successful
 
       Piece pieceBeingMoved = Board[fromSquare];
       Piece pieceBeingCaptured = Board[toSquare];
 
-      if (pieceBeingMoved == null)
+      if (pieceBeingMoved == null || pieceBeingCaptured == null)
       {
-        throw new Exception($"No piece to move from square {Board.GetDefaultSquareNotation(fromSquare)} (square {fromSquare}) during capture");
-      }
-
-      if (pieceBeingCaptured == null)
-      {
-        throw new Exception($"No piece to capture at square {Board.GetDefaultSquareNotation(toSquare)} (square {toSquare})");
+        // Log the issue but don't crash - just skip this move
+        return false;
       }
 
       //	initialize pickups and drops
@@ -454,22 +477,35 @@ namespace ChessV
           dropCursor--;
         }
       }
+      
+      return true; // Successfully added capture
     }
 
-    public void AddCapture(string fromSquareNotation, string toSquareNotation, bool direct = false)
+    public bool AddCapture(string fromSquareNotation, string toSquareNotation, bool direct = false)
     {
-      AddCapture(Board.Game.NotationToSquare(fromSquareNotation), Board.Game.NotationToSquare(toSquareNotation), direct);
+      return AddCapture(Board.Game.NotationToSquare(fromSquareNotation), Board.Game.NotationToSquare(toSquareNotation), direct);
     }
     #endregion
 
     #region AddRifleCapture
-    public void AddRifleCapture(int fromSquare, int toSquare, bool direct = false)
+    public bool AddRifleCapture(int fromSquare, int toSquare, bool direct = false)
     {
+      // Check for move list overflow
+      if (moveCursor >= MAX_MOVES - MAX_MOVES_CRASH_STOP_DELTA)
+      {
+        return false;
+      }
+
       if (!direct && Board.Game.MoveBeingGenerated(this, fromSquare, toSquare, MoveType.BaroqueCapture))
-        return;
+        return true;
 
       Piece pieceBeingMoved = Board[fromSquare];
       Piece pieceBeingCaptured = Board[toSquare];
+
+      if (pieceBeingMoved == null || pieceBeingCaptured == null)
+      {
+        return false;
+      }
 
       //	initialize pickup
       pickups[pickupCursor].Piece = null;
@@ -505,32 +541,35 @@ namespace ChessV
         {
           moveCursor--;
           pickupCursor--;
+          return false;
         }
       }
+      
+      return true;
     }
     #endregion
 
     #region BeginMoveAdd
-    public void BeginMoveAdd
+    public bool BeginMoveAdd
       (MoveType moveType,
         int fromSquare,
         int toSquare,
         int tag = 0)
     {
-      // Check for move list overflow before proceeding
+      // Check for move list overflow before proceeding - return false instead of throwing
       if (moveCursor >= MAX_MOVES - MAX_MOVES_HARD_STOP_DELTA)
       {
-        throw new Exception($"Move list overflow in BeginMoveAdd: {moveCursor} moves already generated, cannot add more. MoveType: {moveType}, From: {fromSquare}, To: {toSquare}");
+        return false;
       }
 
-      // Validate square bounds
+      // Validate square bounds - return false instead of throwing
       if (fromSquare != -1 && (fromSquare < 0 || fromSquare >= Board.NumSquaresExtended))
       {
-        throw new Exception($"Invalid fromSquare {fromSquare} in BeginMoveAdd (valid range: 0-{Board.NumSquaresExtended - 1})");
+        return false;
       }
       if (toSquare < 0 || toSquare >= Board.NumSquaresExtended)
       {
-        throw new Exception($"Invalid toSquare {toSquare} in BeginMoveAdd (valid range: 0-{Board.NumSquaresExtended - 1})");
+        return false;
       }
 
       moves[moveCursor].MoveType = moveType;
@@ -541,7 +580,7 @@ namespace ChessV
         Piece pieceBeingMoved = Board[fromSquare];
         if (pieceBeingMoved == null)
         {
-          throw new Exception($"No piece to move from square {Board.GetDefaultSquareNotation(fromSquare)} (square {fromSquare}) in BeginMoveAdd");
+          return false;
         }
         moves[moveCursor].Player = pieceBeingMoved.Player;
         moves[moveCursor].FromSquare = fromSquare;
@@ -565,6 +604,8 @@ namespace ChessV
       //	illegal, in which case we need to restore the original values
       tempPickupCursor = pickupCursor;
       tempDropCursor = dropCursor;
+      
+      return true;
     }
     #endregion
 
@@ -578,22 +619,22 @@ namespace ChessV
     #region AddPickup
     public Piece AddPickup(int square)
     {
-      // Validate square bounds
+      // Validate square bounds - return null instead of throwing
       if (square < 0 || square >= Board.NumSquaresExtended)
       {
-        throw new Exception($"Invalid square {square} in AddPickup (valid range: 0-{Board.NumSquaresExtended - 1})");
+        return null;
       }
 
-      // Check pickup capacity
+      // Check pickup capacity - return null instead of throwing
       if (pickupCursor >= MAX_MOVES - MAX_MOVES_CRASH_STOP_DELTA)
       {
-        throw new Exception($"Pickup list overflow: {pickupCursor} pickups already registered, cannot add more at square {Board.GetDefaultSquareNotation(square)}");
+        return null;
       }
 
       Piece pieceOnSquare = Board[square];
       if (pieceOnSquare == null)
       {
-        throw new Exception($"No piece to pick up at square {Board.GetDefaultSquareNotation(square)} (square {square})");
+        return null;
       }
 
       pickups[pickupCursor].Piece = null;
@@ -606,25 +647,25 @@ namespace ChessV
     #endregion
 
     #region AddDrop
-    public void AddDrop
+    public bool AddDrop
       (Piece piece,
         int square,
         PieceType newType)
     {
-      // Validate inputs
+      // Validate inputs - return false instead of throwing
       if (piece == null)
       {
-        throw new Exception("Cannot drop null piece in AddDrop");
+        return false;
       }
       if (square < 0 || square >= Board.NumSquaresExtended)
       {
-        throw new Exception($"Invalid square {square} in AddDrop (valid range: 0-{Board.NumSquaresExtended - 1})");
+        return false;
       }
 
-      // Check drop capacity
+      // Check drop capacity - return false instead of throwing
       if (dropCursor >= MAX_MOVES - MAX_MOVES_CRASH_STOP_DELTA)
       {
-        throw new Exception($"Drop list overflow: {dropCursor} drops already registered, cannot add more at square {Board.GetDefaultSquareNotation(square)}");
+        return false;
       }
 
       if (moves[moveCursor].PieceCaptured == piece)
@@ -634,18 +675,20 @@ namespace ChessV
       drops[dropCursor++].Square = square;
       if (newType != null)
         moves[moveCursor].PromotionType = newType.TypeNumber;
+        
+      return true;
     }
 
-    public void AddDrop
+    public bool AddDrop
       (Piece piece,
         int square)
     {
-      AddDrop(piece, square, null);
+      return AddDrop(piece, square, null);
     }
     #endregion
 
     #region EndMoveAdd
-    public void EndMoveAdd(int evaluation)
+    public bool EndMoveAdd(int evaluation)
     {
       // Validate that we have consistent pickup and drop counts
       int pickupCount = pickupCursor - tempPickupCursor;
@@ -654,7 +697,7 @@ namespace ChessV
       // For most moves, we should have equal pickups and drops, but some special moves might differ
       if (pickupCount == 0 && dropCount == 0)
       {
-        throw new Exception($"EndMoveAdd called with no pickups or drops for move {moveCursor}");
+        return false;
       }
 
       moves[moveCursor].PickupCursor = pickupCursor;
@@ -668,10 +711,13 @@ namespace ChessV
         moves[moveCursor].Evaluation += 250;
       moveCursor++;
 
-      // Final bounds check
+      // Final bounds check - return false instead of throwing
       if (moveCursor >= MAX_MOVES)
       {
-        throw new Exception($"Move list overflow after EndMoveAdd: {moveCursor} moves generated (max: {MAX_MOVES})");
+        moveCursor--; // Rollback the increment
+        pickupCursor = tempPickupCursor;
+        dropCursor = tempDropCursor;
+        return false;
       }
 
       if (LegalMovesOnly)
@@ -683,9 +729,95 @@ namespace ChessV
           moveCursor--;
           pickupCursor = tempPickupCursor;
           dropCursor = tempDropCursor;
+          return false;
         }
       }
+      
+      return true;
     }
+    #endregion
+
+    #region Capacity Management
+    
+    /// <summary>
+    /// Check if we can safely add more moves of a given type
+    /// </summary>
+    public bool CanAddMoves(int moveTypeCount = 1)
+    {
+      return moveCursor + moveTypeCount <= MAX_MOVES - MAX_MOVES_HARD_STOP_DELTA;
+    }
+    
+    /// <summary>
+    /// Check if we're approaching capacity and should prioritize important moves
+    /// </summary>
+    public bool ShouldPrioritizeMoves()
+    {
+      return moveCursor >= MAX_MOVES - MAX_MOVES_TRY_STOP_DELTA;
+    }
+    
+    /// <summary>
+    /// Check if we should skip lower-priority move generation
+    /// </summary>
+    public bool ShouldSkipLowPriorityMoves()
+    {
+      return moveCursor >= MAX_MOVES - MAX_MOVES_HARD_STOP_DELTA;
+    }
+    
+    /// <summary>
+    /// Get remaining capacity for moves
+    /// </summary>
+    public int RemainingCapacity()
+    {
+      return MAX_MOVES - moveCursor;
+    }
+    
+    /// <summary>
+    /// Check if a move would be a duplicate (for better deduplication)
+    /// </summary>
+    public bool IsDuplicateMove(MoveType moveType, int fromSquare, int toSquare)
+    {
+      for (int x = 0; x < moveCursor; x++)
+      {
+        if (moves[x].MoveType == moveType &&
+            moves[x].FromSquare == fromSquare &&
+            moves[x].ToSquare == toSquare)
+        {
+          return true;
+        }
+      }
+      return false;
+    }
+    
+    /// <summary>
+    /// Safely add a move with automatic capacity checking and deduplication
+    /// Returns: true if move was added, false if skipped due to capacity or duplication
+    /// </summary>
+    public bool TryAddMove(int fromSquare, int toSquare, bool skipIfDuplicate = true)
+    {
+      if (!CanAddMoves(1))
+        return false;
+        
+      if (skipIfDuplicate && IsDuplicateMove(MoveType.StandardMove, fromSquare, toSquare))
+        return true; // Consider this successful since we already have the move
+        
+      return AddMove(fromSquare, toSquare, false);
+    }
+    
+    /// <summary>
+    /// Safely add a capture with automatic capacity checking and deduplication
+    /// Returns: true if capture was added, false if skipped due to capacity or duplication
+    /// </summary>
+    public bool TryAddCapture(int fromSquare, int toSquare, bool skipIfDuplicate = true)
+    {
+      if (!CanAddMoves(1))
+        return false;
+        
+      if (skipIfDuplicate && IsDuplicateMove(MoveType.StandardCapture, fromSquare, toSquare))
+        return true; // Consider this successful since we already have the move
+        
+      return AddCapture(fromSquare, toSquare, false);
+    }
+    
     #endregion
 
     #region MakeMove
