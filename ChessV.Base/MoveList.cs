@@ -826,10 +826,27 @@ namespace ChessV
       bool succeeded = false;
       if (index >= 0 && index < moveCursor)
       {
+        // determine the pickup/drop ranges for this move
+        int firstPickup = 0;
+        int firstDrop = 0;
+        if (index > 0)
+        {
+          firstPickup = moves[index - 1].PickupCursor;
+          firstDrop = moves[index - 1].DropCursor;
+        }
+
         //	store temporary cursor values, in case this move turns out to be 
         //	illegal, in which case we need to restore the original values
         tempPickupCursor = pickupCursor;
         tempDropCursor = dropCursor;
+
+        // Apply all pickups for this move
+        for (int pickup = firstPickup; pickup < moves[index].PickupCursor; pickup++)
+          PerformPickup(pickup);
+
+        // Apply all drops for this move
+        for (int drop = firstDrop; drop < moves[index].DropCursor; drop++)
+          PerformDrop(drop);
 
         //	ok, now pass message to the Game class, so it can update any info
         //	it may need to as a result of this move.  this also gives the Game
@@ -868,6 +885,15 @@ namespace ChessV
             );
           }
           succeeded = false;
+        }
+        // If illegal, revert the applied pickups/drops to restore board state
+        if (!succeeded)
+        {
+          // undo drops then pickups (same order as UnmakeMove)
+          for (int drop = firstDrop; drop < moves[index].DropCursor; drop++)
+            UndoDrop(drop);
+          for (int pickup = firstPickup; pickup < moves[index].PickupCursor; pickup++)
+            UndoPickup(pickup);
         }
       }
       return succeeded;
