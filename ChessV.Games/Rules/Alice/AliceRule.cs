@@ -26,28 +26,17 @@ namespace ChessV.Games.Rules.Alice
     public override MoveEventResponse MoveBeingGenerated(MoveList moves, int from, int to, MoveType type)
     {
       int nSquaresOnFirstBoard = Board.NumSquares / 2;
-      
-      // Validate input parameters
-      if (from < 0 || from >= Board.NumSquaresExtended || to < 0 || to >= Board.NumSquaresExtended)
-      {
-        return MoveEventResponse.NotHandled;
-      }
-      
       if (type == MoveType.StandardMove)
       {
         if (to >= nSquaresOnFirstBoard)
         {
-          int targetSquare = to - nSquaresOnFirstBoard;
-          // Validate target square is within bounds
-          if (targetSquare >= 0 && targetSquare < Board.NumSquaresExtended && Board[targetSquare] == null)
-            moves.AddMove(from, targetSquare, true);
+          if (Board[to - nSquaresOnFirstBoard] == null)
+            moves.AddMove(from, to - nSquaresOnFirstBoard, true);
         }
         else
         {
-          int targetSquare = to + nSquaresOnFirstBoard;
-          // Validate target square is within bounds
-          if (targetSquare >= 0 && targetSquare < Board.NumSquaresExtended && Board[targetSquare] == null)
-            moves.AddMove(from, targetSquare, true);
+          if (Board[to + nSquaresOnFirstBoard] == null)
+            moves.AddMove(from, to + nSquaresOnFirstBoard, true);
         }
         return MoveEventResponse.Handled;
       }
@@ -55,43 +44,23 @@ namespace ChessV.Games.Rules.Alice
       {
         if (to >= nSquaresOnFirstBoard)
         {
-          int targetSquare = to - nSquaresOnFirstBoard;
-          // Validate target square is within bounds
-          if (targetSquare >= 0 && targetSquare < Board.NumSquaresExtended)
-          {
-            if (moves.BeginMoveAdd(MoveType.StandardCapture, from, targetSquare))
-            {
-              Piece pieceBeingMoved = moves.AddPickup(from);
-              Piece pieceBeingCaptured = moves.AddPickup(to);
-              if (pieceBeingMoved != null && pieceBeingCaptured != null)
-              {
-                moves.AddDrop(pieceBeingMoved, targetSquare);
-                moves.EndMoveAdd(3000 +
-                  pieceBeingCaptured.PieceType.MidgameValue -
-                  (pieceBeingMoved.PieceType.MidgameValue / 16));
-              }
-            }
-          }
+          moves.BeginMoveAdd(MoveType.StandardCapture, from, to - nSquaresOnFirstBoard);
+          Piece pieceBeingMoved = moves.AddPickup(from);
+          Piece pieceBeingCaptured = moves.AddPickup(to);
+          moves.AddDrop(pieceBeingMoved, to - nSquaresOnFirstBoard);
+          moves.EndMoveAdd(3000 +
+            pieceBeingCaptured.PieceType.MidgameValue -
+            (pieceBeingMoved.PieceType.MidgameValue / 16));
         }
         else
         {
-          int targetSquare = to + nSquaresOnFirstBoard;
-          // Validate target square is within bounds
-          if (targetSquare >= 0 && targetSquare < Board.NumSquaresExtended)
-          {
-            if (moves.BeginMoveAdd(MoveType.StandardCapture, from, targetSquare))
-            {
-              Piece pieceBeingMoved = moves.AddPickup(from);
-              Piece pieceBeingCaptured = moves.AddPickup(to);
-              if (pieceBeingMoved != null && pieceBeingCaptured != null)
-              {
-                moves.AddDrop(pieceBeingMoved, targetSquare);
-                moves.EndMoveAdd(3000 +
-                  pieceBeingCaptured.PieceType.MidgameValue -
-                  (pieceBeingMoved.PieceType.MidgameValue / 16));
-              }
-            }
-          }
+          moves.BeginMoveAdd(MoveType.StandardCapture, from, to + nSquaresOnFirstBoard);
+          Piece pieceBeingMoved = moves.AddPickup(from);
+          Piece pieceBeingCaptured = moves.AddPickup(to);
+          moves.AddDrop(pieceBeingMoved, to + nSquaresOnFirstBoard);
+          moves.EndMoveAdd(3000 +
+            pieceBeingCaptured.PieceType.MidgameValue -
+            (pieceBeingMoved.PieceType.MidgameValue / 16));
         }
         return MoveEventResponse.Handled;
       }
@@ -108,16 +77,12 @@ namespace ChessV.Games.Rules.Alice
         int nSquaresOnFirstBoard = Board.NumSquares / 2;
         if (move.ToSquare >= nSquaresOnFirstBoard)
         {
-          int checkSquare = move.ToSquare - nSquaresOnFirstBoard;
-          if (checkSquare >= 0 && checkSquare < Board.NumSquaresExtended && 
-              Game.IsSquareAttacked(checkSquare, move.Player ^ 1))
+          if (Game.IsSquareAttacked(move.ToSquare - nSquaresOnFirstBoard, move.Player ^ 1))
             return MoveEventResponse.IllegalMove;
         }
         else
         {
-          int checkSquare = move.ToSquare + nSquaresOnFirstBoard;
-          if (checkSquare >= 0 && checkSquare < Board.NumSquaresExtended && 
-              Game.IsSquareAttacked(checkSquare, move.Player ^ 1))
+          if (Game.IsSquareAttacked(move.ToSquare + nSquaresOnFirstBoard, move.Player ^ 1))
             return MoveEventResponse.IllegalMove;
         }
       }

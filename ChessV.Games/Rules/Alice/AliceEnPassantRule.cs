@@ -57,12 +57,12 @@ namespace ChessV.Games.Rules.Alice
 
           //	we loop here to accomodate large-board games where a pawn can make a move 
           //	of more than two steps and still be captured e.p. on any square passed over
-          while (epsquare >= 0 && epsquare < Board.NumSquaresExtended && Board[epsquare] == null)
+          while (Board[epsquare] == null)
           {
             for (int ndir = 0; ndir < nAttackDirections; ndir++)
             {
               int nextSquare = Board.NextSquare(attackDirections[move.Player, ndir], epsquare);
-              if (nextSquare >= 0 && nextSquare < Board.NumSquaresExtended)
+              if (nextSquare >= 0)
               {
                 Piece piece = Board[nextSquare];
                 if (piece != null && piece.PieceType == PawnType && piece.Player != move.Player)
@@ -87,16 +87,11 @@ namespace ChessV.Games.Rules.Alice
       {
         int nd = Game.PlayerDirection(Game.CurrentSide ^ 1, NDirection);
         int sq = Board.NextSquare(nd, epSquare);
-        
-        // Validate sq bounds before accessing Board[sq]
-        if (sq < 0 || sq >= Board.NumSquaresExtended)
-          return;
-          
         Piece pawn = Board[sq];
         for (int ndir = 0; ndir < nAttackDirections; ndir++)
         {
           int nextSquare = Board.NextSquare(attackDirections[Game.CurrentSide ^ 1, ndir], epSquare);
-          if (nextSquare >= 0 && nextSquare < Board.NumSquaresExtended)
+          if (nextSquare >= 0)
           {
             Piece piece = Board[nextSquare];
             if (piece != null && piece.PieceType == PawnType && piece.Player == Game.CurrentSide)
@@ -105,42 +100,26 @@ namespace ChessV.Games.Rules.Alice
               //	steps for large-board games where pawns make more than two steps 
               //	and can still be captured e.p.
               int captureSquare = Board.NextSquare(nd, epSquare);
-              while (captureSquare >= 0 && captureSquare < Board.NumSquaresExtended && Board[captureSquare] == null)
+              while (Board[captureSquare] == null)
                 captureSquare = Board.NextSquare(nd, captureSquare);
-
-              // Validate captureSquare bounds after the loop
-              if (captureSquare < 0 || captureSquare >= Board.NumSquaresExtended)
-                continue;
 
               //	this piece can capture en passant 
               int nSquaresFirstBoard = Board.NumSquares / 2;
               if (epSquare > nSquaresFirstBoard)
               {
-                int targetSquare = epSquare - nSquaresFirstBoard;
-                if (targetSquare >= 0 && targetSquare < Board.NumSquaresExtended)
-                {
-                  if (list.BeginMoveAdd(MoveType.EnPassant, nextSquare, targetSquare))
-                  {
-                    list.AddPickup(nextSquare);
-                    list.AddPickup(captureSquare);
-                    list.AddDrop(piece, targetSquare, null);
-                    list.EndMoveAdd(120);
-                  }
-                }
+                list.BeginMoveAdd(MoveType.EnPassant, nextSquare, epSquare - nSquaresFirstBoard);
+                list.AddPickup(nextSquare);
+                list.AddPickup(captureSquare);
+                list.AddDrop(piece, epSquare - nSquaresFirstBoard, null);
+                list.EndMoveAdd(120);
               }
               else
               {
-                int targetSquare = epSquare + nSquaresFirstBoard;
-                if (targetSquare >= 0 && targetSquare < Board.NumSquaresExtended)
-                {
-                  if (list.BeginMoveAdd(MoveType.EnPassant, nextSquare, targetSquare))
-                  {
-                    list.AddPickup(nextSquare);
-                    list.AddPickup(captureSquare);
-                    list.AddDrop(piece, targetSquare, null);
-                    list.EndMoveAdd(120);
-                  }
-                }
+                list.BeginMoveAdd(MoveType.EnPassant, nextSquare, epSquare + nSquaresFirstBoard);
+                list.AddPickup(nextSquare);
+                list.AddPickup(captureSquare);
+                list.AddDrop(piece, epSquare + nSquaresFirstBoard, null);
+                list.EndMoveAdd(120);
               }
             }
           }

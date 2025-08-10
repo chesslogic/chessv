@@ -17,8 +17,6 @@ some reason you need a copy, please visit <http://www.gnu.org/licenses/>.
 
 ****************************************************************************/
 
-using System;
-
 namespace ChessV.Games.Pieces.OdinsRune
 {
   public class ForestOx : PieceType
@@ -42,21 +40,8 @@ namespace ChessV.Games.Pieces.OdinsRune
       for (int nMove = 0; nMove < nMoves; nMove++)
       {
         MoveCapability move = moves[nMove];
-        
-        // Validate direction before using it
-        if (move.NDirection < 0 || move.NDirection >= ChessV.Game.MAX_DIRECTIONS)
-          continue;
-        
-        // Validate piece square
-        if (piece.Square < 0 || piece.Square >= piece.Board.NumSquaresExtended)
-          continue;
-        
-        // Safe NextSquare call with bounds checking
-        int nextSquare = SafeNextSquare(piece.Board, piece.Player, move.NDirection, piece.Square);
-        if (nextSquare < 0)
-          continue;
-          
         int step = 1;
+        int nextSquare = piece.Board.NextSquare(piece.Player, move.NDirection, piece.Square);
         while (nextSquare >= 0 && step <= move.MaxSteps)
         {
           Piece pieceOnSquare = piece.Board[nextSquare];
@@ -67,17 +52,15 @@ namespace ChessV.Games.Pieces.OdinsRune
               moveList.AddCapture(piece.Square, nextSquare);
               for (int x = 0; x < 8; x++)
               {
-                int targetSquare = SafeNextSquare(piece.Board, piece.Player, x, nextSquare);
+                int targetSquare = piece.Board.NextSquare(x, nextSquare);
                 if (targetSquare >= 0 && piece.Board[targetSquare] != null && piece.Board[targetSquare].Player != piece.Player)
                 {
-                  if (moveList.BeginMoveAdd(MoveType.ExtraCapture, piece.Square, nextSquare, targetSquare))
-                  {
-                    moveList.AddPickup(piece.Square);
-                    moveList.AddPickup(nextSquare);
-                    moveList.AddPickup(targetSquare);
-                    moveList.AddDrop(piece, nextSquare);
-                    moveList.EndMoveAdd(4000 + piece.Board[nextSquare].PieceType.MidgameValue + piece.Board[targetSquare].PieceType.MidgameValue);
-                  }
+                  moveList.BeginMoveAdd(MoveType.ExtraCapture, piece.Square, nextSquare, targetSquare);
+                  moveList.AddPickup(piece.Square);
+                  moveList.AddPickup(nextSquare);
+                  moveList.AddPickup(targetSquare);
+                  moveList.AddDrop(piece, nextSquare);
+                  moveList.EndMoveAdd(4000 + piece.Board[nextSquare].PieceType.MidgameValue + piece.Board[targetSquare].PieceType.MidgameValue);
                 }
               }
             }
@@ -91,53 +74,24 @@ namespace ChessV.Games.Pieces.OdinsRune
                 moveList.AddMove(piece.Square, nextSquare);
               for (int x = 0; x < 8; x++)
               {
-                int targetSquare = SafeNextSquare(piece.Board, piece.Player, x, nextSquare);
+                int targetSquare = piece.Board.NextSquare(x, nextSquare);
                 if (targetSquare >= 0 && piece.Board[targetSquare] != null && piece.Board[targetSquare].Player != piece.Player)
                 {
-                  if (moveList.BeginMoveAdd(MoveType.ExtraCapture, piece.Square, nextSquare, targetSquare))
-                  {
-                    moveList.AddPickup(piece.Square);
-                    moveList.AddPickup(targetSquare);
-                    moveList.AddDrop(piece, nextSquare);
-                    moveList.EndMoveAdd(3000 + piece.Board[targetSquare].PieceType.MidgameValue);
-                  }
+                  moveList.BeginMoveAdd(MoveType.ExtraCapture, piece.Square, nextSquare, targetSquare);
+                  moveList.AddPickup(piece.Square);
+                  moveList.AddPickup(targetSquare);
+                  moveList.AddDrop(piece, nextSquare);
+                  moveList.EndMoveAdd(3000 + piece.Board[targetSquare].PieceType.MidgameValue);
                 }
               }
             }
-            nextSquare = SafeNextSquare(piece.Board, piece.Player, move.NDirection, nextSquare);
+            nextSquare = piece.Board.NextSquare(piece.Player, move.NDirection, nextSquare);
             step++;
           }
         }
       }
 
       return false;
-    }
-    
-    // Helper method to safely call NextSquare with bounds checking
-    private static int SafeNextSquare(Board board, int player, int direction, int square)
-    {
-      try
-      {
-        // Validate inputs
-        if (player < 0 || player >= board.Game.NumPlayers)
-          return -1;
-        if (direction < 0 || direction >= ChessV.Game.MAX_DIRECTIONS)
-          return -1;
-        if (square < 0 || square >= board.NumSquaresExtended)
-          return -1;
-          
-        // Get player direction safely
-        int playerDirection = board.Game.PlayerDirection(player, direction);
-        if (playerDirection < 0 || playerDirection >= board.NumberOfDirections)
-          return -1;
-          
-        return board.NextSquare(direction, square);
-      }
-      catch (IndexOutOfRangeException)
-      {
-        // Return -1 to indicate invalid move direction
-        return -1;
-      }
     }
   }
 }

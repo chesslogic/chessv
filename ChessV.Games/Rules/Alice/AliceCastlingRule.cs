@@ -43,23 +43,17 @@ namespace ChessV.Games.Rules.Alice
             if (castlingMoves[Game.CurrentSide, x].KingFromSquare < nSquaresFirstBoard)
             {
               //	going from first board to second
-              int kingTarget = castlingMoves[Game.CurrentSide, x].KingToSquare + nSquaresFirstBoard;
-              int otherTarget = castlingMoves[Game.CurrentSide, x].OtherToSquare + nSquaresFirstBoard;
-              if (kingTarget < 0 || kingTarget >= Board.NumSquaresExtended ||
-                  otherTarget < 0 || otherTarget >= Board.NumSquaresExtended ||
-                  Board[kingTarget] != null || Board[otherTarget] != null)
-                //	out of bounds or occupied - castling not possible
+              if (Board[castlingMoves[Game.CurrentSide, x].KingToSquare + nSquaresFirstBoard] != null ||
+                Board[castlingMoves[Game.CurrentSide, x].OtherToSquare + nSquaresFirstBoard] != null)
+                //	occupied - castling not possible
                 continue;
             }
             else
             {
               //	going from second board to first
-              int kingTarget = castlingMoves[Game.CurrentSide, x].KingToSquare - nSquaresFirstBoard;
-              int otherTarget = castlingMoves[Game.CurrentSide, x].OtherToSquare - nSquaresFirstBoard;
-              if (kingTarget < 0 || kingTarget >= Board.NumSquaresExtended ||
-                  otherTarget < 0 || otherTarget >= Board.NumSquaresExtended ||
-                  Board[kingTarget] != null || Board[otherTarget] != null)
-                //	out of bounds or occupied - castling not possible
+              if (Board[castlingMoves[Game.CurrentSide, x].KingToSquare - nSquaresFirstBoard] != null ||
+                Board[castlingMoves[Game.CurrentSide, x].OtherToSquare - nSquaresFirstBoard] != null)
+                //	occupied - castling not possible
                 continue;
             }
             //	find the left-most square that needs to be free on the board castling FROM
@@ -77,10 +71,9 @@ namespace ChessV.Games.Rules.Alice
             for (int file = Board.GetFile(minSquare); squaresEmpty && file <= Board.GetFile(maxSquare); file++)
             {
               int sq = file * Board.NumRanks + Board.GetRank(minSquare);
-              if (sq >= 0 && sq < Board.NumSquaresExtended &&
-                  sq != castlingMoves[Game.CurrentSide, x].KingFromSquare &&
-                  sq != castlingMoves[Game.CurrentSide, x].OtherFromSquare &&
-                  Board[sq] != null)
+              if (sq != castlingMoves[Game.CurrentSide, x].KingFromSquare &&
+                sq != castlingMoves[Game.CurrentSide, x].OtherFromSquare &&
+                Board[sq] != null)
                 //	the path is blocked by a piece other than those involved in castling
                 squaresEmpty = false;
             }
