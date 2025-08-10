@@ -197,13 +197,13 @@ namespace Archipelago.APChessV
           var slotData = successResult.SlotData;
           
           // Check client version compatibility
-          var requiredClientVersion = slotData.GetValueOrDefault("required_client_version", "0.1.0").ToString();
+          var requiredClientVersion = slotData.GetValueOrDefault("required_chess_client_version", "0.1.0").ToString();
           var currentClientVersion = CLIENT_VERSION;
           
           if (!IsClientVersionCompatible(requiredClientVersion))
           {
             nonSessionMessages.Add($"Client version mismatch: This client is version {currentClientVersion}, but the world requires version {requiredClientVersion} or higher");
-            nonSessionMessages.Add("Please update your ChecksMate client or ask the world generator to use an older APMW world version");
+            nonSessionMessages.Add("Please update your ChecksMate client (see https://github.com/chesslogic/chessv/releases) or ask the world generator to use an older APMW world version");
             session.Socket.DisconnectAsync();
             return;
           }
@@ -287,7 +287,7 @@ namespace Archipelago.APChessV
       catch (Exception)
       {
         // If version parsing fails, assume compatible to avoid blocking connections
-        nonSessionMessages.Add($"Warning: Could not parse version strings (current: {CLIENT_VERSION}, required: {requiredVersion}). Assuming compatible.");
+        nonSessionMessages.Add($"Warning: Could not parse version strings (current: {CLIENT_VERSION}, required: {requiredVersion}). Assuming compatible. Do not proceed if you do not know what you are doing.");
         return true;
       }
     }
