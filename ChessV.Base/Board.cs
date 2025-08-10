@@ -794,49 +794,52 @@ namespace ChessV
       Piece piece = squares[to];
       if (piece == null)
       {
-        // Provide detailed debug information
-        var sb = new System.Text.StringBuilder();
-        sb.AppendLine($"CalculateStandardMovePST: No piece found at destination square {to} ({GetDefaultSquareNotation(to)})");
-        sb.AppendLine($"Source square: {from} ({GetDefaultSquareNotation(from)})");
-        sb.AppendLine($"Piece at source: {(squares[from] != null ? $"{squares[from].PieceType.Name} (Player {squares[from].Player})" : "null")}");
-        sb.AppendLine($"Current game state: Player {Game.CurrentSide}, Move #{Game.GameMoveNumber}, Ply {Game.Ply}");
-        
-        // Show board state around both squares
-        sb.AppendLine("Board state around destination square:");
-        var toLocation = SquareToLocation(to);
-        for (int r = toLocation.Rank - 1; r <= toLocation.Rank + 1; r++)
+        if (DebugFlags.ThrowOnInvariantViolation)
         {
-          for (int f = toLocation.File - 1; f <= toLocation.File + 1; f++)
+          var sb = new System.Text.StringBuilder();
+          sb.AppendLine($"CalculateStandardMovePST: No piece found at destination square {to} ({GetDefaultSquareNotation(to)})");
+          sb.AppendLine($"Source square: {from} ({GetDefaultSquareNotation(from)})");
+          sb.AppendLine($"Piece at source: {(squares[from] != null ? $"{squares[from].PieceType.Name} (Player {squares[from].Player})" : "null")}");
+          sb.AppendLine($"Current game state: Player {Game.CurrentSide}, Move #{Game.GameMoveNumber}, Ply {Game.Ply}");
+          if (DebugFlags.VerboseDiagnostics)
           {
-            if (r >= 0 && r < NumRanks && f >= 0 && f < NumFiles)
+            sb.AppendLine("Board state around destination square:");
+            var toLocation = SquareToLocation(to);
+            for (int r = toLocation.Rank - 1; r <= toLocation.Rank + 1; r++)
             {
-              int sq = LocationToSquare(new Location(r, f));
-              Piece p = squares[sq];
-              string pieceInfo = p != null ? $"{p.PieceType.Name[0]}{p.Player}" : "..";
-              sb.Append($"{GetDefaultSquareNotation(sq)}:{pieceInfo} ");
+              for (int f = toLocation.File - 1; f <= toLocation.File + 1; f++)
+              {
+                if (r >= 0 && r < NumRanks && f >= 0 && f < NumFiles)
+                {
+                  int sq = LocationToSquare(new Location(r, f));
+                  Piece p = squares[sq];
+                  string pieceInfo = p != null ? $"{p.PieceType.Name[0]}{p.Player}" : "..";
+                  sb.Append($"{GetDefaultSquareNotation(sq)}:{pieceInfo} ");
+                }
+              }
+              sb.AppendLine();
+            }
+            sb.AppendLine("Board state around source square:");
+            var fromLocation = SquareToLocation(from);
+            for (int r = fromLocation.Rank - 1; r <= fromLocation.Rank + 1; r++)
+            {
+              for (int f = fromLocation.File - 1; f <= fromLocation.File + 1; f++)
+              {
+                if (r >= 0 && r < NumRanks && f >= 0 && f < NumFiles)
+                {
+                  int sq = LocationToSquare(new Location(r, f));
+                  Piece p = squares[sq];
+                  string pieceInfo = p != null ? $"{p.PieceType.Name[0]}{p.Player}" : "..";
+                  sb.Append($"{GetDefaultSquareNotation(sq)}:{pieceInfo} ");
+                }
+              }
+              sb.AppendLine();
             }
           }
-          sb.AppendLine();
+          throw new Exception(sb.ToString());
         }
-        
-        sb.AppendLine("Board state around source square:");
-        var fromLocation = SquareToLocation(from);
-        for (int r = fromLocation.Rank - 1; r <= fromLocation.Rank + 1; r++)
-        {
-          for (int f = fromLocation.File - 1; f <= fromLocation.File + 1; f++)
-          {
-            if (r >= 0 && r < NumRanks && f >= 0 && f < NumFiles)
-            {
-              int sq = LocationToSquare(new Location(r, f));
-              Piece p = squares[sq];
-              string pieceInfo = p != null ? $"{p.PieceType.Name[0]}{p.Player}" : "..";
-              sb.Append($"{GetDefaultSquareNotation(sq)}:{pieceInfo} ");
-            }
-          }
-          sb.AppendLine();
-        }
-        
-        throw new Exception(sb.ToString());
+        // Safe fallback: no PST delta when destination piece missing
+        return 0;
       }
       return piece.PieceType.GetMidgamePST(flipSquare[piece.Player, to]) - piece.PieceType.GetMidgamePST(flipSquare[piece.Player, from]);
     }

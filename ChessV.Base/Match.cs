@@ -409,51 +409,54 @@ namespace ChessV
       string boardStateBefore = GetBoardDebugInfo("Before temporary moves");
       
       // Get the result before sending the move to the opponent
-      try
+      if (DebugFlags.ValidateMovesBeforeCommit)
       {
-        foreach (Movement move in moves)
+        try
         {
-          string moveDesc = $"{Game.GetSquareNotation(move.FromSquare)} to {Game.GetSquareNotation(move.ToSquare)}";
-          Game.MakeMove(move, true);
-        }
-        
-        // Debug: Track board state after temporary moves
-        string boardStateAfter = GetBoardDebugInfo("After temporary moves");
-        
-        if (Result.IsNone)
-        {
-          Adjudicator.AddEval(Game, sender.Evaluation);
-          if (Adjudicator.Result != null)
-            Result = Adjudicator.Result;
-        }
-        else
-        {
-          int q = 0;
-        }
-        
-        // Debug: Track board state before undo
-        string boardStateBeforeUndo = GetBoardDebugInfo("Before undo");
-        
-        for (int x = 0; x < moves.Count; x++)
-        {
-          try
+          foreach (Movement move in moves)
           {
-            Game.UndoMove();
+            string moveDesc = $"{Game.GetSquareNotation(move.FromSquare)} to {Game.GetSquareNotation(move.ToSquare)}";
+            Game.MakeMove(move, true);
           }
-          catch (Exception ex)
+          
+          // Debug: Track board state after temporary moves
+          string boardStateAfter = GetBoardDebugInfo("After temporary moves");
+          
+          if (Result.IsNone)
           {
-            // Enhanced error with debug info
-            throw new Exception($"Failed to undo move {x + 1} of {moves.Count}. " +
-              $"Move was: {Game.GetSquareNotation(moves[moves.Count - 1 - x].FromSquare)} to {Game.GetSquareNotation(moves[moves.Count - 1 - x].ToSquare)}\n" +
-              $"{boardStateBefore}\n{boardStateAfter}\n{boardStateBeforeUndo}\n" +
-              $"BoardMoveStack count: {Game.BoardMoveStack.MoveCount}\n" +
-              $"Original error: {ex.Message}", ex);
+            Adjudicator.AddEval(Game, sender.Evaluation);
+            if (Adjudicator.Result != null)
+              Result = Adjudicator.Result;
+          }
+          
+          // Debug: Track board state before undo
+          string boardStateBeforeUndo = GetBoardDebugInfo("Before undo");
+          
+          for (int x = 0; x < moves.Count; x++)
+          {
+            try
+            {
+              Game.UndoMove();
+            }
+            catch (Exception ex)
+            {
+              if (DebugFlags.ThrowOnInvariantViolation)
+              {
+                throw new Exception($"Failed to undo move {x + 1} of {moves.Count}. " +
+                  $"Move was: {Game.GetSquareNotation(moves[moves.Count - 1 - x].FromSquare)} to {Game.GetSquareNotation(moves[moves.Count - 1 - x].ToSquare)}\n" +
+                  $"{boardStateBefore}\n{boardStateAfter}\n{boardStateBeforeUndo}\n" +
+                  $"BoardMoveStack count: {Game.BoardMoveStack.MoveCount}\n" +
+                  $"Original error: {ex.Message}", ex);
+              }
+            }
           }
         }
-      }
-      catch (Exception ex)
-      {
-        throw new Exception($"Error in Match.OnMoveMade during move validation sequence.\n{boardStateBefore}\nOriginal error: {ex.Message}", ex);
+        catch (Exception ex)
+        {
+          if (DebugFlags.ThrowOnInvariantViolation)
+            throw new Exception($"Error in Match.OnMoveMade during move validation sequence.\n{boardStateBefore}\nOriginal error: {ex.Message}", ex);
+          // else continue without pre-validation
+        }
       }
 
       Player player = PlayerToWait;

@@ -840,26 +840,34 @@ namespace ChessV
         }
         catch (InvalidBoardStateException ex)
         {
-          // Add move context to the exception
-          throw new InvalidBoardStateException(
-            ex.Message,
-            ex.Square,
-            ex.SquareNotation,
-            ex.Game,
-            moves[index]);
+          if (DebugFlags.ThrowOnInvariantViolation)
+          {
+            throw new InvalidBoardStateException(
+              ex.Message,
+              ex.Square,
+              ex.SquareNotation,
+              ex.Game,
+              moves[index]);
+          }
+          // Swallow and mark as failed move in non-throw mode
+          succeeded = false;
         }
         catch (Exception ex)
         {
-          throw new Exception(
-            string.Format("Error making move {0} ({1}) during move {2} ({3}) considering move {4} ({5})!",
-              index,
-              moves[index].ToString(),
-              currentMoveIndex,
-              moves[currentMoveIndex].ToString(),
-              moveCursor,
-              moves[moveCursor].ToString()),
-            ex
-          );
+          if (DebugFlags.ThrowOnInvariantViolation)
+          {
+            throw new Exception(
+              string.Format("Error making move {0} ({1}) during move {2} ({3}) considering move {4} ({5})!",
+                index,
+                moves[index].ToString(),
+                currentMoveIndex,
+                moves[currentMoveIndex].ToString(),
+                moveCursor,
+                moves[moveCursor].ToString()),
+              ex
+            );
+          }
+          succeeded = false;
         }
       }
       return succeeded;

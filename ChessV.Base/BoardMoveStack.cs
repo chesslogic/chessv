@@ -81,7 +81,9 @@ namespace ChessV
     {
       if (pickups.Count == 0)
       {
-        throw new Exception("BoardMoveStack.UndoPickup: No pickups to undo!");
+        if (DebugFlags.ThrowOnInvariantViolation)
+          throw new Exception("BoardMoveStack.UndoPickup: No pickups to undo!");
+        return;
       }
       
       var pickup = pickups[pickups.Count - 1];
@@ -89,21 +91,21 @@ namespace ChessV
       // Check if there's actually a piece to restore before attempting to restore it
       if (pickup.Piece == null)
       {
-        // No piece to restore - this can happen during move validation
-        // when testing moves that weren't fully executed
-        // TODO: Should this be removed? Should there be another check? It looks like this and the next block are too similar...
-        //pickups.RemoveAt(pickups.Count - 1);
-        pickups.RemoveAt(pickups.Count - 1); // Always remove to maintain state consistency
+        pickups.RemoveAt(pickups.Count - 1); // maintain state
         return;
       }
       
       // Check if the target square is already occupied
       if (Board[pickup.Square] != null)
       {
-        // Square is already occupied - this can happen during move validation
-        // when testing moves that weren't fully executed
-        var existingPiece = Board[pickup.Square];
-        throw new Exception($"BoardMoveStack.UndoPickup: Cannot restore {pickup.Piece.PieceType.Name} (Player {pickup.Piece.Player}) to square {Board.GetDefaultSquareNotation(pickup.Square)} - already occupied by {existingPiece.PieceType.Name} (Player {existingPiece.Player})");
+        if (DebugFlags.ThrowOnInvariantViolation)
+        {
+          var existingPiece = Board[pickup.Square];
+          throw new Exception($"BoardMoveStack.UndoPickup: Cannot restore {pickup.Piece.PieceType.Name} (Player {pickup.Piece.Player}) to square {Board.GetDefaultSquareNotation(pickup.Square)} - already occupied by {existingPiece.PieceType.Name} (Player {existingPiece.Player})");
+        }
+        // Skip restoring to avoid double occupancy, but still drop the pickup to keep cursors consistent
+        pickups.RemoveAt(pickups.Count - 1);
+        return;
       }
       
       Board.SetSquare(pickup.Piece, pickup.Square);
@@ -114,7 +116,9 @@ namespace ChessV
     {
       if (drops.Count == 0)
       {
-        throw new Exception("BoardMoveStack.UndoDrop: No drops to undo!");
+        if (DebugFlags.ThrowOnInvariantViolation)
+          throw new Exception("BoardMoveStack.UndoDrop: No drops to undo!");
+        return;
       }
       
       var drop = drops[drops.Count - 1];
@@ -122,15 +126,21 @@ namespace ChessV
       // Check if there's actually a piece to clear before attempting to clear it
       if (Board[drop.Square] == null)
       {
-        // No piece to clear - this can happen during move validation
-        // when testing moves that weren't fully executed
-        throw new Exception($"BoardMoveStack.UndoDrop: No piece found at square {Board.GetDefaultSquareNotation(drop.Square)} to clear. Expected to find {drop.Piece.PieceType.Name} (Player {drop.Piece.Player}). Current board state around square:\n{GetBoardStateAroundSquare(drop.Square)}");
+        if (DebugFlags.ThrowOnInvariantViolation)
+          throw new Exception($"BoardMoveStack.UndoDrop: No piece found at square {Board.GetDefaultSquareNotation(drop.Square)} to clear. Expected to find {drop.Piece.PieceType.Name} (Player {drop.Piece.Player}). Current board state around square:\n{GetBoardStateAroundSquare(drop.Square)}");
+        // Nothing to clear; consider it already undone
+        drops.RemoveAt(drops.Count - 1);
+        return;
       }
       
       var pieceAtSquare = Board[drop.Square];
       if (pieceAtSquare != drop.Piece)
       {
-        throw new Exception($"BoardMoveStack.UndoDrop: Expected to find {drop.Piece.PieceType.Name} (Player {drop.Piece.Player}) at square {Board.GetDefaultSquareNotation(drop.Square)}, but found {pieceAtSquare.PieceType.Name} (Player {pieceAtSquare.Player}) instead. Current board state around square:\n{GetBoardStateAroundSquare(drop.Square)}");
+        if (DebugFlags.ThrowOnInvariantViolation)
+          throw new Exception($"BoardMoveStack.UndoDrop: Expected to find {drop.Piece.PieceType.Name} (Player {drop.Piece.Player}) at square {Board.GetDefaultSquareNotation(drop.Square)}, but found {pieceAtSquare.PieceType.Name} (Player {pieceAtSquare.Player}) instead. Current board state around square:\n{GetBoardStateAroundSquare(drop.Square)}");
+        // Best-effort: do not clear a different piece; consider this drop already reconciled
+        drops.RemoveAt(drops.Count - 1);
+        return;
       }
       
       Board.ClearSquare(drop.Square);

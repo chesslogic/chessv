@@ -73,7 +73,7 @@ namespace ChessV.Games.Rules.Apmw
 
           //	we loop here to accomodate large-board games where a pawn can make a move 
           //	of more than two steps and still be captured e.p. on any square passed over
-          while (Board[epsquare] == null)
+          while (epsquare >= 0 && epsquare < Board.NumSquares && Board[epsquare] == null)
           {
             for (int ndir = 0; ndir < nAttackDirections; ndir++)
             {
@@ -91,7 +91,10 @@ namespace ChessV.Games.Rules.Apmw
                 }
               }
             }
-            epsquare = Board.NextSquare(Game.PlayerDirection(move.Player, NDirection), epsquare);
+            int nextEp = Board.NextSquare(Game.PlayerDirection(move.Player, NDirection), epsquare);
+            if (nextEp < 0)
+              break;
+            epsquare = nextEp;
           }
         }
       return MoveEventResponse.NotHandled;

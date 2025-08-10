@@ -5,6 +5,10 @@ packages/
 SGF/
 
 
+APMW.Test/UserReports/
+APMW.Test/UserPlan/
+
+
 **/bin/
 **/obj/
 
