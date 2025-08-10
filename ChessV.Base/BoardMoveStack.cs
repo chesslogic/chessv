@@ -88,26 +88,7 @@ namespace ChessV
       
       var pickup = pickups[pickups.Count - 1];
       
-      // Check if there's actually a piece to restore before attempting to restore it
-      if (pickup.Piece == null)
-      {
-        pickups.RemoveAt(pickups.Count - 1); // maintain state
-        return;
-      }
-      
-      // Check if the target square is already occupied
-      if (Board[pickup.Square] != null)
-      {
-        if (DebugFlags.ThrowOnInvariantViolation)
-        {
-          var existingPiece = Board[pickup.Square];
-          throw new Exception($"BoardMoveStack.UndoPickup: Cannot restore {pickup.Piece.PieceType.Name} (Player {pickup.Piece.Player}) to square {Board.GetDefaultSquareNotation(pickup.Square)} - already occupied by {existingPiece.PieceType.Name} (Player {existingPiece.Player})");
-        }
-        // Skip restoring to avoid double occupancy, but still drop the pickup to keep cursors consistent
-        pickups.RemoveAt(pickups.Count - 1);
-        return;
-      }
-      
+      // Strictly restore the picked-up piece back to its original square
       Board.SetSquare(pickup.Piece, pickup.Square);
       pickups.RemoveAt(pickups.Count - 1);
     }
@@ -123,26 +104,7 @@ namespace ChessV
       
       var drop = drops[drops.Count - 1];
       
-      // Check if there's actually a piece to clear before attempting to clear it
-      if (Board[drop.Square] == null)
-      {
-        if (DebugFlags.ThrowOnInvariantViolation)
-          throw new Exception($"BoardMoveStack.UndoDrop: No piece found at square {Board.GetDefaultSquareNotation(drop.Square)} to clear. Expected to find {drop.Piece.PieceType.Name} (Player {drop.Piece.Player}). Current board state around square:\n{GetBoardStateAroundSquare(drop.Square)}");
-        // Nothing to clear; consider it already undone
-        drops.RemoveAt(drops.Count - 1);
-        return;
-      }
-      
-      var pieceAtSquare = Board[drop.Square];
-      if (pieceAtSquare != drop.Piece)
-      {
-        if (DebugFlags.ThrowOnInvariantViolation)
-          throw new Exception($"BoardMoveStack.UndoDrop: Expected to find {drop.Piece.PieceType.Name} (Player {drop.Piece.Player}) at square {Board.GetDefaultSquareNotation(drop.Square)}, but found {pieceAtSquare.PieceType.Name} (Player {pieceAtSquare.Player}) instead. Current board state around square:\n{GetBoardStateAroundSquare(drop.Square)}");
-        // Best-effort: do not clear a different piece; consider this drop already reconciled
-        drops.RemoveAt(drops.Count - 1);
-        return;
-      }
-      
+      // Strictly clear the dropped piece and restore its pre-drop state
       Board.ClearSquare(drop.Square);
       drop.Piece.MoveCount--;
       if (drop.NewType != null)

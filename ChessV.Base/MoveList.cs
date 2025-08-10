@@ -262,22 +262,7 @@ namespace ChessV
     #region UndoPickup
     protected void UndoPickup(int index)
     {
-      // Check if there's actually a piece to restore before attempting to restore it
-      if (pickups[index].Piece == null)
-      {
-        // No piece to restore - this can happen during move validation
-        // when testing moves that weren't fully executed
-        return;
-      }
-      
-      // Check if the target square is already occupied
-      if (Board[pickups[index].Square] != null)
-      {
-        // Square is already occupied - this can happen during move validation
-        // when testing moves that weren't fully executed
-        return;
-      }
-      
+      // Strictly restore the picked-up piece back to its original square
       Board.SetSquare(pickups[index].Piece, pickups[index].Square);
     }
     #endregion
@@ -285,14 +270,7 @@ namespace ChessV
     #region UndoDrop
     protected void UndoDrop(int index)
     {
-      // Check if there's actually a piece to clear before attempting to clear it
-      if (Board[drops[index].Square] == null)
-      {
-        // No piece to clear - this can happen during move validation
-        // when testing moves that weren't fully executed
-        return;
-      }
-      
+      // Strictly clear the dropped piece and restore its pre-drop state
       Board.ClearSquare(drops[index].Square);
       drops[index].Piece.MoveCount--;
       if (drops[index].NewType != null)
@@ -885,15 +863,6 @@ namespace ChessV
             );
           }
           succeeded = false;
-        }
-        // If illegal, revert the applied pickups/drops to restore board state
-        if (!succeeded)
-        {
-          // undo drops then pickups (same order as UnmakeMove)
-          for (int drop = firstDrop; drop < moves[index].DropCursor; drop++)
-            UndoDrop(drop);
-          for (int pickup = firstPickup; pickup < moves[index].PickupCursor; pickup++)
-            UndoPickup(pickup);
         }
       }
       return succeeded;
