@@ -498,7 +498,7 @@ namespace Archipelago.APChessV
             // A King protected by a Queen is not defended...
             
             int attackerValue = attackers[i].MidgameValue;
-            int defenderValue = attackers[i].MidgameValue;
+            int defenderValue = attackedPiece.PieceType.MidgameValue;
 
             // only pieces that are either undefended or worth more count towards a fork
             if (match.Game.IsSquareAttacked(square, humanPlayer ^ 1) && attackerValue >= defenderValue) continue;
