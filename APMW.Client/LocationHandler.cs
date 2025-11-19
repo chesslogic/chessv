@@ -472,10 +472,7 @@ namespace Archipelago.APChessV
 
           bool attackedPieceIsPawn = ApmwCore.getInstance().pawns.Contains(attackedPiece.PieceType);
           if (attackedPieceIsPawn)
-          {
             locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "Threaten Pawn"));
-            continue;
-          }
           bool attackedPieceIsMinor = ApmwCore.getInstance().minors.Contains(attackedPiece.PieceType);
           if (attackedPieceIsMinor)
             locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "Threaten Minor"));
@@ -499,14 +496,38 @@ namespace Archipelago.APChessV
             // There are conceivable moves which can protect both pieces but those are SO complicated, dude
             // And on the other hand, forked pieces defending each other might still be a fork!
             // A King protected by a Queen is not defended...
-            bool isTrueFork =
-              !match.Game.IsSquareAttacked(attackers[i].Square, humanPlayer ^ 1) && // will live to attack
-              (
-                // TODO: attacker has less value than a queen
-                attackedPiece.PieceType.MidgameValue >= (attackers[i].MidgameValue + 100) || // recapture still loses material
-                attackedPieceIsKing || // no king can be defended
-                !match.Game.IsSquareAttacked(square, humanPlayer ^ 1) // not defended
-              );
+            
+            int attackerValue = attackers[i].MidgameValue;
+            if (attackers[i] == ApmwCore.getInstance().kings[0]) attackerValue = 100000;
+            int defenderValue = attackedPiece.PieceType.MidgameValue;
+            if (attackedPiece.PieceType == ApmwCore.getInstance().kings[0]) defenderValue = 10000;
+
+            // only pieces that are either undefended or worth more count towards a fork
+            if (match.Game.IsSquareAttacked(square, humanPlayer ^ 1) && attackerValue >= defenderValue) continue;
+
+            // forks are true in three situations
+            bool isTrueFork = false;
+            // 1. the attacker is not under attack
+            List<Piece> piecesAttackingYou = new List<Piece>();
+            if (!match.Game.IsSquareAttacked(attackers[i].Square, humanPlayer ^ 1, out piecesAttackingYou)) isTrueFork = true;
+            else {
+              // attacker must have a defender
+              List<Piece> piecesDefendingYou = new List<Piece>();
+              if (match.Game.IsSquareAttacked(attackers[i].Square, humanPlayer, out piecesDefendingYou) {
+                int lowestAttackingYou = piecesAttackingYou.Min(p => p.PieceType == ApmwCore.getInstance().kings[0] ? 10000 : p.MidgameValue);
+                // piece attacking must be worth more
+                if (lowestAttackingYou > attackerValue) {
+                  // 2. the attacker is defended, and attacked ONCE by a piece worth more
+                  if (piecesAttackingYou.Count() == 1) isTrueFork = true;
+                  else {
+                    // 3. the attacker is defended, and the lowest value attacker is worth more than your attacker AND your lowest value defender
+                    int lowestDefendingYou = piecesDefendingYou.Min(p => p.PieceType == ApmwCore.getInstance().kings[0] ? 100000 : p.MidgameValue);
+                    if (attackerValue + lowestDefendingYou < lowestAttackingYou) isTrueFork = true;
+                  }
+                }
+              }
+            }
+
             if (isTrueFork)
             {
               if (!trueForkers.ContainsKey(attackers[i]))
