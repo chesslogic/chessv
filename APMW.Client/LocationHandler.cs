@@ -498,7 +498,9 @@ namespace Archipelago.APChessV
             // A King protected by a Queen is not defended...
             
             int attackerValue = attackers[i].MidgameValue;
+            if (attackers[i] == ApmwCore.getInstance().kings[0]) attackerValue = 100000;
             int defenderValue = attackedPiece.PieceType.MidgameValue;
+            if (attackedPiece.PieceType == ApmwCore.getInstance().kings[0]) defenderValue = 10000;
 
             // only pieces that are either undefended or worth more count towards a fork
             if (match.Game.IsSquareAttacked(square, humanPlayer ^ 1) && attackerValue >= defenderValue) continue;
@@ -512,14 +514,14 @@ namespace Archipelago.APChessV
               // attacker must have a defender
               List<Piece> piecesDefendingYou = new List<Piece>();
               if (match.Game.IsSquareAttacked(attackers[i].Square, humanPlayer, out piecesDefendingYou) {
-                int lowestAttackingYou = piecesAttackingYou.Min();
+                int lowestAttackingYou = piecesAttackingYou.Min(p => p.PieceType == ApmwCore.getInstance().kings[0] ? 10000 : p.MidgameValue);
                 // piece attacking must be worth more
                 if (lowestAttackingYou > attackerValue) {
                   // 2. the attacker is defended, and attacked ONCE by a piece worth more
                   if (piecesAttackingYou.Count() == 1) isTrueFork = true;
                   else {
                     // 3. the attacker is defended, and the lowest value attacker is worth more than your attacker AND your lowest value defender
-                    int lowestDefendingYou = piecesDefendingYou.Min();
+                    int lowestDefendingYou = piecesDefendingYou.Min(p => p.PieceType == ApmwCore.getInstance().kings[0] ? 100000 : p.MidgameValue);
                     if (attackerValue + lowestDefendingYou < lowestAttackingYou) isTrueFork = true;
                   }
                 }
