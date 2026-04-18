@@ -1,0 +1,455 @@
+See the end of this message for details on invoking 
+just-in-time (JIT) debugging instead of this dialog box.
+
+************** Exception Text **************
+System.Exception: Error in Match.OnMoveMade during move validation sequence.
+=== Before temporary moves ===
+Current Player: 0, Move #: 0, Ply: 1
+BoardMoveStack moves: 0
+Board state around e4:
+d6:.. e6:.. f6:.. 
+d5:.. e5:.. f5:.. 
+d4:.. e4:.. f4:.. 
+d3:P0 e3:C0 f3:C0 
+
+Original error: No piece to clear at square 9 (b2)
+Board state around the target square:
+a1:R0 b1:C0 c1:C0 
+a2:C0 b2:.. c2:P0 
+a3:C0 b3:P0 c3:P0 
+
+
+Board State Details:
+Square: 9 (b2)
+Current Player: 1
+Game Move Number: 1
+
+
+
+Board State Details:
+Square: 9 (b2)
+Current Player: 1
+Game Move Number: 1
+
+Current Move:
+  From: e3
+  To: d4
+  Type: StandardMove
+  Piece: Checkers
+  Player: 0
+  Square: e3
+
+ ---> ChessV.InvalidBoardStateException: No piece to clear at square 9 (b2)
+Board state around the target square:
+a1:R0 b1:C0 c1:C0 
+a2:C0 b2:.. c2:P0 
+a3:C0 b3:P0 c3:P0 
+
+
+Board State Details:
+Square: 9 (b2)
+Current Player: 1
+Game Move Number: 1
+
+
+
+Board State Details:
+Square: 9 (b2)
+Current Player: 1
+Game Move Number: 1
+
+Current Move:
+  From: e3
+  To: d4
+  Type: StandardMove
+  Piece: Checkers
+  Player: 0
+  Square: e3
+
+   at ChessV.MoveList.PerformPickup(Int32 index) in D:\a\chessv\chessv\ChessV.Base\MoveList.cs:line 231
+   at ChessV.MoveList.MakeMove(Int32 index) in D:\a\chessv\chessv\ChessV.Base\MoveList.cs:line 868
+   at ChessV.MoveList.EndMoveAdd(Int32 evaluation) in D:\a\chessv\chessv\ChessV.Base\MoveList.cs:line 672
+   at ChessV.Games.Rules.Apmw.ApmwFirstTurnRule.GenerateSpecialMoves(MoveList list, Boolean capturesOnly, Int32 ply) in D:\a\chessv\chessv\ChessV.Games\Rules\Apmw\ApmwFirstTurnRule.cs:line 19
+   at ChessV.Game.GenerateSpecialMoves(MoveList list, Boolean capturesOnly) in D:\a\chessv\chessv\ChessV.Base\Game.cs:line 1705
+   at ChessV.Game.generateMoves(Int32 player, Int32 ply, UInt32 movehash, Boolean capturesOnly) in D:\a\chessv\chessv\ChessV.Base\Game.cs:line 1243
+   at ChessV.Game.MakeMove(MoveInfo move, Boolean highlightMove) in D:\a\chessv\chessv\ChessV.Base\Game.cs:line 1608
+   at ChessV.Game.MakeMove(Movement move, Boolean highlightMove) in D:\a\chessv\chessv\ChessV.Base\Game.cs:line 1645
+   at ChessV.Match.OnMoveMade(Player sender, List`1 moves) in D:\a\chessv\chessv\ChessV.Base\Match.cs:line 419
+   --- End of inner exception stack trace ---
+   at ChessV.Match.OnMoveMade(Player sender, List`1 moves) in D:\a\chessv\chessv\ChessV.Base\Match.cs:line 457
+   at ChessV.Player.emitMove(List`1 moves) in D:\a\chessv\chessv\ChessV.Base\Player.cs:line 417
+   at ChessV.HumanPlayer.OnHumanMove(List`1 move, Int32 side) in D:\a\chessv\chessv\ChessV.Base\HumanPlayer.cs:line 85
+   at ChessV.GUI.BoardControl.TryMoveToLocation(Location location) in D:\a\chessv\chessv\ChessV.GUI\Controls\BoardControl.cs:line 249
+   at ChessV.GUI.BoardControl.BoardControl_MouseUp(Object sender, MouseEventArgs e) in D:\a\chessv\chessv\ChessV.GUI\Controls\BoardControl.cs:line 188
+   at System.Windows.Forms.Control.WmMouseUp(Message& m, MouseButtons button, Int32 clicks)
+   at System.Windows.Forms.Control.WndProc(Message& m)
+   at System.Windows.Forms.ScrollableControl.WndProc(Message& m)
+   at System.Windows.Forms.Control.ControlNativeWindow.WndProc(Message& m)
+   at System.Windows.Forms.NativeWindow.Callback(IntPtr hWnd, WM msg, IntPtr wparam, IntPtr lparam)
+
+
+************** Loaded Assemblies **************
+System.Private.CoreLib
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Private.CoreLib.dll
+----------------------------------------
+ChessV
+    Assembly Version: 0.0.0.0
+    Win32 Version: 0.0.0.0
+    CodeBase: file:///D:/Games/Archipelago/APMW-ChessV-Release-106/net7.0-windows7.0/ChessV.dll
+----------------------------------------
+System.Runtime
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Runtime.dll
+----------------------------------------
+System.Windows.Forms
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26907
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.WindowsDesktop.App/7.0.20/System.Windows.Forms.dll
+----------------------------------------
+System.ComponentModel.Primitives
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.ComponentModel.Primitives.dll
+----------------------------------------
+System.Windows.Forms.Primitives
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26907
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.WindowsDesktop.App/7.0.20/System.Windows.Forms.Primitives.dll
+----------------------------------------
+System.Runtime.InteropServices
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Runtime.InteropServices.dll
+----------------------------------------
+System.Drawing.Primitives
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Drawing.Primitives.dll
+----------------------------------------
+System.Collections.Specialized
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Collections.Specialized.dll
+----------------------------------------
+ChessV.Manager
+    Assembly Version: 0.0.0.0
+    Win32 Version: 0.0.0.0
+    CodeBase: file:///D:/Games/Archipelago/APMW-ChessV-Release-106/net7.0-windows7.0/ChessV.Manager.dll
+----------------------------------------
+System.Collections
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Collections.dll
+----------------------------------------
+ChessV.Base
+    Assembly Version: 0.0.0.0
+    Win32 Version: 0.0.0.0
+    CodeBase: file:///D:/Games/Archipelago/APMW-ChessV-Release-106/net7.0-windows7.0/ChessV.Base.dll
+----------------------------------------
+System.Reflection.Emit
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Reflection.Emit.dll
+----------------------------------------
+ChessV.Compiler
+    Assembly Version: 0.0.0.0
+    Win32 Version: 0.0.0.0
+    CodeBase: file:///D:/Games/Archipelago/APMW-ChessV-Release-106/net7.0-windows7.0/ChessV.Compiler.dll
+----------------------------------------
+System.Threading.Thread
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Threading.Thread.dll
+----------------------------------------
+ChessV.Games
+    Assembly Version: 0.0.0.0
+    Win32 Version: 0.0.0.0
+    CodeBase: file:///D:/Games/Archipelago/APMW-ChessV-Release-106/net7.0-windows7.0/ChessV.Games.dll
+----------------------------------------
+System.Drawing.Common
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.WindowsDesktop.App/7.0.20/System.Drawing.Common.dll
+----------------------------------------
+Microsoft.Win32.Registry
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/Microsoft.Win32.Registry.dll
+----------------------------------------
+System.Memory
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Memory.dll
+----------------------------------------
+System.Configuration.ConfigurationManager
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.WindowsDesktop.App/7.0.20/System.Configuration.ConfigurationManager.dll
+----------------------------------------
+System.ObjectModel
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.ObjectModel.dll
+----------------------------------------
+System.Threading
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Threading.dll
+----------------------------------------
+System.Diagnostics.TraceSource
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Diagnostics.TraceSource.dll
+----------------------------------------
+Microsoft.Win32.Primitives
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/Microsoft.Win32.Primitives.dll
+----------------------------------------
+System.ComponentModel.EventBasedAsync
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.ComponentModel.EventBasedAsync.dll
+----------------------------------------
+Accessibility
+    Assembly Version: 4.0.0.0
+    Win32 Version: 7.0.2024.26907
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.WindowsDesktop.App/7.0.20/Accessibility.dll
+----------------------------------------
+System.ComponentModel.TypeConverter
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.ComponentModel.TypeConverter.dll
+----------------------------------------
+System.Numerics.Vectors
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Numerics.Vectors.dll
+----------------------------------------
+System.ComponentModel
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.ComponentModel.dll
+----------------------------------------
+Microsoft.Win32.SystemEvents
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.WindowsDesktop.App/7.0.20/Microsoft.Win32.SystemEvents.dll
+----------------------------------------
+System.Resources.Extensions
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.WindowsDesktop.App/7.0.20/System.Resources.Extensions.dll
+----------------------------------------
+System.Drawing
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26907
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.WindowsDesktop.App/7.0.20/System.Drawing.dll
+----------------------------------------
+System.Runtime.Serialization.Formatters
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Runtime.Serialization.Formatters.dll
+----------------------------------------
+System.Collections.Concurrent
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Collections.Concurrent.dll
+----------------------------------------
+mscorlib
+    Assembly Version: 4.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/mscorlib.dll
+----------------------------------------
+Archipelago.MultiClient.Net
+    Assembly Version: 6.6.0.0
+    Win32 Version: 6.6.0.0
+    CodeBase: file:///D:/Games/Archipelago/APMW-ChessV-Release-106/net7.0-windows7.0/Archipelago.MultiClient.Net.dll
+----------------------------------------
+Archipelago.APChessV
+    Assembly Version: 0.0.0.0
+    Win32 Version: 0.0.0.0
+    CodeBase: file:///D:/Games/Archipelago/APMW-ChessV-Release-106/net7.0-windows7.0/Archipelago.APChessV.dll
+----------------------------------------
+System.Private.Uri
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Private.Uri.dll
+----------------------------------------
+System.Collections.NonGeneric
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Collections.NonGeneric.dll
+----------------------------------------
+System.Text.RegularExpressions
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Text.RegularExpressions.dll
+----------------------------------------
+System.Linq
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Linq.dll
+----------------------------------------
+System.Net.WebSockets.Client
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Net.WebSockets.Client.dll
+----------------------------------------
+System.Net.WebSockets
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Net.WebSockets.dll
+----------------------------------------
+System.Net.Http
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Net.Http.dll
+----------------------------------------
+System.Net.Primitives
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Net.Primitives.dll
+----------------------------------------
+Newtonsoft.Json
+    Assembly Version: 11.0.0.0
+    Win32 Version: 11.0.1
+    CodeBase: file:///D:/Games/Archipelago/APMW-ChessV-Release-106/net7.0-windows7.0/Newtonsoft.Json.dll
+----------------------------------------
+netstandard
+    Assembly Version: 2.1.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/netstandard.dll
+----------------------------------------
+System.Security.Cryptography
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Security.Cryptography.dll
+----------------------------------------
+System.Diagnostics.DiagnosticSource
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Diagnostics.DiagnosticSource.dll
+----------------------------------------
+System.Diagnostics.Tracing
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Diagnostics.Tracing.dll
+----------------------------------------
+System.Net.Security
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Net.Security.dll
+----------------------------------------
+System.Net.Quic
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Net.Quic.dll
+----------------------------------------
+System.Threading.ThreadPool
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Threading.ThreadPool.dll
+----------------------------------------
+System.Net.Sockets
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Net.Sockets.dll
+----------------------------------------
+System.Threading.Overlapped
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Threading.Overlapped.dll
+----------------------------------------
+System.Net.NameResolution
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Net.NameResolution.dll
+----------------------------------------
+System.Security.Principal.Windows
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Security.Principal.Windows.dll
+----------------------------------------
+System.Security.Claims
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Security.Claims.dll
+----------------------------------------
+System.Text.Encoding.Extensions
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Text.Encoding.Extensions.dll
+----------------------------------------
+System.Runtime.Numerics
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Runtime.Numerics.dll
+----------------------------------------
+System.Linq.Expressions
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Linq.Expressions.dll
+----------------------------------------
+System.Reflection.Emit.ILGeneration
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Reflection.Emit.ILGeneration.dll
+----------------------------------------
+System.Reflection.Emit.Lightweight
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Reflection.Emit.Lightweight.dll
+----------------------------------------
+System.Reflection.Primitives
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Reflection.Primitives.dll
+----------------------------------------
+Anonymously Hosted DynamicMethods Assembly
+    Assembly Version: 0.0.0.0
+    Win32 Version: n/a
+    CodeBase: 
+----------------------------------------
+System.Runtime.Serialization.Primitives
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Runtime.Serialization.Primitives.dll
+----------------------------------------
+System.Diagnostics.FileVersionInfo
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Diagnostics.FileVersionInfo.dll
+----------------------------------------
+System.Runtime.Loader
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Runtime.Loader.dll
+----------------------------------------
+System.Diagnostics.StackTrace
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Diagnostics.StackTrace.dll
+----------------------------------------
+System.Reflection.Metadata
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Reflection.Metadata.dll
+----------------------------------------
+System.Collections.Immutable
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.Collections.Immutable.dll
+----------------------------------------
+System.IO.MemoryMappedFiles
+    Assembly Version: 7.0.0.0
+    Win32 Version: 7.0.2024.26716
+    CodeBase: file:///C:/Program%20Files/dotnet/shared/Microsoft.NETCore.App/7.0.20/System.IO.MemoryMappedFiles.dll
+----------------------------------------
+
+************** JIT Debugging **************
+
+

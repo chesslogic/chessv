@@ -1,0 +1,17 @@
+************** Texte de l'exception **************
+ChessV.Exceptions.GameInitializationException: Unable to create game 'Archipelago Multiworld Super-Sized'
+ ---> System.IndexOutOfRangeException: Index was outside the bounds of the array.
+   at ChessV.Game.AddPieceType(PieceType type) in D:\a\chessv\chessv\ChessV.Base\Game.cs:line 1292
+   at ChessV.Games.ApmwChessGame.AddPieceTypes() in D:\a\chessv\chessv\ChessV.Games\MiscellaneousGames\ApmwChess.cs:line 431
+   at ChessV.Game.Initialize(GameAttribute gameAttribute, Dictionary`2 definitions, InitializationHelper helper) in D:\a\chessv\chessv\ChessV.Base\Game.cs:line 374
+   --- End of inner exception stack trace ---
+   at ChessV.Game.Initialize(GameAttribute gameAttribute, Dictionary`2 definitions, InitializationHelper helper) in D:\a\chessv\chessv\ChessV.Base\Game.cs:line 624
+   at ChessV.Manager.Manager.CreateGame(String name, Dictionary`2 definitions, InitializationHelper initHelper) in D:\a\chessv\chessv\ChessV.Manager\Manager.cs:line 225
+   at ChessV.GUI.ApmwForm.button2_Click(Object sender, EventArgs e) in D:\a\chessv\chessv\ChessV.GUI\Forms\ApmwForm.cs:line 279
+   at System.Windows.Forms.Button.OnClick(EventArgs e)
+   at System.Windows.Forms.Button.OnMouseUp(MouseEventArgs mevent)
+   at System.Windows.Forms.Control.WmMouseUp(Message& m, MouseButtons button, Int32 clicks)
+   at System.Windows.Forms.Control.WndProc(Message& m)
+   at System.Windows.Forms.ButtonBase.WndProc(Message& m)
+   at System.Windows.Forms.Control.ControlNativeWindow.WndProc(Message& m)
+   at System.Windows.Forms.NativeWindow.Callback(IntPtr hWnd, WM msg, IntPtr wparam, IntPtr lparam)
