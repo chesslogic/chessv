@@ -211,11 +211,23 @@ namespace ChessV
     #region Public Inquiry Functions
     //	Lookup for the char notation of a given file
     public virtual string GetFileNotation(int nFile)
-    { return fileNotations[nFile].ToString(); }
+    {
+      if (nFile < 0 || nFile >= NumFiles)
+        throw new IndexOutOfRangeException(
+          $"GetFileNotation: file index {nFile} out of range [0, {NumFiles - 1}] " +
+          $"(NumFiles={NumFiles}, NumRanks={NumRanks}, NumSquares={NumSquares}).");
+      return fileNotations[nFile].ToString();
+    }
 
     //	Lookup for the char notation of a given rank
     public virtual string GetRankNotation(int nRank)
-    { return rankNotations[nRank].ToString(); }
+    {
+      if (nRank < 0 || nRank >= NumRanks)
+        throw new IndexOutOfRangeException(
+          $"GetRankNotation: rank index {nRank} out of range [0, {NumRanks - 1}] " +
+          $"(NumFiles={NumFiles}, NumRanks={NumRanks}, NumSquares={NumSquares}).");
+      return rankNotations[nRank].ToString();
+    }
 
     //	Lookup for the notaiton of a square
     public virtual string GetDefaultSquareNotation(int square)

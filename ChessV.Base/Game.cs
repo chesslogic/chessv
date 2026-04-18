@@ -1338,6 +1338,21 @@ namespace ChessV
     }
 
     #region AddPieceType
+    private void GuardPieceTypeCapacity(string typeName)
+    {
+      if (nPieceTypes >= MAX_PIECE_TYPES)
+      {
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine($"Cannot add piece type '{typeName ?? "(unnamed)"}': variant '{Name ?? GetType().Name}' has reached the MAX_PIECE_TYPES cap of {MAX_PIECE_TYPES}.");
+        sb.AppendLine("Already-added piece types:");
+        for (int i = 0; i < nPieceTypes; i++)
+          sb.AppendLine($"  [{i}] {pieceTypes[i]?.Name ?? "(null)"}");
+        sb.AppendLine();
+        sb.AppendLine("This cap is tied to MoveInfo.Tag bit-packing; raising it requires a coordinated audit. Reduce piece-type diversity for this variant, or dedupe AddPieceType calls.");
+        throw new InvalidOperationException(sb.ToString());
+      }
+    }
+
     public PieceType AddPieceType(PieceType type)
     {
 #if DEBUG
@@ -1356,6 +1371,7 @@ namespace ChessV
 			}
 #endif
 
+      GuardPieceTypeCapacity(type?.Name);
       pieceTypes[nPieceTypes] = type;
       if (type.Name != null)
         SetCustomProperty(type.Name, type);
@@ -1364,6 +1380,7 @@ namespace ChessV
 
     public PieceType AddPieceType(Type pieceType, string name, string notation, int midgameValue, int endgameValue, string preferredImageName = null)
     {
+      GuardPieceTypeCapacity(name);
       ConstructorInfo ci = pieceType.GetConstructor(new Type[] { typeof(string), typeof(string), typeof(int), typeof(int), typeof(string) });
       pieceTypes[nPieceTypes] = (PieceType)ci.Invoke(new object[] { name, notation, midgameValue, endgameValue, preferredImageName });
       SetCustomProperty(name, pieceTypes[nPieceTypes]);
