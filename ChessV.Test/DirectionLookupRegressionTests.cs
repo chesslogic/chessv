@@ -4,10 +4,12 @@ using ChessV.Base;
 
 namespace ChessV.Test
 {
-  // Regression tests pinning down the "unregistered Direction" hypothesis:
+  // Regression tests for the "unregistered Direction" bug, originally
+  // hypothesized by the user and confirmed by the agent that authored this
+  // file:
   //
   // Game.DirectionLookup(MoveInfo) and Game.DirectionLookup(Movement) at
-  // ChessV.Base/Game.cs:1296-1300 unconditionally index
+  // ChessV.Base/Game.cs:1296-1300 used to unconditionally index
   //     playerDirections[move.Player, Board.DirectionLookup(from, to)]
   // but Board.DirectionLookup (Board.cs:271) returns -1 whenever no
   // *registered* direction connects from->to. The matrix is built in
@@ -17,16 +19,16 @@ namespace ChessV.Test
   // direction (e.g. the (rank+6, file+2) displacement of a 3-jump Checkers
   // chain a1->c3->e5->c7) get no entry and stay at -1.
   //
-  // Consumers that iterate generated moves and call this lookup will then
+  // Consumers that iterate generated moves and call this lookup would then
   // crash with IndexOutOfRangeException:
   //   ChessV.Games\Rules\Move50Rule.cs:110
   //   ChessV.Games\Rules\Apmw\MixedEnPassantRule.cs:62
   //   ChessV.Games\Rules\EnPassantRule.cs:152
   //   ChessV.Games\Rules\Berolina\BerolinaEnPassantRule.cs:150
   //
-  // These tests PIN the bug. They are intentionally not fixes - leaving the
-  // tests asserting the crash is the explicit purpose so that any future
-  // patch which silently changes the behavior is forced to update them.
+  // The fix forwards the -1 sentinel from Board.DirectionLookup instead of
+  // indexing playerDirections with it. These tests now PIN the safe
+  // behavior: -1 is returned, no exception is thrown.
   [TestClass]
   public class DirectionLookupRegressionTests
   {
@@ -46,12 +48,10 @@ namespace ChessV.Test
     // (a) Direct call: hand-construct a Movement whose displacement is not on
     // any registered direction (a1->c7 has rank/file delta (6,2), not a
     // primary compass direction nor a knight leap, and certainly not
-    // anything Chess+Checkers+Cannon registers). Calling
-    // game.DirectionLookup MUST throw IndexOutOfRangeException because
-    // Board.DirectionLookup returns -1 and Game.DirectionLookup indexes
-    // playerDirections[player, -1] without a guard.
+    // anything Chess+Checkers+Cannon registers). Game.DirectionLookup must
+    // forward the -1 sentinel instead of indexing playerDirections[player, -1].
     [TestMethod]
-    public void DirectionLookup_HandCraftedCompositeDisplacement_Throws()
+    public void DirectionLookup_HandCraftedCompositeDisplacement_ReturnsMinusOne()
     {
       var g = CreateGame();
       g.LoadFEN("8/8/8/8/8/8/8/8 w - - 0 1");
@@ -63,17 +63,14 @@ namespace ChessV.Test
         "Sanity: Board.DirectionLookup must return -1 for composite displacement (a1->c7).");
 
       var movement = new Movement(from, to, 0, MoveType.StandardMove);
-      Assert.ThrowsException<IndexOutOfRangeException>(() =>
-      {
-        int _ = g.DirectionLookup(movement);
-      },
-      "PINS BUG: Game.DirectionLookup(Movement) does not guard the -1 return " +
-      "from Board.DirectionLookup and indexes playerDirections[player, -1].");
+      Assert.AreEqual(-1, g.DirectionLookup(movement),
+        "Game.DirectionLookup(Movement) must forward the -1 sentinel instead of " +
+        "indexing playerDirections[player, -1].");
     }
 
     // (a') Same as above but via the MoveInfo overload (Game.cs:1296).
     [TestMethod]
-    public void DirectionLookup_MoveInfoOverload_CompositeDisplacement_Throws()
+    public void DirectionLookup_MoveInfoOverload_CompositeDisplacement_ReturnsMinusOne()
     {
       var g = CreateGame();
       g.LoadFEN("8/8/8/8/8/8/8/8 w - - 0 1");
@@ -86,11 +83,8 @@ namespace ChessV.Test
         MoveType = MoveType.StandardMove,
       };
 
-      Assert.ThrowsException<IndexOutOfRangeException>(() =>
-      {
-        int _ = g.DirectionLookup(ref move);
-      },
-      "PINS BUG: Game.DirectionLookup(ref MoveInfo) has the same unguarded -1 index.");
+      Assert.AreEqual(-1, g.DirectionLookup(ref move),
+        "Game.DirectionLookup(ref MoveInfo) must forward the -1 sentinel.");
     }
 
     // (d) Matrix proof: the directionLookup matrix, after Board init, has -1
@@ -134,7 +128,7 @@ namespace ChessV.Test
     //   2: .e......
     //   1: E......K
     [TestMethod]
-    public void DirectionLookup_OnGeneratedCheckersTripleJump_Throws()
+    public void DirectionLookup_OnGeneratedCheckersTripleJump_ReturnsMinusOne()
     {
       var g = CreateGame();
       g.LoadFEN("6k1/8/3e4/8/3e4/8/1e6/E6K w - - 0 1");
@@ -164,21 +158,18 @@ namespace ChessV.Test
       Assert.IsTrue(tripleJump.HasValue,
         "Expected a generated Checkers triple-jump a1->c3->e5->c7. If this " +
         "fails the layout no longer produces the chain (check the FEN); the " +
-        "subsequent crash assertion would otherwise be vacuous.");
+        "subsequent assertion would otherwise be vacuous.");
 
       // Sanity: the displacement really is composite/unregistered.
       Assert.AreEqual(-1, g.Board.DirectionLookup(a1, c7),
         "a1->c7 must remain unregistered for this test to be meaningful.");
 
       MoveInfo move = tripleJump.Value;
-      Assert.ThrowsException<IndexOutOfRangeException>(() =>
-      {
-        int _ = g.DirectionLookup(ref move);
-      },
-      "PINS BUG: a generated multi-jump's MoveInfo, fed back into " +
-      "Game.DirectionLookup (which Move50Rule / EnPassantRule / " +
-      "MixedEnPassantRule / BerolinaEnPassantRule all do during " +
-      "post-move processing), throws IndexOutOfRangeException.");
+      Assert.AreEqual(-1, g.DirectionLookup(ref move),
+        "A generated multi-jump's MoveInfo, fed into Game.DirectionLookup " +
+        "(which Move50Rule / EnPassantRule / MixedEnPassantRule / " +
+        "BerolinaEnPassantRule all do during post-move processing), must " +
+        "now return -1 rather than throw IndexOutOfRangeException.");
     }
 
     // (b) Indirect via a real rule. Move50Rule.MoveBeingMade calls

@@ -1294,10 +1294,24 @@ namespace ChessV
     }
 
     public int DirectionLookup(ref MoveInfo move)
-    { return playerDirections[move.Player, Board.DirectionLookup(move.FromSquare, move.ToSquare)]; }
+    {
+      //	Board.DirectionLookup returns -1 for any from->to whose displacement
+      //	is not on a registered Direction (e.g. composite displacements like
+      //	the (rank+6, file+2) endpoints of a Checkers multi-jump chain).
+      //	Forward that sentinel rather than indexing playerDirections[player, -1],
+      //	which throws IndexOutOfRangeException. Consumers
+      //	(Move50Rule, MixedEnPassantRule, EnPassantRule, BerolinaEnPassantRule)
+      //	already compare the result against a known direction index and treat
+      //	"not equal" as "not the move we care about", so -1 is the safe answer.
+      int dir = Board.DirectionLookup(move.FromSquare, move.ToSquare);
+      return dir < 0 ? -1 : playerDirections[move.Player, dir];
+    }
 
     public int DirectionLookup(Movement move)
-    { return playerDirections[move.Player, Board.DirectionLookup(move.FromSquare, move.ToSquare)]; }
+    {
+      int dir = Board.DirectionLookup(move.FromSquare, move.ToSquare);
+      return dir < 0 ? -1 : playerDirections[move.Player, dir];
+    }
 
     public int GetPieceTypes(out PieceType[] pieceTypes)
     { pieceTypes = this.pieceTypes; return nPieceTypes; }
