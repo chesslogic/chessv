@@ -45,9 +45,13 @@ namespace ChessV.Test
       Castling.Value = "None";
       // Standard chess array gets overwritten per-test anyway; keep a
       // syntactically valid FEN so the initial LoadFEN in postInitialize
-      // succeeds.
-      Array = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+      // succeeds. We use an empty board as the initial position so that
+      // the first "real" LoadFEN call in each test places its pieces onto
+      // a fresh board (LoadFEN does not clear state before placing).
+      Array = "8/8/8/8/8/8/8/8";
+      FENStart = "8/8/8/8/8/8/8/8 w - - 0 1";
       PromotionTypes = "QRNB";
+      EnPassant = false;
     }
 
     public override void AddPieceTypes()
@@ -61,19 +65,17 @@ namespace ChessV.Test
       AddPieceType(CannonType);
     }
 
-    // Skip the default FEN load from postInitialize so tests can call
-    // LoadFEN themselves with a custom position against an empty board.
-    // We still need everything else postInitialize does (PostInitialize on
-    // rules, BoardMoveStack allocation, mobility statistics, and the
-    // material thresholds), so we replicate it without the LoadFEN call.
-    protected override void finishInitialization()
+    public override void AddRules()
     {
-      base.finishInitialization();
+      base.AddRules();
+      // Checkers needs its promotion-type list explicitly set (its
+      // CustomMoveGenerator silently skips promoting jumps otherwise).
+      // ApmwChessGame normally does this in AddRules; mirror it here.
+      CheckersType.SetPromotionTypes(new List<PieceType> { Queen, Rook, Bishop, Knight });
     }
   }
 
   [TestClass]
-  [Ignore("Pre-existing WIP test suite for the PerformPickup crash family (2025-09-12 and 2026-02-12 reports). The tests currently fail because the harness still needs tightening (e.g., royal-pieces bookkeeping for CheckmateRule). Kept here and ignored so they do not block CI while the APMW setup smoke tests stabilize. TODO(chesslogic): stabilize or delete.")]
   public class CheckersCannonGenerationTests
   {
     // Helper to instantiate the test game directly, bypassing Manager so we
