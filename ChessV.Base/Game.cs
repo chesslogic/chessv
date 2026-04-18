@@ -2301,12 +2301,12 @@ namespace ChessV
     #endregion
 
     #region IsSquareAttacked
-    public bool IsSquareAttacked(int square, int player)
+    public virtual bool IsSquareAttacked(int square, int player)
     {
       return IsSquareAttacked(square, player, out _, false);
     }
 
-    public bool IsSquareAttacked(int square, int player, out List<Piece> attackers, bool findAttackers = false)
+    public virtual bool IsSquareAttacked(int square, int player, out List<Piece> attackers, bool findAttackers = false)
     {
       attackers = new List<Piece>();
       bool result = false;

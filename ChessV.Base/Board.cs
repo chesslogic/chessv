@@ -122,7 +122,7 @@ namespace ChessV
     public int NumRanks { get; protected set; }
 
     //	The number of squares on the board(s) excluding virtual (drop) squares
-    public int NumSquares { get; protected set; }
+    public virtual int NumSquares { get; protected set; }
 
     //	The total number of squares across all boards, and virtual squares, 
     //	such as the drop squares from which pieces drop in Pocket Knight
@@ -169,7 +169,7 @@ namespace ChessV
     public UInt64 MaterialHashCode { get; protected set; }
 
     //  indexer that returns or updates the contents of a square by number
-    public Piece this[int square]
+    public virtual Piece this[int square]
     {
       get
       { return squares[square]; }
