@@ -1518,6 +1518,22 @@ namespace ChessV
     public int GetRootMoves(out MoveInfo[] moves)
     { return moveLists[1].GetMoves(out moves); }
 
+    // Test hook: direct access to the root MoveList used by the GUI/engine.
+    // Allows regression tests to inspect pickup/drop cursors and pre-validated
+    // pickup squares after calling GenerateMovesForTest. Non-mutating from the
+    // caller's perspective, the returned list may be re-used by subsequent
+    // move generation calls.
+    public MoveList RootMoveListForTest { get { return moveLists[1]; } }
+
+    // Test hook: trigger the same move-generation pipeline that the GUI invokes
+    // during Match.OnMoveMade validation. This is the only way to reproduce
+    // mid-game pickup crashes from a unit test without constructing a full
+    // Match/Player/Engine stack.
+    public void GenerateMovesForTest(int player, bool capturesOnly = false)
+    {
+      generateMoves(player, 1, 0, capturesOnly);
+    }
+
     public int GetRootMoves(out MoveInfo[] moves, Piece movingPiece)
     {
       int moveCount = 0;

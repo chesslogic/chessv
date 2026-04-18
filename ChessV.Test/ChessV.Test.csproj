@@ -2,6 +2,8 @@
   <PropertyGroup>
     <TargetFramework>net7.0-windows7.0</TargetFramework>
     <OutputType>Library</OutputType>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
     <IsTestProject>true</IsTestProject>
     <IsPackable>false</IsPackable>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -25,6 +27,8 @@
   <ItemGroup>
     <ProjectReference Include="..\ChessV.Base\ChessV.Base.csproj" />
     <ProjectReference Include="..\ChessV.Games\ChessV.Games.csproj" />
+    <ProjectReference Include="..\ChessV.Manager\ChessV.Manager.csproj" />
+    <ProjectReference Include="..\ChessV.Compiler\ChessV.Compiler.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Moq" Version="4.20.70" />

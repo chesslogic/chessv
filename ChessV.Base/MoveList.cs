@@ -44,6 +44,17 @@ namespace ChessV
     public int MoveCursor
     { get { return moveCursor; } }
 
+    // *** TEST HOOKS *** //
+    // The following accessors are intentionally narrow, read-only views of the
+    // internal cursors and arrays. They exist so that regression tests can
+    // snapshot/inspect MoveList state without needing reflection. They are not
+    // used by production code paths.
+    public int PickupCursorForTest { get { return pickupCursor; } }
+    public int DropCursorForTest { get { return dropCursor; } }
+    public Pickup GetPickupForTest(int index) { return pickups[index]; }
+    public Drop GetDropForTest(int index) { return drops[index]; }
+    public MoveInfo GetMoveForTest(int index) { return moves[index]; }
+
     // The current move being made, if any
     public MoveInfo CurrentMove
     { get { return currentMoveIndex >= 0 && currentMoveIndex < moveCursor ? moves[currentMoveIndex] : default(MoveInfo); } }
