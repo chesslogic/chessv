@@ -222,7 +222,7 @@ namespace ChessV
     { return GetFileNotation(GetFile(square)) + GetRankNotation(GetRank(square)); }
 
     //	Find the Rank for a given square
-    public int GetRank(int square)
+    public virtual int GetRank(int square)
     { return rankBySquare[square]; }
 
     //	Find the File for a given square

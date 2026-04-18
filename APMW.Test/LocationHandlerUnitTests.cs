@@ -42,6 +42,10 @@ namespace Archipelago.APChessV
       match.SetupGet(mock => mock.Game).Returns(game.Object);
       match.Setup(mock => mock.GetPlayer(0)).Returns(player.Object);
       game.SetupGet(mock => mock.Board).Returns(board.Object);
+      game.SetupGet(mock => mock.GameTurnNumber).Returns(1);
+      game.SetupGet(mock => mock.NumFiles).Returns(8);
+      game.SetupGet(mock => mock.BoardMoveStack).Returns(new BoardMoveStack(board.Object));
+      board.Setup(mock => mock.GetRank(It.IsAny<int>())).Returns(0);
       board.Setup(mock => mock.GetFile(0)).Returns(0);
       board.Setup(mock => mock.GetFile(1)).Returns(1);
       board.Setup(mock => mock.GetFile(2)).Returns(2);
@@ -66,9 +70,14 @@ namespace Archipelago.APChessV
 
       //board.Setup(mock => mock.GetFile(1)).Returns(0);
 
-      handler = new LocationHandler(locations.Object);
+      var core = ApmwCore.getInstance();
+      core.kings = new System.Collections.Generic.List<PieceType>();
+      core.pawns = new System.Collections.Generic.HashSet<PieceType>();
+      core.minors = new System.Collections.Generic.HashSet<PieceType>();
+      core.majors = new System.Collections.Generic.HashSet<PieceType>();
+      core.queens = new System.Collections.Generic.HashSet<PieceType>();
 
-      ApmwCore._instance.StartedEventHandlers.ForEach((handler) => handler(match.Object));
+      handler = new LocationHandler(locations.Object, match.Object);
     }
 
     [TestMethod]
@@ -83,7 +92,7 @@ namespace Archipelago.APChessV
       info.MoveType = MoveType.StandardCapture;
       handler.HandleMove(info);
 
-      locations.Verify(locs => locs.GetLocationIdFromName("ChecksMate", "Capture Piece B"));
+      locations.Verify(locs => locs.GetLocationIdFromName("ChecksMate", "Capture Piece Queen's Knight"));
     }
 
     [TestMethod]
@@ -99,7 +108,7 @@ namespace Archipelago.APChessV
       info.MoveType = MoveType.StandardCapture;
       handler.HandleMove(info);
 
-      locations.Verify(locs => locs.GetLocationIdFromName("ChecksMate", "Capture Piece A"));
+      locations.Verify(locs => locs.GetLocationIdFromName("ChecksMate", "Capture Piece Queen's Rook"));
     }
 
     [TestMethod]
@@ -119,7 +128,7 @@ namespace Archipelago.APChessV
       info.MoveType = MoveType.StandardCapture;
       handler.HandleMove(info);
 
-      locations.Verify(locs => locs.GetLocationIdFromName("ChecksMate", "Capture Piece B"));
+      locations.Verify(locs => locs.GetLocationIdFromName("ChecksMate", "Capture Piece Queen's Knight"));
     }
 
     private MoveInfo GetMoveInfo()

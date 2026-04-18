@@ -40,6 +40,28 @@ namespace Archipelago.APChessV
       Initialized = false;
     }
 
+    /// <summary>
+    /// Test-only constructor. Wires up the location-check helper and marks the handler
+    /// initialized without requiring an Archipelago session. Not intended for production use.
+    /// </summary>
+    internal LocationHandler(ILocationCheckHelper locationCheckHelper) : this()
+    {
+      LocationCheckHelper = locationCheckHelper;
+      Initialized = true;
+      CaptureLookup = new CaptureLookup();
+    }
+
+    /// <summary>
+    /// Test-only constructor that also injects a pre-configured Match, bypassing
+    /// <see cref="StartMatch"/>. Not intended for production use.
+    /// </summary>
+    internal LocationHandler(ILocationCheckHelper locationCheckHelper, Match match)
+      : this(locationCheckHelper)
+    {
+      this.match = match;
+      humanPlayer = match.GetPlayer(0).IsHuman ? 0 : 1;
+    }
+
     public void Initialize(ILocationCheckHelper locationCheckHelper, ArchipelagoSession session)
     {
       //if (Initialized)
@@ -571,7 +593,7 @@ namespace Archipelago.APChessV
       UpdateMoveState(info);
     }
 
-    protected void UpdateMoveState(MoveInfo info)
+    internal void UpdateMoveState(MoveInfo info)
     {
       if (!TryValidatePlayingArchipelago())
         return;
@@ -655,7 +677,7 @@ namespace Archipelago.APChessV
     public bool TryValidatePlayingArchipelago()
     {
       // TODO(chesslogic): Player can't "disconnect" without restarting.
-      if (Initialized && match != null &&
+      if (Initialized && match != null && match.Game.GameAttribute != null &&
           match.Game.GameAttribute.GameName != NAME_OF_ARCHIPELAGO_GAME_ATTRIBUTE &&
           match.Game.GameAttribute.GameName != NAME_OF_GRAND_ARCHIPELAGO_GAME_ATTRIBUTE)
         throw new InvalidOperationException("Please disconnect from Archipelago when using other ChessV features");

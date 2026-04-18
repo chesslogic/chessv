@@ -66,7 +66,7 @@ namespace ChessV
     public int NumRanks { get; private set; }
 
     //	The number of files on the main part of the board (excludes pocket squares)
-    public int NumFiles { get; protected set; }
+    public virtual int NumFiles { get; protected set; }
 
     //	The format of the FEN for this game
     public string FENFormat
@@ -123,7 +123,7 @@ namespace ChessV
     //	GameTurnNumber - the current number of the turn.  Will be 1 for both white's first move 
     //	and black's first move, then will increment to 2.  In double-move variants like Marseillais 
     //	Chess, it still reflects what the player would consider to be the turn number to be.
-    public int GameTurnNumber
+    public virtual int GameTurnNumber
     { get { return moveCompletionRule.TurnNumber; } }
 
     //	The active PromotionRule (if any.)  If there are multiple promotion 
@@ -186,7 +186,7 @@ namespace ChessV
 
     public TimerFactory TimerFactory { get; private set; }
 
-    public BoardMoveStack BoardMoveStack { get; private set; }
+    public virtual BoardMoveStack BoardMoveStack { get; private set; }
 
     public DebugMessageLog MessageLog
     { get { return messageLog; } }
