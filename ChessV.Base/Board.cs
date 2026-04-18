@@ -720,7 +720,7 @@ namespace ChessV
         }
         
         throw new InvalidBoardStateException(
-          sb.ToString(),
+          sb.ToString() + MoveGenerationContext.FormatContextStack(),
           square, 
           GetDefaultSquareNotation(square),
           Game);

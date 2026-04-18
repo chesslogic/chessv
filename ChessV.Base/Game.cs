@@ -1750,7 +1750,22 @@ namespace ChessV
     public void GenerateSpecialMoves(MoveList list, bool capturesOnly)
     {
       foreach (Rule rule in rulesHandlingGenerateSpecialMoves)
-        rule.GenerateSpecialMoves(list, capturesOnly, Ply);
+      {
+        // Set the current rule label so any frame pushed by
+        // BeginMoveAdd / AddMove / AddCapture during this rule's run is
+        // tagged with the rule type. Cleared in finally so that frames
+        // pushed by base Game move generation outside any rule are
+        // attributed to "(root)" rather than the previous rule.
+        MoveGenerationContext.SetCurrentRule(rule.GetType().Name);
+        try
+        {
+          rule.GenerateSpecialMoves(list, capturesOnly, Ply);
+        }
+        finally
+        {
+          MoveGenerationContext.SetCurrentRule(null);
+        }
+      }
     }
     #endregion
 

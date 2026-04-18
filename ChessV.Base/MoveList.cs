@@ -229,9 +229,13 @@ namespace ChessV
       }
       catch (InvalidBoardStateException ex)
       {
-        // Add move context to the exception
+        // Add move context AND the unified move-generation context stack
+        // to the exception. The base message already includes the board
+        // dump from Board.ClearSquare; we append the context stack so the
+        // caller can see WHICH rule and WHICH nested generation cycle
+        // triggered the failing pickup.
         throw new InvalidBoardStateException(
-          ex.Message,
+          ex.Message + MoveGenerationContext.FormatContextStack(),
           ex.Square,
           ex.SquareNotation,
           ex.Game,
@@ -240,13 +244,14 @@ namespace ChessV
       catch (Exception ex)
       {
         throw new Exception(
-          string.Format("Error performing pickup at {0} ({1}) during move {2} ({3}) following move {4} ({5})!",
+          string.Format("Error performing pickup at {0} ({1}) during move {2} ({3}) following move {4} ({5})!{6}",
             pickups[index].Square,
             Board.GetDefaultSquareNotation(pickups[index].Square),
             moveCursor,
             moves[moveCursor].ToString(),
             moveCursor - 1,
-            moveCursor > 0 ? moves[moveCursor - 1].ToString() : "none"),
+            moveCursor > 0 ? moves[moveCursor - 1].ToString() : "none",
+            MoveGenerationContext.FormatContextStack()),
           ex
         );
       }
@@ -368,13 +373,32 @@ namespace ChessV
 
       if (LegalMovesOnly)
       {
-        bool legal = MakeMove(moveCursor - 1);
-        UnmakeMove(moveCursor - 1);
-        if (!legal)
+        // Synthetic diagnostic frame: AddMove runs Make/Unmake without
+        // going through BeginMoveAdd/EndMoveAdd, so push our own.
+        MoveGenerationContext.Push(
+          ruleNameOverride: "(AddMove)",
+          ply: ply,
+          moveType: MoveType.StandardMove,
+          fromSquare: fromSquare,
+          toSquare: toSquare,
+          pickupCursor: pickupCursor,
+          dropCursor: dropCursor,
+          moveCursor: moveCursor,
+          boardHash: Board != null ? Board.HashCode : 0UL);
+        try
         {
-          moveCursor--;
-          pickupCursor--;
-          dropCursor--;
+          bool legal = MakeMove(moveCursor - 1);
+          UnmakeMove(moveCursor - 1);
+          if (!legal)
+          {
+            moveCursor--;
+            pickupCursor--;
+            dropCursor--;
+          }
+        }
+        finally
+        {
+          MoveGenerationContext.Pop();
         }
       }
       
@@ -457,13 +481,32 @@ namespace ChessV
 
       if (LegalMovesOnly)
       {
-        bool legal = MakeMove(moveCursor - 1);
-        UnmakeMove(moveCursor - 1);
-        if (!legal)
+        // Synthetic diagnostic frame: AddCapture runs Make/Unmake
+        // without going through BeginMoveAdd/EndMoveAdd, so push our own.
+        MoveGenerationContext.Push(
+          ruleNameOverride: "(AddCapture)",
+          ply: ply,
+          moveType: MoveType.StandardCapture,
+          fromSquare: fromSquare,
+          toSquare: toSquare,
+          pickupCursor: pickupCursor,
+          dropCursor: dropCursor,
+          moveCursor: moveCursor,
+          boardHash: Board != null ? Board.HashCode : 0UL);
+        try
         {
-          moveCursor--;
-          pickupCursor -= 2;
-          dropCursor--;
+          bool legal = MakeMove(moveCursor - 1);
+          UnmakeMove(moveCursor - 1);
+          if (!legal)
+          {
+            moveCursor--;
+            pickupCursor -= 2;
+            dropCursor--;
+          }
+        }
+        finally
+        {
+          MoveGenerationContext.Pop();
         }
       }
       
@@ -569,6 +612,7 @@ namespace ChessV
         Piece pieceBeingMoved = Board[fromSquare];
         if (pieceBeingMoved == null)
         {
+          // No frame pushed yet; safe to bail without affecting the diag stack.
           return false;
         }
         moves[moveCursor].Player = pieceBeingMoved.Player;
@@ -593,7 +637,26 @@ namespace ChessV
       //	illegal, in which case we need to restore the original values
       tempPickupCursor = pickupCursor;
       tempDropCursor = dropCursor;
-      
+
+      // Push a diagnostic frame so any crash escaping PerformPickup or
+      // Board.ClearSquare during this move's Make/Unmake validation is
+      // attributable to the rule + ply + cursor state that started it.
+      // Matched by a Pop in every exit of EndMoveAdd. If EndMoveAdd is
+      // never reached because the caller abandons the move without
+      // calling EndMoveAdd, the frame leaks for the duration of the
+      // current generation pass; this is acceptable because in-product
+      // callers always pair the two, and tests can call Reset().
+      MoveGenerationContext.Push(
+        ruleNameOverride: null,
+        ply: ply,
+        moveType: moveType,
+        fromSquare: fromSquare,
+        toSquare: toSquare,
+        pickupCursor: pickupCursor,
+        dropCursor: dropCursor,
+        moveCursor: moveCursor,
+        boardHash: Board != null ? Board.HashCode : 0UL);
+
       return true;
     }
     #endregion
@@ -678,6 +741,21 @@ namespace ChessV
 
     #region EndMoveAdd
     public bool EndMoveAdd(int evaluation)
+    {
+      try
+      {
+        return EndMoveAddCore(evaluation);
+      }
+      finally
+      {
+        // Pair with the Push in BeginMoveAdd. Always runs, even when an
+        // exception escapes from MakeMove/PerformPickup, so the per-thread
+        // diag stack does not leak across generation passes.
+        MoveGenerationContext.Pop();
+      }
+    }
+
+    private bool EndMoveAddCore(int evaluation)
     {
       // Validate that we have consistent pickup and drop counts
       int pickupCount = pickupCursor - tempPickupCursor;
