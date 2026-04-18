@@ -58,14 +58,7 @@ namespace ChessV.GUI
         exceptionLogText.Append(Environment.NewLine);
         exceptionLogText.Append(Environment.NewLine);
       }
-      Exception excursor = exception;
-      while (excursor != null)
-      {
-        exceptionLogText.Append(getExceptionText(excursor));
-        exceptionLogText.Append(Environment.NewLine);
-        exceptionLogText.Append(Environment.NewLine);
-        excursor = excursor.InnerException;
-      }
+      exceptionLogText.Append(CrashReportFormatter.FormatExceptionChain(exception));
       InitializeComponent();
     }
 
@@ -128,14 +121,7 @@ namespace ChessV.GUI
 
     private string getExceptionText(Exception exception)
     {
-      StringBuilder detail = new StringBuilder(1000);
-      Type exceptionType = exception.GetType();
-      detail.Append("Exception type: " + exceptionType.FullName + Environment.NewLine);
-      detail.Append("Message: " + exception.Message + Environment.NewLine);
-      detail.Append("Source: " + exception.Source + Environment.NewLine);
-      detail.Append("Stack Trace: " + Environment.NewLine);
-      detail.Append(exception.StackTrace);
-      return detail.ToString();
+      return CrashReportFormatter.FormatException(exception);
     }
 
     private void btnSaveLog_Click(object sender, EventArgs e)
