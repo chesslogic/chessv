@@ -185,76 +185,113 @@ namespace Archipelago.APChessV
       }
     }
 
-    private List<PieceType> PickPawns(Random randomPieces, int adjustedPawnValues, int remainingPawnSpaces, int foundPawns, int spare_material)
+    internal List<PieceType> PickPawns(Random randomPieces, int adjustedPawnValues, int remainingPawnSpaces, int foundPawns)
     {
-      var sergeantsMode = ApmwConfig.getInstance().PawnSergeants;
-      List<PieceType> pawnOptions = setupPawnOptions();
-      // Add more pawns until we have enough
+      return PickPawns(randomPieces, setupPawnOptions(), adjustedPawnValues, remainingPawnSpaces, foundPawns);
+    }
+
+    internal List<PieceType> PickPawns(Random randomPieces, List<PieceType> pawnOptions, int adjustedPawnValues, int remainingPawnSpaces, int foundPawns)
+    {
+      var mode = ApmwConfig.getInstance().PawnUpgrades;
+      var sergeants = ApmwCore.getInstance().sergeants.ToList();
       List<PieceType> workingPawns = new List<PieceType>();
       while (workingPawns.Count < remainingPawnSpaces && adjustedPawnValues > 0)
       {
         PieceType picked;
-        if (sergeantsMode != FairyPawnSergeants.Off && workingPawns.Count >= foundPawns)
+        switch (mode)
         {
-          picked = ChooseBonusPawnPiece(randomPieces, pawnOptions, sergeantsMode, adjustedPawnValues);
+          case FairyPawnUpgrades.Pool:
+            picked = PickPawnPoolMode(randomPieces, pawnOptions, sergeants, adjustedPawnValues, foundPawns, workingPawns.Count);
+            break;
+          case FairyPawnUpgrades.Max:
+            picked = PickPawnMaxMode(randomPieces, pawnOptions, sergeants, adjustedPawnValues, foundPawns, workingPawns.Count);
+            break;
+          case FairyPawnUpgrades.Off:
+          default:
+          {
+            var upgrade = adjustedPawnValues <= PAWN_VALUE ? PawnUpgrade.Min : PawnUpgrade.Core;
+            picked = GetNextPawn(randomPieces, pawnOptions, upgrade);
+            break;
+          }
         }
-        else
-        {
-          var upgrade = adjustedPawnValues <= PAWN_VALUE ? PawnUpgrade.Min : PawnUpgrade.Core;
-          picked = GetNextPawn(randomPieces, pawnOptions, upgrade);
-        }
+        if (picked == null) break;
         workingPawns.Add(picked);
         adjustedPawnValues -= picked.MidgameValue;
       }
       // TODO(chesslogic): Add an Option not to upgrade pawns. For now, we'll always maximize material value.
-      UpgradePawns(randomPieces, adjustedPawnValues, pawnOptions, workingPawns, sergeantsMode, spare_material);
+      UpgradePawns(randomPieces, adjustedPawnValues, pawnOptions, workingPawns, mode);
       return workingPawns;
     }
 
-    private PieceType ChooseBonusPawnPiece(Random randomPieces, List<PieceType> pawnOptions, FairyPawnSergeants mode, int budget)
+    private PieceType PickPawnPoolMode(Random randomPieces, List<PieceType> pawnOptions, List<PieceType> sergeants,
+        int budget, int foundPawns, int currentCount)
     {
-      bool wantSergeant = mode == FairyPawnSergeants.Replace
-        || (mode == FairyPawnSergeants.Random && randomPieces.Next(2) == 0);
-      if (wantSergeant)
-      {
-        var sergeant = GetNextPawn(randomPieces, pawnOptions, PawnUpgrade.Sergeant);
-        if (sergeant.MidgameValue <= budget)
-          return sergeant;
-        // Budget too small to afford a sergeant; fall through to a regular pawn pick
-        // so the outer loop can terminate naturally on the next iteration.
-      }
-      var upgrade = budget <= PAWN_VALUE ? PawnUpgrade.Min : PawnUpgrade.Core;
-      return GetNextPawn(randomPieces, pawnOptions, upgrade);
+      var augmented = pawnOptions.Concat(sergeants).ToList();
+      if (augmented.Count == 0) return null;
+      var candidate = augmented[randomPieces.Next(augmented.Count)];
+      if (!sergeants.Contains(candidate)) return candidate;
+      bool allowed = currentCount >= foundPawns
+        ? budget >= candidate.MidgameValue
+        : PigeonholeAllowsSergeant(budget, foundPawns, currentCount, candidate.MidgameValue, pawnOptions);
+      if (allowed) return candidate;
+      // Sergeant rejected; re-pick uniformly from non-sergeant options.
+      var nonSerg = pawnOptions.Where(p => !sergeants.Contains(p)).ToList();
+      if (nonSerg.Count == 0) return null;
+      return GetNextPawn(randomPieces, nonSerg, FallbackUpgrade(budget, foundPawns, currentCount));
     }
 
-    private void UpgradePawns(Random randomPieces, int adjustedPawnValues, List<PieceType> pawnOptions, List<PieceType> workingPawns, FairyPawnSergeants sergeantsMode, int spare_material)
+    private PieceType PickPawnMaxMode(Random randomPieces, List<PieceType> pawnOptions, List<PieceType> sergeants,
+        int budget, int foundPawns, int currentCount)
     {
-      // Find the lowest value piece that can be upgraded, then replace it with a higher-value piece
+      var sergeant = GetNextPawn(randomPieces, pawnOptions, PawnUpgrade.Sergeant);
+      bool allowed = currentCount >= foundPawns
+        ? budget >= sergeant.MidgameValue
+        : PigeonholeAllowsSergeant(budget, foundPawns, currentCount, sergeant.MidgameValue, pawnOptions);
+      if (allowed) return sergeant;
+      return GetNextPawn(randomPieces, pawnOptions, FallbackUpgrade(budget, foundPawns, currentCount));
+    }
+
+    // Slot-aware fallback selector: if remaining budget per still-required slot won't
+    // afford a PAWN_VALUE piece, force the cheapest option so the count guarantee holds.
+    private PawnUpgrade FallbackUpgrade(int budget, int foundPawns, int currentCount)
+    {
+      if (budget <= PAWN_VALUE) return PawnUpgrade.Min;
+      int slotsLeft = Math.Max(1, foundPawns - currentCount);
+      if (currentCount < foundPawns && budget / slotsLeft <= PAWN_VALUE) return PawnUpgrade.Min;
+      return PawnUpgrade.Core;
+    }
+
+    private bool PigeonholeAllowsSergeant(
+        int budget, int foundPawns, int currentCount, int sergeantCost,
+        List<PieceType> pawnOptions)
+    {
+      var sergeants = ApmwCore.getInstance().sergeants;
+      int slotsStillNeededAfter = Math.Max(0, foundPawns - currentCount - 1);
+      if (slotsStillNeededAfter == 0) return budget >= sergeantCost;
+      var nonSergeantOptions = pawnOptions.Where(p => !sergeants.Contains(p)).ToList();
+      if (nonSergeantOptions.Count == 0) return false;
+      int cheapestNonSergeant = nonSergeantOptions.Min(p => p.MidgameValue);
+      return (budget - sergeantCost) >= slotsStillNeededAfter * cheapestNonSergeant;
+    }
+
+    private void UpgradePawns(Random randomPieces, int adjustedPawnValues, List<PieceType> pawnOptions,
+        List<PieceType> workingPawns, FairyPawnUpgrades mode)
+    {
+      // Best-upgrade pass: replace the cheapest sub-WEAK_VALUE pieces with Best-tier alternatives.
       var miniIndexes = new Queue<int>(workingPawns.Select((item, index) => new { Piece = item, Index = index })
         .Where(item => item.Piece.MidgameValue < WEAK_VALUE)
         .OrderBy(item => item.Piece.MidgameValue)
         .Select(item => item.Index));
       while (adjustedPawnValues > 0 && miniIndexes.Count > 0)
       {
-        // Find the indexes of the lowest value piece that can be upgraded
         var index = miniIndexes.Dequeue();
-        // Remove that piece, returning its value to the pool
         adjustedPawnValues += workingPawns[index].MidgameValue;
-        // Replace it with a higher-value piece
         workingPawns[index] = GetNextPawn(randomPieces, pawnOptions, PawnUpgrade.Best);
-        // Subtract the new piece's value from the pool
         adjustedPawnValues -= workingPawns[index].MidgameValue;
       }
-      // Replace/Random already placed sergeants per-slot in PickPawns; skip the legacy fallback.
-      if (sergeantsMode == FairyPawnSergeants.Replace || sergeantsMode == FairyPawnSergeants.Random)
-        return;
-      // Add mode: ensure sergeant upgrades trigger even when the board isn't full
-      // by topping up the remaining budget with the spare material.
-      int sergeantBudget = adjustedPawnValues;
-      if (sergeantsMode == FairyPawnSergeants.Add)
-        sergeantBudget += spare_material;
-      // If we still have value to distribute, start upgrading pawns to sergeants or minors
-      UpgradeRemainingPawnsToSergeants(randomPieces, sergeantBudget, pawnOptions, workingPawns);
+      // Pool/Max already placed sergeants per-slot in PickPawns; only Off uses the legacy fallback.
+      if (mode != FairyPawnUpgrades.Off) return;
+      UpgradeRemainingPawnsToSergeants(randomPieces, adjustedPawnValues, pawnOptions, workingPawns);
     }
 
     private void UpgradeRemainingPawnsToSergeants(Random randomPieces, int adjustedPawnValues, List<PieceType> pawnOptions, List<PieceType> workingPawns)
@@ -295,7 +332,7 @@ namespace Archipelago.APChessV
         core.foundPawns * PAWN_VALUE,
         core.foundPawns * PAWN_VALUE + spare_material + 45);
 
-      List<PieceType> workingPawns = PickPawns(randomPieces, adjustedPawnValues, remainingPawnSpaces, core.foundPawns, spare_material);
+      List<PieceType> workingPawns = PickPawns(randomPieces, adjustedPawnValues, remainingPawnSpaces, core.foundPawns);
 
       Queue<PieceType> adjustedPawns = new Queue<PieceType>(workingPawns);
       // Fill each rank

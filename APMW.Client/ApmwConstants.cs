@@ -19,8 +19,8 @@ namespace Archipelago.APChessV
     /// <summary>Client version string sent during connection handshake.</summary>
     public const string ClientVersion = "0.3.1";
 
-    /// <summary>Slot-data key controlling whether bonus material spawns Sergeants.</summary>
-    public const string SlotKeyFairyChessPawnSergeants = "fairy_chess_pawn_sergeants";
+    /// <summary>Slot-data key controlling how bonus material upgrades pawns (off/pool/max).</summary>
+    public const string SlotKeyFairyChessPawnUpgrades = "fairy_chess_pawn_upgrades";
 
     /// <summary>Names of "Progressive ..." (and a few non-progressive) items received from the Archipelago server.</summary>
     public static class ProgressiveItems
