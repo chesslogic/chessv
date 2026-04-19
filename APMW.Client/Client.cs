@@ -15,7 +15,6 @@ namespace Archipelago.APChessV
 {
   public class ArchipelagoClient
   {
-    private const string CLIENT_VERSION = "0.3.1";
     public static ArchipelagoClient _instance;
     public static ArchipelagoClient getInstance()
     {
@@ -151,10 +150,10 @@ namespace Archipelago.APChessV
         connectionTask = new Task(() =>
         {
           var result = Session.TryConnectAndLogin(
-            "ChecksMate",
+            ApmwConstants.TrackerName,
             slotName,
             itemsHandlingFlags: ItemsHandlingFlags.AllItems,
-            tags: new string[] { "ChecksMate V", $"Release {CLIENT_VERSION}" },
+            tags: new string[] { "ChecksMate V", $"Release {ApmwConstants.ClientVersion}" },
             password: password,
             requestSlotData: true);
 
@@ -198,7 +197,7 @@ namespace Archipelago.APChessV
           
           // Check client version compatibility
           var requiredClientVersion = slotData.GetValueOrDefault("required_chess_client_version", "0.1.0").ToString();
-          var currentClientVersion = CLIENT_VERSION;
+          var currentClientVersion = ApmwConstants.ClientVersion;
           
           if (!IsClientVersionCompatible(requiredClientVersion))
           {
@@ -280,14 +279,14 @@ namespace Archipelago.APChessV
     {
       try
       {
-        var current = new Version(CLIENT_VERSION);
+        var current = new Version(ApmwConstants.ClientVersion);
         var required = new Version(requiredVersion);
         return current >= required;
       }
       catch (Exception)
       {
         // If version parsing fails, assume compatible to avoid blocking connections
-        nonSessionMessages.Add($"Warning: Could not parse version strings (current: {CLIENT_VERSION}, required: {requiredVersion}). Assuming compatible. Do not proceed if you do not know what you are doing.");
+        nonSessionMessages.Add($"Warning: Could not parse version strings (current: {ApmwConstants.ClientVersion}, required: {requiredVersion}). Assuming compatible. Do not proceed if you do not know what you are doing.");
         return true;
       }
     }

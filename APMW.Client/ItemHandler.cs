@@ -1,4 +1,4 @@
-﻿using Archipelago.MultiClient.Net.Helpers;
+using Archipelago.MultiClient.Net.Helpers;
 using ChessV;
 using ChessV.Base;
 using ChessV.Games.Pieces.Apmw;
@@ -42,42 +42,32 @@ namespace Archipelago.APChessV
 
       var core = ApmwCore.getInstance();
 
+      int Count(string name) => items.Count(
+        item => ReceivedItemsHelper.GetItemName(item.ItemId, ApmwConstants.TrackerName) == name);
+      bool Any(string name) => items.Any(
+        item => ReceivedItemsHelper.GetItemName(item.ItemId, ApmwConstants.TrackerName) == name);
+
       try
       {
-        core.foundPockets = items.Count(
-          (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Pocket");
+        core.foundPockets = Count(ApmwConstants.ProgressiveItems.Pocket);
       } catch (Exception e)
       {
         ArchipelagoClient.getInstance().nonSessionMessages.Add(e.ToString());
       }
-      core.foundPocketRange = Math.Min(6, items.Count(
-        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Pocket Range"));
-      core.foundPocketGems = items.Count(
-        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Pocket Gems");
-      core.GeriProvider = () => items.Any(
-        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Play as White") ? 0 : 1;
-      core.EngineWeakeningProvider = () => Math.Min(5, items.Count(
-        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive AI Intelligence Malus"));
-      core.foundPockets = Math.Min(12, items.Count(
-        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Pocket"));
-      core.foundPawns = items.Count(
-        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Pawn");
-      core.foundMinors = items.Count(
-        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Minor Piece");
-      core.foundMajors = items.Count(
-        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Major Piece");
-      core.foundJacks = items.Count(
-        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Jack");
-      core.foundQueens = items.Count(
-        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Major To Queen");
-      core.foundPawnForwardness = items.Count(
-        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Pawn Forwardness");
-      core.foundConsuls = Math.Min(2, items.Count(
-        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive Consul"));
-      core.foundKingPromotions = Math.Min(2, items.Count(
-        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Progressive King Promotion"));
-      core.isGrand = items.Any(
-        (item) => ReceivedItemsHelper.GetItemName(item.ItemId, "ChecksMate") == "Super-Size Me");
+      core.foundPocketRange = Math.Min(6, Count(ApmwConstants.ProgressiveItems.PocketRange));
+      core.foundPocketGems = Count(ApmwConstants.ProgressiveItems.PocketGems);
+      core.GeriProvider = () => Any(ApmwConstants.ProgressiveItems.PlayAsWhite) ? 0 : 1;
+      core.EngineWeakeningProvider = () => Math.Min(5, Count(ApmwConstants.ProgressiveItems.AIIntelligenceMalus));
+      core.foundPockets = Math.Min(12, Count(ApmwConstants.ProgressiveItems.Pocket));
+      core.foundPawns = Count(ApmwConstants.ProgressiveItems.Pawn);
+      core.foundMinors = Count(ApmwConstants.ProgressiveItems.MinorPiece);
+      core.foundMajors = Count(ApmwConstants.ProgressiveItems.MajorPiece);
+      core.foundJacks = Count(ApmwConstants.ProgressiveItems.Jack);
+      core.foundQueens = Count(ApmwConstants.ProgressiveItems.MajorToQueen);
+      core.foundPawnForwardness = Count(ApmwConstants.ProgressiveItems.PawnForwardness);
+      core.foundConsuls = Math.Min(2, Count(ApmwConstants.ProgressiveItems.Consul));
+      core.foundKingPromotions = Math.Min(2, Count(ApmwConstants.ProgressiveItems.KingPromotion));
+      core.isGrand = Any(ApmwConstants.ProgressiveItems.SuperSizeMe);
     }
 
     public void Unhook()
@@ -230,6 +220,11 @@ namespace Archipelago.APChessV
         adjustedPawnValues -= workingPawns[index].MidgameValue;
       }
       // If we still have value to distribute, start upgrading pawns to sergeants or minors
+      UpgradeRemainingPawnsToSergeants(randomPieces, adjustedPawnValues, pawnOptions, workingPawns);
+    }
+
+    private void UpgradeRemainingPawnsToSergeants(Random randomPieces, int adjustedPawnValues, List<PieceType> pawnOptions, List<PieceType> workingPawns)
+    {
       var sergeantIndexes = new Queue<int>(workingPawns.Select((item, index) => new { Piece = item, Index = index })
         .OrderBy(item => item.Piece.MidgameValue)
         .Select(item => item.Index));

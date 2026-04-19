@@ -121,6 +121,10 @@ namespace ChessV.Games
     protected string promotions;
     public int HumanPlayer;
 
+    private const string COLOURBOUND_CLOBBERERS_PIECES = "gxeakexg";
+    private const string REMARKABLE_ROOKIES_PIECES = "stickits";
+    private const string NUTTY_KNIGHTS_PIECES = "hlmykmlh";
+
     public ApmwChessGame()
     {
       Kings = new List<PieceType>();
@@ -194,35 +198,7 @@ namespace ChessV.Games
       // *** FAIRY PAWN DOUBLE MOVE *** //
       if (PawnDoubleMove)
       {
-        MoveCapability doubleMoveNE = new MoveCapability();
-        doubleMoveNE.MinSteps = 2;
-        doubleMoveNE.MaxSteps = 2;
-        doubleMoveNE.MustCapture = false;
-        doubleMoveNE.CanCapture = false;
-        doubleMoveNE.Direction = new Direction(1, 1);
-        doubleMoveNE.Condition = location => location.Rank <= 1;
-
-        MoveCapability doubleMoveNW = new MoveCapability();
-        doubleMoveNW.MinSteps = 2;
-        doubleMoveNW.MaxSteps = 2;
-        doubleMoveNW.MustCapture = false;
-        doubleMoveNW.CanCapture = false;
-        doubleMoveNW.Direction = new Direction(1, -1);
-        doubleMoveNW.Condition = location => location.Rank <= 1;
-        if (BerolinaPawn.Enabled)
-        {
-          BerolinaPawn.AddMoveCapability(doubleMoveNE);
-          BerolinaPawn.AddMoveCapability(doubleMoveNW);
-        }
-        if (Checkers.Enabled) {
-          Checkers.AddMoveCapability(doubleMoveNE);
-          Checkers.AddMoveCapability(doubleMoveNW);
-        }
-        if (Sergeant.Enabled)
-        {
-          Sergeant.AddMoveCapability(doubleMoveNE);
-          Sergeant.AddMoveCapability(doubleMoveNW);
-        }
+        AddFairyPawnDoubleMoves();
       }
 
       // *** BEROLINA PAWN EN PASSANT *** //
@@ -235,80 +211,8 @@ namespace ChessV.Games
 
       // *** 480 CASTLING NO SCOPE ***
       AddCastlingRule();
-      Dictionary<string, string> majorsFromAndTo = new Dictionary<string, string>();
-      int humanPlayer = ApmwCore.getInstance().GeriProvider();
-      int rank = humanPlayer * 7;
-      // TODO(chesslogic): the starting position dict chesslogic made uses rank=4 for back line. why? u ever heard front to back?
-      int positionRank = 4;
-      bool isGrand = NumFiles > 8;
-      Location kingFrom = new Location(rank, isGrand ? 5 : 4);
-      for (int i = 0; i < NumFiles; i++)
-      {
-        var rookFromPair = new KeyValuePair<int, int>(positionRank, i);
-        if (!startingPosition.ContainsKey(rookFromPair))
-          continue;
-        PieceType rookPiece = startingPosition[rookFromPair];
-        if (Majors.Contains(rookPiece) || Jacks.Contains(rookPiece))
-        {
-          var kingMoveAmt = i < (NumFiles / 2) ? -2 : 2;
-          Location kingTo = new Location(rank, kingFrom.File + kingMoveAmt);
-          Location rookFrom = new Location(rank, i);
-          Location rookTo = new Location(rank, kingFrom.File + (kingMoveAmt / 2));
-          if (Colorbounds.Contains(rookPiece))
-          {
-            int parity = rookFrom.File % 2;
-            if (parity != rookTo.File % 2)
-              rookTo = new Location(rookTo.Rank, kingFrom.File);
-          }
-          if (kingTo == rookTo)
-          {
-            throw new InvalidOperationException(
-              string.Format("chesslogic fucked up some castling math: {0}, {1}, {2}, {3}, {4}",
-                  humanPlayer, kingFrom, kingTo, rookFrom, rookTo));
-          }
-          char privChar = (char)('a' + i);
-          if (humanPlayer == 0)
-            privChar = Char.ToUpper(privChar);
-          castlingMove(humanPlayer,
-            Board.LocationToSquare(kingFrom),
-            Board.LocationToSquare(kingTo),
-            Board.LocationToSquare(rookFrom),
-            Board.LocationToSquare(rookTo),
-            privChar);
-        }
-      }
-      // TODO(chesslogic): support CPU different armies
-      // TODO(chesslogic): name these tiles by role so the semantic is more obvious, e.g. KINGSTARTSQUARE
-      // check if grand chess is in play
-      if (NumFiles == 8)
-      {
-        // computer is black
-        if (humanPlayer == 0)
-        {
-          CastlingMove(1, "e8", "g8", "h8", "f8", 'k');
-          CastlingMove(1, "e8", "c8", "a8", "d8", 'q');
-        }
-        // computer is white
-        else
-        {
-          CastlingMove(0, "e1", "g1", "h1", "f1", 'K');
-          CastlingMove(0, "e1", "c1", "a1", "d1", 'Q');
-        }
-      } else
-      {
-        // computer is black
-        if (humanPlayer == 0)
-        {
-          CastlingMove(1, "f8", "h8", "j8", "g8", 'k');
-          CastlingMove(1, "f8", "d8", "a8", "e8", 'q');
-        }
-        // computer is white
-        else
-        {
-          CastlingMove(0, "f1", "h1", "j1", "g1", 'K');
-          CastlingMove(0, "f1", "d1", "a1", "e1", 'Q');
-        }
-      }
+      AddCustomBackRankCastlingMoves();
+      AddDefaultCastlingMoves();
     }
     #endregion
 
@@ -368,34 +272,15 @@ namespace ChessV.Games
         OutpostEval.AddOutpostBonus(Bishop, 10, 2, 5, 5);
         AddEvaluation(OutpostEval);
       }
-      if (loadableTypes.Contains(ChargingKnight.Notation[HumanPlayer]))
-        OutpostEval.AddOutpostBonus(ChargingKnight);
-      if (loadableTypes.Contains(NarrowKnight.Notation[HumanPlayer]))
-        OutpostEval.AddOutpostBonus(NarrowKnight);
-      if (loadableTypes.Contains(Phoenix.Notation[HumanPlayer]))
-        OutpostEval.AddOutpostBonus(Phoenix);
-      if (loadableTypes.Contains(MountedKing.Notation[HumanPlayer]))
-        OutpostEval.AddOutpostBonus(MountedKing);
-      if (loadableTypes.Contains(Nightrider.Notation[HumanPlayer]))
-        OutpostEval.AddOutpostBonus(Nightrider);
-      if (loadableTypes.Contains(Ribbon.Notation[HumanPlayer]))
-        OutpostEval.AddOutpostBonus(Ribbon);
-      if (loadableTypes.Contains(Gardener.Notation[HumanPlayer]))
-        OutpostEval.AddOutpostBonus(Gardener);
-      if (loadableTypes.Contains(WarElephant.Notation[HumanPlayer]))
-        OutpostEval.AddOutpostBonus(WarElephant, 10, 2, 5, 5);
-      if (loadableTypes.Contains(Cleric.Notation[HumanPlayer]))
-        OutpostEval.AddOutpostBonus(Cleric, 10, 2, 5, 5);
-      if (loadableTypes.Contains(Lion.Notation[HumanPlayer]))
-        OutpostEval.AddOutpostBonus(Lion, 10, 2, 5, 5);
-      if (loadableTypes.Contains(Bishop.Notation[HumanPlayer]))
-        OutpostEval.AddOutpostBonus(Bishop, 10, 2, 5, 5);
-      if (loadableTypes.Contains(Tower.Notation[HumanPlayer]))
-        OutpostEval.AddOutpostBonus(Tower, 10, 2, 5, 5);
-      if (loadableTypes.Contains(Petal.Notation[HumanPlayer]))
-        OutpostEval.AddOutpostBonus(Petal, 10, 2, 5, 5);
-      if (loadableTypes.Contains(Miracle.Notation[HumanPlayer]))
-        OutpostEval.AddOutpostBonus(Miracle, 10, 2, 5, 5);
+      var simpleOutposts = new[] { ChargingKnight, NarrowKnight, Phoenix, MountedKing, Nightrider, Ribbon, Gardener };
+      foreach (var p in simpleOutposts)
+        if (loadableTypes.Contains(p.Notation[HumanPlayer]))
+          OutpostEval.AddOutpostBonus(p);
+
+      var defendedOutposts = new[] { WarElephant, Cleric, Lion, Bishop, Tower, Petal, Miracle };
+      foreach (var p in defendedOutposts)
+        if (loadableTypes.Contains(p.Notation[HumanPlayer]))
+          OutpostEval.AddOutpostBonus(p, 10, 2, 5, 5);
     }
     #endregion
 
@@ -487,19 +372,19 @@ namespace ChessV.Games
         //new HashSet<PieceType>() { WarElephant, Phoenix, Cleric, Archbishop, Mullah },
         if (enemyArmy == "Colourbound Clobberers (Betza)")
         {
-          pieces = "gxeakexg";
+          pieces = COLOURBOUND_CLOBBERERS_PIECES;
         }
         // Remarkable Rookies (Betza)
         //new HashSet<PieceType>() { Tower, ShortRook, Lion, Chancellor, Zealot },
         else if (enemyArmy == "Remarkable Rookies (Betza)")
         {
-          pieces = "stickits";
+          pieces = REMARKABLE_ROOKIES_PIECES;
         }
         // Nutty Knights (Betza)
         //new HashSet<PieceType>() { ChargingKnight, NarrowKnight, ChargingRook, Colonel, Mameluk },
         else if (enemyArmy == "Nutty Knights (Betza)")
         {
-          pieces = "hlmykmlh";
+          pieces = NUTTY_KNIGHTS_PIECES;
         }
       }
       if (humanPlayer == 0)
@@ -750,6 +635,124 @@ namespace ChessV.Games
         // Petal army
         new HashSet<PieceType>() { Gardener, Ribbon, Petal, Miracle, Grazer }
       });
+    }
+
+    private void AddFairyPawnDoubleMoves()
+    {
+      MoveCapability doubleMoveNE = new MoveCapability();
+      doubleMoveNE.MinSteps = 2;
+      doubleMoveNE.MaxSteps = 2;
+      doubleMoveNE.MustCapture = false;
+      doubleMoveNE.CanCapture = false;
+      doubleMoveNE.Direction = new Direction(1, 1);
+      doubleMoveNE.Condition = location => location.Rank <= 1;
+
+      MoveCapability doubleMoveNW = new MoveCapability();
+      doubleMoveNW.MinSteps = 2;
+      doubleMoveNW.MaxSteps = 2;
+      doubleMoveNW.MustCapture = false;
+      doubleMoveNW.CanCapture = false;
+      doubleMoveNW.Direction = new Direction(1, -1);
+      doubleMoveNW.Condition = location => location.Rank <= 1;
+      if (BerolinaPawn.Enabled)
+      {
+        BerolinaPawn.AddMoveCapability(doubleMoveNE);
+        BerolinaPawn.AddMoveCapability(doubleMoveNW);
+      }
+      if (Checkers.Enabled)
+      {
+        Checkers.AddMoveCapability(doubleMoveNE);
+        Checkers.AddMoveCapability(doubleMoveNW);
+      }
+      if (Sergeant.Enabled)
+      {
+        Sergeant.AddMoveCapability(doubleMoveNE);
+        Sergeant.AddMoveCapability(doubleMoveNW);
+      }
+    }
+
+    private void AddCustomBackRankCastlingMoves()
+    {
+      Dictionary<string, string> majorsFromAndTo = new Dictionary<string, string>();
+      int humanPlayer = ApmwCore.getInstance().GeriProvider();
+      int rank = humanPlayer * 7;
+      // TODO(chesslogic): the starting position dict chesslogic made uses rank=4 for back line. why? u ever heard front to back?
+      int positionRank = 4;
+      bool isGrand = NumFiles > 8;
+      Location kingFrom = new Location(rank, isGrand ? 5 : 4);
+      for (int i = 0; i < NumFiles; i++)
+      {
+        var rookFromPair = new KeyValuePair<int, int>(positionRank, i);
+        if (!startingPosition.ContainsKey(rookFromPair))
+          continue;
+        PieceType rookPiece = startingPosition[rookFromPair];
+        if (Majors.Contains(rookPiece) || Jacks.Contains(rookPiece))
+        {
+          var kingMoveAmt = i < (NumFiles / 2) ? -2 : 2;
+          Location kingTo = new Location(rank, kingFrom.File + kingMoveAmt);
+          Location rookFrom = new Location(rank, i);
+          Location rookTo = new Location(rank, kingFrom.File + (kingMoveAmt / 2));
+          if (Colorbounds.Contains(rookPiece))
+          {
+            int parity = rookFrom.File % 2;
+            if (parity != rookTo.File % 2)
+              rookTo = new Location(rookTo.Rank, kingFrom.File);
+          }
+          if (kingTo == rookTo)
+          {
+            throw new InvalidOperationException(
+              string.Format("chesslogic fucked up some castling math: {0}, {1}, {2}, {3}, {4}",
+                  humanPlayer, kingFrom, kingTo, rookFrom, rookTo));
+          }
+          char privChar = (char)('a' + i);
+          if (humanPlayer == 0)
+            privChar = Char.ToUpper(privChar);
+          castlingMove(humanPlayer,
+            Board.LocationToSquare(kingFrom),
+            Board.LocationToSquare(kingTo),
+            Board.LocationToSquare(rookFrom),
+            Board.LocationToSquare(rookTo),
+            privChar);
+        }
+      }
+    }
+
+    private void AddDefaultCastlingMoves()
+    {
+      int humanPlayer = ApmwCore.getInstance().GeriProvider();
+      // TODO(chesslogic): support CPU different armies
+      // TODO(chesslogic): name these tiles by role so the semantic is more obvious, e.g. KINGSTARTSQUARE
+      // check if grand chess is in play
+      if (NumFiles == 8)
+      {
+        // computer is black
+        if (humanPlayer == 0)
+        {
+          CastlingMove(1, "e8", "g8", "h8", "f8", 'k');
+          CastlingMove(1, "e8", "c8", "a8", "d8", 'q');
+        }
+        // computer is white
+        else
+        {
+          CastlingMove(0, "e1", "g1", "h1", "f1", 'K');
+          CastlingMove(0, "e1", "c1", "a1", "d1", 'Q');
+        }
+      }
+      else
+      {
+        // computer is black
+        if (humanPlayer == 0)
+        {
+          CastlingMove(1, "f8", "h8", "j8", "g8", 'k');
+          CastlingMove(1, "f8", "d8", "a8", "e8", 'q');
+        }
+        // computer is white
+        else
+        {
+          CastlingMove(0, "f1", "h1", "j1", "g1", 'K');
+          CastlingMove(0, "f1", "d1", "a1", "e1", 'Q');
+        }
+      }
     }
   }
 }

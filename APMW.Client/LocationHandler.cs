@@ -1,4 +1,4 @@
-﻿using Archipelago.MultiClient.Net;
+using Archipelago.MultiClient.Net;
 using Archipelago.MultiClient.Net.BounceFeatures.DeathLink;
 using Archipelago.MultiClient.Net.Enums;
 using Archipelago.MultiClient.Net.Helpers;
@@ -14,8 +14,6 @@ namespace Archipelago.APChessV
 {
   public class LocationHandler
   {
-    private const string NAME_OF_ARCHIPELAGO_GAME_ATTRIBUTE = "Archipelago Multiworld";
-    private const string NAME_OF_GRAND_ARCHIPELAGO_GAME_ATTRIBUTE = "Archipelago Multiworld Super-Sized";
     public static LocationHandler _instance;
 
     public static LocationHandler GetInstance()
@@ -94,7 +92,7 @@ namespace Archipelago.APChessV
 
     public void StartMatch(Match match)
     {
-      if (!Initialized && match.Game.GameAttribute.GameName == NAME_OF_ARCHIPELAGO_GAME_ATTRIBUTE)
+      if (!Initialized && match.Game.GameAttribute.GameName == ApmwConstants.GameNameStandard)
         throw new InvalidOperationException("LocationHandler has not been initialized");
       this.match = match;
       //match.Game.MovePlayed += (move) => this.HandleMove(move);
@@ -110,7 +108,7 @@ namespace Archipelago.APChessV
 
     public void EndMatch()
     {
-      if (!Initialized && match.Game.GameAttribute.GameName == NAME_OF_ARCHIPELAGO_GAME_ATTRIBUTE)
+      if (!Initialized && match.Game.GameAttribute.GameName == ApmwConstants.GameNameStandard)
         throw new InvalidOperationException("LocationHandler has not been initialized");
       TryValidatePlayingArchipelago();
       if (this.match == null)
@@ -150,7 +148,7 @@ namespace Archipelago.APChessV
     /// The only way I can figure out how to do that is to manually compare every single square.
     /// Consider that a multi-capture ending on the same file is ambiguous: did the Checkers go right or left?
     public void SetupMove(MoveInfo info) {
-      if (!Initialized && match.Game.GameAttribute.GameName == NAME_OF_ARCHIPELAGO_GAME_ATTRIBUTE)
+      if (!Initialized && match.Game.GameAttribute.GameName == ApmwConstants.GameNameStandard)
         throw new InvalidOperationException("LocationHandler has not been initialized");
       if (!TryValidatePlayingArchipelago())
         return;
@@ -269,14 +267,40 @@ namespace Archipelago.APChessV
 
     public void HandleMove(MoveInfo info)
     {
-      if (!Initialized && match.Game.GameAttribute.GameName == NAME_OF_ARCHIPELAGO_GAME_ATTRIBUTE)
+      if (!Initialized && match.Game.GameAttribute.GameName == ApmwConstants.GameNameStandard)
         throw new InvalidOperationException("LocationHandler has not been initialized");
       if (!TryValidatePlayingArchipelago())
         return;
-      List<long> locations = new List<long>();
       if (info == null)
         return; // probably never happens
 
+      CheckVictoryAndDeathlink();
+
+      var locations = new List<long>();
+      if (info.Player != humanPlayer)
+      {
+        // CPU can't emit locations - we've updated state, so return early
+        UpdateMoveState(info);
+        return;
+      }
+
+      RecordKingMoveLocations(info, locations);
+      RecordSurvivalLocation(locations);
+      // The captures section may early-return after dispatching to HandleCheckersMultiCapture.
+      if (RecordCaptureLocations(info, locations)) return;
+      RecordThreatLocations(locations);
+
+      if (locations.Count > 0 && !DeathlinkedMatches.Contains(match))
+        new Task(() => LocationCheckHelper.CompleteLocationChecks(locations.ToArray())).Start();
+
+      UpdateMoveState(info);
+    }
+
+    private long Loc(string name)
+      => LocationCheckHelper.GetLocationIdFromName(ApmwConstants.TrackerName, name);
+
+    private void CheckVictoryAndDeathlink()
+    {
       //
       // BEGIN victory ...
       //
@@ -294,25 +318,15 @@ namespace Archipelago.APChessV
       //
       // END victory ...
       //
+    }
 
-      // CPU can't emit locations - we've updated state, so return early
-      if (info.Player != humanPlayer)
-      {
-        if (locations.Count > 0)
-          new Task(() => LocationCheckHelper.CompleteLocationChecks(locations.ToArray())).Start();
-        UpdateMoveState(info);
-        return;
-      }
-
-      Piece piece = info.PieceMoved;
-      string pieceName = piece.PieceType.Name;
-
-      // TODO(chesslogic): refactor these, extract into individual methods, probably reduce them to 7 lines
-
+    private void RecordKingMoveLocations(MoveInfo info, List<long> locations)
+    {
       //
       // BEGIN various king moves ...
       //
 
+      Piece piece = info.PieceMoved;
       // check if move is early and is directly forward one step
       if (ApmwCore.getInstance().kings.Contains(piece.PieceType))
       {
@@ -321,12 +335,12 @@ namespace Archipelago.APChessV
           match.Game.Board.GetFile(info.ToSquare) == 4 &&
           (match.Game.Board.GetRank(info.ToSquare) == 1 || match.Game.Board.GetRank(info.ToSquare) == 6))
         {
-          locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "King to E2/E7 Early"));
+          locations.Add(Loc("King to E2/E7 Early"));
         }
         // check if move is to A file
         if (match.Game.Board.GetFile(info.ToSquare) == 0)
         {
-          locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "King to A File"));
+          locations.Add(Loc("King to A File"));
         }
         // check if move is to distant rank
         if ((info.Player == 1 && match.Game.Board.GetRank(info.ToSquare) == 0) ||
@@ -334,24 +348,24 @@ namespace Archipelago.APChessV
         {
           // TODO(chesslogic): info.ToSquare probably isn't based on Board.PlayerSquare (used for PST eval)
           // TODO(chesslogic): ... but if it is, just check info.GetRank==7, ignore info.Player
-          locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "King to Back Rank"));
+          locations.Add(Loc("King to Back Rank"));
         }
         // check if move is to center
         if ((match.Game.Board.GetFile(info.ToSquare) == 3 || match.Game.Board.GetFile(info.ToSquare) == 4) &&
           (match.Game.Board.GetRank(info.ToSquare) == 3 || match.Game.Board.GetRank(info.ToSquare) == 4))
         {
-          locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "King to Center"));
+          locations.Add(Loc("King to Center"));
         }
 
         if (info.MoveType.HasFlag(MoveType.Castling))
         {
           if (info.FromSquare > info.ToSquare)
           {
-            locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "O-O-O Castle"));
+            locations.Add(Loc("O-O-O Castle"));
           }
           else
           {
-            locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "O-O Castle"));
+            locations.Add(Loc("O-O Castle"));
           }
         }
       }
@@ -359,34 +373,45 @@ namespace Archipelago.APChessV
       //
       // END various king moves ...
       //
+    }
 
+    private void RecordSurvivalLocation(List<long> locations)
+    {
       //
       // BEGIN survive ...
       //
 
       var currentTurn = match.Game.GameTurnNumber;
-      locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", $"Current Objective: Survive {currentTurn} Turns"));
+      locations.Add(Loc($"Current Objective: Survive {currentTurn} Turns"));
 
       //
       // END survive ...
       //
+    }
 
+    /// <summary>
+    /// Records capture-related locations. Returns true if HandleMove should return immediately
+    /// (i.e. a Checkers multi-capture was dispatched).
+    /// </summary>
+    private bool RecordCaptureLocations(MoveInfo info, List<long> locations)
+    {
       //
       // START captures ...
       //
 
+      Piece piece = info.PieceMoved;
       // check if move is capture
       if (info.MoveType.HasFlag(MoveType.CaptureProperty))
       {
         // handle king captures
         if (ApmwCore.getInstance().kings.Contains(piece.PieceType))
         {
-          locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "King Captures Anything"));
+          locations.Add(Loc("King Captures Anything"));
         }
         /*
         if (info.PieceCaptured.PieceType.Name.Equals("King"))
         {
-          locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "Checkmate Maxima"));
+          locations.Add(Loc("Checkmate Maxima"));
           // TODO(chesslogic): count # of pieces and pawns, emit corresponding checkmate
         }
         */
@@ -402,7 +427,7 @@ namespace Archipelago.APChessV
             info.MoveType == (MoveType.ExtraCapture | MoveType.PromotionProperty))
         {
           HandleCheckersMultiCapture(info);
-          return;
+          return true;
         }
         // Lookup starting square - this is the original square a piece started the game at
         if (currentSquaresToOriginalSquares.ContainsKey(originalSquare))
@@ -418,7 +443,7 @@ namespace Archipelago.APChessV
           locationName = CaptureLookup.fileToLocation(match.Game.NumFiles, fileNotation);
         else
           locationName = "Capture Pawn " + fileNotation;
-        locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", locationName));
+        locations.Add(Loc(locationName));
 
         // handle piece sequence
         int captures;
@@ -432,7 +457,7 @@ namespace Archipelago.APChessV
           if (totalCaptures < 15 || (ApmwConfig.getInstance().Goal != Goal.Single && totalCaptures < 19))
           {
             locationName = "Capture Any " + totalCaptures;
-            locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", locationName));
+            locations.Add(Loc(locationName));
           }
         }
         if (captures > 1)
@@ -443,7 +468,7 @@ namespace Archipelago.APChessV
             locationName = "Capture " + captures + " Pieces";
             if (capturedPawns >= captures)
             {
-              locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", locationName));
+              locations.Add(Loc(locationName));
               locationName = "Capture " + captures + " Of Each";
             }
           }
@@ -453,26 +478,31 @@ namespace Archipelago.APChessV
             locationName = "Capture " + captures + " Pawns";
             if (capturedPieces >= captures)
             {
-              locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", locationName));
+              locations.Add(Loc(locationName));
               locationName = "Capture " + captures + " Of Each";
             }
           }
-          locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", locationName));
+          locations.Add(Loc(locationName));
           // capture everything
           if ((ApmwConfig.getInstance().Goal == Goal.Single && capturedPieces >= 7 && capturedPawns >= 8) ||
             (ApmwCore.getInstance().isGrand && capturedPieces >= 9 && capturedPawns >= 10))
           {
-            locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "Capture Everything"));
+            locations.Add(Loc("Capture Everything"));
           }
         }
       }
       if ((info.MoveType & MoveType.EnPassant) == MoveType.EnPassant)
-        locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "French Move"));
+        locations.Add(Loc("French Move"));
 
       //
       // END captures ...
       //
 
+      return false;
+    }
+
+    private void RecordThreatLocations(List<long> locations)
+    {
       //
       // BEGIN threats ...
       //
@@ -495,74 +525,30 @@ namespace Archipelago.APChessV
           bool attackedPieceIsPawn = ApmwCore.getInstance().pawns.Contains(attackedPiece.PieceType);
           if (attackedPieceIsPawn)
           {
-            locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "Threaten Pawn"));
+            locations.Add(Loc("Threaten Pawn"));
             continue;
           }
           bool attackedPieceIsMinor = ApmwCore.getInstance().minors.Contains(attackedPiece.PieceType);
           if (attackedPieceIsMinor)
-            locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "Threaten Minor"));
+            locations.Add(Loc("Threaten Minor"));
           bool attackedPieceIsMajor = ApmwCore.getInstance().majors.Contains(attackedPiece.PieceType);
           if (attackedPieceIsMajor)
-            locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "Threaten Major"));
+            locations.Add(Loc("Threaten Major"));
           bool attackedPieceIsQueen = ApmwCore.getInstance().queens.Contains(attackedPiece.PieceType);
           if (attackedPieceIsQueen)
-            locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "Threaten Queen"));
+            locations.Add(Loc("Threaten Queen"));
           bool attackedPieceIsKing = ApmwCore.getInstance().kings[0] == attackedPiece.PieceType;
           if (attackedPieceIsKing)
-            locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "Threaten King"));
+            locations.Add(Loc("Threaten King"));
 
           // For each piece attacking {square}, note it found a target, and check if it's attacking elsewhere
           for (int i = 0; i < attackers.Count; i++)
           {
-            // This doesn't calculate whether a single move could defend both pieces.
-            // Imagine a rook, blocked by a pawn offensively, sliding to a defensive location between two pieces
-            // - or a "discovered defend" where two different pieces are used to defend the forked pieces.
-            // We have to add "true forks" at each step, because we count the target, not just the source
-            // There are conceivable moves which can protect both pieces but those are SO complicated, dude
-            // And on the other hand, forked pieces defending each other might still be a fork!
-            // A King protected by a Queen is not defended...
-            bool isTrueFork =
-              !match.Game.IsSquareAttacked(attackers[i].Square, humanPlayer ^ 1) && // will live to attack
-              (
-                // TODO: attacker has less value than a queen
-                attackedPiece.PieceType.MidgameValue >= (attackers[i].MidgameValue + 100) || // recapture still loses material
-                attackedPieceIsKing || // no king can be defended
-                !match.Game.IsSquareAttacked(square, humanPlayer ^ 1) // not defended
-              );
-            if (isTrueFork)
-            {
-              if (!trueForkers.ContainsKey(attackers[i]))
-                trueForkers[attackers[i]] = 0;
-              trueForkers[attackers[i]]++;
-            }
-
-            // This is used to determine if a fork is royal.
-            if (attackedPieceIsKing)
-              kingAttacked[attackers[i]] = (true, isTrueFork);
-            if (attackedPieceIsQueen)
-              queenAttacked[attackers[i]] = (true, isTrueFork);
-
-            if (!forkers.ContainsKey(attackers[i]))
-              forkers[attackers[i]] = 0;
-            if (++forkers[attackers[i]] > 1)
-            {
-              locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "Fork, Sacrificial"));
-              if (trueForkers.ContainsKey(attackers[i]) && trueForkers[attackers[i]] > 1)
-                locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "Fork, True"));
-              if (forkers[attackers[i]] > 2)
-              {
-                locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "Fork, Sacrificial Triple"));
-                if (trueForkers.ContainsKey(attackers[i]) && trueForkers[attackers[i]] > 2)
-                  locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "Fork, True Triple"));
-              }
-              if (kingAttacked.ContainsKey(attackers[i]) && queenAttacked.ContainsKey(attackers[i]))
-                if (kingAttacked[attackers[i]].Item1 && queenAttacked[attackers[i]].Item1)
-                {
-                  locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "Fork, Sacrificial Royal"));
-                  if (kingAttacked[attackers[i]].Item2 && queenAttacked[attackers[i]].Item2)
-                    locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "Fork, True Royal"));
-                }
-            }
+            RecordForksForAttacker(
+              square, attackers[i], attackedPiece,
+              attackedPieceIsKing, attackedPieceIsQueen,
+              forkers, trueForkers, kingAttacked, queenAttacked,
+              locations);
           }
 
           // TODO(chesslogic): pin??? how would??? maybe check if target has no moves... for king pins?
@@ -575,9 +561,9 @@ namespace Archipelago.APChessV
           piece.GenerateMoves(moveList, false);
           if (moveList.Count > 0)
           {
-            locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "Pin"));
+            locations.Add(Loc("Pin"));
             // all pieces matter?? I don't know ... this only detects pins to king...
-            locations.Add(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "Skewer"));
+            locations.Add(Loc("Skewer"));
           }
           */
         }
@@ -586,11 +572,66 @@ namespace Archipelago.APChessV
       //
       // END threats ...
       //
+    }
 
-      if (locations.Count > 0 && !DeathlinkedMatches.Contains(match))
-        new Task(() => LocationCheckHelper.CompleteLocationChecks(locations.ToArray())).Start();
+    private void RecordForksForAttacker(
+      int square, Piece attacker, Piece attackedPiece,
+      bool attackedPieceIsKing, bool attackedPieceIsQueen,
+      Dictionary<Piece, int> forkers,
+      Dictionary<Piece, int> trueForkers,
+      Dictionary<Piece, (bool, bool)> kingAttacked,
+      Dictionary<Piece, (bool, bool)> queenAttacked,
+      List<long> locations)
+    {
+      // This doesn't calculate whether a single move could defend both pieces.
+      // Imagine a rook, blocked by a pawn offensively, sliding to a defensive location between two pieces
+      // - or a "discovered defend" where two different pieces are used to defend the forked pieces.
+      // We have to add "true forks" at each step, because we count the target, not just the source
+      // There are conceivable moves which can protect both pieces but those are SO complicated, dude
+      // And on the other hand, forked pieces defending each other might still be a fork!
+      // A King protected by a Queen is not defended...
+      bool isTrueFork =
+        !match.Game.IsSquareAttacked(attacker.Square, humanPlayer ^ 1) && // will live to attack
+        (
+          // TODO: attacker has less value than a queen
+          attackedPiece.PieceType.MidgameValue >= (attacker.MidgameValue + 100) || // recapture still loses material
+          attackedPieceIsKing || // no king can be defended
+          !match.Game.IsSquareAttacked(square, humanPlayer ^ 1) // not defended
+        );
+      if (isTrueFork)
+      {
+        if (!trueForkers.ContainsKey(attacker))
+          trueForkers[attacker] = 0;
+        trueForkers[attacker]++;
+      }
 
-      UpdateMoveState(info);
+      // This is used to determine if a fork is royal.
+      if (attackedPieceIsKing)
+        kingAttacked[attacker] = (true, isTrueFork);
+      if (attackedPieceIsQueen)
+        queenAttacked[attacker] = (true, isTrueFork);
+
+      if (!forkers.ContainsKey(attacker))
+        forkers[attacker] = 0;
+      if (++forkers[attacker] > 1)
+      {
+        locations.Add(Loc("Fork, Sacrificial"));
+        if (trueForkers.ContainsKey(attacker) && trueForkers[attacker] > 1)
+          locations.Add(Loc("Fork, True"));
+        if (forkers[attacker] > 2)
+        {
+          locations.Add(Loc("Fork, Sacrificial Triple"));
+          if (trueForkers.ContainsKey(attacker) && trueForkers[attacker] > 2)
+            locations.Add(Loc("Fork, True Triple"));
+        }
+        if (kingAttacked.ContainsKey(attacker) && queenAttacked.ContainsKey(attacker))
+          if (kingAttacked[attacker].Item1 && queenAttacked[attacker].Item1)
+          {
+            locations.Add(Loc("Fork, Sacrificial Royal"));
+            if (kingAttacked[attacker].Item2 && queenAttacked[attacker].Item2)
+              locations.Add(Loc("Fork, True Royal"));
+          }
+      }
     }
 
     internal void UpdateMoveState(MoveInfo info)
@@ -630,10 +671,10 @@ namespace Archipelago.APChessV
     {
       if (!TryValidatePlayingArchipelago())
         return;
-      LocationCheckHelper.CompleteLocationChecks(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "Checkmate Minima"));
-      if (ApmwCore.getInstance().isGrand && match.Game.GameAttribute.GameName == NAME_OF_GRAND_ARCHIPELAGO_GAME_ATTRIBUTE)
+      LocationCheckHelper.CompleteLocationChecks(LocationCheckHelper.GetLocationIdFromName(ApmwConstants.TrackerName, "Checkmate Minima"));
+      if (ApmwCore.getInstance().isGrand && match.Game.GameAttribute.GameName == ApmwConstants.GameNameGrand)
       {
-        LocationCheckHelper.CompleteLocationChecks(LocationCheckHelper.GetLocationIdFromName("ChecksMate", "Checkmate Maxima"));
+        LocationCheckHelper.CompleteLocationChecks(LocationCheckHelper.GetLocationIdFromName(ApmwConstants.TrackerName, "Checkmate Maxima"));
         var statusUpdatePacket = new StatusUpdatePacket();
         statusUpdatePacket.Status = ArchipelagoClientState.ClientGoal;
         session.Socket.SendPacket(statusUpdatePacket);
@@ -678,8 +719,8 @@ namespace Archipelago.APChessV
     {
       // TODO(chesslogic): Player can't "disconnect" without restarting.
       if (Initialized && match != null && match.Game.GameAttribute != null &&
-          match.Game.GameAttribute.GameName != NAME_OF_ARCHIPELAGO_GAME_ATTRIBUTE &&
-          match.Game.GameAttribute.GameName != NAME_OF_GRAND_ARCHIPELAGO_GAME_ATTRIBUTE)
+          match.Game.GameAttribute.GameName != ApmwConstants.GameNameStandard &&
+          match.Game.GameAttribute.GameName != ApmwConstants.GameNameGrand)
         throw new InvalidOperationException("Please disconnect from Archipelago when using other ChessV features");
       return Initialized;
     }

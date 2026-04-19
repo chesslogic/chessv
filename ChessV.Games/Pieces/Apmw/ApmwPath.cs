@@ -51,77 +51,28 @@ namespace ChessV.Games.Pieces.Apmw
       Elephant.AddMoves(type);
 
       // Move 1 square inward from each elephant space
-      MoveCapability move = MoveCapability.StepMoveOnly(new Direction(2, 1));
-      MovePathInfo movePath = new MovePathInfo();
-      movePath.AddPath(new List<Direction>() { new Direction(2, 2), new Direction(0, -1) });
-      move.PathInfo = movePath;
-      type.AddMoveCapability(move);
-
-      move = MoveCapability.StepMoveOnly(new Direction(1, 2));
-      movePath = new MovePathInfo();
-      movePath.AddPath(new List<Direction>() { new Direction(2, 2), new Direction(-1, 0) });
-      move.PathInfo = movePath;
-      type.AddMoveCapability(move);
-
-      move = MoveCapability.StepMoveOnly(new Direction(1, 1));
-      movePath = new MovePathInfo();
-      movePath.AddPath(new List<Direction>() { new Direction(2, 2), new Direction(-1, -1) });
-      move.PathInfo = movePath;
-      type.AddMoveCapability(move);
-
-      move = MoveCapability.StepMoveOnly(new Direction(-2, 1));
-      movePath = new MovePathInfo();
-      movePath.AddPath(new List<Direction>() { new Direction(-2, 2), new Direction(0, -1) });
-      move.PathInfo = movePath;
-      type.AddMoveCapability(move);
-
-      move = MoveCapability.StepMoveOnly(new Direction(-1, 2));
-      movePath = new MovePathInfo();
-      movePath.AddPath(new List<Direction>() { new Direction(-2, 2), new Direction(1, 0) });
-      move.PathInfo = movePath;
-      type.AddMoveCapability(move);
-
-      move = MoveCapability.StepMoveOnly(new Direction(-1, 1));
-      movePath = new MovePathInfo();
-      movePath.AddPath(new List<Direction>() { new Direction(-2, 2), new Direction(1, -1) });
-      move.PathInfo = movePath;
-      type.AddMoveCapability(move);
-
-      move = MoveCapability.StepMoveOnly(new Direction(2, -1));
-      movePath = new MovePathInfo();
-      movePath.AddPath(new List<Direction>() { new Direction(2, -2), new Direction(0, 1) });
-      move.PathInfo = movePath;
-      type.AddMoveCapability(move);
-
-      move = MoveCapability.StepMoveOnly(new Direction(1, -2));
-      movePath = new MovePathInfo();
-      movePath.AddPath(new List<Direction>() { new Direction(2, -2), new Direction(-1, 0) });
-      move.PathInfo = movePath;
-      type.AddMoveCapability(move);
-
-      move = MoveCapability.StepMoveOnly(new Direction(1, -1));
-      movePath = new MovePathInfo();
-      movePath.AddPath(new List<Direction>() { new Direction(2, -2), new Direction(-1, 1) });
-      move.PathInfo = movePath;
-      type.AddMoveCapability(move);
-
-      move = MoveCapability.StepMoveOnly(new Direction(-2, -1));
-      movePath = new MovePathInfo();
-      movePath.AddPath(new List<Direction>() { new Direction(-2, -2), new Direction(0, 1) });
-      move.PathInfo = movePath;
-      type.AddMoveCapability(move);
-
-      move = MoveCapability.StepMoveOnly(new Direction(-1, -2));
-      movePath = new MovePathInfo();
-      movePath.AddPath(new List<Direction>() { new Direction(-2, -2), new Direction(1, 0) });
-      move.PathInfo = movePath;
-      type.AddMoveCapability(move);
-
-      move = MoveCapability.StepMoveOnly(new Direction(-1, -1));
-      movePath = new MovePathInfo();
-      movePath.AddPath(new List<Direction>() { new Direction(-2, -2), new Direction(1, 1) });
-      move.PathInfo = movePath;
-      type.AddMoveCapability(move);
+      var moves = new (Direction step, Direction longLeg, Direction shortLeg)[] {
+        (new Direction( 2,  1), new Direction( 2,  2), new Direction( 0, -1)),
+        (new Direction( 1,  2), new Direction( 2,  2), new Direction(-1,  0)),
+        (new Direction( 1,  1), new Direction( 2,  2), new Direction(-1, -1)),
+        (new Direction(-2,  1), new Direction(-2,  2), new Direction( 0, -1)),
+        (new Direction(-1,  2), new Direction(-2,  2), new Direction( 1,  0)),
+        (new Direction(-1,  1), new Direction(-2,  2), new Direction( 1, -1)),
+        (new Direction( 2, -1), new Direction( 2, -2), new Direction( 0,  1)),
+        (new Direction( 1, -2), new Direction( 2, -2), new Direction(-1,  0)),
+        (new Direction( 1, -1), new Direction( 2, -2), new Direction(-1,  1)),
+        (new Direction(-2, -1), new Direction(-2, -2), new Direction( 0,  1)),
+        (new Direction(-1, -2), new Direction(-2, -2), new Direction( 1,  0)),
+        (new Direction(-1, -1), new Direction(-2, -2), new Direction( 1,  1)),
+      };
+      foreach (var (step, longLeg, shortLeg) in moves)
+      {
+        MoveCapability move = MoveCapability.StepMoveOnly(step);
+        MovePathInfo movePath = new MovePathInfo();
+        movePath.AddPath(new List<Direction>() { longLeg, shortLeg });
+        move.PathInfo = movePath;
+        type.AddMoveCapability(move);
+      }
     }
   }
 
