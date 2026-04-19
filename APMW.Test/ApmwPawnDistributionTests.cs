@@ -19,6 +19,9 @@ namespace ChessV.Test
         [TestInitialize]
         public void Setup()
         {
+            // Reset the sergeants mode between tests; ApmwConfig is a singleton.
+            ApmwConfig.getInstance().PawnSergeantsInt = (int)FairyPawnSergeants.Off;
+
             var core = ApmwCore.getInstance();
             core.pawns = new System.Collections.Generic.HashSet<PieceType>
             {
@@ -145,6 +148,102 @@ namespace ChessV.Test
         {
             // Create a mock piece type for testing
             return new Pawn("Test Pawn", "T", 100, 100);
+        }
+
+        private static bool IsSergeant(PieceType piece)
+        {
+            return piece != null && ApmwCore.getInstance().sergeants.Contains(piece);
+        }
+
+        private static int CountSergeants(System.Collections.Generic.List<PieceType> result)
+        {
+            return result.Count(IsSergeant);
+        }
+
+        private static int CountPlainPawns(System.Collections.Generic.List<PieceType> result)
+        {
+            return result.Count(p => p != null && !IsSergeant(p));
+        }
+
+        [TestMethod]
+        public void Sergeants_Off_PreservesBaselineDistribution()
+        {
+            ApmwConfig.getInstance().PawnSergeantsInt = (int)FairyPawnSergeants.Off;
+            var minors = EmptyMinors();
+            ApmwCore.getInstance().foundPawns = 8;
+
+            var result = handler.GeneratePawns(NUM_FILES, minors, 0);
+
+            // Same invariants as TestPawnDistribution_BasicCase.
+            Assert.AreEqual(0, CountInRank(result, 0), "back rank untouched");
+            Assert.AreEqual(NUM_FILES, CountInRank(result, 1), "pawn rank should be full");
+            Assert.IsTrue(CountInRank(result, 2) <= NUM_FILES / 2, "minimal spill onto third rank");
+            Assert.AreEqual(0, CountInRank(result, 3), "no pawns in fourth rank");
+            Assert.AreEqual(0, CountInRank(result, 4), "no pawns in fifth rank");
+            Assert.AreEqual(0, CountSergeants(result), "Off mode must not place sergeants");
+        }
+
+        [TestMethod]
+        public void Sergeants_Replace_PlacesSergeantsForBonusBudget()
+        {
+            ApmwConfig.getInstance().PawnSergeantsInt = (int)FairyPawnSergeants.Replace;
+            var minors = EmptyMinors();
+            ApmwCore.getInstance().foundPawns = 4;
+
+            // spare_material flows directly into adjustedPawnValues; 400 ensures multiple bonus
+            // pawn slots are picked, each of which Replace mode resolves to a Sergeant.
+            var result = handler.GeneratePawns(NUM_FILES, minors, 400);
+
+            Assert.IsTrue(CountSergeants(result) >= 1,
+                "Replace mode should place at least one sergeant beyond the 4 plain pawns");
+        }
+
+        [TestMethod]
+        public void Sergeants_Add_UpgradesExistingPawnsOnUnderfullBoard()
+        {
+            ApmwConfig.getInstance().PawnSergeantsInt = (int)FairyPawnSergeants.Add;
+            var minors = EmptyMinors();
+            ApmwCore.getInstance().foundPawns = 6;
+
+            // Board is not full (foundPawns=6 < numFiles*4=32); Add mode should still upgrade.
+            var result = handler.GeneratePawns(NUM_FILES, minors, 200);
+
+            int sergeants = CountSergeants(result);
+            int plainPawns = CountPlainPawns(result);
+
+            Assert.IsTrue(sergeants >= 1,
+                "Add mode should upgrade at least one pawn into a sergeant even on an under-full board");
+
+            // The total chessmen placed should not exceed what the unconstrained budget could have produced.
+            // adjustedPawnValues = max(600, 600+200+45) = 845 -> at most ~8-9 plain-pawn-equivalents.
+            int totalPlaced = sergeants + plainPawns;
+            Assert.IsTrue(totalPlaced <= 9,
+                $"upgrade should reduce or maintain piece count, got {totalPlaced} pieces ({sergeants} sergeants, {plainPawns} pawns)");
+        }
+
+        [TestMethod]
+        public void Sergeants_Random_HasMixedDistributionOverManySeeds()
+        {
+            ApmwConfig.getInstance().PawnSergeantsInt = (int)FairyPawnSergeants.Random;
+            ApmwCore.getInstance().foundPawns = 4;
+
+            int totalSergeants = 0;
+            int totalPlainPawns = 0;
+
+            for (int seed = 1; seed <= 25; seed++)
+            {
+                ApmwConfig.getInstance().pawnSeed = seed;
+                ApmwConfig.getInstance().pawnLocSeed = seed * 7 + 1;
+
+                var minors = EmptyMinors();
+                var result = handler.GeneratePawns(NUM_FILES, minors, 1000);
+
+                totalSergeants += CountSergeants(result);
+                totalPlainPawns += CountPlainPawns(result);
+            }
+
+            Assert.IsTrue(totalSergeants > 0, "Random mode should produce at least one sergeant across seeds");
+            Assert.IsTrue(totalPlainPawns > 0, "Random mode should still produce plain pawns across seeds");
         }
     }
 } 

@@ -185,23 +185,49 @@ namespace Archipelago.APChessV
       }
     }
 
-    private List<PieceType> PickPawns(Random randomPieces, int adjustedPawnValues, int remainingPawnSpaces)
+    private List<PieceType> PickPawns(Random randomPieces, int adjustedPawnValues, int remainingPawnSpaces, int foundPawns, int spare_material)
     {
+      var sergeantsMode = ApmwConfig.getInstance().PawnSergeants;
       List<PieceType> pawnOptions = setupPawnOptions();
       // Add more pawns until we have enough
       List<PieceType> workingPawns = new List<PieceType>();
       while (workingPawns.Count < remainingPawnSpaces && adjustedPawnValues > 0)
       {
-        var upgrade = adjustedPawnValues <= PAWN_VALUE ? PawnUpgrade.Min : PawnUpgrade.Core;
-        workingPawns.Add(GetNextPawn(randomPieces, pawnOptions, upgrade));
-        adjustedPawnValues -= workingPawns.Last().MidgameValue;
+        PieceType picked;
+        if (sergeantsMode != FairyPawnSergeants.Off && workingPawns.Count >= foundPawns)
+        {
+          picked = ChooseBonusPawnPiece(randomPieces, pawnOptions, sergeantsMode, adjustedPawnValues);
+        }
+        else
+        {
+          var upgrade = adjustedPawnValues <= PAWN_VALUE ? PawnUpgrade.Min : PawnUpgrade.Core;
+          picked = GetNextPawn(randomPieces, pawnOptions, upgrade);
+        }
+        workingPawns.Add(picked);
+        adjustedPawnValues -= picked.MidgameValue;
       }
       // TODO(chesslogic): Add an Option not to upgrade pawns. For now, we'll always maximize material value.
-      UpgradePawns(randomPieces, adjustedPawnValues, pawnOptions, workingPawns);
+      UpgradePawns(randomPieces, adjustedPawnValues, pawnOptions, workingPawns, sergeantsMode, spare_material);
       return workingPawns;
     }
 
-    private void UpgradePawns(Random randomPieces, int adjustedPawnValues, List<PieceType> pawnOptions, List<PieceType> workingPawns)
+    private PieceType ChooseBonusPawnPiece(Random randomPieces, List<PieceType> pawnOptions, FairyPawnSergeants mode, int budget)
+    {
+      bool wantSergeant = mode == FairyPawnSergeants.Replace
+        || (mode == FairyPawnSergeants.Random && randomPieces.Next(2) == 0);
+      if (wantSergeant)
+      {
+        var sergeant = GetNextPawn(randomPieces, pawnOptions, PawnUpgrade.Sergeant);
+        if (sergeant.MidgameValue <= budget)
+          return sergeant;
+        // Budget too small to afford a sergeant; fall through to a regular pawn pick
+        // so the outer loop can terminate naturally on the next iteration.
+      }
+      var upgrade = budget <= PAWN_VALUE ? PawnUpgrade.Min : PawnUpgrade.Core;
+      return GetNextPawn(randomPieces, pawnOptions, upgrade);
+    }
+
+    private void UpgradePawns(Random randomPieces, int adjustedPawnValues, List<PieceType> pawnOptions, List<PieceType> workingPawns, FairyPawnSergeants sergeantsMode, int spare_material)
     {
       // Find the lowest value piece that can be upgraded, then replace it with a higher-value piece
       var miniIndexes = new Queue<int>(workingPawns.Select((item, index) => new { Piece = item, Index = index })
@@ -219,8 +245,16 @@ namespace Archipelago.APChessV
         // Subtract the new piece's value from the pool
         adjustedPawnValues -= workingPawns[index].MidgameValue;
       }
+      // Replace/Random already placed sergeants per-slot in PickPawns; skip the legacy fallback.
+      if (sergeantsMode == FairyPawnSergeants.Replace || sergeantsMode == FairyPawnSergeants.Random)
+        return;
+      // Add mode: ensure sergeant upgrades trigger even when the board isn't full
+      // by topping up the remaining budget with the spare material.
+      int sergeantBudget = adjustedPawnValues;
+      if (sergeantsMode == FairyPawnSergeants.Add)
+        sergeantBudget += spare_material;
       // If we still have value to distribute, start upgrading pawns to sergeants or minors
-      UpgradeRemainingPawnsToSergeants(randomPieces, adjustedPawnValues, pawnOptions, workingPawns);
+      UpgradeRemainingPawnsToSergeants(randomPieces, sergeantBudget, pawnOptions, workingPawns);
     }
 
     private void UpgradeRemainingPawnsToSergeants(Random randomPieces, int adjustedPawnValues, List<PieceType> pawnOptions, List<PieceType> workingPawns)
@@ -261,7 +295,7 @@ namespace Archipelago.APChessV
         core.foundPawns * PAWN_VALUE,
         core.foundPawns * PAWN_VALUE + spare_material + 45);
 
-      List<PieceType> workingPawns = PickPawns(randomPieces, adjustedPawnValues, remainingPawnSpaces);
+      List<PieceType> workingPawns = PickPawns(randomPieces, adjustedPawnValues, remainingPawnSpaces, core.foundPawns, spare_material);
 
       Queue<PieceType> adjustedPawns = new Queue<PieceType>(workingPawns);
       // Fill each rank

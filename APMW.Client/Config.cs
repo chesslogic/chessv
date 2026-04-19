@@ -30,6 +30,13 @@ namespace Archipelago.APChessV
   {
     Vanilla = 0, Mixed = 1, Berolina = 2, Checkers = 3, Reserved = 4, AnyPawn = 5, AnyFairy = 6, AnyClassical = 7
   }
+  public enum FairyPawnSergeants
+  {
+    Off = 0,
+    Add = 1,
+    Replace = 2,
+    Random = 3
+  }
 
   public class ApmwConfig
   {
@@ -125,6 +132,15 @@ namespace Archipelago.APChessV
         pawns = (FairyPawns)value;
       }
     }
+    private FairyPawnSergeants pawnSergeants;
+    public FairyPawnSergeants PawnSergeants { get { return pawnSergeants; } }
+    public int PawnSergeantsInt
+    {
+      set
+      {
+        pawnSergeants = (FairyPawnSergeants)value;
+      }
+    }
 
     public void Instantiate(Dictionary<string, object> slotData)
     {
@@ -160,6 +176,8 @@ namespace Archipelago.APChessV
       // Non-Fairy Chess
       PawnsInt = Convert.ToInt32(SlotData.GetValueOrDefault(
         "fairy_chess_pawns", FairyPawns.Mixed));
+      PawnSergeantsInt = Convert.ToInt32(SlotData.GetValueOrDefault(
+        ApmwConstants.SlotKeyFairyChessPawnSergeants, FairyPawnSergeants.Off));
 
       // Piece Limits
       minorTypeLimit = Convert.ToInt32(SlotData.GetValueOrDefault(
