@@ -8,6 +8,7 @@ using ChessV;
 using ChessV.Base;
 using ChessV.Games;
 using ChessV.Games.Pieces.Berolina;
+using ChessV.Games.Pieces.OdinsRune;
 using Moq;
 
 namespace ChessV.Test
@@ -17,6 +18,14 @@ namespace ChessV.Test
     {
         private ItemHandler handler;
         private const int NUM_FILES = 8;
+
+        // Shared piece instances so tests can swap them in/out of core.pawns/core.sergeants
+        // (PickPawns identifies sergeants via reference-equality through HashSet.Contains).
+        private static PieceType _pawn;
+        private static PieceType _berolina;
+        private static PieceType _checkers;
+        private static PieceType _sergeant;
+        private static PieceType _odinPawn;
 
         // Tiny mocked Random so tests can deterministically force PickPawns down
         // specific code paths (e.g. always-pick-sergeant in Pool mode).
@@ -51,21 +60,25 @@ namespace ChessV.Test
         {
             // Reset the upgrades mode between tests; ApmwConfig is a singleton.
             ApmwConfig.getInstance().PawnUpgradesInt = (int)FairyPawnUpgrades.Off;
+            // Reset FairyPawns between tests so the singleton can't leak a non-default
+            // value across tests. Vanilla matches the implicit pre-existing default that
+            // pre-feature tests (e.g. TestPawnDistribution_MultipleRanks) relied on.
+            ApmwConfig.getInstance().PawnsInt = (int)FairyPawns.Vanilla;
             // Deterministic seeds for tests that go through GeneratePawns.
             ApmwConfig.getInstance().pawnSeed = 42;
             ApmwConfig.getInstance().pawnLocSeed = 4242;
 
+            // Fresh instances per test so mutation of core.pawns/core.sergeants in
+            // one test cannot bleed into another via shared object identity.
+            _pawn = new Pawn("Pawn", "P", 100, 125);
+            _berolina = new BerolinaPawn("Berolina Pawn", "Ŕ", 85, 120);
+            _checkers = new ChessV.Games.Pieces.Apmw.Checkers("Checkers", "Ç", 40, 95);
+            _sergeant = new ChessV.Games.Pieces.Apmw.Sergeant("Sergeant", "Ŝ", 200, 225);
+            _odinPawn = new OdinPawn("Odin Pawn", "Ó", 150, 200);
+
             var core = ApmwCore.getInstance();
-            core.pawns = new System.Collections.Generic.HashSet<PieceType>
-            {
-                new Pawn("Pawn", "P", 100, 125),
-                new BerolinaPawn("Berolina Pawn", "Ŕ", 85, 120),
-                new ChessV.Games.Pieces.Apmw.Checkers("Checkers", "Ç", 40, 95),
-            };
-            core.sergeants = new System.Collections.Generic.HashSet<PieceType>
-            {
-                new ChessV.Games.Pieces.Apmw.Sergeant("Sergeant", "Ŝ", 200, 225),
-            };
+            core.pawns = new System.Collections.Generic.HashSet<PieceType> { _pawn, _berolina, _checkers };
+            core.sergeants = new System.Collections.Generic.HashSet<PieceType> { _sergeant };
             core.foundPawnForwardness = 0;
 
             var helper = new Mock<IReceivedItemsHelper>();
@@ -432,6 +445,370 @@ namespace ChessV.Test
 
             Assert.IsTrue(picks.Count >= foundPawns,
                 $"mode={mode} foundPawns={foundPawns} spare={spare}: count {picks.Count} < foundPawns");
+        }
+
+        // ---------------------------------------------------------------------
+        // (A) FairyPawns x PawnUpgrades cross-coverage
+        // ---------------------------------------------------------------------
+
+        private void ConfigurePool(FairyPawns pawns, FairyPawnUpgrades upgrades)
+        {
+            ApmwConfig.getInstance().PawnsInt = (int)pawns;
+            ApmwConfig.getInstance().PawnUpgradesInt = (int)upgrades;
+        }
+
+        // Mirror of ItemHandler.setupPawnOptions(); kept private to the test class
+        // so it stays in lock-step with what PickPawns actually receives.
+        private static List<PieceType> ExpectedPawnOptions(FairyPawns mode)
+        {
+            switch (mode)
+            {
+                case FairyPawns.Mixed: return ApmwCore.getInstance().pawns.ToList();
+                case FairyPawns.AnyPawn: return new List<PieceType> { _pawn, _berolina };
+                case FairyPawns.AnyFairy: return new List<PieceType> { _berolina, _checkers };
+                case FairyPawns.AnyClassical: return new List<PieceType> { _pawn, _checkers };
+                case FairyPawns.Berolina: return new List<PieceType> { _berolina };
+                case FairyPawns.Checkers: return new List<PieceType> { _checkers };
+                case FairyPawns.Vanilla:
+                default: return new List<PieceType> { _pawn };
+            }
+        }
+
+        [DataTestMethod]
+        [DataRow(FairyPawns.Vanilla, FairyPawnUpgrades.Off)]
+        [DataRow(FairyPawns.Vanilla, FairyPawnUpgrades.Pool)]
+        [DataRow(FairyPawns.Vanilla, FairyPawnUpgrades.Max)]
+        [DataRow(FairyPawns.Mixed, FairyPawnUpgrades.Off)]
+        [DataRow(FairyPawns.Mixed, FairyPawnUpgrades.Pool)]
+        [DataRow(FairyPawns.Mixed, FairyPawnUpgrades.Max)]
+        [DataRow(FairyPawns.Berolina, FairyPawnUpgrades.Off)]
+        [DataRow(FairyPawns.Berolina, FairyPawnUpgrades.Pool)]
+        [DataRow(FairyPawns.Berolina, FairyPawnUpgrades.Max)]
+        [DataRow(FairyPawns.Checkers, FairyPawnUpgrades.Off)]
+        [DataRow(FairyPawns.Checkers, FairyPawnUpgrades.Pool)]
+        [DataRow(FairyPawns.Checkers, FairyPawnUpgrades.Max)]
+        [DataRow(FairyPawns.AnyPawn, FairyPawnUpgrades.Off)]
+        [DataRow(FairyPawns.AnyPawn, FairyPawnUpgrades.Pool)]
+        [DataRow(FairyPawns.AnyPawn, FairyPawnUpgrades.Max)]
+        [DataRow(FairyPawns.AnyFairy, FairyPawnUpgrades.Off)]
+        [DataRow(FairyPawns.AnyFairy, FairyPawnUpgrades.Pool)]
+        [DataRow(FairyPawns.AnyFairy, FairyPawnUpgrades.Max)]
+        [DataRow(FairyPawns.AnyClassical, FairyPawnUpgrades.Off)]
+        [DataRow(FairyPawns.AnyClassical, FairyPawnUpgrades.Pool)]
+        [DataRow(FairyPawns.AnyClassical, FairyPawnUpgrades.Max)]
+        public void PawnUpgrades_FairyPawns_AllCombinations_NeverFewerThanFoundPawns(
+            FairyPawns pawns, FairyPawnUpgrades upgrades)
+        {
+            ConfigurePool(pawns, upgrades);
+            int foundPawns = 8;
+            ApmwCore.getInstance().foundPawns = foundPawns;
+
+            var picks = handler.PickPawns(new Random(42),
+                AdjustedBudget(foundPawns, 100), NUM_FILES * 4, foundPawns);
+
+            Assert.IsTrue(picks.Count >= foundPawns,
+                $"pawns={pawns} upgrades={upgrades}: count {picks.Count} < foundPawns");
+
+            var expected = ExpectedPawnOptions(pawns);
+            var sergeants = ApmwCore.getInstance().sergeants;
+            foreach (var p in picks)
+            {
+                Assert.IsTrue(expected.Contains(p) || sergeants.Contains(p),
+                    $"pawns={pawns} upgrades={upgrades}: piece {p?.Name} not in setupPawnOptions or core.sergeants");
+            }
+
+            if (upgrades == FairyPawnUpgrades.Off)
+            {
+                Assert.AreEqual(0, CountSergeants(picks),
+                    $"Off mode must not place sergeants (pawns={pawns})");
+            }
+        }
+
+        // ---------------------------------------------------------------------
+        // (B) OdinPawn-specific tests
+        // ---------------------------------------------------------------------
+
+        [TestMethod]
+        public void PawnUpgrades_Pool_OdinPawnAcceptedWhenSergeantWouldBeRejected()
+        {
+            // Augmented pool inside PickPawnPoolMode = pawnOptions ++ sergeants
+            // = [Pawn(100), Sergeant(200), OdinPawn(150)].
+            // Pigeonhole at slot 0 with foundPawns=3, budget=380, cheapestNonSergeant=100:
+            //   Sergeant: 200 + 2*100 = 400 > 380 -> rejected
+            //   OdinPawn: 150 + 2*100 = 350 <= 380 -> accepted
+            // We force the outer Next(3) to land on index 2 (OdinPawn) so the path
+            // is exercised; subsequent zeros let the algorithm settle deterministically.
+            var originalSergeants = ApmwCore.getInstance().sergeants;
+            try
+            {
+                ApmwCore.getInstance().sergeants =
+                    new System.Collections.Generic.HashSet<PieceType> { _sergeant, _odinPawn };
+                ApmwConfig.getInstance().PawnUpgradesInt = (int)FairyPawnUpgrades.Pool;
+                ApmwCore.getInstance().foundPawns = 3;
+
+                var pool = new List<PieceType> { _pawn };
+                // Queue: 2 -> picks OdinPawn at slot 0 (augmented index 2 of [Pawn, Sergeant, OdinPawn]).
+                // Trailing zeros pick Pawn (index 0) for remaining slots.
+                var rng = new TestRandom(new[] { 2, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
+
+                var picks = handler.PickPawns(rng, pool,
+                    adjustedPawnValues: 380, remainingPawnSpaces: 32, foundPawns: 3);
+
+                Assert.IsTrue(picks.Contains(_odinPawn),
+                    "OdinPawn should be placed when its cheaper cost satisfies pigeonhole");
+                Assert.IsTrue(picks.Count >= 3, $"must end with >= foundPawns slots, got {picks.Count}");
+            }
+            finally
+            {
+                ApmwCore.getInstance().sergeants = originalSergeants;
+            }
+        }
+
+        [TestMethod]
+        public void PawnUpgrades_Max_PrefersAffordableSergeantVariant_OverManySeeds()
+        {
+            // Mixed pool, Max mode, foundPawns=3, budget=380. Whichever sergeant variant
+            // GetNextPawn happens to pick (Sergeant=200 or OdinPawn=150), the algorithm
+            // must always satisfy count >= foundPawns.
+            var originalSergeants = ApmwCore.getInstance().sergeants;
+            try
+            {
+                ApmwCore.getInstance().sergeants =
+                    new System.Collections.Generic.HashSet<PieceType> { _sergeant, _odinPawn };
+                ApmwConfig.getInstance().PawnsInt = (int)FairyPawns.Mixed;
+                ApmwConfig.getInstance().PawnUpgradesInt = (int)FairyPawnUpgrades.Max;
+                ApmwCore.getInstance().foundPawns = 3;
+
+                for (int seed = 1; seed <= 50; seed++)
+                {
+                    var picks = handler.PickPawns(new Random(seed),
+                        adjustedPawnValues: 380, remainingPawnSpaces: 32, foundPawns: 3);
+
+                    Assert.IsTrue(picks.Count >= 3,
+                        $"seed={seed}: count {picks.Count} < foundPawns 3");
+                }
+            }
+            finally
+            {
+                ApmwCore.getInstance().sergeants = originalSergeants;
+            }
+        }
+
+        [TestMethod]
+        public void PawnUpgrades_BothSergeantVariantsCanAppear_AcrossSeeds()
+        {
+            // With both sergeant variants enabled, Pool mode + a generous budget should,
+            // across many seeds, surface BOTH Sergeant and OdinPawn at least once.
+            var originalSergeants = ApmwCore.getInstance().sergeants;
+            try
+            {
+                ApmwCore.getInstance().sergeants =
+                    new System.Collections.Generic.HashSet<PieceType> { _sergeant, _odinPawn };
+                ApmwConfig.getInstance().PawnsInt = (int)FairyPawns.Mixed;
+                ApmwConfig.getInstance().PawnUpgradesInt = (int)FairyPawnUpgrades.Pool;
+                ApmwCore.getInstance().foundPawns = 8;
+
+                var aggregated = new List<PieceType>();
+                for (int seed = 1; seed <= 30; seed++)
+                {
+                    var picks = handler.PickPawns(new Random(seed),
+                        AdjustedBudget(8, 800), NUM_FILES * 4, 8);
+                    aggregated.AddRange(picks);
+                }
+
+                Assert.IsTrue(aggregated.Any(p => p?.Name == "Sergeant"),
+                    "expected at least one Sergeant across 30 seeds");
+                Assert.IsTrue(aggregated.Any(p => p?.Name == "Odin Pawn"),
+                    "expected at least one Odin Pawn across 30 seeds");
+            }
+            finally
+            {
+                ApmwCore.getInstance().sergeants = originalSergeants;
+            }
+        }
+
+        // ---------------------------------------------------------------------
+        // (C) Material-spend efficiency
+        // ---------------------------------------------------------------------
+
+        // Lookup helper: maps a piece name to the shared instance prepared in Setup.
+        // Using shared instances keeps reference-equality intact for sergeant detection.
+        private static List<PieceType> CustomPool(params string[] names)
+        {
+            return names.Select(n =>
+            {
+                switch (n)
+                {
+                    case "Pawn": return _pawn;
+                    case "Berolina Pawn": return _berolina;
+                    case "Checkers": return _checkers;
+                    case "Sergeant": return _sergeant;
+                    case "Odin Pawn": return _odinPawn;
+                    default: throw new ArgumentException($"unknown piece {n}");
+                }
+            }).ToList();
+        }
+
+        private static readonly System.Collections.Generic.HashSet<string> _sergeantNames =
+            new System.Collections.Generic.HashSet<string> { "Sergeant", "Odin Pawn" };
+
+        [DataTestMethod]
+        [DataRow(new[] { "Pawn", "Sergeant", "Checkers" }, 4, 600, FairyPawnUpgrades.Pool)]
+        [DataRow(new[] { "Pawn", "Sergeant", "Checkers" }, 4, 600, FairyPawnUpgrades.Max)]
+        [DataRow(new[] { "Berolina Pawn", "Odin Pawn", "Checkers" }, 4, 540, FairyPawnUpgrades.Pool)]
+        [DataRow(new[] { "Berolina Pawn", "Odin Pawn", "Checkers" }, 4, 540, FairyPawnUpgrades.Max)]
+        [DataRow(new[] { "Pawn", "Berolina Pawn", "Sergeant", "Odin Pawn" }, 4, 700, FairyPawnUpgrades.Pool)]
+        [DataRow(new[] { "Pawn", "Berolina Pawn", "Sergeant", "Odin Pawn" }, 4, 700, FairyPawnUpgrades.Max)]
+        [DataRow(new[] { "Pawn", "Berolina Pawn", "Checkers", "Sergeant" }, 4, 600, FairyPawnUpgrades.Pool)]
+        [DataRow(new[] { "Pawn", "Berolina Pawn", "Checkers", "Sergeant" }, 4, 600, FairyPawnUpgrades.Max)]
+        [DataRow(new[] { "Pawn", "Berolina Pawn", "Checkers", "Odin Pawn", "Sergeant" }, 4, 700, FairyPawnUpgrades.Pool)]
+        [DataRow(new[] { "Pawn", "Berolina Pawn", "Checkers", "Odin Pawn", "Sergeant" }, 4, 700, FairyPawnUpgrades.Max)]
+        [DataRow(new[] { "Pawn", "Sergeant" }, 3, 400, FairyPawnUpgrades.Pool)]
+        [DataRow(new[] { "Berolina Pawn", "Odin Pawn" }, 3, 420, FairyPawnUpgrades.Max)]
+        public void PawnUpgrades_SpendsAsMuchMaterialAsPossible(
+            string[] names, int foundPawns, int adjustedPawnValues, FairyPawnUpgrades mode)
+        {
+            var pool = CustomPool(names);
+            var pawnPool = pool.Where(p => !_sergeantNames.Contains(p.Name)).ToList();
+            var sergPool = pool.Where(p => _sergeantNames.Contains(p.Name)).ToList();
+            int cheapest = pool.Min(p => p.MidgameValue);
+
+            var originalSergeants = ApmwCore.getInstance().sergeants;
+            try
+            {
+                ApmwCore.getInstance().sergeants =
+                    new System.Collections.Generic.HashSet<PieceType>(sergPool);
+                // Force Mixed so GetNextPawn(Sergeant) uses the random-from-sergeants
+                // path rather than the Vanilla branch that hard-requires a piece named
+                // "Sergeant" (which some custom pools intentionally omit).
+                ApmwConfig.getInstance().PawnsInt = (int)FairyPawns.Mixed;
+                ApmwConfig.getInstance().PawnUpgradesInt = (int)mode;
+                ApmwCore.getInstance().foundPawns = foundPawns;
+
+                var picks = handler.PickPawns(new Random(42), pawnPool,
+                    adjustedPawnValues, NUM_FILES * 4, foundPawns);
+
+                Assert.IsTrue(picks.Count >= foundPawns,
+                    $"names=[{string.Join(",", names)}] mode={mode}: count {picks.Count} < foundPawns {foundPawns}");
+
+                int spent = picks.Sum(p => p.MidgameValue);
+                int leftover = adjustedPawnValues - spent;
+
+                // Leftover should be strictly less than the cheapest piece value: if
+                // it weren't, the algorithm could have placed one more cheap piece.
+                // Note: leftover may be negative (last pick can overshoot the budget).
+                Assert.IsTrue(leftover < cheapest,
+                    $"names=[{string.Join(",", names)}] mode={mode}: leftover {leftover} >= cheapest {cheapest} (spent {spent}/{adjustedPawnValues})");
+            }
+            finally
+            {
+                ApmwCore.getInstance().sergeants = originalSergeants;
+            }
+        }
+
+        // ---------------------------------------------------------------------
+        // (D) Targeted FairyPawns edge tests
+        // ---------------------------------------------------------------------
+
+        [TestMethod]
+        public void PawnUpgrades_Pool_VanillaPool_StrictPigeonhole_RejectsSergeant()
+        {
+            // Vanilla -> setupPawnOptions = [Pawn]. core.sergeants = {Sergeant} (200).
+            // Pigeonhole at slot 0 with foundPawns=3, budget=320, cheapest=100:
+            //   200 + 2*100 = 400 > 320 -> reject every sergeant.
+            ConfigurePool(FairyPawns.Vanilla, FairyPawnUpgrades.Pool);
+            ApmwCore.getInstance().foundPawns = 3;
+
+            var picks = handler.PickPawns(new AlwaysLastRandom(),
+                adjustedPawnValues: 320, remainingPawnSpaces: 32, foundPawns: 3);
+
+            Assert.AreEqual(0, CountSergeants(picks), "Vanilla pigeonhole must reject Sergeant at budget 320");
+            Assert.IsTrue(CountPlainPawns(picks) >= 3,
+                $"need >= 3 plain pawns to satisfy foundPawns, got {CountPlainPawns(picks)}");
+        }
+
+        [TestMethod]
+        public void PawnUpgrades_Pool_BerolinaOnly_PigeonholeUsesBerolinaCheapest()
+        {
+            // Berolina -> setupPawnOptions = [Berolina(85)] so cheapestNonSergeant=85.
+            // foundPawns=3, budget=350. Sub-case a) with Sergeant(200) only:
+            //   200 + 2*85 = 370 > 350 -> reject.
+            // Sub-case b) with OdinPawn(150) only:
+            //   150 + 2*85 = 320 <= 350 -> accept.
+            ConfigurePool(FairyPawns.Berolina, FairyPawnUpgrades.Pool);
+            ApmwCore.getInstance().foundPawns = 3;
+
+            var originalSergeants = ApmwCore.getInstance().sergeants;
+            try
+            {
+                // Sub-case a: Sergeant variant.
+                ApmwCore.getInstance().sergeants =
+                    new System.Collections.Generic.HashSet<PieceType> { _sergeant };
+                var picksA = handler.PickPawns(new AlwaysLastRandom(),
+                    adjustedPawnValues: 350, remainingPawnSpaces: 32, foundPawns: 3);
+                Assert.AreEqual(0, CountSergeants(picksA),
+                    "Berolina+Sergeant: 200+2*85=370 > 350, pigeonhole should reject");
+
+                // Sub-case b: OdinPawn variant.
+                ApmwCore.getInstance().sergeants =
+                    new System.Collections.Generic.HashSet<PieceType> { _odinPawn };
+                var picksB = handler.PickPawns(new AlwaysLastRandom(),
+                    adjustedPawnValues: 350, remainingPawnSpaces: 32, foundPawns: 3);
+                Assert.IsTrue(CountSergeants(picksB) >= 1,
+                    "Berolina+OdinPawn: 150+2*85=320 <= 350, pigeonhole should accept at least one");
+            }
+            finally
+            {
+                ApmwCore.getInstance().sergeants = originalSergeants;
+            }
+        }
+
+        [TestMethod]
+        public void PawnUpgrades_Pool_AnyFairy_NoPlainPawnInResult()
+        {
+            // AnyFairy -> setupPawnOptions = [Berolina, Checkers]. Plain Pawn must not appear.
+            ConfigurePool(FairyPawns.AnyFairy, FairyPawnUpgrades.Pool);
+            ApmwCore.getInstance().foundPawns = 8;
+
+            var picks = handler.PickPawns(new Random(42),
+                AdjustedBudget(8, 100), NUM_FILES * 4, 8);
+
+            Assert.IsFalse(picks.Any(p => p?.Name == "Pawn"),
+                "AnyFairy must never produce plain Pawn; only Berolina/Checkers/sergeants");
+        }
+
+        [TestMethod]
+        public void PawnUpgrades_Max_AnyFairy_FallbackPicksFairyPawn_NotPlainPawn()
+        {
+            // AnyFairy + Max: when the pigeonhole rejects a sergeant, the fallback must
+            // draw from the AnyFairy options ([Berolina, Checkers]), never plain Pawn.
+            ConfigurePool(FairyPawns.AnyFairy, FairyPawnUpgrades.Max);
+            ApmwCore.getInstance().foundPawns = 3;
+
+            var picks = handler.PickPawns(new Random(42),
+                adjustedPawnValues: 350, remainingPawnSpaces: 32, foundPawns: 3);
+
+            foreach (var p in picks.Where(p => !IsSergeant(p)))
+            {
+                Assert.IsTrue(p?.Name == "Berolina Pawn" || p?.Name == "Checkers",
+                    $"AnyFairy fallback produced unexpected non-sergeant piece: {p?.Name}");
+            }
+        }
+
+        [TestMethod]
+        public void PawnUpgrades_Pool_Mixed_RespectsCheckersAsCheapest()
+        {
+            // Mixed -> setupPawnOptions = [Pawn, Berolina, Checkers] so cheapestNonSergeant=40.
+            // foundPawns=3, budget=320, Sergeant(200): 200+2*40=280 <= 320 -> accept.
+            ConfigurePool(FairyPawns.Mixed, FairyPawnUpgrades.Pool);
+            ApmwCore.getInstance().foundPawns = 3;
+
+            // core.sergeants = {Sergeant} (default) so AlwaysLastRandom forces Sergeant variant.
+            var picks = handler.PickPawns(new AlwaysLastRandom(),
+                adjustedPawnValues: 320, remainingPawnSpaces: 32, foundPawns: 3);
+
+            Assert.IsTrue(CountSergeants(picks) >= 1,
+                "Mixed cheapest (Checkers=40) should let pigeonhole accept Sergeant at budget 320");
         }
     }
 }
