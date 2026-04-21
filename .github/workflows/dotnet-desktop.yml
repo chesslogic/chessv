@@ -79,6 +79,8 @@ jobs:
 
     # Execute all unit tests in the solution
     - name: Execute unit tests
+      env:
+        CHESSV_DISABLE_MAKEUNMAKE_ASSERT: '1'
       run: dotnet test
 
     # Restore the application to populate the obj folder with RuntimeIdentifiers
