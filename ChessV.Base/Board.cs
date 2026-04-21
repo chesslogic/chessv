@@ -229,9 +229,28 @@ namespace ChessV
       return rankNotations[nRank].ToString();
     }
 
-    //	Lookup for the notaiton of a square
+    //	Lookup for the notaiton of a square. Defensive: error formatters
+    //	(e.g. InvalidBoardStateException.BuildErrorMessage) call this with
+    //	values that may be corrupt after a failed Make/Unmake. Returning a
+    //	sentinel here lets diagnostics surface the actual bug instead of a
+    //	secondary IndexOutOfRangeException from rankBySquare/fileBySquare.
     public virtual string GetDefaultSquareNotation(int square)
-    { return GetFileNotation(GetFile(square)) + GetRankNotation(GetRank(square)); }
+    {
+      if (square < 0 || square >= NumSquaresExtended)
+        return $"<sq:{square}>";
+      try
+      {
+        int file = GetFile(square);
+        int rank = GetRank(square);
+        if (file < 0 || file >= NumFiles || rank < 0 || rank >= NumRanks)
+          return $"<sq:{square}>";
+        return GetFileNotation(file) + GetRankNotation(rank);
+      }
+      catch
+      {
+        return $"<sq:{square}>";
+      }
+    }
 
     //	Find the Rank for a given square
     public virtual int GetRank(int square)
