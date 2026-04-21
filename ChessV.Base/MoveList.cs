@@ -890,6 +890,16 @@ namespace ChessV
             preSnapshot = SnapshotBoardSquares();
         }
 
+        // Phase 3.6: snapshot the cursors right BEFORE MakeMove so we can
+        // detect any nested write to tempPickupCursor / tempDropCursor that
+        // would silently corrupt the rollback below. MakeMove+UnmakeMove
+        // must be balanced and may not bump the global cursors; if they
+        // do, our rollback target is no longer trustworthy.
+        int preMakePickupCursor = pickupCursor;
+        int preMakeDropCursor = dropCursor;
+        int preMakeTempPickupCursor = tempPickupCursor;
+        int preMakeTempDropCursor = tempDropCursor;
+
         bool legal = MakeMove(moveCursor - 1);
         UnmakeMove(moveCursor - 1);
 
@@ -904,6 +914,24 @@ namespace ChessV
             preHash: preHash,
             postHash: Board.HashCode,
             preSnapshot: preSnapshot);
+        }
+
+        if (DebugFlags.AssertMakeUnmakeRoundTrip &&
+            (pickupCursor != preMakePickupCursor || dropCursor != preMakeDropCursor ||
+             tempPickupCursor != preMakeTempPickupCursor ||
+             tempDropCursor != preMakeTempDropCursor))
+        {
+          throw new InvalidBoardStateException(
+            $"MakeMove/UnmakeMove perturbed MoveList cursors: " +
+            $"pickupCursor {preMakePickupCursor}->{pickupCursor}, " +
+            $"dropCursor {preMakeDropCursor}->{dropCursor}, " +
+            $"tempPickupCursor {preMakeTempPickupCursor}->{tempPickupCursor}, " +
+            $"tempDropCursor {preMakeTempDropCursor}->{tempDropCursor}. " +
+            $"Cursor state must be invariant across a balanced Make+Unmake. " +
+            MoveGenerationContext.FormatContextStack(),
+            square: 0,
+            squareNotation: "<n/a>",
+            game: Board?.Game);
         }
 
         if (!legal)
@@ -1017,10 +1045,17 @@ namespace ChessV
           firstDrop = moves[index - 1].DropCursor;
         }
 
-        //	store temporary cursor values, in case this move turns out to be 
-        //	illegal, in which case we need to restore the original values
-        tempPickupCursor = pickupCursor;
-        tempDropCursor = dropCursor;
+        //	NOTE: do NOT write tempPickupCursor / tempDropCursor here.
+        //	Those fields are owned by BeginMoveAdd as a snapshot for the
+        //	EndMoveAddCore rollback path, and EndMoveAddCore calls into
+        //	this MakeMove for its legality check. Aliasing the snapshot
+        //	from inside MakeMove silently corrupted the rollback target
+        //	for illegal moves, leaving pickupCursor/dropCursor at the
+        //	post-Make values and causing later AddMove calls to overlap
+        //	prior pickup ranges (see Phase 2 diagnosis of the
+        //	2026-02-12 Checkers crash). MakeMove itself does not need
+        //	these fields - rollback within MakeMove is bounded by the
+        //	local lastAppliedPickup / lastAppliedDrop counters below.
 
         // Track the last successfully-applied pickup/drop so that a catch
         // path knows EXACTLY how much state to roll back. If PerformPickup

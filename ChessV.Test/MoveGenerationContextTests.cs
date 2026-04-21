@@ -110,16 +110,21 @@ namespace ChessV.Test
     }
 
     // -----------------------------------------------------------------
-    // End-to-end: drive the still-failing Checkers multi-jump repro
-    // through LoadFEN's implicit generateMoves and assert that the
-    // exception message now contains the diagnostic context stack with
-    // a recognizable rule label and cursor snapshot. The underlying bug
-    // is intentionally still failing in
-    // FirstTurnRuleReproTests.Repros_2026_02_12_*; this test just
-    // verifies the diagnostics surface useful info on that failure.
+    // The Checkers multi-jump crash from _refs/2026-02-12.txt is fixed
+    // (Phase 3.6, MoveList: removed dead writes to tempPickupCursor /
+    // tempDropCursor inside MakeMove that aliased the BeginMoveAdd
+    // rollback snapshot). This test now pins the FIX: LoadFEN must
+    // complete cleanly on the historical repro position.
+    //
+    // The diagnostic-message-content contract that this test originally
+    // exercised is still covered by:
+    //   MoveListGuardTests   -- guards against partial-Make corruption
+    //   CrashReportFormatTests -- enriched message tokens / budgets
+    //   MoveGenerationContextTests (the rest of this class) -- frame
+    //     stack format, LIFO, Reset, SetCurrentRule
     // -----------------------------------------------------------------
     [TestMethod]
-    public void Repros_2026_02_12_ExceptionMessageContainsContextStack()
+    public void Repros_2026_02_12_LoadFenNoLongerCrashes()
     {
       var game = new FirstTurnRuleTestGame();
       var attrs = typeof(FirstTurnRuleTestGame)
@@ -128,56 +133,17 @@ namespace ChessV.Test
       var gameAttr = (GameAttribute)attrs[0];
       game.Initialize(gameAttr, null, null);
 
-      InvalidBoardStateException caught = null;
       try
       {
         game.LoadFEN("4k3/7e/6P1/4e3/3P4/4R3/8/4K3 b - - 0 1");
       }
       catch (InvalidBoardStateException ex)
       {
-        caught = ex;
+        Assert.Fail(
+          "Regression: the 2026-02-12 Checkers multi-jump crash has " +
+          "returned. LoadFEN raised InvalidBoardStateException: " +
+          ex.Message);
       }
-
-      Assert.IsNotNull(caught,
-        "Expected the still-failing Checkers multi-jump scenario to raise " +
-        "InvalidBoardStateException so we can inspect the diagnostic message. " +
-        "If this passes, either the underlying bug is fixed (good - delete " +
-        "this test) or the diagnostics regressed.");
-
-      string message = caught.Message;
-      // Existing diagnostics that must remain present.
-      StringAssert.Contains(message, "No piece to clear at square",
-        "Original Board.ClearSquare diagnostic must be preserved.");
-      StringAssert.Contains(message, "Board state around the target square",
-        "Original board grid dump must be preserved.");
-
-      // New diagnostics from the unified context stack.
-      StringAssert.Contains(message, "=== Move Generation Context Stack ===",
-        "Context stack header must be present in the exception message.\n" +
-        "Full message:\n" + message);
-      StringAssert.Contains(message, "=== End Move Generation Context Stack ===",
-        "Context stack footer must be present.\nFull message:\n" + message);
-      StringAssert.Contains(message, "pickupCursor=",
-        "Cursor snapshot must appear in at least one frame.\nFull message:\n" + message);
-
-      // The failing pickup is reached either via a Rule's BeginMoveAdd
-      // (rule label = the Rule subclass name) or via AddMove/AddCapture's
-      // synthetic frame. Either way, ONE of these tokens must appear so
-      // a future investigator can attribute the crash.
-      bool hasRuleAttribution =
-        message.Contains("(AddMove)") ||
-        message.Contains("(AddCapture)") ||
-        message.Contains("Rule") || // any concrete *Rule class name
-        message.Contains("(root)");
-      Assert.IsTrue(hasRuleAttribution,
-        "Context stack must attribute the failing pickup to a rule or to " +
-        "(AddMove)/(AddCapture)/(root).\nFull message:\n" + message);
-
-      // Surface the full message in the test output so the diagnostics
-      // are visible in CI logs whenever this test runs.
-      System.Console.WriteLine("=== Repros_2026_02_12 enriched exception ===");
-      System.Console.WriteLine(message);
-      System.Console.WriteLine("=== End enriched exception ===");
     }
   }
 }
