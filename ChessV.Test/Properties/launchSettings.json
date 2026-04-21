@@ -1,0 +1,16 @@
+{
+  "profiles": {
+    "Run All Tests": {
+      "commandName": "Executable",
+      "executablePath": "dotnet",
+      "commandLineArgs": "test ChessV.sln --nologo --logger \"console;verbosity=minimal\"",
+      "workingDirectory": "$(SolutionDir)"
+    },
+    "Run ChessV Tests": {
+      "commandName": "Executable",
+      "executablePath": "dotnet",
+      "commandLineArgs": "test ChessV.Test\\ChessV.Test.csproj --nologo --logger \"console;verbosity=minimal\"",
+      "workingDirectory": "$(SolutionDir)"
+    }
+  }
+}

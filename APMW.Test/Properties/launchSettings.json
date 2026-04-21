@@ -1,0 +1,16 @@
+{
+  "profiles": {
+    "Run All Tests": {
+      "commandName": "Executable",
+      "executablePath": "dotnet",
+      "commandLineArgs": "test ChessV.sln --nologo --logger \"console;verbosity=minimal\"",
+      "workingDirectory": "$(SolutionDir)"
+    },
+    "Run APMW Tests": {
+      "commandName": "Executable",
+      "executablePath": "dotnet",
+      "commandLineArgs": "test APMW.Test\\APMW.Test.csproj --nologo --logger \"console;verbosity=minimal\"",
+      "workingDirectory": "$(SolutionDir)"
+    }
+  }
+}
