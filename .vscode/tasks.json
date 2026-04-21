@@ -1,0 +1,126 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "ChessV.sln",
+                "--nologo"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": "$msCompile",
+            "group": "build",
+            "presentation": {
+                "reveal": "silent",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "test-all",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "test",
+                "ChessV.sln",
+                "--nologo"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "test-chessv",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "test",
+                "ChessV.Test/ChessV.Test.csproj",
+                "--nologo"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": "$msCompile",
+            "group": "test",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "test-apmw",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "test",
+                "APMW.Test/APMW.Test.csproj",
+                "--nologo"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": "$msCompile",
+            "group": "test",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "test-current-file",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "test",
+                "ChessV.sln",
+                "--nologo",
+                "--filter",
+                "FullyQualifiedName~${fileBasenameNoExtension}"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": "$msCompile",
+            "group": "test",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "test-known-failures",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "test",
+                "ChessV.sln",
+                "--nologo",
+                "--filter",
+                "FullyQualifiedName~Repros_2026_02_12 | TestCategory=KnownLimit"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": "$msCompile",
+            "group": "test",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        }
+    ]
+}
