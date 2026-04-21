@@ -55,6 +55,23 @@ namespace ChessV
     public Drop GetDropForTest(int index) { return drops[index]; }
     public MoveInfo GetMoveForTest(int index) { return moves[index]; }
 
+    // Test hooks that expose the protected Make/Undo primitives so unit
+    // tests can drive partial Make sequences and verify the defensive
+    // rollback logic in MakeMove without having to go through a custom
+    // Rule that throws inside Game.MoveBeingMade.
+    public void PerformPickupForTest(int index) { PerformPickup(index); }
+    public void PerformDropForTest(int index) { PerformDrop(index); }
+    public void UndoPickupForTest(int index) { UndoPickup(index); }
+    public void UndoDropForTest(int index) { UndoDrop(index); }
+    public void SetPickupForTest(int index, Pickup p) { pickups[index] = p; }
+    public void SetDropForTest(int index, Drop d) { drops[index] = d; }
+    public void RollbackPartialApplyForTest(
+      int firstPickup, int lastAppliedPickup,
+      int firstDrop, int lastAppliedDrop)
+    {
+      RollbackPartialApply(firstPickup, lastAppliedPickup, firstDrop, lastAppliedDrop);
+    }
+
     // The current move being made, if any
     public MoveInfo CurrentMove
     { get { return currentMoveIndex >= 0 && currentMoveIndex < moveCursor ? moves[currentMoveIndex] : default(MoveInfo); } }
@@ -278,6 +295,26 @@ namespace ChessV
     #region UndoPickup
     protected void UndoPickup(int index)
     {
+      // Defensive guard: if the recorded Piece is null then PerformPickup
+      // either never ran for this slot or threw before assigning. Restoring
+      // null would silently corrupt the board (Board.SetSquare with null
+      // throws elsewhere) and hide the real cause. Surface the failure
+      // with full context so the caller can diagnose the partial Make.
+      if (pickups[index].Piece == null)
+      {
+        int sq = pickups[index].Square;
+        string sqNotation;
+        try { sqNotation = Board != null ? Board.GetDefaultSquareNotation(sq) : sq.ToString(); }
+        catch { sqNotation = sq.ToString(); }
+        string msg = string.Format(
+          "UndoPickup called on pickup #{0} (square {1}) whose Piece is null " +
+          "— likely PerformPickup never ran (failed move?) or the pickup index " +
+          "is stale. This means a Make failed mid-way and the board is corrupted. " +
+          "moveCursor={2} pickupCursor={3} dropCursor={4}{5}",
+          index, sqNotation, moveCursor, pickupCursor, dropCursor,
+          MoveGenerationContext.FormatContextStack());
+        throw new InvalidBoardStateException(msg, sq, sqNotation, Board != null ? Board.Game : null);
+      }
       // Strictly restore the picked-up piece back to its original square
       Board.SetSquare(pickups[index].Piece, pickups[index].Square);
     }
@@ -387,8 +424,35 @@ namespace ChessV
           boardHash: Board != null ? Board.HashCode : 0UL);
         try
         {
+          // Make/Unmake round-trip invariant: capture pre-state if armed.
+          // Off-path is a single bool check; no allocation when disabled.
+          int firstPickup = pickupCursor - 1;
+          int firstDrop = dropCursor - 1;
+          ulong preHash = 0;
+          Piece[] preSnapshot = null;
+          if (DebugFlags.AssertMakeUnmakeRoundTrip)
+          {
+            preHash = Board.HashCode;
+            if (DebugFlags.VerboseDiagnostics)
+              preSnapshot = SnapshotBoardSquares();
+          }
+
           bool legal = MakeMove(moveCursor - 1);
           UnmakeMove(moveCursor - 1);
+
+          if (DebugFlags.AssertMakeUnmakeRoundTrip && Board.HashCode != preHash)
+          {
+            ThrowMakeUnmakeRoundTripViolation(
+              moveIndex: moveCursor - 1,
+              firstPickup: firstPickup,
+              endPickup: pickupCursor,
+              firstDrop: firstDrop,
+              endDrop: dropCursor,
+              preHash: preHash,
+              postHash: Board.HashCode,
+              preSnapshot: preSnapshot);
+          }
+
           if (!legal)
           {
             moveCursor--;
@@ -495,8 +559,34 @@ namespace ChessV
           boardHash: Board != null ? Board.HashCode : 0UL);
         try
         {
+          // AddCapture pushed 2 pickups (from, to) and 1 drop above.
+          int firstPickup = pickupCursor - 2;
+          int firstDrop = dropCursor - 1;
+          ulong preHash = 0;
+          Piece[] preSnapshot = null;
+          if (DebugFlags.AssertMakeUnmakeRoundTrip)
+          {
+            preHash = Board.HashCode;
+            if (DebugFlags.VerboseDiagnostics)
+              preSnapshot = SnapshotBoardSquares();
+          }
+
           bool legal = MakeMove(moveCursor - 1);
           UnmakeMove(moveCursor - 1);
+
+          if (DebugFlags.AssertMakeUnmakeRoundTrip && Board.HashCode != preHash)
+          {
+            ThrowMakeUnmakeRoundTripViolation(
+              moveIndex: moveCursor - 1,
+              firstPickup: firstPickup,
+              endPickup: pickupCursor,
+              firstDrop: firstDrop,
+              endDrop: dropCursor,
+              preHash: preHash,
+              postHash: Board.HashCode,
+              preSnapshot: preSnapshot);
+          }
+
           if (!legal)
           {
             moveCursor--;
@@ -789,8 +879,33 @@ namespace ChessV
 
       if (LegalMovesOnly)
       {
+        int firstPickup = tempPickupCursor;
+        int firstDrop = tempDropCursor;
+        ulong preHash = 0;
+        Piece[] preSnapshot = null;
+        if (DebugFlags.AssertMakeUnmakeRoundTrip)
+        {
+          preHash = Board.HashCode;
+          if (DebugFlags.VerboseDiagnostics)
+            preSnapshot = SnapshotBoardSquares();
+        }
+
         bool legal = MakeMove(moveCursor - 1);
         UnmakeMove(moveCursor - 1);
+
+        if (DebugFlags.AssertMakeUnmakeRoundTrip && Board.HashCode != preHash)
+        {
+          ThrowMakeUnmakeRoundTripViolation(
+            moveIndex: moveCursor - 1,
+            firstPickup: firstPickup,
+            endPickup: pickupCursor,
+            firstDrop: firstDrop,
+            endDrop: dropCursor,
+            preHash: preHash,
+            postHash: Board.HashCode,
+            preSnapshot: preSnapshot);
+        }
+
         if (!legal)
         {
           moveCursor--;
@@ -907,19 +1022,34 @@ namespace ChessV
         tempPickupCursor = pickupCursor;
         tempDropCursor = dropCursor;
 
-        // Apply all pickups for this move
-        for (int pickup = firstPickup; pickup < moves[index].PickupCursor; pickup++)
-          PerformPickup(pickup);
+        // Track the last successfully-applied pickup/drop so that a catch
+        // path knows EXACTLY how much state to roll back. If PerformPickup
+        // throws on index N, then pickups [firstPickup..N-1] are applied
+        // and pickups [N..end) are not (and may have stale/null Piece
+        // refs from prior MoveLists), so the rollback must NOT iterate
+        // past lastAppliedPickup.
+        int lastAppliedPickup = firstPickup - 1;
+        int lastAppliedDrop = firstDrop - 1;
 
-        // Apply all drops for this move
-        for (int drop = firstDrop; drop < moves[index].DropCursor; drop++)
-          PerformDrop(drop);
-
-        //	ok, now pass message to the Game class, so it can update any info
-        //	it may need to as a result of this move.  this also gives the Game
-        //	class the chance to return false, indicating that the move is illegal
         try
         {
+          // Apply all pickups for this move
+          for (int pickup = firstPickup; pickup < moves[index].PickupCursor; pickup++)
+          {
+            PerformPickup(pickup);
+            lastAppliedPickup = pickup;
+          }
+
+          // Apply all drops for this move
+          for (int drop = firstDrop; drop < moves[index].DropCursor; drop++)
+          {
+            PerformDrop(drop);
+            lastAppliedDrop = drop;
+          }
+
+          //	ok, now pass message to the Game class, so it can update any info
+          //	it may need to as a result of this move.  this also gives the Game
+          //	class the chance to return false, indicating that the move is illegal
           succeeded = Board.Game.MoveBeingMade(moves[index]);
         }
         catch (InvalidBoardStateException ex)
@@ -933,7 +1063,11 @@ namespace ChessV
               ex.Game,
               moves[index]);
           }
-          // Swallow and mark as failed move in non-throw mode
+          // Swallow and mark as failed move in non-throw mode, but first
+          // roll back any pickups/drops we already applied so the board
+          // is restored to its pre-MakeMove state. Without this, a later
+          // UnmakeMove would compound the corruption.
+          RollbackPartialApply(firstPickup, lastAppliedPickup, firstDrop, lastAppliedDrop);
           succeeded = false;
         }
         catch (Exception ex)
@@ -951,10 +1085,42 @@ namespace ChessV
               ex
             );
           }
+          RollbackPartialApply(firstPickup, lastAppliedPickup, firstDrop, lastAppliedDrop);
           succeeded = false;
         }
       }
       return succeeded;
+    }
+
+    // Rolls back any pickups/drops applied by MakeMove before a failure.
+    // Iterates in REVERSE (LIFO) so each Undo step sees the same board
+    // state its corresponding Perform step left behind. Bounded by the
+    // last successfully-applied index so we never call UndoPickup on a
+    // slot whose Piece is null (which would trip the Phase 3 guard).
+    // Secondary exceptions during rollback are swallowed (with optional
+    // diagnostic output) because the board may already be too corrupt
+    // to fully restore — propagating here would mask the original
+    // failure that the caller is already handling.
+    private void RollbackPartialApply(int firstPickup, int lastAppliedPickup,
+                                       int firstDrop, int lastAppliedDrop)
+    {
+      try
+      {
+        for (int drop = lastAppliedDrop; drop >= firstDrop; drop--)
+          UndoDrop(drop);
+        for (int pickup = lastAppliedPickup; pickup >= firstPickup; pickup--)
+          UndoPickup(pickup);
+      }
+      catch (Exception rollbackEx)
+      {
+        if (DebugFlags.VerboseDiagnostics)
+        {
+          Console.Error.WriteLine(
+            "MoveList.RollbackPartialApply: secondary exception while undoing " +
+            "partial Make state (pickups[{0}..{1}] drops[{2}..{3}]): {4}",
+            firstPickup, lastAppliedPickup, firstDrop, lastAppliedDrop, rollbackEx);
+        }
+      }
     }
 
     public bool MakeMove(MoveInfo move)
@@ -1039,6 +1205,107 @@ namespace ChessV
         for (int y = 0; y < moveCursor; y++)
           if (x != y && moves[x] == moves[y])
             throw new Exception("Invalid move list.");
+    }
+    #endregion
+
+
+    #region Make/Unmake round-trip invariant helpers
+    // Snapshot every square's Piece reference. Only called when both
+    // AssertMakeUnmakeRoundTrip and VerboseDiagnostics are on, so the
+    // allocation cost is opt-in. Returns null if Board is unavailable.
+    private Piece[] SnapshotBoardSquares()
+    {
+      if (Board == null)
+        return null;
+      int n = Board.NumSquaresExtended;
+      Piece[] snapshot = new Piece[n];
+      for (int sq = 0; sq < n; sq++)
+        snapshot[sq] = Board[sq];
+      return snapshot;
+    }
+
+    // Build and throw the round-trip invariant violation. Centralized so all
+    // three Make/Unmake call sites (AddMove, AddCapture, EndMoveAddCore) emit
+    // a consistent message that includes pickup/drop ranges and (when
+    // VerboseDiagnostics is on) per-square diffs vs. a pre-MakeMove snapshot.
+    private void ThrowMakeUnmakeRoundTripViolation(
+      int moveIndex,
+      int firstPickup,
+      int endPickup,
+      int firstDrop,
+      int endDrop,
+      ulong preHash,
+      ulong postHash,
+      Piece[] preSnapshot)
+    {
+      MoveInfo mi = moves[moveIndex];
+      var sb = new System.Text.StringBuilder();
+      sb.AppendLine("Make/Unmake round-trip invariant violated: Board.HashCode was not restored after UnmakeMove.");
+      sb.AppendLine($"  Move index: {moveIndex}");
+      sb.AppendLine($"  MoveType: {mi.MoveType}");
+      sb.AppendLine($"  FromSquare: {mi.FromSquare}, ToSquare: {mi.ToSquare}");
+      sb.AppendLine($"  Pickup range: [{firstPickup}..{endPickup})");
+      sb.AppendLine($"  Drop range: [{firstDrop}..{endDrop})");
+      sb.AppendLine($"  Pre-MakeMove HashCode:  0x{preHash:X16}");
+      sb.AppendLine($"  Post-UnmakeMove HashCode: 0x{postHash:X16}");
+
+      if (DebugFlags.VerboseDiagnostics && preSnapshot != null && Board != null)
+      {
+        int n = Math.Min(preSnapshot.Length, Board.NumSquaresExtended);
+        int diffs = 0;
+        sb.AppendLine("  Per-square differences (pre vs post):");
+        for (int sq = 0; sq < n; sq++)
+        {
+          Piece before = preSnapshot[sq];
+          Piece after = Board[sq];
+          if (!ReferenceEquals(before, after))
+          {
+            string beforeDesc = before == null ? "(empty)" : before.PieceType.Name + ":" + before.Player;
+            string afterDesc = after == null ? "(empty)" : after.PieceType.Name + ":" + after.Player;
+            sb.AppendLine($"    sq {sq} ({Board.GetDefaultSquareNotation(sq)}): {beforeDesc} -> {afterDesc}");
+            diffs++;
+            if (diffs >= 32)
+            {
+              sb.AppendLine("    ... (further differences truncated)");
+              break;
+            }
+          }
+        }
+        if (diffs == 0)
+          sb.AppendLine("    (none — only hash differs; possible Zobrist/side-to-move desync)");
+      }
+
+      sb.Append(MoveGenerationContext.FormatContextStack());
+
+      // Defensive throw: BuildErrorMessage will read mi.PieceMoved.Square and
+      // call Board.GetDefaultSquareNotation(square) on whatever we pass. After
+      // a corrupting Make/Unmake round-trip those values can be out-of-range,
+      // so we sanitize square to a safe value, do not pass a MoveInfo (so the
+      // formatter skips the corrupted PieceMoved access), and fall back to a
+      // plain Exception if construction still throws.
+      int boardN = Board != null ? Board.NumSquaresExtended : 0;
+      int safeSquare = (Board != null && mi.FromSquare >= 0 && mi.FromSquare < boardN) ? mi.FromSquare : 0;
+      string safeNotation;
+      try
+      {
+        safeNotation = Board != null ? Board.GetDefaultSquareNotation(safeSquare) : safeSquare.ToString();
+      }
+      catch
+      {
+        safeNotation = safeSquare.ToString();
+      }
+
+      InvalidBoardStateException toThrow;
+      try
+      {
+        toThrow = new InvalidBoardStateException(sb.ToString(), safeSquare, safeNotation, Game);
+      }
+      catch (Exception buildEx)
+      {
+        throw new Exception(sb.ToString() + Environment.NewLine +
+          "(Secondary failure while constructing InvalidBoardStateException: " + buildEx.Message + ")");
+      }
+      throw toThrow;
     }
     #endregion
 
