@@ -14,6 +14,7 @@
   <ItemGroup>
     <ProjectReference Include="..\ChessV.Base\ChessV.Base.csproj" />
     <ProjectReference Include="..\ChessV.Games\ChessV.Games.csproj" />
+    <ProjectReference Include="..\ChessV.Manager\ChessV.Manager.csproj" />
     <ProjectReference Include="..\APMW.Client\APMW.Client.csproj" />
   </ItemGroup>
   <ItemGroup>
