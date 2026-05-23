@@ -383,26 +383,23 @@ namespace Archipelago.APChessV
       Dictionary<PieceType, int> chosenPieces = new Dictionary<PieceType, int>();
       List<PieceType> minors = ApmwCore.getInstance().minors.ToList();
       minors = filterPiecesByArmy(minors);
-      List<PieceType> outer = queens.Skip(numFiles).Take(numFiles - 2).ToList();
+      List<PieceType> outer = queens.Skip(numFiles).Take(numFiles).ToList();
       List<PieceType> left = queens.Take(numFiles / 2).ToList();
       List<PieceType> right = queens.Skip(numFiles / 2 + 1).Take(numFiles / 2 - 1).ToList();
-      // full row: 1 empty space, then 6 potential major pieces, then 1 empty space
-      outer = outer.Prepend(null).Append(null).ToList();
 
       Random randomPieces = new Random(ApmwConfig.getInstance().minorSeed);
       Random randomLocations = new Random(ApmwConfig.getInstance().minorLocSeed);
 
-      int startingPieces =
-        ApmwCore.getInstance().foundMajors
-        + ApmwCore.getInstance().foundConsuls
-        + ApmwCore.getInstance().foundJacks;
-      int totalPieces = startingPieces + ApmwCore.getInstance().foundMinors;
-
       int limit = ApmwConfig.getInstance().minorTypeLimit;
       int player = ApmwCore.getInstance().GeriProvider();
       int parity = left.Count((piece) => piece != null) - right.Count((piece) => piece != null);
-      // this ends at 7 instead of 8 because the King occupies 1 space, thus 0..6 not 0..7
-      for (int i = startingPieces; i < Math.Min(numFiles - 1, totalPieces); i++)
+      int backRankPieces = left.Count(piece => piece != null) + right.Count(piece => piece != null);
+      int availableBackRankSpaces = left.Count(piece => piece == null) + right.Count(piece => piece == null);
+      int availableOuterSpaces = outer.Count(piece => piece == null);
+      int minorsToPlace = Math.Min(core.foundMinors, availableBackRankSpaces + availableOuterSpaces);
+      int backRankMinorsToPlace = Math.Min(availableBackRankSpaces, minorsToPlace);
+
+      for (int i = 0; i < backRankMinorsToPlace; i++)
       {
         var piece = choosePiece(ref minors, randomPieces, chosenPieces, limit);
         if (piece != null)
@@ -410,9 +407,9 @@ namespace Archipelago.APChessV
           promoPieces.Add(piece.Notation[player]);
           spare_material += MINOR_VALUE - piece.MidgameValue; // Track difference from expected minor value
         }
-        parity = placeOnBackRank(new List<int>(), left, right, randomLocations, parity, i, piece);
+        parity = placeOnBackRank(new List<int>(), left, right, randomLocations, parity, backRankPieces + i, piece);
       }
-      for (int i = Math.Max(numFiles - 1, startingPieces); i < Math.Min(numFiles * 2 - 1, totalPieces); i++)
+      for (int i = backRankMinorsToPlace; i < minorsToPlace; i++)
       {
         var piece = choosePiece(ref minors, randomPieces, chosenPieces, limit);
         if (piece != null)
@@ -422,6 +419,7 @@ namespace Archipelago.APChessV
         }
         chooseIndexAndPlace(outer, randomLocations, piece);
       }
+      spare_material += Math.Max(0, core.foundMinors - minorsToPlace) * MINOR_VALUE;
 
       List<PieceType> output = new List<PieceType>();
       output.AddRange(left);
