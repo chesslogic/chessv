@@ -251,6 +251,11 @@ namespace ChessV.Test
             return BuildItemCounts().ToDictionary(item => item.ItemName, item => item.Count);
         }
 
+        public string CanonicalOptionKey
+        {
+            get { return ApmwFuzzCaseOptionVector.BuildCanonicalKey(this); }
+        }
+
         public string ToDiagnosticString()
         {
             return string.Format(

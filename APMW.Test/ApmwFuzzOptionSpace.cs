@@ -643,6 +643,15 @@ namespace ChessV.Test
                 Axes.ToDictionary(axis => axis.Name, axis => axis.DefaultValue, StringComparer.Ordinal));
         }
 
+        public string BuildCanonicalKey(ApmwFuzzCase fuzzCase)
+        {
+            if (fuzzCase == null)
+                throw new ArgumentNullException(nameof(fuzzCase));
+
+            return string.Join("|", Axes.Select(axis =>
+                BuildValueCoverageKey(axis, BuildCanonicalCaseValue(axis, fuzzCase))));
+        }
+
         public bool HasAxis(string axisName)
         {
             return Axes.Any(axis => string.Equals(axis.Name, axisName, StringComparison.Ordinal));
@@ -699,6 +708,195 @@ namespace ChessV.Test
             return BuildValueCoverageKey(firstAxis, firstValue) + "|" + BuildValueCoverageKey(secondAxis, secondValue);
         }
 
+        internal static ApmwFuzzOptionValue BuildCanonicalCaseValue(ApmwFuzzAxis axis, ApmwFuzzCase fuzzCase)
+        {
+            if (axis == null)
+                throw new ArgumentNullException(nameof(axis));
+
+            ApmwFuzzOptionValue value = BuildCaseValue(axis.Name, fuzzCase);
+            return axis.ContainsValue(value)
+                ? axis.GetValue(value.CanonicalKey)
+                : value;
+        }
+
+        internal static ApmwFuzzOptionValue BuildCaseValue(string axisName, ApmwFuzzCase fuzzCase)
+        {
+            if (axisName == null)
+                throw new ArgumentNullException(nameof(axisName));
+            if (fuzzCase == null)
+                throw new ArgumentNullException(nameof(fuzzCase));
+
+            switch (axisName)
+            {
+                case AxisIsSuperSized:
+                    return ApmwFuzzOptionValue.Boolean(fuzzCase.IsSuperSized);
+                case AxisGoal:
+                    return ApmwFuzzOptionValue.Enumeration(fuzzCase.Goal);
+                case AxisEnemyPieceTypes:
+                    return ApmwFuzzOptionValue.Enumeration(fuzzCase.EnemyPieceTypes);
+                case AxisPieceLocations:
+                    return ApmwFuzzOptionValue.Enumeration(fuzzCase.PieceLocations);
+                case AxisPlayerPieceTypes:
+                    return ApmwFuzzOptionValue.Enumeration(fuzzCase.PlayerPieceTypes);
+                case AxisFairyChessArmy:
+                    return ApmwFuzzOptionValue.Enumeration(fuzzCase.FairyChessArmy);
+                case AxisArmy:
+                    return ApmwFuzzOptionValue.IntSet("army", fuzzCase.ArmyIndexes);
+                case AxisFairyChessPawns:
+                    return ApmwFuzzOptionValue.Enumeration(fuzzCase.FairyChessPawns);
+                case AxisFairyChessPawnUpgrades:
+                    return ApmwFuzzOptionValue.Enumeration(fuzzCase.FairyChessPawnUpgrades);
+                case AxisMinorPieceLimitByType:
+                    return ApmwFuzzOptionValue.Numeric(fuzzCase.MinorPieceLimitByType);
+                case AxisMajorPieceLimitByType:
+                    return ApmwFuzzOptionValue.Numeric(fuzzCase.MajorPieceLimitByType);
+                case AxisQueenPieceLimitByType:
+                    return ApmwFuzzOptionValue.Numeric(fuzzCase.QueenPieceLimitByType);
+                case AxisPocketLimitByPocket:
+                    return ApmwFuzzOptionValue.Numeric(fuzzCase.PocketLimitByPocket);
+                case AxisDeathLink:
+                    return ApmwFuzzOptionValue.Boolean(fuzzCase.DeathLink);
+                case AxisPocketCount:
+                    return ApmwFuzzOptionValue.Numeric(fuzzCase.PocketCount);
+                case AxisPocketRangeCount:
+                    return ApmwFuzzOptionValue.Numeric(fuzzCase.PocketRangeCount);
+                case AxisPocketGemCount:
+                    return ApmwFuzzOptionValue.Numeric(fuzzCase.PocketGemCount);
+                case AxisAIIntelligenceMalusCount:
+                    return ApmwFuzzOptionValue.Numeric(fuzzCase.AIIntelligenceMalusCount);
+                case AxisPawnCount:
+                    return ApmwFuzzOptionValue.Numeric(fuzzCase.PawnCount);
+                case AxisMinorPieceCount:
+                    return ApmwFuzzOptionValue.Numeric(fuzzCase.MinorPieceCount);
+                case AxisMajorPieceCount:
+                    return ApmwFuzzOptionValue.Numeric(fuzzCase.MajorPieceCount);
+                case AxisJackCount:
+                    return ApmwFuzzOptionValue.Numeric(fuzzCase.JackCount);
+                case AxisMajorToQueenCount:
+                    return ApmwFuzzOptionValue.Numeric(fuzzCase.MajorToQueenCount);
+                case AxisPawnForwardnessCount:
+                    return ApmwFuzzOptionValue.Numeric(fuzzCase.PawnForwardnessCount);
+                case AxisConsulCount:
+                    return ApmwFuzzOptionValue.Numeric(fuzzCase.ConsulCount);
+                case AxisKingPromotionCount:
+                    return ApmwFuzzOptionValue.Numeric(fuzzCase.KingPromotionCount);
+                case AxisSuperSizeMeCount:
+                    return ApmwFuzzOptionValue.Numeric(fuzzCase.SuperSizeMeCount);
+                case AxisPlayAsWhiteCount:
+                    return ApmwFuzzOptionValue.Numeric(fuzzCase.PlayAsWhiteCount);
+                case AxisVictoryCount:
+                    return ApmwFuzzOptionValue.Numeric(fuzzCase.VictoryCount);
+                default:
+                    throw new ArgumentException("Unknown APMW fuzz case option axis '" + axisName + "'.", nameof(axisName));
+            }
+        }
+
+        internal static void ApplyCaseValue(
+            ApmwFuzzCase.Builder builder,
+            string axisName,
+            ApmwFuzzOptionValue value)
+        {
+            if (builder == null)
+                throw new ArgumentNullException(nameof(builder));
+            if (axisName == null)
+                throw new ArgumentNullException(nameof(axisName));
+            if (value == null)
+                throw new ArgumentNullException(nameof(value));
+
+            switch (axisName)
+            {
+                case AxisIsSuperSized:
+                    builder.IsSuperSized = ToBool(value);
+                    break;
+                case AxisGoal:
+                    builder.Goal = (Goal)value.Value;
+                    break;
+                case AxisEnemyPieceTypes:
+                    builder.EnemyPieceTypes = (PieceTypes)value.Value;
+                    break;
+                case AxisPieceLocations:
+                    builder.PieceLocations = (PieceLocations)value.Value;
+                    break;
+                case AxisPlayerPieceTypes:
+                    builder.PlayerPieceTypes = (PieceTypes)value.Value;
+                    break;
+                case AxisFairyChessArmy:
+                    builder.FairyChessArmy = (FairyArmy)value.Value;
+                    break;
+                case AxisArmy:
+                    builder.ArmyIndexes = ((IEnumerable<int>)value.Value).ToArray();
+                    break;
+                case AxisFairyChessPawns:
+                    builder.FairyChessPawns = (FairyPawns)value.Value;
+                    break;
+                case AxisFairyChessPawnUpgrades:
+                    builder.FairyChessPawnUpgrades = (FairyPawnUpgrades)value.Value;
+                    break;
+                case AxisMinorPieceLimitByType:
+                    builder.MinorPieceLimitByType = ToInt(value);
+                    break;
+                case AxisMajorPieceLimitByType:
+                    builder.MajorPieceLimitByType = ToInt(value);
+                    break;
+                case AxisQueenPieceLimitByType:
+                    builder.QueenPieceLimitByType = ToInt(value);
+                    break;
+                case AxisPocketLimitByPocket:
+                    builder.PocketLimitByPocket = ToInt(value);
+                    break;
+                case AxisDeathLink:
+                    builder.DeathLink = ToBool(value);
+                    break;
+                case AxisPocketCount:
+                    builder.PocketCount = ToInt(value);
+                    break;
+                case AxisPocketRangeCount:
+                    builder.PocketRangeCount = ToInt(value);
+                    break;
+                case AxisPocketGemCount:
+                    builder.PocketGemCount = ToInt(value);
+                    break;
+                case AxisAIIntelligenceMalusCount:
+                    builder.AIIntelligenceMalusCount = ToInt(value);
+                    break;
+                case AxisPawnCount:
+                    builder.PawnCount = ToInt(value);
+                    break;
+                case AxisMinorPieceCount:
+                    builder.MinorPieceCount = ToInt(value);
+                    break;
+                case AxisMajorPieceCount:
+                    builder.MajorPieceCount = ToInt(value);
+                    break;
+                case AxisJackCount:
+                    builder.JackCount = ToInt(value);
+                    break;
+                case AxisMajorToQueenCount:
+                    builder.MajorToQueenCount = ToInt(value);
+                    break;
+                case AxisPawnForwardnessCount:
+                    builder.PawnForwardnessCount = ToInt(value);
+                    break;
+                case AxisConsulCount:
+                    builder.ConsulCount = ToInt(value);
+                    break;
+                case AxisKingPromotionCount:
+                    builder.KingPromotionCount = ToInt(value);
+                    break;
+                case AxisSuperSizeMeCount:
+                    builder.SuperSizeMeCount = ToInt(value);
+                    break;
+                case AxisPlayAsWhiteCount:
+                    builder.PlayAsWhiteCount = ToInt(value);
+                    break;
+                case AxisVictoryCount:
+                    builder.VictoryCount = ToInt(value);
+                    break;
+                default:
+                    throw new ArgumentException("Unknown APMW fuzz case option axis '" + axisName + "'.", nameof(axisName));
+            }
+        }
+
         private static IEnumerable<ApmwFuzzAxis> ValidateAxes(IEnumerable<ApmwFuzzAxis> axes)
         {
             var seen = new HashSet<string>(StringComparer.Ordinal);
@@ -732,6 +930,16 @@ namespace ChessV.Test
         private static int ForwardnessCapacity(int boardWidth)
         {
             return boardWidth * 3;
+        }
+
+        private static int ToInt(ApmwFuzzOptionValue value)
+        {
+            return Convert.ToInt32(value.Value, CultureInfo.InvariantCulture);
+        }
+
+        private static bool ToBool(ApmwFuzzOptionValue value)
+        {
+            return Convert.ToBoolean(value.Value, CultureInfo.InvariantCulture);
         }
     }
 

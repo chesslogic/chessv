@@ -239,10 +239,11 @@ namespace ChessV.Test
             if (materializedCases.Count == 0)
                 throw new ArgumentException("At least one APMW fuzz case is required.", nameof(cases));
 
+            var runnableCases = DeduplicateCases(materializedCases).ToList();
             var failures = new List<ApmwFuzzFailure>();
             int executedCaseCount = 0;
 
-            foreach (var fuzzCase in materializedCases)
+            foreach (var fuzzCase in runnableCases)
             {
                 if (failures.Count >= maxFailures)
                     break;
@@ -258,6 +259,16 @@ namespace ChessV.Test
                 executedCaseCount,
                 maxFailures,
                 failures);
+        }
+
+        private static IEnumerable<ApmwFuzzCase> DeduplicateCases(IEnumerable<ApmwFuzzCase> cases)
+        {
+            var seenOptionKeys = new HashSet<string>(StringComparer.Ordinal);
+            foreach (ApmwFuzzCase fuzzCase in cases)
+            {
+                if (fuzzCase == null || seenOptionKeys.Add(fuzzCase.CanonicalOptionKey))
+                    yield return fuzzCase;
+            }
         }
 
         public static void AssertNoFailures(ApmwFuzzRunResult result)
@@ -327,11 +338,12 @@ namespace ChessV.Test
 
         private static ApmwFuzzFailure TryShrinkFailure(ApmwFuzzFailure failure, ApmwFuzzStage finalStage)
         {
-            if (failure == null || !ShouldShrinkCase(failure.FuzzCase))
+            if (failure == null)
                 return failure;
 
             ApmwFuzzFailure currentFailure = failure;
             ApmwFuzzCase currentCase = failure.FuzzCase;
+            var testedOptionKeys = new HashSet<string>(StringComparer.Ordinal) { currentCase.CanonicalOptionKey };
             bool reduced;
 
             do
@@ -339,6 +351,9 @@ namespace ChessV.Test
                 reduced = false;
                 foreach (var candidate in ShrinkCandidates(currentCase))
                 {
+                    if (!testedOptionKeys.Add(candidate.CanonicalOptionKey))
+                        continue;
+
                     ApmwFuzzFailure candidateFailure = RunCase(candidate, finalStage, false);
                     if (candidateFailure != null && IsSameFailure(failure, candidateFailure))
                     {
@@ -354,17 +369,6 @@ namespace ChessV.Test
             return failure.WithMinimizedFailure(currentFailure);
         }
 
-        private static bool ShouldShrinkCase(ApmwFuzzCase fuzzCase)
-        {
-            return ContainsIgnoreCase(fuzzCase.Category, "random") ||
-                ContainsIgnoreCase(fuzzCase.CaseName, "random");
-        }
-
-        private static bool ContainsIgnoreCase(string value, string expected)
-        {
-            return (value ?? string.Empty).IndexOf(expected, StringComparison.OrdinalIgnoreCase) >= 0;
-        }
-
         private static bool IsSameFailure(ApmwFuzzFailure expected, ApmwFuzzFailure actual)
         {
             return expected.Kind == actual.Kind &&
@@ -372,56 +376,57 @@ namespace ChessV.Test
                 expected.ExceptionType == actual.ExceptionType;
         }
 
-        private static IEnumerable<ApmwFuzzCase> ShrinkCandidates(ApmwFuzzCase fuzzCase)
+        internal static IEnumerable<ApmwFuzzCase> ShrinkCandidates(ApmwFuzzCase fuzzCase)
         {
-            ApmwFuzzCase defaults = DefaultCaseForShrink(fuzzCase);
-            var seenDiagnostics = new HashSet<string> { fuzzCase.ToDiagnosticString() };
+            var seenOptionKeys = new HashSet<string>(StringComparer.Ordinal) { fuzzCase.CanonicalOptionKey };
 
-            foreach (var candidate in BuildShrinkCandidates(fuzzCase, defaults))
+            foreach (var candidate in BuildShrinkCandidates(fuzzCase))
             {
-                if (seenDiagnostics.Add(candidate.ToDiagnosticString()))
+                if (seenOptionKeys.Add(candidate.CanonicalOptionKey))
                     yield return candidate;
             }
         }
 
-        private static IEnumerable<ApmwFuzzCase> BuildShrinkCandidates(
-            ApmwFuzzCase fuzzCase,
-            ApmwFuzzCase defaults)
+        private static IEnumerable<ApmwFuzzCase> BuildShrinkCandidates(ApmwFuzzCase fuzzCase)
         {
-            yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.Goal = defaultCase.Goal);
-            yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.EnemyPieceTypes = defaultCase.EnemyPieceTypes);
-            yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.PieceLocations = defaultCase.PieceLocations);
-            yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.PlayerPieceTypes = defaultCase.PlayerPieceTypes);
-            yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.FairyChessArmy = defaultCase.FairyChessArmy);
-            yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.ArmyIndexes = defaultCase.ArmyIndexes);
-            yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.FairyChessPawns = defaultCase.FairyChessPawns);
-            yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.FairyChessPawnUpgrades = defaultCase.FairyChessPawnUpgrades);
-            yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.MinorPieceLimitByType = defaultCase.MinorPieceLimitByType);
-            yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.MajorPieceLimitByType = defaultCase.MajorPieceLimitByType);
-            yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.QueenPieceLimitByType = defaultCase.QueenPieceLimitByType);
-            yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.PocketLimitByPocket = defaultCase.PocketLimitByPocket);
-            yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.DeathLink = defaultCase.DeathLink);
+            foreach (ApmwFuzzAxis axis in ApmwFuzzCaseOptionVector.DefaultOptionSpace.Axes)
+            {
+                foreach (ApmwFuzzOptionValue value in ShrinkValues(axis, fuzzCase))
+                {
+                    yield return fuzzCase.With(builder =>
+                        ApmwFuzzOptionSpace.ApplyCaseValue(builder, axis.Name, value));
+                }
+            }
+
+            ApmwFuzzCase defaults = DefaultCaseForShrink(fuzzCase);
             yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.PocketSeed = defaultCase.PocketSeed);
             yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.PawnSeed = defaultCase.PawnSeed);
             yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.MinorSeed = defaultCase.MinorSeed);
             yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.MajorSeed = defaultCase.MajorSeed);
             yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.QueenSeed = defaultCase.QueenSeed);
             yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.DeterministicChaosSeed = defaultCase.DeterministicChaosSeed);
-            yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.PocketCount = defaultCase.PocketCount);
-            yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.PocketRangeCount = defaultCase.PocketRangeCount);
-            yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.PocketGemCount = defaultCase.PocketGemCount);
-            yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.AIIntelligenceMalusCount = defaultCase.AIIntelligenceMalusCount);
-            yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.PawnCount = defaultCase.PawnCount);
-            yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.MinorPieceCount = defaultCase.MinorPieceCount);
-            yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.MajorPieceCount = defaultCase.MajorPieceCount);
-            yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.JackCount = defaultCase.JackCount);
-            yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.MajorToQueenCount = defaultCase.MajorToQueenCount);
-            yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.PawnForwardnessCount = defaultCase.PawnForwardnessCount);
-            yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.ConsulCount = defaultCase.ConsulCount);
-            yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.KingPromotionCount = defaultCase.KingPromotionCount);
-            yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.SuperSizeMeCount = defaultCase.SuperSizeMeCount);
-            yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.PlayAsWhiteCount = defaultCase.PlayAsWhiteCount);
-            yield return Reset(fuzzCase, defaults, (builder, defaultCase) => builder.VictoryCount = defaultCase.VictoryCount);
+        }
+
+        private static IEnumerable<ApmwFuzzOptionValue> ShrinkValues(ApmwFuzzAxis axis, ApmwFuzzCase fuzzCase)
+        {
+            ApmwFuzzOptionValue currentValue = ApmwFuzzOptionSpace.BuildCanonicalCaseValue(axis, fuzzCase);
+            var seenValueKeys = new HashSet<string>(StringComparer.Ordinal) { currentValue.CanonicalKey };
+            bool currentIsDefault = string.Equals(
+                currentValue.CanonicalKey,
+                axis.DefaultValue.CanonicalKey,
+                StringComparison.Ordinal);
+
+            if (currentIsDefault)
+                yield break;
+
+            if (seenValueKeys.Add(axis.DefaultValue.CanonicalKey))
+                yield return axis.DefaultValue;
+
+            foreach (ApmwFuzzOptionValue value in axis.Values)
+            {
+                if (seenValueKeys.Add(value.CanonicalKey))
+                    yield return value;
+            }
         }
 
         private static ApmwFuzzCase Reset(
