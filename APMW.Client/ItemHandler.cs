@@ -691,17 +691,18 @@ namespace Archipelago.APChessV
 
     private List<PieceType> filterPiecesByArmy(IEnumerable<PieceType> pieces)
     {
-      List<PieceType> newPieces = new List<PieceType>();
+      List<PieceType> originalPieces = pieces.ToList();
       List<int> army = ApmwConfig.getInstance().Army;
       if (army.Count == 0)
-        return pieces.ToList();
+        return originalPieces;
       HashSet<PieceType> armiesPieces = new HashSet<PieceType>();
       for (int i = 0; i < army.Count; i++)
         armiesPieces = armiesPieces.Concat(ApmwCore.getInstance().armies[army[i]]).ToHashSet();
-      foreach (var piece in pieces)
+      List<PieceType> newPieces = new List<PieceType>();
+      foreach (var piece in originalPieces)
         if (armiesPieces.Contains(piece))
           newPieces.Add(piece);
-      return newPieces;
+      return newPieces.Count > 0 ? newPieces : originalPieces;
     }
   }
 }
