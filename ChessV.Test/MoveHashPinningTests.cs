@@ -99,13 +99,15 @@ namespace ChessV.Test
     [TestMethod]
     public void MoveInfo_ImplicitConversion_ToMovement()
     {
+      int highPromotionType = Game.MAX_PIECE_TYPES - 1;
+      Assert.IsTrue(highPromotionType > 24);
       var moveInfo = new MoveInfo
       {
         FromSquare = 18,
         ToSquare = 52,
         Player = 1,
         MoveType = MoveType.CaptureWithPromotion,
-        PromotionType = 7,
+        PromotionType = highPromotionType,
       };
 
       Movement movement = moveInfo;
@@ -116,6 +118,7 @@ namespace ChessV.Test
       Assert.AreEqual(moveInfo.MoveType, movement.MoveType);
       Assert.AreEqual(moveInfo.PromotionType, movement.Tag);
       Assert.AreEqual(moveInfo.Hash, movement.Hash);
+      Assert.AreEqual(highPromotionType, Movement.GetTagFromHash(moveInfo.Hash));
     }
 
     [TestMethod]

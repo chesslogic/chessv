@@ -36,7 +36,7 @@ namespace ChessV
 
     #region Constants
     public const int MAX_DIRECTIONS = 96;
-    public const int MAX_PIECE_TYPES = 24; // necessary maximum when hashing MoveInfo Tag functionality
+    public const int MAX_PIECE_TYPES = 64;
     public const int MAX_PIECES = 64;
     public const int MAX_PLY = 128;
     //	Internal indicator for movement matrices that a square is disconnected
@@ -1362,7 +1362,7 @@ namespace ChessV
         for (int i = 0; i < nPieceTypes; i++)
           sb.AppendLine($"  [{i}] {pieceTypes[i]?.Name ?? "(null)"}");
         sb.AppendLine();
-        sb.AppendLine("This cap is tied to MoveInfo.Tag bit-packing; raising it requires a coordinated audit. Reduce piece-type diversity for this variant, or dedupe AddPieceType calls.");
+        sb.AppendLine("This cap protects piece-type-indexed engine structures; raising MAX_PIECE_TYPES requires auditing fixed-size arrays and HashKeys allocation. Reduce piece-type diversity for this variant, or dedupe AddPieceType calls.");
         throw new InvalidOperationException(sb.ToString());
       }
     }

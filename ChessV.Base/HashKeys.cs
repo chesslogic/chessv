@@ -24,6 +24,10 @@ namespace ChessV
 {
   public class HashKeys
   {
+    private const UInt64 DynamicKeySeed = 0x6A09E667F3BCC909UL;
+    private const UInt64 SplitMixIncrement = 0x9E3779B97F4A7C15UL;
+    private static readonly object KeyGrowthLock = new object();
+
     protected int nextKey;
     protected int nextMaterialKey;
 
@@ -35,8 +39,10 @@ namespace ChessV
 
     public int TakeKeys(int count)
     {
-      if (nextKey + count > Keys.Length)
-        throw new Exception("Not enough Zobrist keys!");
+      if (count < 0)
+        throw new ArgumentOutOfRangeException(nameof(count));
+      int requiredCount = checked(nextKey + count);
+      EnsureCapacity(requiredCount);
       int given = nextKey;
       nextKey += count;
       return given;
@@ -44,11 +50,43 @@ namespace ChessV
 
     public int TakeMaterialKeys(int count)
     {
-      if (nextMaterialKey + count > Keys.Length)
-        throw new Exception("Not enough Zobrist keys!");
+      if (count < 0)
+        throw new ArgumentOutOfRangeException(nameof(count));
+      int requiredCount = checked(nextMaterialKey + count);
+      EnsureCapacity(requiredCount);
       int given = nextMaterialKey;
       nextMaterialKey += count;
       return given;
+    }
+
+    private static void EnsureCapacity(int requiredCount)
+    {
+      if (requiredCount <= Keys.Length)
+        return;
+
+      lock (KeyGrowthLock)
+      {
+        if (requiredCount <= Keys.Length)
+          return;
+
+        int oldLength = Keys.Length;
+        int newLength = oldLength;
+        while (newLength < requiredCount)
+          newLength = checked(newLength * 2);
+
+        Array.Resize(ref Keys, newLength);
+        for (int index = oldLength; index < newLength; index++)
+          Keys[index] = GenerateDynamicKey(index);
+      }
+    }
+
+    private static UInt64 GenerateDynamicKey(int index)
+    {
+      UInt64 value = unchecked(DynamicKeySeed + ((UInt64)index * SplitMixIncrement));
+      value = unchecked((value ^ (value >> 30)) * 0xBF58476D1CE4E5B9UL);
+      value = unchecked((value ^ (value >> 27)) * 0x94D049BB133111EBUL);
+      value ^= value >> 31;
+      return value == 0UL ? DynamicKeySeed : value;
     }
 
     public static UInt64[] Keys = { 
