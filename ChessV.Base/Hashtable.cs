@@ -95,7 +95,7 @@ namespace ChessV
       return false;
     }
 
-    public void Store(UInt64 hashcode, int score, int depth, UInt32 movehash, TTHashEntry.HashType hashtype)
+    public void Store(UInt64 hashcode, int score, int depth, UInt64 movehash, TTHashEntry.HashType hashtype)
     {
       long groupStart = (long)hashcode & (size - 1) & 0xFFFFFFFCL;
       long replace = groupStart;

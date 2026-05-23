@@ -30,7 +30,7 @@ namespace ChessV
 
     public OpeningBook(BinaryReader instream)
     {
-      book = new Dictionary<UInt64, List<Int32>>();
+      book = new Dictionary<UInt64, List<UInt64>>();
       while (true)
       {
         //	each entry begins with the hashcode of a position
@@ -40,12 +40,12 @@ namespace ChessV
           break;
         //	create a list of move hashes to store the moves 
         //	which are to be randonly chosen from for this position
-        List<Int32> movelist = new List<Int32>();
-        Int32 movehash = instream.ReadInt32();
-        while (movehash != 0)
+        List<UInt64> movelist = new List<UInt64>();
+        Int32 legacyMoveHash = instream.ReadInt32();
+        while (legacyMoveHash != 0)
         {
-          movelist.Add(movehash);
-          movehash = instream.ReadInt32();
+          movelist.Add(LegacyMoveHashToUInt64(legacyMoveHash));
+          legacyMoveHash = instream.ReadInt32();
         }
       }
       random = new Random();
@@ -54,7 +54,7 @@ namespace ChessV
 
     // *** OPERATIONS *** //
 
-    public bool Lookup(UInt64 positionHash, out Int32 moveHash)
+    public bool Lookup(UInt64 positionHash, out UInt64 moveHash)
     {
       moveHash = 0;
       if (book.ContainsKey(positionHash))
@@ -66,10 +66,16 @@ namespace ChessV
       return false;
     }
 
+    protected static UInt64 LegacyMoveHashToUInt64(Int32 legacyMoveHash)
+    {
+      // Opening-book files still store the old 32-bit move layout.
+      return Movement.FromLegacyUInt32Hash(unchecked((UInt32)legacyMoveHash));
+    }
+
 
     // *** PROTECTED DATA *** //
 
-    protected Dictionary<UInt64, List<Int32>> book;
+    protected Dictionary<UInt64, List<UInt64>> book;
     protected Random random;
   }
 }

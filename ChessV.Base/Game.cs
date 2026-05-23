@@ -177,8 +177,8 @@ namespace ChessV
     //	Structures used by the internal engine for computer play
     public int Ply { get; private set; }
     public SearchStack[] SearchStack { get { return searchStack; } }
-    public UInt32[] Killers1 { get { return killers1; } }
-    public UInt32[] Killers2 { get { return killers2; } }
+    public UInt64[] Killers1 { get { return killers1; } }
+    public UInt64[] Killers2 { get { return killers2; } }
     public Statistics Statistics { get; private set; }
     public Movement[] SearchPath;
 
@@ -278,8 +278,8 @@ namespace ChessV
       nPieces = new int[nPlayers];
       moveLists = new MoveList[MAX_PLY];
       searchStack = new SearchStack[MAX_PLY];
-      killers1 = new UInt32[MAX_PLY];
-      killers2 = new UInt32[MAX_PLY];
+      killers1 = new UInt64[MAX_PLY];
+      killers2 = new UInt64[MAX_PLY];
       razorMargin = new int[] { 300, 350, 400, 450, 450, 450, 450, 450 };
       seeAttackers = new List<Piece>[2];
       seeAttackers[0] = new List<Piece>(24);
@@ -659,7 +659,7 @@ namespace ChessV
       butterflyCounters = new UInt32[NumPlayers, NPieceTypes, Board.NumSquaresExtended];
 
       //	Allocate array of countermoves (move ordering countermove heuristic)
-      countermoves = new UInt32[Board.NumSquaresExtended, Board.NumSquaresExtended];
+      countermoves = new UInt64[Board.NumSquaresExtended, Board.NumSquaresExtended];
 
       //	Allocate the MovementLists
       for (int x = 0; x < MAX_PLY; x++)
@@ -1108,8 +1108,8 @@ namespace ChessV
       nPieces = new int[NumPlayers];
       moveLists = new MoveList[MAX_PLY];
       searchStack = new SearchStack[MAX_PLY];
-      killers1 = new UInt32[MAX_PLY];
-      killers2 = new UInt32[MAX_PLY];
+      killers1 = new UInt64[MAX_PLY];
+      killers2 = new UInt64[MAX_PLY];
       for (int x = 0; x < MAX_PLY; x++)
         searchStack[x].Initialize();
       gameHistory = new MoveInfo[MAX_GAME_LENGTH];
@@ -1125,7 +1125,7 @@ namespace ChessV
       //	Allocate array of butterfly counters
       butterflyCounters = new UInt32[NumPlayers, NPieceTypes, Board.NumSquaresExtended];
       //	Allocate array of countermoves
-      countermoves = new UInt32[Board.NumSquaresExtended, Board.NumSquaresExtended];
+      countermoves = new UInt64[Board.NumSquaresExtended, Board.NumSquaresExtended];
       //	Allocate the MovementLists
       for (int x = 0; x < MAX_PLY; x++)
         moveLists[x] = new MoveList(Board, searchStack, killers1, killers2, historyCounters, butterflyCounters, x);
@@ -1173,9 +1173,9 @@ namespace ChessV
 
 
     #region Protected - GenerateMoves
-    protected void generateMoves(int player, int ply, UInt32 movehash, bool capturesOnly = false)
+    protected void generateMoves(int player, int ply, UInt64 movehash, bool capturesOnly = false)
     {
-      UInt32 countermove = ply == 1 ? 0 : countermoves[SearchPath[ply - 1].FromSquare, SearchPath[ply - 1].ToSquare];
+      UInt64 countermove = ply == 1 ? 0 : countermoves[SearchPath[ply - 1].FromSquare, SearchPath[ply - 1].ToSquare];
       moveLists[ply].Reset(movehash, countermove);
       
       // Track how many pieces have custom move generators to better manage capacity
@@ -2028,7 +2028,7 @@ namespace ChessV
       return null;
     }
 
-    public virtual string DescribeMove(UInt32 movehash, MoveNotation format)
+    public virtual string DescribeMove(UInt64 movehash, MoveNotation format)
     {
       #region Format: Standard Algebraic
       if (format == MoveNotation.StandardAlgebraic)
@@ -2829,12 +2829,12 @@ namespace ChessV
 
     protected MoveList[] moveLists;
     protected SearchStack[] searchStack;
-    protected UInt32[] killers1;
-    protected UInt32[] killers2;
+    protected UInt64[] killers1;
+    protected UInt64[] killers2;
     protected UInt32[,,] historyCounters;
     protected UInt32[,,] butterflyCounters;
     protected UInt32 lmrHistoryCutoff;
-    protected UInt32[,] countermoves;
+    protected UInt64[,] countermoves;
     protected List<Piece>[] seeAttackers;
 
     public const int MAX_GAME_LENGTH = 1000;

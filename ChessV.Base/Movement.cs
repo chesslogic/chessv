@@ -30,8 +30,8 @@ namespace ChessV
 	from any valid position of any supported game.  It does not provide
 	enough information to actually make the move - that requires a MoveInfo.
 	The Movement is used for quickly comparing moves for equivalence and 
-	recording them where space is tight (hashtable and killer move list for 
-	example.)  It stores several values packed into a single 32-bit 
+	recording them where space is tight (hashtable and killer move list for
+	example.)  It stores several values packed into a single 64-bit
 	integer ("Hash") and later unpacked.  The Movement class provides 
 	functions for performing this packing and unpacking.
 
@@ -58,8 +58,18 @@ namespace ChessV
     public int Player
     { get { return (int)((playerAndType & 128u) >> 7); } }
 
-    public UInt32 Hash
-    { get { return (uint)FromSquare + (uint)(ToSquare << 8) + (uint)(Tag << 16) + (playerAndType << 24); } }
+    public UInt64 Hash
+    {
+      get
+      {
+        return
+          ((UInt64)FromSquare & 0xFFUL) |
+          (((UInt64)ToSquare & 0xFFUL) << 8) |
+          (((UInt64)Tag & 0xFFFFUL) << 16) |
+          (((UInt64)MoveType & 0x7FUL) << 32) |
+          (((UInt64)Player & 1UL) << 39);
+      }
+    }
     #endregion
 
 
@@ -80,6 +90,11 @@ namespace ChessV
     }
 
     public Movement(UInt32 movehash)
+      : this(FromLegacyUInt32Hash(movehash))
+    {
+    }
+
+    public Movement(UInt64 movehash)
     {
       FromSquare = GetFromSquareFromHash(movehash);
       ToSquare = GetToSquareFromHash(movehash);
@@ -92,44 +107,56 @@ namespace ChessV
     // *** HASH FUNCTIONS *** //
 
     #region GetFromSquareFromHash
-    public static int GetFromSquareFromHash(UInt32 movehash)
+    public static int GetFromSquareFromHash(UInt64 movehash)
     {
-      return (int)(movehash & 0x000000FF);
+      return (int)(movehash & 0xFFUL);
     }
     #endregion
 
     #region GetToSquareFromHash
-    public static int GetToSquareFromHash(UInt32 movehash)
+    public static int GetToSquareFromHash(UInt64 movehash)
     {
-      return (int)((movehash & 0x0000FF00) >> 8);
+      return (int)((movehash >> 8) & 0xFFUL);
     }
     #endregion
 
     #region GetPlayerFromHash
-    public static int GetPlayerFromHash(UInt32 movehash)
+    public static int GetPlayerFromHash(UInt64 movehash)
     {
-      return (int)((movehash >> 31) & 1);
+      return (int)((movehash >> 39) & 1UL);
     }
     #endregion
 
     #region GetTagFromHash
-    public static int GetTagFromHash(UInt32 movehash)
+    public static int GetTagFromHash(UInt64 movehash)
     {
-      return (int)((movehash & 0x00FF0000) >> 16);
+      return (int)((movehash >> 16) & 0xFFFFUL);
     }
     #endregion
 
     #region GetMoveTypeFromHash
-    public static MoveType GetMoveTypeFromHash(UInt32 movehash)
+    public static MoveType GetMoveTypeFromHash(UInt64 movehash)
     {
-      return (MoveType)((movehash & 0x7F000000) >> 24);
+      return (MoveType)((movehash >> 32) & 0x7FUL);
+    }
+    #endregion
+
+    #region FromLegacyUInt32Hash
+    public static UInt64 FromLegacyUInt32Hash(UInt32 movehash)
+    {
+      return
+        ((UInt64)(movehash & 0x000000FFU)) |
+        (((UInt64)((movehash & 0x0000FF00U) >> 8)) << 8) |
+        (((UInt64)((movehash & 0x00FF0000U) >> 16)) << 16) |
+        (((UInt64)((movehash & 0x7F000000U) >> 24)) << 32) |
+        (((UInt64)((movehash & 0x80000000U) >> 31)) << 39);
     }
     #endregion
 
     #region GetHashCode
     public override int GetHashCode()
     {
-      return (int)Hash;
+      return Hash.GetHashCode();
     }
     #endregion
 
@@ -180,7 +207,7 @@ namespace ChessV
         m1.Tag != m2.Tag;
     }
 
-    public static bool operator ==(Movement m1, UInt32 hash)
+    public static bool operator ==(Movement m1, UInt64 hash)
     {
       if (((object)m1) == null)
         return false;
@@ -188,12 +215,22 @@ namespace ChessV
       return m1.Hash == hash;
     }
 
-    public static bool operator !=(Movement m1, UInt32 hash)
+    public static bool operator !=(Movement m1, UInt64 hash)
     {
       if (((object)m1) == null)
         return true;
 
       return m1.Hash != hash;
+    }
+
+    public static bool operator ==(Movement m1, UInt32 hash)
+    {
+      return m1 == FromLegacyUInt32Hash(hash);
+    }
+
+    public static bool operator !=(Movement m1, UInt32 hash)
+    {
+      return m1 != FromLegacyUInt32Hash(hash);
     }
     #endregion
   }

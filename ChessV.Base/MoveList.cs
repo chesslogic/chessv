@@ -83,8 +83,8 @@ namespace ChessV
     public MoveList
       (Board board,
         SearchStack[] searchStack,
-        UInt32[] killers1,
-        UInt32[] killers2,
+        UInt64[] killers1,
+        UInt64[] killers2,
         UInt32[,,] historyCounters,
         UInt32[,,] butterflyCounters,
         int ply)
@@ -119,7 +119,7 @@ namespace ChessV
     // *** OPERATIONS *** //
 
     #region Reset
-    public void Reset(UInt32 hashtableMoveHash = 0, UInt32 countermove = 0)
+    public void Reset(UInt64 hashtableMoveHash = 0, UInt64 countermove = 0)
     {
       moveCursor = 0;
       pickupCursor = 0;
@@ -131,7 +131,7 @@ namespace ChessV
     #endregion
 
     #region Restart
-    public void Restart(UInt32 pvMove)
+    public void Restart(UInt64 pvMove)
     {
       triedMovesCursor = -1;
       if (pvMove != 0)
@@ -146,7 +146,7 @@ namespace ChessV
     #endregion
 
     #region ReorderMoves
-    public void ReorderMoves(Dictionary<UInt32, int> moveScores)
+    public void ReorderMoves(Dictionary<UInt64, int> moveScores)
     {
       for (int x = 0; x < moveCursor; x++)
         moves[x].Evaluation = moveScores[moves[x].Hash];
@@ -159,10 +159,10 @@ namespace ChessV
     #endregion
 
     #region FindMove
-    public MoveInfo FindMove(Int32 movehash)
+    public MoveInfo FindMove(UInt64 movehash)
     {
       for (int x = 0; x < moveCursor; x++)
-        if (moves[x] == movehash)
+        if (moves[x].Hash == movehash)
           return moves[x];
       throw new Exception("Move not found");
     }
@@ -1356,13 +1356,13 @@ namespace ChessV
     protected int[] moveOrder;
     protected int currentMoveIndex;
     protected SearchStack[] searchStack;
-    protected UInt32[] killers1;
-    protected UInt32[] killers2;
+    protected UInt64[] killers1;
+    protected UInt64[] killers2;
     protected UInt32[,,] historyCounters;
     protected UInt32[,,] butterflyCounters;
     protected int ply;
-    protected UInt32 hashtableMoveHash;
-    protected UInt32 countermove;
+    protected UInt64 hashtableMoveHash;
+    protected UInt64 countermove;
     private int tempPickupCursor;
     private int tempDropCursor;
     private int triedMovesCursor;

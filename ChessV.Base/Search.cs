@@ -106,13 +106,13 @@ namespace ChessV
         PVs[x].Initialize();
       }
       int[] pvScores = new int[multiPV];
-      Dictionary<UInt32, PV> lookupPVbyExcludedMoves = new Dictionary<uint, PV>();
+      Dictionary<UInt64, PV> lookupPVbyExcludedMoves = new Dictionary<UInt64, PV>();
       searchStack[1].Eval = Evaluate();
 
       //	If we are in multi-pv mode, we will use this movesToExclude list to 
       //	accumulate the moves selected from previous PVs and exclude them from 
       //	consideration in later PVs.
-      List<UInt32> movesToExclude = multiPV > 1 ? new List<UInt32>() : null;
+      List<UInt64> movesToExclude = multiPV > 1 ? new List<UInt64>() : null;
       #endregion
 
 
@@ -199,11 +199,11 @@ namespace ChessV
               beta = Math.Min(pvScores[pvIndex] + delta, INFINITY);
             }
 
-            UInt32 exclusionKey = 0;
+            UInt64 exclusionKey = 0;
             if (movesToExclude != null)
             {
               //	Determine key based on moves to exclude
-              foreach (UInt32 movehash in movesToExclude)
+              foreach (UInt64 movehash in movesToExclude)
                 exclusionKey = exclusionKey ^ (movehash * 17);
               //	Lookup PV in case we've already run an iteration 
               //	with these particular moves excluded before
@@ -318,7 +318,7 @@ namespace ChessV
                 else if (score > 150)
                   timeUseAgressiveness -= Math.Min((score - 150) / 10, 8);
                 //	use time more agressively if the best move has been changing over recent iterations
-                uint bestMove = PVs[0][1];
+                UInt64 bestMove = PVs[0][1];
                 for (int x = Math.Min(idepth / ONEPLY - 2, 3); x >= 0; x--)
                   if (previousBestMoves[x] != bestMove)
                   {
@@ -364,7 +364,7 @@ namespace ChessV
     #endregion
 
     #region SearchRoot
-    public int SearchRoot(int alpha, int beta, int depth, List<UInt32> movesToExclude = null)
+    public int SearchRoot(int alpha, int beta, int depth, List<UInt64> movesToExclude = null)
     {
       //	track counts of moves executed:
       int moveNumber = 0; // count of all moves
@@ -376,7 +376,7 @@ namespace ChessV
         depth += extension;
 
       //	track number of nodes per move for better move ordering
-      Dictionary<UInt32, int> nodesPerMove = new Dictionary<UInt32, int>();
+      Dictionary<UInt64, int> nodesPerMove = new Dictionary<UInt64, int>();
 
       //	no need to regenerate moves at the root - just restart the move selection
       moveLists[1].Restart(movesToExclude != null ? 0 : searchStack[1].PV[1]);
@@ -390,7 +390,7 @@ namespace ChessV
         MoveInfo currentMove = moveLists[1].CurrentMove;
         //	Check to see if this is an excluded move.  If it is, just 
         //	undo and continue.  The excluded moves are used for multi-pv
-        if (movesToExclude != null && movesToExclude.Contains(currentMove))
+        if (movesToExclude != null && movesToExclude.Contains(currentMove.Hash))
         {
           moveLists[1].UnmakeMove();
           nodesPerMove[currentMove.Hash] = nodesPerMove.GetValueOrDefault(currentMove.Hash);
@@ -502,7 +502,7 @@ namespace ChessV
 
       // *** TRANSPOSITION TABLE CHECK *** //
       TTHashEntry hash = new TTHashEntry();
-      UInt32 hashtableMove = 0;
+      UInt64 hashtableMove = 0;
       if (hashtable.Lookup(GetPositionHashCode(ply), ref hash))
       {
         //	If this position has been stored in the hashtable with a 
@@ -753,7 +753,7 @@ namespace ChessV
 
       // *** TRANSPOSITION TABLE CHECK *** //
       TTHashEntry hash = new TTHashEntry();
-      UInt32 hashtableMove = 0;
+      UInt64 hashtableMove = 0;
       if (hashtable.Lookup(GetPositionHashCode(ply), ref hash))
       {
         hashtableMove = hash.MoveHash;
@@ -1078,7 +1078,7 @@ namespace ChessV
 
       // *** TRANSPOSITION TABLE CHECK *** //
       TTHashEntry hash = new TTHashEntry();
-      UInt32 hashtableMove = 0;
+      UInt64 hashtableMove = 0;
       if (hashtable.Lookup(GetPositionHashCode(ply), ref hash))
       {
         hashtableMove = hash.MoveHash;
@@ -1230,7 +1230,7 @@ namespace ChessV
       }
     }
 
-    protected void saveKiller(int ply, UInt32 movehash)
+    protected void saveKiller(int ply, UInt64 movehash)
     {
       if (Movement.GetMoveTypeFromHash(movehash) == MoveType.StandardMove)
       {
@@ -1253,7 +1253,7 @@ namespace ChessV
       }
     }
 
-    protected void updateHistoryCounters(int depth, UInt32 movehash)
+    protected void updateHistoryCounters(int depth, UInt64 movehash)
     {
       if (Movement.GetMoveTypeFromHash(movehash) != MoveType.StandardMove)
         return;
@@ -1380,6 +1380,6 @@ namespace ChessV
 
     protected int[] razorMargin;
     protected int weakeningHashShift;
-    protected uint[] previousBestMoves = new uint[5];
+    protected UInt64[] previousBestMoves = new UInt64[5];
   }
 }

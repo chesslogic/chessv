@@ -50,13 +50,20 @@ namespace ChessV
       return new Movement(mi.FromSquare, mi.ToSquare, mi.Player, mi.MoveType, mi.tagOrPromotionType);
     }
 
-    public UInt32 Hash
+    public UInt64 Hash
     {
       get
-      { return (uint)FromSquare + (uint)(ToSquare << 8) + (uint)(tagOrPromotionType << 16) + ((uint)MoveType << 24) + ((uint)Player << 31); }
+      {
+        return
+          ((UInt64)FromSquare & 0xFFUL) |
+          (((UInt64)ToSquare & 0xFFUL) << 8) |
+          (((UInt64)tagOrPromotionType & 0xFFFFUL) << 16) |
+          (((UInt64)MoveType & 0x7FUL) << 32) |
+          (((UInt64)Player & 1UL) << 39);
+      }
     }
 
-    public static implicit operator UInt32(MoveInfo mi)
+    public static implicit operator UInt64(MoveInfo mi)
     { return mi.Hash; }
 
     public override bool Equals(object obj)
@@ -70,7 +77,7 @@ namespace ChessV
     { return this == other; }
 
     public override int GetHashCode()
-    { return (int)Hash; }
+    { return Hash.GetHashCode(); }
 
     public override string ToString()
     {

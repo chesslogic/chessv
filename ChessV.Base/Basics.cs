@@ -180,14 +180,14 @@ namespace ChessV
   #region PV class
   public class PV
   {
-    public UInt32[] MoveHashes { get; set; }
+    public UInt64[] MoveHashes { get; set; }
 
     public void Initialize()
     {
-      MoveHashes = new UInt32[Game.MAX_PLY];
+      MoveHashes = new UInt64[Game.MAX_PLY];
     }
 
-    public UInt32 this[int moveNumber]
+    public UInt64 this[int moveNumber]
     {
       get
       { return MoveHashes[moveNumber]; }

@@ -39,7 +39,7 @@ namespace ChessV
     }
 
     private UInt64 hash;
-    private UInt32 moveHash;
+    private UInt64 moveHash;
     private Int32 data;
 
     public bool CheckHash(UInt64 hashToCheck)
@@ -53,7 +53,7 @@ namespace ChessV
       { return (int)(hash & uint64_generation_part); }
     }
 
-    public UInt32 MoveHash
+    public UInt64 MoveHash
     {
       get
       { return moveHash; }
@@ -77,7 +77,7 @@ namespace ChessV
       { return data >> 16; }
     }
 
-    public void SetData(UInt64 hash, UInt32 moveHash, HashType hashType, int depth, int score, uint generation)
+    public void SetData(UInt64 hash, UInt64 moveHash, HashType hashType, int depth, int score, uint generation)
     {
       this.moveHash = moveHash;  // store the best move
 
