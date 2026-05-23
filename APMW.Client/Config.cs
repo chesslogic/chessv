@@ -68,6 +68,9 @@ namespace Archipelago.APChessV
     public int queenSeed = -1;
     public int queenLocSeed = -1;
 
+    internal const string DeterministicChaosSeedSlotKeyForTest = "deterministic_chaos_seed";
+    internal int? DeterministicChaosSeedForTest { get; set; }
+
     public int minorTypeLimit = -1;
     public int majorTypeLimit = -1;
     public int queenTypeLimit = -1;
@@ -144,6 +147,9 @@ namespace Archipelago.APChessV
     public void Instantiate(Dictionary<string, object> slotData)
     {
       SlotData = slotData;
+      DeterministicChaosSeedForTest = SlotData.ContainsKey(DeterministicChaosSeedSlotKeyForTest)
+        ? Convert.ToInt32(SlotData[DeterministicChaosSeedSlotKeyForTest])
+        : (int?)null;
 
       // Implemented by ChecksMate protocol
       //SlotData["max_material"]
@@ -191,7 +197,9 @@ namespace Archipelago.APChessV
 
     public void seed()
     {
-      Random random = new Random();
+      Random random = DeterministicChaosSeedForTest.HasValue
+        ? new Random(DeterministicChaosSeedForTest.Value)
+        : new Random();
 
       // Types
       if (this.Types != PieceTypes.Chaos)
@@ -287,6 +295,14 @@ namespace Archipelago.APChessV
      */
     public static Dictionary<int, Item> distribute<Item>(List<Item> items, int spaces)
     {
+      return distribute(items, spaces, new Random());
+    }
+
+    internal static Dictionary<int, Item> distribute<Item>(List<Item> items, int spaces, Random random)
+    {
+      if (random == null)
+        throw new ArgumentNullException(nameof(random));
+
       // Create list of items * z
       Dictionary<int, Item> allItems = new Dictionary<int, Item>();
       for (int i = 0; i < items.Count; i++)
@@ -294,7 +310,6 @@ namespace Archipelago.APChessV
       for (int i = items.Count; i < spaces; i++)
         allItems.Add(i, default);
 
-      Random random = new Random();
       int n = allItems.Count;
       while (n > 1)
       {
