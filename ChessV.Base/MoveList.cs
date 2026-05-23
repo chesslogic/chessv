@@ -121,9 +121,11 @@ namespace ChessV
     #region Reset
     public void Reset(UInt64 hashtableMoveHash = 0, UInt64 countermove = 0)
     {
+      // Reset clears generated entries and any currently selected move.
       moveCursor = 0;
       pickupCursor = 0;
       dropCursor = 0;
+      currentMoveIndex = -1;
       triedMovesCursor = -1;
       this.hashtableMoveHash = hashtableMoveHash;
       this.countermove = countermove;
@@ -133,6 +135,8 @@ namespace ChessV
     #region Restart
     public void Restart(UInt64 pvMove)
     {
+      // Restart preserves generated entries but rewinds search iteration.
+      currentMoveIndex = -1;
       triedMovesCursor = -1;
       if (pvMove != 0)
       {

@@ -7,6 +7,45 @@ using ChessV.Games.Pieces.Apmw;
 
 namespace ChessV.Test
 {
+  [Game("High Type Checkers Promotion Test Variant",
+      typeof(Geometry.Rectangular), 8, 8,
+      Template = true)]
+  public class HighTypeCheckersPromotionTestGame : FirstTurnRuleTestGame
+  {
+    public PieceType HighPromotionType { get; private set; }
+
+    public override void AddPieceTypes()
+    {
+      base.AddPieceTypes();
+
+      int suffix = 0;
+      while (NPieceTypes <= 24)
+      {
+        char notation = (char)('a' + suffix);
+        AddPieceType(new Rook(
+          $"High Type Filler {suffix}",
+          "_" + notation,
+          100,
+          100,
+          "Rook"));
+        suffix++;
+      }
+
+      HighPromotionType = AddPieceType(new Queen(
+        "High Type Checkers Promotion",
+        "_z",
+        900,
+        900,
+        "Queen"));
+    }
+
+    public override void AddRules()
+    {
+      base.AddRules();
+      CheckersType.SetPromotionTypes(new List<PieceType> { HighPromotionType });
+    }
+  }
+
   // *** CHECKERS MAKE/UNMAKE SAFETY NET ***
   //
   // Commit 022b223 removed two writes from MoveList.MakeMove that were
@@ -82,6 +121,20 @@ namespace ChessV.Test
       Assert.IsTrue(attrs.Length > 0, "Test game must carry a [Game] attribute.");
       var gameAttr = (GameAttribute)attrs[0];
       game.Initialize(gameAttr, null, null);
+      return game;
+    }
+
+    private static HighTypeCheckersPromotionTestGame CreateHighTypePromotionGame()
+    {
+      var game = new HighTypeCheckersPromotionTestGame();
+      var attrs = typeof(HighTypeCheckersPromotionTestGame)
+        .GetCustomAttributes(typeof(GameAttribute), inherit: false);
+      Assert.IsTrue(attrs.Length > 0, "Test game must carry a [Game] attribute.");
+      var gameAttr = (GameAttribute)attrs[0];
+      game.Initialize(gameAttr, null, null);
+      Assert.IsTrue(
+        game.HighPromotionType.TypeNumber > 24,
+        "Test setup must put the Checkers promotion target above the old 24-type cap.");
       return game;
     }
 
@@ -262,6 +315,68 @@ namespace ChessV.Test
 
       // Now the formal snapshot/Make/Unmake cycle.
       RoundTripOne(g, idx, "TripleJumpWithPromotion b2->d4->f6->h8");
+    }
+
+    [TestMethod]
+    public void TripleSkipCaptureWithHighTypePromotion_RoundTripsCleanly()
+    {
+      var g = CreateHighTypePromotionGame();
+      LoadPosition(g, "4k3/6e1/8/4e3/8/2e5/1E6/4K3", 'w');
+      AssertGenerationDoesNotThrow(g, "TripleSkipCaptureWithHighTypePromotion:generation");
+
+      var ml = g.RootMoveListForTest;
+      int idx = FindMoveTo(ml, g, "h8");
+      Assert.AreNotEqual(-1, idx,
+        "Expected the three-skip Checkers promotion move ending on h8.");
+
+      var move = ml.GetMoveForTest(idx);
+      Assert.IsTrue((move.MoveType & MoveType.PromotionProperty) != 0,
+        "Three-skip move to h8 must carry PromotionProperty.");
+      Assert.AreEqual(g.HighPromotionType.TypeNumber, move.PromotionType,
+        "Three-skip move must encode the high-index promotion type.");
+      Assert.AreEqual(g.HighPromotionType.TypeNumber, Movement.GetTagFromHash(move.Hash),
+        "Move hash tag must preserve the high-index promotion type.");
+
+      int firstPickup = idx == 0 ? 0 : ml.GetMoveForTest(idx - 1).PickupCursor;
+      int firstDrop = idx == 0 ? 0 : ml.GetMoveForTest(idx - 1).DropCursor;
+      Assert.AreEqual(4, move.PickupCursor - firstPickup,
+        "Three skips should record one moving-piece pickup plus three captured-piece pickups.");
+      Assert.AreEqual(1, move.DropCursor - firstDrop,
+        "Promoting skip capture should record one promoted drop.");
+
+      int b2 = g.Board.DefaultNotationToSquare("b2");
+      int c3 = g.Board.DefaultNotationToSquare("c3");
+      int e5 = g.Board.DefaultNotationToSquare("e5");
+      int g7 = g.Board.DefaultNotationToSquare("g7");
+      int h8 = g.Board.DefaultNotationToSquare("h8");
+
+      Assert.AreEqual(b2, ml.GetPickupForTest(firstPickup).Square,
+        "Pickup #0 should be the moving Checkers on b2.");
+      Assert.AreEqual(c3, ml.GetPickupForTest(firstPickup + 1).Square,
+        "Pickup #1 should be the first skipped piece on c3.");
+      Assert.AreEqual(e5, ml.GetPickupForTest(firstPickup + 2).Square,
+        "Pickup #2 should be the second skipped piece on e5.");
+      Assert.AreEqual(g7, ml.GetPickupForTest(firstPickup + 3).Square,
+        "Pickup #3 should be the third skipped piece on g7.");
+
+      var drop = ml.GetDropForTest(firstDrop);
+      Assert.AreEqual(h8, drop.Square, "Promoted Checkers should drop on h8.");
+      Assert.AreSame(g.HighPromotionType, drop.NewType,
+        "Drop should promote to the high-index promotion type.");
+
+      var beforeProbe = Take(g);
+      ml.MakeMove(idx);
+      Assert.IsNull(g.Board[b2], "Origin b2 should be empty after the skip capture.");
+      Assert.IsNull(g.Board[c3], "First skipped square c3 should be empty after capture.");
+      Assert.IsNull(g.Board[e5], "Second skipped square e5 should be empty after capture.");
+      Assert.IsNull(g.Board[g7], "Third skipped square g7 should be empty after capture.");
+      Assert.AreSame(g.HighPromotionType, g.Board[h8].PieceType,
+        "h8 should contain the high-index promoted piece after MakeMove.");
+      UnmakeByIndex(ml, idx);
+      AssertEqual(g, beforeProbe, Take(g),
+        "TripleSkipCaptureWithHighTypePromotion: probe round-trip");
+
+      RoundTripOne(g, idx, "TripleSkipCaptureWithHighTypePromotion b2->d4->f6->h8");
     }
 
     // ---------------------------------------------------------------------
