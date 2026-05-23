@@ -433,19 +433,15 @@ namespace Archipelago.APChessV
 
     public List<PieceType> SubstituteQueens(int numFiles, List<PieceType> majors, List<int> order, List<string> promotions, ref int spare_material)
     {
-      var core = ApmwCore.getInstance();
-
       HashSet<string> promoPieces = new HashSet<string>();
       Dictionary<PieceType, int> chosenPieces = new Dictionary<PieceType, int>();
       List<PieceType> queens = ApmwCore.getInstance().queens.ToList();
       queens = filterPiecesByArmy(queens);
-      int kingIndex = numFiles / 2; // king is on E file
 
       Random random = new Random(ApmwConfig.getInstance().queenSeed);
 
       int limit = ApmwConfig.getInstance().queenTypeLimit;
       int player = ApmwCore.getInstance().GeriProvider();
-      int numKings = ApmwCore.getInstance().foundConsuls;
       int numQueens = ApmwCore.getInstance().foundQueens;
       int remainingMajors = order.Count - numQueens;
       for (int i = order.Count - 1; i >= remainingMajors && i >= 0; i--)
@@ -455,14 +451,24 @@ namespace Archipelago.APChessV
         {
           promoPieces.Add(piece.Notation[player]);
           spare_material += QUEEN_VALUE - piece.MidgameValue; // Track difference from expected queen value
-          if (order[i] < kingIndex)
-            majors[order[i]] = piece;
-          else
-            majors[order[i] + 1] = piece;
+          majors[MajorOrderIndexToPieceSetIndex(numFiles, order[i], majors.Count)] = piece;
         }
       }
       promotions.Add(string.Join("", promoPieces));
       return majors;
+    }
+
+    private static int MajorOrderIndexToPieceSetIndex(int numFiles, int orderIndex, int pieceSetCount)
+    {
+      int kingIndex = numFiles / 2;
+      int pieceSetIndex =
+        orderIndex < kingIndex ? orderIndex :
+        orderIndex < numFiles - 1 ? orderIndex + 1 :
+        orderIndex;
+      if (pieceSetIndex < 0 || pieceSetIndex >= pieceSetCount)
+        throw new InvalidOperationException(
+          "Major order index " + orderIndex + " mapped outside generated piece set of size " + pieceSetCount + ".");
+      return pieceSetIndex;
     }
 
     public List<PieceType> GenerateMajors(int numFiles, out List<int> order, List<string> promotions, ref int spare_material)
@@ -477,7 +483,7 @@ namespace Archipelago.APChessV
       majors = filterPiecesByArmy(majors);
       jacks = filterPiecesByArmy(jacks);
       // Initialize lists with appropriate size based on board size
-      List<PieceType> outer = Enumerable.Repeat<PieceType>(null, numFiles - 2).ToList();
+      List<PieceType> outer = Enumerable.Repeat<PieceType>(null, numFiles).ToList();
       List<PieceType> left = Enumerable.Repeat<PieceType>(null, numFiles / 2).ToList();
       List<PieceType> right = Enumerable.Repeat<PieceType>(null, numFiles / 2 - 1).ToList();
 
@@ -507,7 +513,10 @@ namespace Archipelago.APChessV
       // this ends at 7 instead of 8 because the King always occupies 1 space, thus 0..6 not 0..7
       int numJacks = ApmwCore.getInstance().foundJacks;
       int numNonMinorPieces = ApmwCore.getInstance().foundMajors + numKings + numJacks;
-      for (int i = numKings; i < Math.Min(numFiles - 1, numNonMinorPieces); i++)
+      int backRankCapacity = numFiles - 1;
+      int outerRankCapacity = numFiles;
+      int placementCapacity = backRankCapacity + outerRankCapacity;
+      for (int i = numKings; i < Math.Min(backRankCapacity, numNonMinorPieces); i++)
       {
         PieceType piece = null;
         if (i < numJacks + numKings)
@@ -529,10 +538,10 @@ namespace Archipelago.APChessV
           randomPieces.Next();
         parity = placeOnBackRank(order, left, right, randomLocations, parity, i, piece);
       }
-      for (int i = numFiles - 1; i < Math.Min(numFiles * 2 - 1, numNonMinorPieces); i++)
+      for (int i = backRankCapacity; i < Math.Min(placementCapacity, numNonMinorPieces); i++)
       {
         PieceType piece = null;
-        if (i < numJacks)
+        if (i < numJacks + numKings)
         {
           piece = choosePiece(ref jacks, randomJackPieces, chosenPieces, limit);
           promoPieces.Add(piece.Notation[player]);
@@ -549,9 +558,13 @@ namespace Archipelago.APChessV
         }
         else
           randomPieces.Next();
-        order.Add(chooseIndexAndPlace(outer, randomLocations, piece) + 8);
+        bool innerSpillSpaceAvailable = outer.Skip(1).Take(numFiles - 2).Any(item => item == null);
+        int placedIndex = innerSpillSpaceAvailable
+          ? chooseIndexAndPlace(outer, randomLocations, piece, 1, numFiles - 1)
+          : chooseIndexAndPlace(outer, randomLocations, piece);
+        order.Add(placedIndex + numFiles);
       }
-      spare_material += Math.Max(0, numNonMinorPieces - numFiles * 2) * MAJOR_VALUE;
+      spare_material += Math.Max(0, numNonMinorPieces - placementCapacity) * MAJOR_VALUE;
 
       List<PieceType> output = new List<PieceType>();
       output.AddRange(left);
@@ -619,18 +632,36 @@ namespace Archipelago.APChessV
 
     private static int chooseIndexAndPlace(List<PieceType> items, Random random, PieceType piece)
     {
-      var index = 0;
-      var skips = random.Next(items.Count(item => item == null));
-      if (skips == items.Count)
-        throw new Exception("No space to place piece in " + string.Join(", ", items.Select(item => item?.Notation[0])));
-      while (items[index] != null || skips > 0)
+      return chooseIndexAndPlace(items, random, piece, 0, items.Count);
+    }
+
+    private static int chooseIndexAndPlace(List<PieceType> items, Random random, PieceType piece, int startIndex, int endIndex)
+    {
+      if (items == null)
+        throw new ArgumentNullException(nameof(items));
+      if (random == null)
+        throw new ArgumentNullException(nameof(random));
+      if (startIndex < 0 || endIndex > items.Count || startIndex >= endIndex)
+        throw new ArgumentOutOfRangeException(nameof(startIndex), "Placement range must be within the target list.");
+
+      int emptyCount = items.Skip(startIndex).Take(endIndex - startIndex).Count(item => item == null);
+      if (emptyCount <= 0)
+        throw new InvalidOperationException(
+          "No space to place piece in " + string.Join(", ", items.Select(item => item?.Notation[0])));
+
+      var skips = random.Next(emptyCount);
+      for (int index = startIndex; index < endIndex; index++)
       {
-        if (items[index] == null)
-          skips--;
-        index++;
+        if (items[index] != null)
+          continue;
+        if (skips-- > 0)
+          continue;
+        items[index] = piece;
+        return index;
       }
-      items[index] = piece;
-      return index;
+
+      throw new InvalidOperationException(
+        "No space to place piece in " + string.Join(", ", items.Select(item => item?.Notation[0])));
     }
 
     public List<PieceType> generatePocketItems()
