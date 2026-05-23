@@ -24,8 +24,13 @@ namespace ChessV
 {
   public class HashKeys
   {
+    // Using SplitMix algorithm with constant gamma.
+    // Chosen gamma is the odd number closest to 2^^64
+    // divided by the silver ratio (1.0L + sqrt(2.0L)).
     private const UInt64 DynamicKeySeed = 0x6A09E667F3BCC909UL;
-    private const UInt64 SplitMixIncrement = 0x9E3779B97F4A7C15UL;
+    private const UInt64 SplitMixSilverRatioGamma = 0x9E3779B97F4A7C15UL;
+    private const UInt64 SplitMixFirstScrambler = 0xBF58476D1CE4E5B9UL;
+    private const UInt64 SplitMixSecondScrambler = 0x94D049BB133111EBUL;
     private static readonly object KeyGrowthLock = new object();
 
     protected int nextKey;
@@ -82,9 +87,9 @@ namespace ChessV
 
     private static UInt64 GenerateDynamicKey(int index)
     {
-      UInt64 value = unchecked(DynamicKeySeed + ((UInt64)index * SplitMixIncrement));
-      value = unchecked((value ^ (value >> 30)) * 0xBF58476D1CE4E5B9UL);
-      value = unchecked((value ^ (value >> 27)) * 0x94D049BB133111EBUL);
+      UInt64 value = unchecked(DynamicKeySeed + ((UInt64)index * SplitMixSilverRatioGamma));
+      value = unchecked((value ^ (value >> 30)) * SplitMixFirstScrambler);
+      value = unchecked((value ^ (value >> 27)) * SplitMixSecondScrambler);
       value ^= value >> 31;
       return value == 0UL ? DynamicKeySeed : value;
     }

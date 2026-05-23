@@ -35,7 +35,9 @@ namespace ChessV.Test
   {
     private const int OriginalStaticKeyCount = 8704;
     private const UInt64 DynamicKeySeed = 0x6A09E667F3BCC909UL;
-    private const UInt64 SplitMixIncrement = 0x9E3779B97F4A7C15UL;
+    private const UInt64 SplitMixSilverRatioGamma = 0x9E3779B97F4A7C15UL;
+    private const UInt64 SplitMixFirstScrambler = 0xBF58476D1CE4E5B9UL;
+    private const UInt64 SplitMixSecondScrambler = 0x94D049BB133111EBUL;
 
     [TestMethod]
     public void TakeKeys_GrowsDeterministicallyBeyondStaticTable()
@@ -109,9 +111,9 @@ namespace ChessV.Test
 
     private static UInt64 ExpectedDynamicKey(int index)
     {
-      UInt64 value = unchecked(DynamicKeySeed + ((UInt64)index * SplitMixIncrement));
-      value = unchecked((value ^ (value >> 30)) * 0xBF58476D1CE4E5B9UL);
-      value = unchecked((value ^ (value >> 27)) * 0x94D049BB133111EBUL);
+      UInt64 value = unchecked(DynamicKeySeed + ((UInt64)index * SplitMixSilverRatioGamma));
+      value = unchecked((value ^ (value >> 30)) * SplitMixFirstScrambler);
+      value = unchecked((value ^ (value >> 27)) * SplitMixSecondScrambler);
       value ^= value >> 31;
       return value == 0UL ? DynamicKeySeed : value;
     }
