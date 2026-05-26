@@ -143,7 +143,9 @@ namespace ChessV.GUI
 
       try
       {
-        Application.Run(new MainForm());
+        MainForm mainForm = new MainForm();
+        RecoverableDiagnosticForm.Install(mainForm);
+        Application.Run(mainForm);
       }
       catch (Exception ex)
       {

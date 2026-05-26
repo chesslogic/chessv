@@ -22,6 +22,16 @@ using System.Collections.Generic;
 
 namespace ChessV
 {
+  // MoveList is a compact, shared buffer with several intentionally separate
+  // roles. Keep these cursor contracts distinct when changing callers:
+  //
+  //   Role                 Main callers                         Cursor contract
+  //   -------------------  -----------------------------------  ---------------------------------------------
+  //   Generation buffer    Game.generateMoves, pieces/rules     Reset clears entries; Add* appends candidates.
+  //   Candidate check      AddMove/AddCapture/EndMoveAddCore    Legal Make/Unmake checks must leave state even.
+  //   Search iterator      Search.cs                            Restart keeps entries; MakeNextMove selects one.
+  //   Root move source     GetRootMoves, GUI, Game.MakeMove     Count/cursors describe candidates, not history.
+  //   History source       Game.MakeMove, BoardMoveStack        Played history copies ranges from a root move.
   public class MoveList
   {
     // *** PROPERTIES *** //
@@ -1195,6 +1205,22 @@ namespace ChessV
 
     public void UnmakeMove()
     {
+      if (currentMoveIndex < 0)
+      {
+        RecoverableDiagnostics.Report(new RecoverableDiagnostic(
+          "MoveList.UnmakeMove",
+          "MoveList.UnmakeMove() was called without a selected search move.",
+          string.Format(
+            "The parameterless UnmakeMove overload is for search iteration after MakeNextMove(). " +
+            "No board mutation was attempted. currentMoveIndex={0}, moveCursor={1}, pickupCursor={2}, dropCursor={3}.",
+            currentMoveIndex, moveCursor, pickupCursor, dropCursor),
+          Board != null ? Board.Game : null));
+        return;
+      }
+      if (currentMoveIndex >= moveCursor)
+        throw new InvalidOperationException(
+          string.Format("MoveList.UnmakeMove() selected move index {0} is outside generated move count {1}.",
+            currentMoveIndex, moveCursor));
       UnmakeMove(currentMoveIndex);
     }
     #endregion

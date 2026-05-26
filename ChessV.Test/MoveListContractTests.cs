@@ -26,6 +26,12 @@ namespace ChessV.Test
   [TestClass]
   public class MoveListContractTests
   {
+    [TestCleanup]
+    public void ResetRecoverableDiagnostics()
+    {
+      RecoverableDiagnostics.ResetForTest();
+    }
+
     private static MoveListContractTestGame CreateGame()
     {
       var game = new MoveListContractTestGame();
@@ -83,6 +89,34 @@ namespace ChessV.Test
         "MoveList.UnmakeMove must not change game history.");
       Assert.AreEqual(boardMoveStackCount, game.BoardMoveStack.MoveCount,
         "MoveList.UnmakeMove must not change BoardMoveStack history.");
+    }
+
+    [TestMethod]
+    public void UnmakeMove_WithoutSelectedMove_ReportsDiagnosticAndLeavesState()
+    {
+      MoveListContractTestGame game = CreateGame();
+      MoveList root = game.RootMoveListForTest;
+      RecoverableDiagnostic diagnostic = null;
+      int gameMoveNumber = game.GameMoveNumber;
+      int boardMoveStackCount = game.BoardMoveStack.MoveCount;
+      ulong boardHash = game.Board.HashCode;
+
+      RecoverableDiagnostics.Handler = d =>
+      {
+        diagnostic = d;
+        return RecoverableDiagnosticResponse.Continue;
+      };
+
+      root.UnmakeMove();
+
+      Assert.IsNotNull(diagnostic, "UnmakeMove without a selected search move should report a diagnostic.");
+      Assert.AreEqual("MoveList.UnmakeMove", diagnostic.Source);
+      Assert.AreEqual(gameMoveNumber, game.GameMoveNumber,
+        "No-selected UnmakeMove must not change game history.");
+      Assert.AreEqual(boardMoveStackCount, game.BoardMoveStack.MoveCount,
+        "No-selected UnmakeMove must not change BoardMoveStack history.");
+      Assert.AreEqual(boardHash, game.Board.HashCode,
+        "No-selected UnmakeMove must not mutate the board.");
     }
   }
 }
