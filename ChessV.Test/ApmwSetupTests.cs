@@ -204,7 +204,7 @@ namespace ChessV.Test
     // answered. TODO(chesslogic): unignore once the intended post-
     // Initialize state is decided.
     [TestMethod]
-    [Ignore("Repros suspected MoveList leftover-cursor bug; see _refs/2025-09-12.txt and _refs/2026-02-12.txt. After Game.Initialize() the root MoveList has candidate moves already generated, so cursors are not zero. Unignore once it is decided whether that is a bug.")]
+    //[Ignore("Repros suspected MoveList leftover-cursor bug; see _refs/2025-09-12.txt and _refs/2026-02-12.txt. After Game.Initialize() the root MoveList has candidate moves already generated, so cursors are not zero. Unignore once it is decided whether that is a bug.")]
     public void Initialize_RootMoveListCursors_AreZero()
     {
       ApmwChessGame game = CreateAndInitializeApmw();
