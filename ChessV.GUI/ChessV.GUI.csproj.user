@@ -95,6 +95,9 @@
     <Compile Update="Forms\PiecePropertiesForm.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Update="Forms\RecoverableDiagnosticForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Update="Forms\SaveGamesAsImagesForm.cs">
       <SubType>Form</SubType>
     </Compile>
