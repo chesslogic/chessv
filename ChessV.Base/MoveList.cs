@@ -265,8 +265,9 @@ namespace ChessV
         // dump from Board.ClearSquare; we append the context stack so the
         // caller can see WHICH rule and WHICH nested generation cycle
         // triggered the failing pickup.
+        string message = AppendMoveGenerationContextIfMissing(ex.Message);
         throw new InvalidBoardStateException(
-          ex.Message + MoveGenerationContext.FormatContextStack(),
+          message,
           ex.Square,
           ex.SquareNotation,
           ex.Game,
@@ -1373,6 +1374,17 @@ namespace ChessV
       throw toThrow;
     }
     #endregion
+
+    private static string AppendMoveGenerationContextIfMissing(string message)
+    {
+      string context = MoveGenerationContext.FormatContextStack();
+      if (string.IsNullOrEmpty(context))
+        return message;
+      if (!string.IsNullOrEmpty(message) &&
+          message.IndexOf("=== Move Generation Context Stack ===", StringComparison.Ordinal) >= 0)
+        return message;
+      return (message ?? string.Empty) + context;
+    }
 
 
     // *** PROTECTED DATA MEMBERS *** //

@@ -58,35 +58,92 @@ namespace ChessV
     private static string BuildErrorMessage(string message, int square, string squareNotation, Game game, MoveInfo move = default(MoveInfo))
     {
       var sb = new System.Text.StringBuilder();
-      sb.AppendLine(message);
+      sb.AppendLine(message ?? string.Empty);
       sb.AppendLine();
       sb.AppendLine("Board State Details:");
-      sb.AppendLine($"Square: {square} ({squareNotation})");
-      sb.AppendLine($"Current Player: {game.CurrentSide}");
-      sb.AppendLine($"Game Move Number: {game.GameMoveNumber}");
+      sb.AppendLine($"Square: {square} ({(squareNotation ?? "<unknown>")})");
+      sb.AppendLine("Current Player: " + FormatGameDiagnostic(game, () => game.CurrentSide.ToString()));
+      sb.AppendLine("Game Move Number: " + FormatGameDiagnostic(game, () => game.GameMoveNumber.ToString()));
       sb.AppendLine();
 
       MoveInfo currentMoveInfo = move.MoveType != MoveType.Invalid ? move : currentMove;
       if (currentMoveInfo.MoveType != MoveType.Invalid)
       {
         sb.AppendLine("Current Move:");
-        sb.AppendLine($"  From: {game.Board.GetDefaultSquareNotation(currentMoveInfo.FromSquare)}");
-        sb.AppendLine($"  To: {game.Board.GetDefaultSquareNotation(currentMoveInfo.ToSquare)}");
+        sb.AppendLine($"  From: {FormatSquareDiagnostic(game, currentMoveInfo.FromSquare)}");
+        sb.AppendLine($"  To: {FormatSquareDiagnostic(game, currentMoveInfo.ToSquare)}");
         sb.AppendLine($"  Type: {currentMoveInfo.MoveType}");
         if (currentMoveInfo.PieceMoved != null)
         {
-          sb.AppendLine($"  Piece: {currentMoveInfo.PieceMoved.PieceType.Name}");
+          sb.AppendLine($"  Piece: {FormatPieceTypeName(currentMoveInfo.PieceMoved)}");
           sb.AppendLine($"  Player: {currentMoveInfo.PieceMoved.Player}");
-          sb.AppendLine($"  Square: {game.Board.GetDefaultSquareNotation(currentMoveInfo.PieceMoved.Square)}");
+          sb.AppendLine($"  Square: {FormatSquareDiagnostic(game, currentMoveInfo.PieceMoved.Square)}");
         }
         if (currentMoveInfo.PieceCaptured != null)
         {
-          sb.AppendLine($"  Captured Piece: {currentMoveInfo.PieceCaptured.PieceType.Name}");
+          sb.AppendLine($"  Captured Piece: {FormatPieceTypeName(currentMoveInfo.PieceCaptured)}");
           sb.AppendLine($"  Captured Player: {currentMoveInfo.PieceCaptured.Player}");
         }
       }
 
       return sb.ToString();
+    }
+
+    private static string FormatGameDiagnostic(Game game, Func<string> readValue)
+    {
+      if (game == null)
+        return "<unavailable: game is null>";
+
+      try
+      {
+        return readValue() ?? "<null>";
+      }
+      catch (Exception ex)
+      {
+        return "<unavailable: " + FormatDiagnosticFailure(ex) + ">";
+      }
+    }
+
+    private static string FormatSquareDiagnostic(Game game, int square)
+    {
+      if (game == null)
+        return square + " (<notation unavailable: game is null>)";
+
+      try
+      {
+        if (game.Board == null)
+          return square + " (<notation unavailable: board is null>)";
+        return game.Board.GetDefaultSquareNotation(square);
+      }
+      catch (Exception ex)
+      {
+        return square + " (<notation unavailable: " + FormatDiagnosticFailure(ex) + ">)";
+      }
+    }
+
+    private static string FormatPieceTypeName(Piece piece)
+    {
+      try
+      {
+        if (piece == null)
+          return "<null>";
+        if (piece.PieceType == null)
+          return "<unavailable: piece type is null>";
+        return piece.PieceType.Name ?? "<unnamed>";
+      }
+      catch (Exception ex)
+      {
+        return "<unavailable: " + FormatDiagnosticFailure(ex) + ">";
+      }
+    }
+
+    private static string FormatDiagnosticFailure(Exception ex)
+    {
+      if (ex == null)
+        return "unknown failure";
+      if (string.IsNullOrEmpty(ex.Message))
+        return ex.GetType().Name;
+      return ex.GetType().Name + ": " + ex.Message.Replace('\r', ' ').Replace('\n', ' ');
     }
   }
 

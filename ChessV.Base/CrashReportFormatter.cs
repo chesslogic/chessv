@@ -37,6 +37,8 @@ namespace ChessV
       detail.Append("Source: ").Append(exception.Source).Append(Environment.NewLine);
       detail.Append("Stack Trace: ").Append(Environment.NewLine);
       detail.Append(exception.StackTrace);
+      if (exception is InvalidBoardStateException invalidBoardStateException)
+        AppendInvalidBoardStateDiagnostics(detail, invalidBoardStateException);
       return detail.ToString();
     }
 
@@ -58,6 +60,56 @@ namespace ChessV
         cursor = cursor.InnerException;
       }
       return sb.ToString();
+    }
+
+    private static void AppendInvalidBoardStateDiagnostics(
+      StringBuilder detail,
+      InvalidBoardStateException exception)
+    {
+      detail.AppendLine();
+      detail.AppendLine();
+      detail.AppendLine("=== InvalidBoardStateException Diagnostics ===");
+      AppendFormatterOutput(
+        detail,
+        "BoardDiagnosticFormatter",
+        () => BoardDiagnosticFormatter.Format(exception.Game));
+      detail.AppendLine();
+      AppendFormatterOutput(
+        detail,
+        "CommittedHistoryDiagnosticFormatter",
+        () => CommittedHistoryDiagnosticFormatter.Format(exception.Game));
+      detail.AppendLine("=== End InvalidBoardStateException Diagnostics ===");
+    }
+
+    private static void AppendFormatterOutput(
+      StringBuilder detail,
+      string formatterName,
+      Func<string> format)
+    {
+      try
+      {
+        string output = format();
+        if (string.IsNullOrEmpty(output))
+        {
+          detail.Append(formatterName).AppendLine(" produced no diagnostic output.");
+          return;
+        }
+
+        detail.Append(output);
+        if (!output.EndsWith(Environment.NewLine, StringComparison.Ordinal))
+          detail.AppendLine();
+      }
+      catch (Exception ex)
+      {
+        detail.Append(formatterName).AppendLine(" diagnostic failed.");
+        detail.Append("Failure type: ").Append(ex.GetType().FullName).AppendLine();
+        detail.Append("Failure message: ").Append(ex.Message).AppendLine();
+        if (ex.StackTrace != null)
+        {
+          detail.AppendLine("Failure stack trace:");
+          detail.AppendLine(ex.StackTrace);
+        }
+      }
     }
   }
 }

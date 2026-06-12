@@ -1,5 +1,6 @@
 using System;
 using ChessV;
+using ChessV.Games;
 
 namespace ChessV.Test
 {
@@ -100,6 +101,127 @@ namespace ChessV.Test
       Assert.AreEqual(string.Empty, CrashReportFormatter.FormatExceptionChain(null));
     }
 
+    [TestMethod]
+    public void FormatException_InvalidBoardStateException_AppendsBoardAndHistoryDiagnostics()
+    {
+      Chess game = CreateChess();
+      var ex = new InvalidBoardStateException(
+        "diagnostic probe",
+        0,
+        game.Board.GetDefaultSquareNotation(0),
+        game);
+
+      string text = CrashReportFormatter.FormatException(ex);
+
+      StringAssert.Contains(text, "Message: diagnostic probe");
+      StringAssert.Contains(text, "Board State Details:");
+      StringAssert.Contains(text, "=== InvalidBoardStateException Diagnostics ===");
+      StringAssert.Contains(text, "Board Diagnostic");
+      StringAssert.Contains(text, "Dimensions: 8 files x 8 ranks");
+      StringAssert.Contains(text, "=== Committed History Metadata ===");
+      StringAssert.Contains(text, "Recent Committed Moves (last 0 of 0):");
+    }
+
+    [TestMethod]
+    public void InvalidBoardStateException_MessageStaysConciseWhileDetailsIncludeFullDiagnostics()
+    {
+      Chess game = CreateChess();
+      int square = game.NotationToSquare("e4");
+      var ex = new InvalidBoardStateException(
+        "diagnostic probe",
+        square,
+        game.Board.GetDefaultSquareNotation(square),
+        game);
+
+      StringAssert.Contains(ex.Message, "diagnostic probe");
+      StringAssert.Contains(ex.Message, "Board State Details:");
+      Assert.IsTrue(ex.Message.Length <= CrashReportFormatter.LabelDisplayBudgetBytes,
+        "The message shown in the fixed-size dialog label must stay concise. Actual: " +
+        ex.Message.Length + ".");
+      Assert.IsFalse(ex.Message.Contains("Board Diagnostic"),
+        "Full board diagnostics belong in the Details pane, not Exception.Message.");
+      Assert.IsFalse(ex.Message.Contains("=== Committed History Metadata ==="),
+        "Committed-history diagnostics belong in the Details pane, not Exception.Message.");
+
+      string text = CrashReportFormatter.FormatException(ex);
+
+      StringAssert.Contains(text, "Board Diagnostic");
+      StringAssert.Contains(text, "Occupied cells:");
+      StringAssert.Contains(text, "=== Committed History Metadata ===");
+    }
+
+    [TestMethod]
+    public void FormatException_InvalidBoardStateExceptionWithNullGame_AppendsUnavailableDiagnostics()
+    {
+      var ex = new InvalidBoardStateException("missing game", 7, "h1", null);
+
+      string text = CrashReportFormatter.FormatException(ex);
+
+      StringAssert.Contains(text, "Current Player: <unavailable: game is null>");
+      StringAssert.Contains(text, "Board diagnostic unavailable: game is null.");
+      StringAssert.Contains(text, "Game: <null>");
+    }
+
+    [TestMethod]
+    public void FormatExceptionChain_InvalidBoardStateException_AppendsDiagnosticsOnce()
+    {
+      Chess game = CreateChess();
+      var leaf = new InvalidBoardStateException(
+        "diagnostic leaf",
+        0,
+        game.Board.GetDefaultSquareNotation(0),
+        game);
+      var outer = new Exception("outer wrapper", leaf);
+
+      string text = CrashReportFormatter.FormatExceptionChain(outer);
+
+      Assert.AreEqual(1, CountOccurrences(text, "=== InvalidBoardStateException Diagnostics ==="));
+      Assert.AreEqual(1, CountOccurrences(text, "Board Diagnostic"));
+      Assert.AreEqual(1, CountOccurrences(text, "=== Committed History Metadata ==="));
+    }
+
+    [TestMethod]
+    public void FormatException_InvalidBoardStateException_DoesNotDuplicateMoveGenerationContext()
+    {
+      Chess game = CreateChess();
+      MoveList moveList = game.RootMoveListForTest;
+      int fromSquare = game.NotationToSquare("e2");
+      int emptySquare = game.NotationToSquare("e4");
+      Assert.IsNull(game.Board[emptySquare], "Test setup requires e4 to be empty.");
+
+      MoveGenerationContext.Reset();
+      try
+      {
+        MoveGenerationContext.SetCurrentRule("DiagnosticRule");
+        MoveGenerationContext.Push(
+          "PerformPickupTest",
+          ply: 1,
+          moveType: MoveType.StandardMove,
+          fromSquare: fromSquare,
+          toSquare: emptySquare,
+          pickupCursor: 0,
+          dropCursor: 0,
+          moveCursor: 0,
+          boardHash: game.Board.HashCode);
+        moveList.SetPickupForTest(0, new Pickup { Piece = null, Square = emptySquare });
+
+        InvalidBoardStateException ex = Assert.ThrowsException<InvalidBoardStateException>(
+          () => moveList.PerformPickupForTest(0));
+        string text = CrashReportFormatter.FormatException(ex);
+
+        Assert.AreEqual(1, CountOccurrences(ex.Message, "=== Move Generation Context Stack ==="),
+          "PerformPickup must not append a second context stack when Board.ClearSquare already did.");
+        Assert.AreEqual(1, CountOccurrences(text, "=== Move Generation Context Stack ==="),
+          "Exception formatting must preserve exactly one context stack.");
+        StringAssert.Contains(text, "PerformPickupTest");
+        StringAssert.Contains(text, "Board Diagnostic");
+      }
+      finally
+      {
+        MoveGenerationContext.Reset();
+      }
+    }
+
     // ----- (2) Length-budget tests -----
     //
     // The label at the top of ExceptionForm is bounded; long messages get
@@ -160,6 +282,49 @@ namespace ChessV.Test
         "huge stack (recursion?) or runaway diagnostics.");
     }
 
+    [TestMethod]
+    public void FullFormattedDetail_ForRealisticInvalidBoardStateException_StaysWithinDetailBudget()
+    {
+      Chess game = CreateChess();
+      game.PlayMoves("e2e4 e7e5 g1f3 b8c6");
+      int square = game.NotationToSquare("e5");
+      string realisticMessage =
+        "No piece to clear at square " + square + " (" + game.Board.GetDefaultSquareNotation(square) + ")\n" +
+        "Board state around the target square:\n" +
+        "d4:.. e4:P0 f4:..\n" +
+        "d5:.. e5:.. f5:..\n" +
+        "d6:.. e6:.. f6:..\n" +
+        "\n" +
+        "=== Move Generation Context Stack ===\n" +
+        "Depth: 2   CurrentRule: DiagnosticRule\n" +
+        "  [1] rule=DiagnosticRule ply=2 type=StandardMove from=36 to=44 " +
+        "pickupCursor=12 dropCursor=10 moveCursor=8 boardHash=0x531D5B338700DEE4\n" +
+        "  [0] rule=(AddMove) ply=2 type=StandardMove from=44 to=52 " +
+        "pickupCursor=9 dropCursor=7 moveCursor=6 boardHash=0x531D5B338700DEE4\n" +
+        "=== End Move Generation Context Stack ===";
+      Exception ex;
+      try
+      {
+        throw new InvalidBoardStateException(
+          realisticMessage,
+          square,
+          game.Board.GetDefaultSquareNotation(square),
+          game);
+      }
+      catch (Exception caught) { ex = caught; }
+
+      string text = CrashReportFormatter.FormatException(ex);
+
+      Assert.IsTrue(text.Length <= CrashReportFormatter.DetailBudgetBytes,
+        "The full Details-pane text for a realistic InvalidBoardStateException " +
+        "with board/history diagnostics must stay under " +
+        CrashReportFormatter.DetailBudgetBytes + " chars. Actual: " + text.Length + ".");
+      StringAssert.Contains(text, "Board Diagnostic");
+      StringAssert.Contains(text, "Occupied cells:");
+      StringAssert.Contains(text, "Recent Committed Moves (last 4 of 4):");
+      Assert.AreEqual(1, CountOccurrences(text, "=== Move Generation Context Stack ==="));
+    }
+
     // ----- (3) Anti-truncation guard -----
     //
     // ChessV historically embedded summaries like "(N more lines hidden)"
@@ -188,6 +353,27 @@ namespace ChessV.Test
       foreach (string forbidden in new[] { "more lines", "more line", "...truncated", "(elided)" })
         Assert.IsFalse(text.Contains(forbidden, StringComparison.OrdinalIgnoreCase),
           "Formatter introduced an elision marker '" + forbidden + "'.");
+    }
+
+    private static Chess CreateChess()
+    {
+      var game = new Chess();
+      object[] attrs = typeof(Chess).GetCustomAttributes(typeof(GameAttribute), false);
+      Assert.IsTrue(attrs.Length > 0, "Chess test game must carry a [Game] attribute.");
+      game.Initialize((GameAttribute) attrs[0], null, null);
+      return game;
+    }
+
+    private static int CountOccurrences(string text, string value)
+    {
+      int count = 0;
+      int index = 0;
+      while ((index = text.IndexOf(value, index, StringComparison.Ordinal)) >= 0)
+      {
+        count++;
+        index += value.Length;
+      }
+      return count;
     }
   }
 }
