@@ -123,18 +123,24 @@ namespace ChessV.Games.Rules.Apmw
               //	and can still be captured e.p.
               int captureSquare = Board.NextSquare(nd, epSquare);
               int steps = 1;
-              // Add maximum step limit and validate capture square
-              while (Board[captureSquare] == null && steps < Board.NumRanks && captureSquare >= 0)
+              // Add maximum step limit and validate capture square before indexing.
+              while (captureSquare >= 0 && captureSquare < Board.NumSquares &&
+                     Board[captureSquare] == null && steps < Board.NumRanks)
               {
                 int nextCaptureSquare = Board.NextSquare(nd, captureSquare);
-                if (nextCaptureSquare < 0)
-                    break;
+                if (nextCaptureSquare < 0 || nextCaptureSquare >= Board.NumSquares)
+                {
+                  captureSquare = nextCaptureSquare;
+                  break;
+                }
                 captureSquare = nextCaptureSquare;
                 steps++;
               }
 
               // Verify there is actually a pawn to capture
-              Piece capturedPiece = Board[captureSquare];
+              Piece capturedPiece = captureSquare >= 0 && captureSquare < Board.NumSquares
+                ? Board[captureSquare]
+                : null;
               if (captureSquare >= 0 && capturedPiece != null && 
                   ((IMultipawnGame)Game).Pawns.Contains(capturedPiece.PieceType) &&
                   capturedPiece.Player == (Game.CurrentSide ^ 1))

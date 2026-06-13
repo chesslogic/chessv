@@ -1127,11 +1127,11 @@ namespace ChessV
             throw new Exception(
               string.Format("Error making move {0} ({1}) during move {2} ({3}) considering move {4} ({5})!",
                 index,
-                moves[index].ToString(),
+                FormatMoveForDiagnostic(index),
                 currentMoveIndex,
-                moves[currentMoveIndex].ToString(),
+                FormatMoveForDiagnostic(currentMoveIndex),
                 moveCursor,
-                moves[moveCursor].ToString()),
+                FormatMoveForDiagnostic(moveCursor)),
               ex
             );
           }
@@ -1140,6 +1140,13 @@ namespace ChessV
         }
       }
       return succeeded;
+    }
+
+    private string FormatMoveForDiagnostic(int index)
+    {
+      if (index < 0 || index >= moveCursor)
+        return "<none>";
+      return moves[index].ToString();
     }
 
     // Rolls back any pickups/drops applied by MakeMove before a failure.

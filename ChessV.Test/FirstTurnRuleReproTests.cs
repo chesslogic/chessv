@@ -168,6 +168,42 @@ namespace ChessV.Test
       AssertPickupsReferenceLivePieces(ml, g, scenario);
     }
 
+    private static int CountMovesOfType(MoveList ml, MoveType moveType)
+    {
+      int count = 0;
+      for (int i = 0; i < ml.MoveCursor; i++)
+        if (ml.GetMoveForTest(i).MoveType == moveType)
+          count++;
+      return count;
+    }
+
+    [TestMethod]
+    public void FirstTurn_AttackerNotNormallyCapturable_EmitsBaroqueCapture()
+    {
+      var g = CreateGame();
+      LoadPosition(g, "4k3/8/8/8/8/4R3/8/4K3", 'b');
+
+      GenerateAndValidate(g, g.CurrentSide, "FirstTurn_AttackerNotNormallyCapturable");
+
+      Assert.IsTrue(
+        CountMovesOfType(g.RootMoveListForTest, MoveType.BaroqueCapture) > 0,
+        "ApmwFirstTurnRule should emit emergency BaroqueCapture moves when no normal capture can answer check.");
+    }
+
+    [TestMethod]
+    public void FirstTurn_AttackerNormallyCapturable_DoesNotEmitBaroqueCapture()
+    {
+      var g = CreateGame();
+      LoadPosition(g, "4k3/4R3/8/8/8/8/8/4K3", 'b');
+
+      GenerateAndValidate(g, g.CurrentSide, "FirstTurn_AttackerNormallyCapturable");
+
+      Assert.AreEqual(
+        0,
+        CountMovesOfType(g.RootMoveListForTest, MoveType.BaroqueCapture),
+        "ApmwFirstTurnRule should not add emergency BaroqueCapture moves when a normal capture exists.");
+    }
+
     // ---------------------------------------------------------------------
     // (a) Minimal in-check first-turn position: White Rook on e3 attacks
     //     Black King on e8 along the empty e-file. Black has only Checkers
