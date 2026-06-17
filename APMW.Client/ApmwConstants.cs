@@ -17,7 +17,7 @@ namespace Archipelago.APChessV
     public const string GameNameGrand = "Archipelago Multiworld Super-Sized";
 
     /// <summary>Client version string sent during connection handshake.</summary>
-    public const string ClientVersion = "0.3.1";
+    public const string ClientVersion = "0.3.2";
 
     /// <summary>Slot-data key controlling how bonus material upgrades pawns (off/pool/max).</summary>
     public const string SlotKeyFairyChessPawnUpgrades = "fairy_chess_pawn_upgrades";
