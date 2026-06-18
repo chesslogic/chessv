@@ -28,11 +28,15 @@ Right-click a piece and choose Properties to see its info and movement diagram. 
 
 Extra Kings act as backup royal pieces for extinction; losing one King is not necessarily the end if another King-type piece remains. Castling is still for the main King only; extra Kings (called Consuls in your Item Tracker) do not castle.
 
+The first two turns have a special "Scholar's Mate Minimum" rule, which can look surprising: If a King is threatened very early, the defender may emergency capture against the attacking piece, so that a generated starting position does not immediately decide the match. This triggers on ANY King attack, not only on mate.
+
 Checkers are a pawn variant. The default options preclude all pawn variants, so don't worry. Their normal non-capturing moves are one step forward diagonally. Their captures are jump chains, and during those capture chains they may hop across the left/right board edge. That is Checkers-specific behavior, not a general "the whole board is cylindrical" rule.
 
-Location wording is literal. `Capture Any N` counts total captures in one match. `Capture N Of Each` means N pawns and N back-rank pieces in the same match. Fork locations are attack locations: Sacrificial forks require one piece attacking multiple counted non-pawn targets; True forks additionally require the attacker to live and the counted targets to be king, undefended, or valuable enough that recapturing still loses material.
+Location wording is literal. `Capture Any N` counts total captures in one match. `Capture N Of Each` means N pawns and N back-rank chessmen in the same match. Fork locations are attack locations: Sacrificial forks require one piece attacking multiple counted non-pawn targets; True forks additionally require the attacker to live and the counted targets to be king, undefended, or valuable enough that recapturing still loses material.
 
-Undo is not supported. The analysis tools will fail you. You have been warned.
+Undo is not supported. The analysis tools will fail you. There are various other ways to cheat, the behaviour of which is undefined. You have been warned.
+
+A recommended PopTracker pack is available at https://github.com/checkerslogic/checksmate-poptracker/releases/.
 
 ### Supported Options
 
@@ -40,23 +44,22 @@ Undo is not supported. The analysis tools will fail you. You have been warned.
    - Players have 3 pockets, which can be empty, or hold a pawn, minor piece, major piece, or queen. Collected pocket items are distributed randomly to the 3 pockets, improving them in the above order.
    - You may only drop a piece by spending Gems equal to its material value. Gems are collected at a rate of 1/turn, and you start a match with your collected Pocket Gems. The Black player starts with 1 extra Gem.
    - Pocket Range extends pocket drops away from your home row, normally stopping before the opponent's home row.
- - Fairy Chess Pieces and Fairy Chess Army. You can keep material close to orthodox Chess, open the Betza/FIDE/fairy pools, customize the enabled set, or constrain generated player material by army.
+ - Fairy Chess Pieces and Fairy Chess Army. While the default is close to orthodox Chess, support for Ralph Betza's Different Armies and other fairy pieces allow you to customize the enabled set, constraining generated player material by army.
  - Chaotic Material Randomization. Every game, you get new pieces in new places! Who needs an opening book?
  - Piece Limits. Under some mindsets, it can be taxing to find 6 minor pieces and no Queen. By adding certain rails to the experience, one can have a more personalized approach to a Chess randomizer, where one's army bears some resemblance to a traditional game.
  - Extra Kings. What if you had a backup King?
- - Difficulty, AI Intelligence malus, enemy army, Super Mode, DeathLink, pawn families, and Jacks all have generation or client-side wrinkles. See the notes below before assuming a dropdown changes the current match.
+ - Difficulty, AI Intelligence malus, enemy army, Super Mode, DeathLink, fairy pawns, and Jacks! 
 
 #### Option reference notes
 
- - DeathLink is chosen at generation time. If your slot has DeathLink, the client enables the DeathLink checkbox after connecting and starts it checked; if not, the checkbox stays unavailable. The checkbox is a local participation toggle, not a way to add DeathLink to a non-DeathLink seed. With the toggle enabled, losing a match or resigning sends a DeathLink, and receiving one kills the active match immediately. No undo, no review, no "wait, I had a tactic."
- - Difficulty and AI Intelligence are not the same knob. YAML `difficulty` changes generation logic: which checks are expected, how much material the logic assumes, and how relaxed later objectives are. `Maximum Engine Penalties` controls how many `Progressive AI Intelligence Malus` items can appear. The client's "Reduce AI Intelligence" dropdown is local and per-match; it stacks with collected AI malus for search limits, but it does not change the generated world or logic.
- - Enemy army is a client match setting. The "Change Enemy Army" dropdown can give the opponent Standard/FIDE, Colourbound Clobberers, Remarkable Rookies, or Nutty Knights pieces for the next match, and those pieces are added to the promotion set. Pick it before starting the match.
- - Super Mode uses the larger Super-Sized variant. Goal `Super` starts there immediately. `Progressive` puts `Super-Size Me` in the pool. `Ordered Progressive` awards `Super-Size Me` at Checkmate Minima. After you have `Super-Size Me`, the Super checkbox starts the larger-board match.
- - Fairy Chess Pieces is the simple collection selector. FIDE, Betza, and Full override the custom Configure set. If you want `fairy_chess_pieces_configure` to matter, set Fairy Chess Pieces to Configure first.
- - Fairy Chess Army constrains generated player material to the enabled army or armies. If the selected army filter would leave no legal choices for a piece class, the client falls back to the unfiltered pool rather than drawing from nothing.
- - `Asymmetric Trades: Jacks` adds `Progressive Jack`. Jacks are custom roughly 7-material pieces such as Agile Rook, Mullah, Zealot, Great Camel, Dragon Cannon, Mameluk, and Grazer. They are generated before ordinary major pieces and can participate in castling.
- - `fairy_chess_pawns` chooses the pawn family: standard pawns, Berolina, Checkers, or one of the mixed pools. `fairy_chess_pawn_upgrades` controls stronger pawn-family upgrades drawn from the pawn budget: Off keeps the legacy post-selection upgrade pass, Pool adds upgrades as random pool options while guarding pawn count, and Max prefers upgrades when the budget can still reach your earned pawn count.
- - A drop is not a pawn move. If a nonstandard setup lets a pocket pawn be dropped directly onto a promotion rank, do not expect it to promote as part of that drop.
+ - DeathLink is only available when enabled at generation time. If the local toggle is also enabled, losing a match or resigning sends a DeathLink, and receiving one kills the active match immediately. DeathLink cannot be enabled in a non-DeathLink seed.
+ - Difficulty and AI Intelligence differ: YAML `difficulty` changes generation logic, lowering expectations at any given material value, while `Maximum Engine Penalties` controls how many `Progressive AI Intelligence Malus` items can appear. The client's "Reduce AI Intelligence" dropdown is additive to collected AI malus. AI malus causes the heuristic engine to act without thinking.
+ - The "Change Enemy Army" dropdown normally affords the opponent Standard/FIDE pieces, which can be replaced by Ralph Betza's Different Armies (Colourbound Clobberers, Remarkable Rookies, or Nutty Knights) for the next match. Those pieces are added to the promotion set.
+ - FUN SPOILERS: Super Mode uses the larger Super-Sized board variant. Goal `Super` starts there immediately. `Progressive` puts `Super-Size Me` in the pool. `Ordered Progressive`, the default, awards `Super-Size Me` at Checkmate Minima. After you have `Super-Size Me`, the Super checkbox starts a super match.
+ - Fairy Chess Pieces allows further replayability by replacing the player pieces with modern innovations by Ralph Betza and other authors. FIDE, Betza, and Full override the custom Configure set. If you want to use `fairy_chess_pieces_configure` to choose your own subset, set Fairy Chess Pieces to Configure first.
+ - Fairy Chess Army constrains generated player material to a single army among enabled armies.
+ - `Asymmetric Trades: Jacks` adds `Progressive Jack`. Jacks are custom (by the author!) roughly 7-material pieces such as Agile Rook, Mullah, Zealot, Great Camel, Dragon Cannon, Mameluk, and Grazer. They can participate in castling like major pieces and unlike queens.
+ - `fairy_chess_pawns` includes standard pawns, Berolina, Checkers, or one of the mixed pools. `fairy_chess_pawn_upgrades` controls stronger pawn upgrades drawn from the pawn budget: Off keeps the legacy post-selection upgrade pass, Pool adds upgrades as random pool options while guarding pawn count, and Max prefers upgrades when the budget can still reach your earned pawn count.
 
 ### Strategic notes
 
@@ -69,8 +72,6 @@ Choose one specific location each round. Invest all your tools toward that task 
 ### Versions, trackers, and troubleshooting
 
 Use the ChecksMate client and `checksmate.apworld` from the same release unless you know why you're mixing them. The generator writes a `required_chess_client_version` into slot data, and the client compares it with its built-in version. Newer-or-equal clients may continue; too-old clients disconnect with an update message. If version parsing fails, the client warns and lets you continue. That's "dangerous wizard mode", not a compatibility promise.
-
-The Archipelago game/tracker name is `ChecksMate`. A PopTracker pack exists at https://github.com/checkerslogic/checksmate-poptracker/releases/. Universal Tracker is not promised here yet; if you try it with the release `checksmate.apworld`, treat it as best-effort until the workflow is verified.
 
 Known rough edges:
  - If the AI appears to think forever or stops moving, start a fresh game/client. Recent releases hardened move generation, make/unmake, diagnostics, and move hashes, but weird boards can still be weird.
@@ -95,6 +96,7 @@ http://www.chessv.org/
  - Fixes to some extremely minor and/or niche bugs.
  - The AI considering a pocket knight drop will write "Pkt1" in its node exploration log.
  - Displays "YOU ARE IN CHECK" in large red text if a King the player controls is threatened.
+ - MoveInfo is now 64-bit, allowing a wider range of representation of PieceTypes and other info.
 
 ## ArchipelagoMW
 
@@ -111,6 +113,7 @@ Bugs:
  - Infinite generation time if player excludes almost every possible item on a very low difficulty. (This is close to a suggested preset, and therefore a higher risk.)
  - Engine Elo reduction item is incorrectly named. (It's a person's name, not an acronym.)
  - Draw by repetition happens in 2 moves, not 3. (I think this is a problem in the base ChessV client. If true, I'm inclined to believe that fixing it would be quite difficult.)
+ - A drop is not a pawn move. If a nonstandard setup lets a pocket pawn be dropped directly onto a promotion rank, do not expect it to promote as part of that drop. There has been some work to completely prevent having a Pocket Range value above +6.
 
 Locations:
 
@@ -121,7 +124,7 @@ Locations:
 Randomizer options and features:
 
  - Silly vs Serious Location and Item Names. Some people have laughed at some of the names I've come up with, and others are rather utilitarian in wanting to know the specific requirements of locations and benefits of items. With some work to update the location and item trackers, as well as an expanded redundant set of items from Items.py, a player should be able to use either set of names.
- - Progressive Goal option. Your enemy's pieces are also scattered across the multiworld! (The current design can make progression too easy.)
+ - Progressive Goal option. Your enemy's pieces are also scattered across the multiworld! (The current design can make progression too easy or flush with filler items.)
  - Non-Progressive Material option. Pieces will not be selected progressively from a set, but instead placed with specific names in your world. This means you would find a Bishop or Cleric rather than a Progressive Minor Piece or Progressive Major Piece. (They are unlikely to come with pre-determined locations.)
  
 
