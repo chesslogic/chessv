@@ -16,21 +16,23 @@ As you complete the following objectives, you will gain access to additional mat
  - Move your King each of: forward one space; to the A file; to the center 4 squares; to the opposing home rank; and to capture a piece
  - Short/Long "Castle" where you castle.
 
-Unlike ordinary Chess, the main match target in this client is King extinction, not ordinary checkmate. This means when a player has no relevant King piece left, they lose. (A player ordinarily has 1 King piece.) This was chosen in order to make it clearer whether various objectives are accessible.
+Unlike ordinary Chess, the main match target in this client is King extinction, not ordinary checkmate. This means when a player has no relevant King piece left, they lose. (A player ordinarily has 1 King piece.) This was chosen in order to make it clearer whether various objectives are accessible. Archipelago refers to the above objectives as "Locations."
 
 This client implements the ChecksMate protocol for ArchipelagoMW by modifying the ChessV 2.2 client by Greg Strong.
 
 ### Gameplay expectations and rules FAQ
 
-Each Try Again is a fresh match. Think of a match as an attempt to claim one or more Archipelago locations, not as a board state you are supposed to preserve forever. Losing after grabbing a useful location is normal progression: pick a target, spend the position to get it, and come back stronger. Undo is not supported.
+Each Try Again is a fresh match. In each match, you should attempt to claim one or more Archipelago locations. Losing after grabbing a useful location is normal progression: pick a target, spend the position, come back stronger.
 
-Extra Kings act as backup royal pieces for extinction; losing one King is not necessarily the end if another King-type piece remains. Castling is still for the main King only; extra Kings and consuls do not castle.
+Right-click a piece and choose Properties to see its info and movement diagram. Fairy pieces and pawn variants may not move like their icons suggest.
 
-Checkers are their own weird pawn variant. Their normal non-capturing moves are one step forward diagonally. Their captures are jump chains, and during those capture chains they may hop across the left/right board edge. That is Checkers-specific behavior, not a general "the whole board is cylindrical" rule.
+Extra Kings act as backup royal pieces for extinction; losing one King is not necessarily the end if another King-type piece remains. Castling is still for the main King only; extra Kings (called Consuls in your Item Tracker) do not castle.
 
-Fairy pieces and pawn variants may not move like their icons suggest. If a piece surprises you, right-click it and choose Properties to see its info and movement diagram.
+Checkers are a pawn variant. The default options preclude all pawn variants, so don't worry. Their normal non-capturing moves are one step forward diagonally. Their captures are jump chains, and during those capture chains they may hop across the left/right board edge. That is Checkers-specific behavior, not a general "the whole board is cylindrical" rule.
 
 Location wording is literal. `Capture Any N` counts total captures in one match. `Capture N Of Each` means N pawns and N back-rank pieces in the same match. Fork locations are attack locations: Sacrificial forks require one piece attacking multiple counted non-pawn targets; True forks additionally require the attacker to live and the counted targets to be king, undefended, or valuable enough that recapturing still loses material.
+
+Undo is not supported. The analysis tools will fail you. You have been warned.
 
 ### Supported Options
 
