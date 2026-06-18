@@ -78,6 +78,70 @@ Known rough edges:
  - Checkers pawns are spicy. They can multi-capture and wrap captures over the board edge. Recent builds added guard rails around Checkers/Cannon move generation, but Checkers-heavy seeds are still a reasonable place to expect instability. For a calmer seed, avoid or reduce Checkers in `fairy_chess_pawns`.
  - Reconnect/disconnect guarantees, Stable Stuck behavior, exact Consul/King Promotion limits, and Play as White details are intentionally not promised here yet.
 
+### Army PieceTypes reference
+
+This list covers army-selected non-pawn back-rank PieceTypes and promotion pools. Right-click Properties in the client for exact movement diagrams; the notes here only call out the stranger moves. Camel and Petal include unique material partly designed by the ChecksMate author, which is why their definitions are documented here. Jacks listed below are army-specific; Great Camel is a global Jack pool piece, not a Camel or Petal army assignment.
+
+#### FIDE
+
+ - **Minor:** Bishop/Knight.
+ - **Major:** Rook.
+ - **Jack:** Agile Rook.
+ - **Queen:** Queen.
+
+#### Colourbound
+
+ - **Minor:** Phoenix.
+ - **Major:** War Elephant/Cleric.
+ - **Jack:** Mullah (diagonal slider plus camel leaper).
+ - **Queen:** Archbishop.
+
+#### Remarkable
+
+ - **Minor:** Tower/Short Rook.
+ - **Major:** Lion.
+ - **Jack:** Zealot.
+ - **Queen:** Chancellor.
+
+#### Nutty
+
+ - **Minor:** Charging Knight/Lancer.
+ - **Major:** Charging Rook.
+ - **Jack:** Mameluk (Wazir step plus camel-rider).
+ - **Queen:** Colonel (king step, forward/sideways slides, and forward knight leaps).
+
+#### Eurasian
+
+ - **Minor:** Cannon/Vao.
+ - **Major:** No army-specific major, so generation falls back to the broader major pool if filtering finds none.
+ - **Jack:** Dragon Cannon.
+ - **Queen:** Herald/Queennon.
+
+#### Camel
+
+ - **Minor:** Scout (1-square orthogonal step plus 3-square orthogonal leap).
+ - **Major:** Nightrider (rides along knight vectors).
+ - **Jack:** Mameluk (Wazir step plus camel-rider).
+ - **Queen:** Miracle (Ribbon plus Petal)/Colonel (king step, forward/sideways slides, and forward knight leaps).
+
+#### Petal
+
+ - **Minor:** Gardener (Elephant leap; extra inward moves are move-only and path-restricted)/Ribbon (Ferz plus bent diagonal path moves).
+ - **Major:** Petal (short orthogonal rook plus non-leaping bent rook paths after 3 orthogonal squares).
+ - **Jack:** Grazer (enhanced Ribbon plus Wazir).
+ - **Queen:** Miracle (Ribbon plus Petal).
+
+#### Pawn families
+
+Pawn families are separate from back-rank armies. In CwDA, `WhiteArmy` and `BlackArmy` change back ranks and promotion pools while every army keeps normal pawns. In ChecksMate generation, `fairy_chess_pawns` chooses Pawn/Berolina/Checkers pools; `fairy_chess_pawn_upgrades` can add Sergeant/Odin Pawn, and army filtering applies to non-pawn piece sets.
+
+ - Standard Pawns move forward, capture diagonally, and use generic promotion/en passant.
+ - Berolina Pawns move diagonally, capture forward, and use diagonal double-step/en passant.
+ - Checkers move diagonally without capture, capture by jump chains that may wrap over the left/right edge, and promote on the final rank.
+ - Sergeant mixes normal and Berolina pawn movement; Odin Pawn is an upgrade with diagonal/Ferz-like movement plus a forward zig-zag option.
+
+Diamond Pawn is Diamond Chess-only; do not treat it as a ChecksMate army pawn.
+
 ## ChessV
 
 ChessV is a free, open-source universal chess program with a graphical user interface, sophisticated AI engine, and other features of traditional Chess programs. As a "universal" chess program, it not only plays orthodox Chess, it is also capable of playing games reasonably similar to Chess. It currently plays over 100 different chess variants, and can be programmed to play additional variants.
