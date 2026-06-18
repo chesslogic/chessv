@@ -2,7 +2,7 @@
 
 This project implements a co-op Roguelite meta-progression layer for the best semi-3d on-rails platformer since Crash Bandicoot 2.
 
-Your opponent begins with a set of 16 chessmen. You begin with a King and the ability to Try Again. Your objective is to checkmate the King.
+Your opponent begins with a set of 16 chessmen. You begin with a King and the ability to Try Again. Your objective is to win a match by eliminating the opposing King pieces.
 
 In addition to the 6 ordinary chessmen, you may find yourself in control of fairy chess pieces. These include the Berolina Pawn, various pieces from Ralph Betza's Chess With Different Armies, as well as Xiang Qi's Cannon (and an invented Vao piece, which is to the Bishop as the Cannon is to the Rook).
 
@@ -16,37 +16,68 @@ As you complete the following objectives, you will gain access to additional mat
  - Move your King each of: forward one space; to the A file; to the center 4 squares; to the opposing home rank; and to capture a piece
  - Short/Long "Castle" where you castle.
 
-Unlike ordinary Chess, the victory condition in this client is King extinction, not checkmate. This means when a player has had their last King captured, they lose. (A player ordinarily has 1 King piece.) This was chosen in order to enable the player to simplify whether various objectives are accessible.
+Unlike ordinary Chess, the main match target in this client is King extinction, not ordinary checkmate. This means when a player has no relevant King piece left, they lose. (A player ordinarily has 1 King piece.) This was chosen in order to make it clearer whether various objectives are accessible.
 
 This client implements the ChecksMate protocol for ArchipelagoMW by modifying the ChessV 2.2 client by Greg Strong.
+
+### Gameplay expectations and rules FAQ
+
+Each Try Again is a fresh match. Think of a match as an attempt to claim one or more Archipelago locations, not as a board state you are supposed to preserve forever. Losing after grabbing a useful location is normal progression: pick a target, spend the position to get it, and come back stronger. Undo is not supported.
+
+Extra Kings act as backup royal pieces for extinction; losing one King is not necessarily the end if another King-type piece remains. Castling is still for the main King only; extra Kings and consuls do not castle.
+
+Checkers are their own weird pawn variant. Their normal non-capturing moves are one step forward diagonally. Their captures are jump chains, and during those capture chains they may hop across the left/right board edge. That is Checkers-specific behavior, not a general "the whole board is cylindrical" rule.
+
+Fairy pieces and pawn variants may not move like their icons suggest. If a piece surprises you, right-click it and choose Properties to see its info and movement diagram.
+
+Location wording is literal. `Capture Any N` counts total captures in one match. `Capture N Of Each` means N pawns and N back-rank pieces in the same match. Fork locations are attack locations: Sacrificial forks require one piece attacking multiple counted non-pawn targets; True forks additionally require the attacker to live and the counted targets to be king, undefended, or valuable enough that recapturing still loses material.
 
 ### Supported Options
 
  - Pocket Pieces. Inspired by Bughouse and Pocket Knights, you may drop a piece from outside the board onto an open square on your home row instead of making a normal move.
    - Players have 3 pockets, which can be empty, or hold a pawn, minor piece, major piece, or queen. Collected pocket items are distributed randomly to the 3 pockets, improving them in the above order.
    - You may only drop a piece by spending Gems equal to its material value. Gems are collected at a rate of 1/turn, and you start a match with your collected Pocket Gems. The Black player starts with 1 extra Gem.
-   - Pocket Range allows the player to deploy pocket items one rank further from the home row, but not the opponent's home row
- - Non-Fairy Chess. Your major pieces will always be Rooks, your minor pieces will always be Bishops and Knights, and your queens will always slay. Also, no more dumb Berolina Pawns. Who even thought mixing those was a good idea?
-   - Simplified Fairy Pieces option: only standard Chess pieces / all fairy armies / customize armies.
-     - This is only necessary because OptionSets don't show up on the settings menu on the Archipelago website, unless you navigate to the advanced Weighted Settings page.
+   - Pocket Range extends pocket drops away from your home row, normally stopping before the opponent's home row.
+ - Fairy Chess Pieces and Fairy Chess Army. You can keep material close to orthodox Chess, open the Betza/FIDE/fairy pools, customize the enabled set, or constrain generated player material by army.
  - Chaotic Material Randomization. Every game, you get new pieces in new places! Who needs an opening book?
- - Army-Constrained Material. The material you get will always be related to each other (in that they belong in the same army): If you find a Bishop you won't find a Cannon; if you find a Cleric you won't find a Lion.
-   - It may be inconvenient to exclude certain pieces under this mode...
  - Piece Limits. Under some mindsets, it can be taxing to find 6 minor pieces and no Queen. By adding certain rails to the experience, one can have a more personalized approach to a Chess randomizer, where one's army bears some resemblance to a traditional game.
- - Extra Kings. The player loses when their King is extinct, and the AI loses by checkmate. But what if you had a backup King?
- - Internal "difficulty" acknowledgement in the sphere generation based on certain settings. (Mixed pawns makes not only your pawn items much weaker, but also your pieces which must navigate past them. Likewise, Stable positions are easier to study but can leave the player stuck with an awkward layout.)
+ - Extra Kings. What if you had a backup King?
+ - Difficulty, AI Intelligence malus, enemy army, Super Mode, DeathLink, pawn families, and Jacks all have generation or client-side wrinkles. See the notes below before assuming a dropdown changes the current match.
+
+#### Option reference notes
+
+ - DeathLink is chosen at generation time. If your slot has DeathLink, the client enables the DeathLink checkbox after connecting and starts it checked; if not, the checkbox stays unavailable. The checkbox is a local participation toggle, not a way to add DeathLink to a non-DeathLink seed. With the toggle enabled, losing a match or resigning sends a DeathLink, and receiving one kills the active match immediately. No undo, no review, no "wait, I had a tactic."
+ - Difficulty and AI Intelligence are not the same knob. YAML `difficulty` changes generation logic: which checks are expected, how much material the logic assumes, and how relaxed later objectives are. `Maximum Engine Penalties` controls how many `Progressive AI Intelligence Malus` items can appear. The client's "Reduce AI Intelligence" dropdown is local and per-match; it stacks with collected AI malus for search limits, but it does not change the generated world or logic.
+ - Enemy army is a client match setting. The "Change Enemy Army" dropdown can give the opponent Standard/FIDE, Colourbound Clobberers, Remarkable Rookies, or Nutty Knights pieces for the next match, and those pieces are added to the promotion set. Pick it before starting the match.
+ - Super Mode uses the larger Super-Sized variant. Goal `Super` starts there immediately. `Progressive` puts `Super-Size Me` in the pool. `Ordered Progressive` awards `Super-Size Me` at Checkmate Minima. After you have `Super-Size Me`, the Super checkbox starts the larger-board match.
+ - Fairy Chess Pieces is the simple collection selector. FIDE, Betza, and Full override the custom Configure set. If you want `fairy_chess_pieces_configure` to matter, set Fairy Chess Pieces to Configure first.
+ - Fairy Chess Army constrains generated player material to the enabled army or armies. If the selected army filter would leave no legal choices for a piece class, the client falls back to the unfiltered pool rather than drawing from nothing.
+ - `Asymmetric Trades: Jacks` adds `Progressive Jack`. Jacks are custom roughly 7-material pieces such as Agile Rook, Mullah, Zealot, Great Camel, Dragon Cannon, Mameluk, and Grazer. They are generated before ordinary major pieces and can participate in castling.
+ - `fairy_chess_pawns` chooses the pawn family: standard pawns, Berolina, Checkers, or one of the mixed pools. `fairy_chess_pawn_upgrades` controls stronger pawn-family upgrades drawn from the pawn budget: Off keeps the legacy post-selection upgrade pass, Pool adds upgrades as random pool options while guarding pawn count, and Max prefers upgrades when the budget can still reach your earned pawn count.
+ - A drop is not a pawn move. If a nonstandard setup lets a pocket pawn be dropped directly onto a promotion rank, do not expect it to promote as part of that drop.
 
 ### Strategic notes
 
-This is not Chess. It's an asymmetric, multi-round experience involving the rules of Chess. You only need to checkmate once - and your opponent is too shortsighted to stop you from coming back stronger.
+This is not Chess. It's an asymmetric, multi-round experience involving the rules of Chess. You only need to land the win once - and your opponent is too shortsighted to stop you from coming back stronger.
 
-Don't hesitate to put your King into checkmate to capture a new piece - you can just play again, now with another item.
+Don't hesitate to lose a match to capture a new piece - you can just play again, now with another item.
 
 Choose one specific location each round. Invest all your tools toward that task alone.
 
+### Versions, trackers, and troubleshooting
+
+Use the ChecksMate client and `checksmate.apworld` from the same release unless you know why you're mixing them. The generator writes a `required_chess_client_version` into slot data, and the client compares it with its built-in version. Newer-or-equal clients may continue; too-old clients disconnect with an update message. If version parsing fails, the client warns and lets you continue. That's "dangerous wizard mode", not a compatibility promise.
+
+The Archipelago game/tracker name is `ChecksMate`. A PopTracker pack exists at https://github.com/checkerslogic/checksmate-poptracker/releases/. Universal Tracker is not promised here yet; if you try it with the release `checksmate.apworld`, treat it as best-effort until the workflow is verified.
+
+Known rough edges:
+ - If the AI appears to think forever or stops moving, start a fresh game/client. Recent releases hardened move generation, make/unmake, diagnostics, and move hashes, but weird boards can still be weird.
+ - Checkers pawns are spicy. They can multi-capture and wrap captures over the board edge. Recent builds added guard rails around Checkers/Cannon move generation, but Checkers-heavy seeds are still a reasonable place to expect instability. For a calmer seed, avoid or reduce Checkers in `fairy_chess_pawns`.
+ - Reconnect/disconnect guarantees, Stable Stuck behavior, exact Consul/King Promotion limits, and Play as White details are intentionally not promised here yet.
+
 ## ChessV
 
-ChessV is a free, open-source universal chess program with a graphical user interface, sophisticated AI engine, and other features of traditional Chess programs. As a "universal" chess program, it not only plays orthodox Chess, it is also capable of playing games reasonbly similar to Chess. It currently plays over 100 different chess variants, and can be programmed to play additional variants.
+ChessV is a free, open-source universal chess program with a graphical user interface, sophisticated AI engine, and other features of traditional Chess programs. As a "universal" chess program, it not only plays orthodox Chess, it is also capable of playing games reasonably similar to Chess. It currently plays over 100 different chess variants, and can be programmed to play additional variants.
 
 Features
  - Plays over 100 different Chess variants, including some that are quite exotic.
