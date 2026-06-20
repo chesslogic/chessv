@@ -80,7 +80,13 @@ Known rough edges:
 
 ### Army PieceTypes reference
 
-This list covers army-selected non-pawn back-rank PieceTypes and promotion pools. Right-click Properties in the client for exact movement diagrams; the notes here only call out the stranger moves. Camel and Petal include unique material partly designed by the ChecksMate author, which is why their definitions are documented here. Jacks listed below are army-specific; Great Camel is a global Jack pool piece, not a Camel or Petal army assignment.
+This list covers army-selected non-pawn back-rank PieceTypes and promotion pools. Right-click Properties in the client to see piece info and movement diagrams. Camel and Petal include unique material partly designed by the ChecksMate author, which is why their definitions are documented here. Jacks listed below are army-specific; Great Camel is a global Jack pool piece, not a Camel or Petal army assignment.
+
+#### Movement notation
+
+`(r,f)` is the rank/file offset from the moving piece; N = `(+1,0)`, E = `(0,+1)`. `s,t in {+1,-1}` choose mirrored signs. For directional pieces, positive rank is forward for the moving side; the opposite side mirrors forward/backward.
+
+`Step` or leap moves directly to the listed offset; blockers between source and destination are ignored. `Slide` or rider repeats a vector until the board edge or blockage: empty squares are legal, the first enemy can be captured, and any occupied square stops the ray. `Path` is a single-target move requiring one listed sequence of pre-target route squares to be empty; the target uses normal move/capture rules unless marked move-only. `CannonMove` uses the screen/capture rules described in Cannon pieces.
 
 #### FIDE
 
@@ -93,7 +99,7 @@ This list covers army-selected non-pawn back-rank PieceTypes and promotion pools
 
  - **Minor:** Phoenix.
  - **Major:** War Elephant/Cleric.
- - **Jack:** Mullah (diagonal slider plus camel leaper).
+ - **Jack:** Mullah.
  - **Queen:** Archbishop.
 
 #### Remarkable
@@ -107,8 +113,8 @@ This list covers army-selected non-pawn back-rank PieceTypes and promotion pools
 
  - **Minor:** Charging Knight/Lancer.
  - **Major:** Charging Rook.
- - **Jack:** Mameluk (Wazir step plus camel-rider).
- - **Queen:** Colonel (king step, forward/sideways slides, and forward knight leaps).
+ - **Jack:** Mameluk.
+ - **Queen:** Colonel.
 
 #### Eurasian
 
@@ -119,17 +125,82 @@ This list covers army-selected non-pawn back-rank PieceTypes and promotion pools
 
 #### Camel
 
- - **Minor:** Scout (1-square orthogonal step plus 3-square orthogonal leap).
- - **Major:** Nightrider (rides along knight vectors).
- - **Jack:** Mameluk (Wazir step plus camel-rider).
- - **Queen:** Miracle (Ribbon plus Petal)/Colonel (king step, forward/sideways slides, and forward knight leaps).
+ - **Minor:** Scout.
+ - **Major:** Nightrider.
+ - **Jack:** Mameluk.
+ - **Queen:** Miracle/Colonel.
 
 #### Petal
 
- - **Minor:** Gardener (Elephant leap; extra inward moves are move-only and path-restricted)/Ribbon (Ferz plus bent diagonal path moves).
- - **Major:** Petal (short orthogonal rook plus non-leaping bent rook paths after 3 orthogonal squares).
- - **Jack:** Grazer (enhanced Ribbon plus Wazir).
- - **Queen:** Miracle (Ribbon plus Petal).
+ - **Minor:** Gardener/Ribbon.
+ - **Major:** Petal.
+ - **Jack:** Grazer.
+ - **Queen:** Miracle.
+
+#### Movement definitions
+
+All offsets below use the notation above. In `via` clauses, only pre-target route squares are listed; the described offset is the target square and is not repeated in the route list.
+
+##### Orthodox baseline and atoms
+
+| Piece/atom | Movement definition |
+| --- | --- |
+| Rook | Slides `(s,0)` or `(0,s)`. |
+| Bishop | Slides `(s,t)`. |
+| Knight | Leaps to `(s,2t)` or `(2s,t)`; jumps blockers. |
+| Queen | Rook + Bishop. |
+| Wazir | Steps `(s,0)` or `(0,s)`. |
+| Ferz | Steps `(s,t)`. |
+| Elephant | Leaps `(2s,2t)`. |
+| Dabbabah | Leaps `(2s,0)` or `(0,2s)`. |
+| Tribbabah | Leaps `(3s,0)` or `(0,3s)`. |
+| Camel | Leaps `(s,3t)` or `(3s,t)`. |
+
+##### Path pieces
+
+| Piece | Movement definition |
+| --- | --- |
+| Ribbon | Ferz step to `(s,t)`. Close targets: `(2s,0)` via `(s,+1)` or `(s,-1)`; `(0,2t)` via `(+1,t)` or `(-1,t)`. Long targets: `(3s,t)` via `(s,-t) -> (2s,0)`; `(s,3t)` via `(-s,t) -> (0,2t)`. Ribbon is not a Knight, not a rider, never leaps to Knight squares, and has no longer repeated paths. Intervening route squares must be empty. |
+| Petal | Orthogonal limited rider targets `(ks,0)` and `(0,kt)` for `k=1..3`, straight path clear. Bent rook paths only after exactly 3 orthogonal squares: `(3s,t)` via `(s,0) -> (2s,0) -> (3s,0)`; `(3s,2t)` via `(s,0) -> (2s,0) -> (3s,0) -> (3s,t)`; `(s,3t)` via `(0,t) -> (0,2t) -> (0,3t)`; `(2s,3t)` via `(0,t) -> (0,2t) -> (0,3t) -> (s,3t)`; `(3s,3t)` via rank-first `(s,0) -> (2s,0) -> (3s,0) -> (3s,t) -> (3s,2t)` or file-first `(0,t) -> (0,2t) -> (0,3t) -> (s,3t) -> (2s,3t)`. Petal has no short bends or diagonal targets such as `(s,t)`, `(2s,2t)`, `(2s,t)`, or `(s,2t)`. |
+| Gardener | Elephant leaps `(2s,2t)`. Also has move-only inward paths to `(2s,t)`, `(s,2t)`, and `(s,t)`, each via `(2s,2t)`; both the route square and the target must be empty. |
+| Miracle | Ribbon + Petal. If both define the same target, either legal path is sufficient. |
+| Grazer | Wazir steps `(s,0),(0,t)`. CloseRibbon targets: `(2s,0)` via `(s,+1)` or `(s,-1)`; `(0,2t)` via `(+1,t)` or `(-1,t)`. Diagonal limited rider targets `(s,t)` and `(2s,2t)`, with `(s,t)` empty for length 2. Cardinal four-step targets: `(4s,0)` via `(s,t) -> (2s,2t) -> (3s,t)` and `(0,4t)` via `(s,t) -> (2s,2t) -> (s,3t)`. Enhanced Ribbon targets: `(3s,t)` via `(s,-t) -> (2s,0)` or `(s,t) -> (2s,2t)`; `(s,3t)` via `(-s,t) -> (0,2t)` or `(s,t) -> (2s,2t)`. |
+| Zealot | Rook slide plus forward-only path targets `(3,t)` via `(1,0) -> (2,0) -> (3,0)` and `(1,3t)` via `(0,t) -> (0,2t) -> (0,3t)`. No backward path counterparts. |
+
+##### Cannon pieces
+
+`CannonMove` per vector: empty squares before the first occupied square are quiet moves. The first occupied square of either color is the screen and is not captured. Empty squares beyond the screen are illegal destinations. The next occupied square stops the ray and is capturable only if enemy. No screen means no capture; pure cannon pieces therefore have no adjacent captures.
+
+| Piece | Movement definition |
+| --- | --- |
+| Cannon | `CannonMove` on `(s,0)` and `(0,s)`. |
+| Vao | `CannonMove` on `(s,t)`. |
+| Dragon Cannon | Cannon + Vao. |
+| Queennon | Dragon Cannon plus adjacent capture-only king steps in all 8 directions and knight-vector `CannonMove`s `(s,2t)` and `(2s,t)` as repeated-vector cannon riders. |
+
+##### Other compound pieces
+
+| Piece | Movement definition |
+| --- | --- |
+| Agile Rook | Rook slides + Elephant leaps. |
+| Phoenix | Wazir steps + Elephant leaps. |
+| War Elephant | Ferz steps + Elephant leaps + Dabbabah leaps. |
+| Cleric | Bishop slides + Dabbabah leaps. |
+| Mullah | Bishop-like diagonal slides `(s,t)` + Camel leaps `(s,3t),(3s,t)`; no Dabbabah despite source comment. |
+| Archbishop | Bishop slides + Knight leaps. |
+| Tower | Wazir steps + Dabbabah leaps. |
+| Short Rook | Bounded orthogonal slide up to 4 squares: targets `(ks,0)` and `(0,ks)` for `k=1..4`, straight path clear. |
+| Lion | Ferz steps + Dabbabah leaps + Tribbabah leaps `(3s,0),(0,3s)`. |
+| Chancellor | Rook slides + Knight leaps. |
+| Charging Knight | Leaps `(1,+/-2),(2,+/-1)` plus steps `(-1,-1),(-1,0),(-1,1),(0,+/-1)`. Directional piece. |
+| Lancer/NarrowKnight | User-facing Lancer; Ferz steps `(s,t)` + narrow knight leaps `(2s,t)` only. |
+| Charging Rook | Slides `(1,0),(0,+/-1)` plus steps `(-1,0),(-1,+/-1)`. Directional piece. |
+| Mameluk | Wazir steps + camel-rider lines along `(s,3t),(3s,t)`. |
+| Colonel | Leaps `(1,+/-2),(2,+/-1)`, steps `(+/-1,+/-1),(-1,0)`, slides `(1,0),(0,+/-1)`. Directional piece. |
+| Scout | Wazir steps + Tribbabah leaps `(3s,0),(0,3s)`. |
+| Nightrider | Rider along Knight vectors `(s,2t),(2s,t)`. |
+| Herald | Camel leaps + Tribbabah leaps + diagonal limited rider up to 3 squares on `(s,t)` + forward step `(1,0)`. Directional piece. |
+| Great Camel | Global Jack pool piece, not a Camel/Petal army assignment; Knight leaps + Camel leaps. |
 
 #### Pawn families
 
