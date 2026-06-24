@@ -7,9 +7,9 @@ namespace ChessV.Test
     [DoNotParallelize]
     public class ApmwPairwiseCaseGeneratorTests
     {
-        private const int ExpectedPairwiseCaseCount = 34;
-        private const int ExpectedPeripheryCaseCount = 51;
-        private const int ExpectedCategoricalPairCount = 414;
+        private const int ExpectedPairwiseCaseCount = 37;
+        private const int ExpectedPeripheryCaseCount = 54;
+        private const int ExpectedCategoricalPairCount = 442;
 
         [TestMethod]
         public void PairwiseCases_AreDeterministicAndCoverCategoricalPairs()
@@ -37,14 +37,14 @@ namespace ChessV.Test
             CollectionAssert.AreEqual(
                 new[]
                 {
-                    "pairwise-0026-standard",
-                    "pairwise-0027-standard",
-                    "pairwise-0028-standard",
                     "pairwise-0029-standard",
                     "pairwise-0030-standard",
                     "pairwise-0031-standard",
                     "pairwise-0032-standard",
                     "pairwise-0033-standard",
+                    "pairwise-0034-standard",
+                    "pairwise-0035-standard",
+                    "pairwise-0036-standard",
                 },
                 cases.Skip(cases.Count - 8).Select(fuzzCase => fuzzCase.CaseName).ToArray());
 

@@ -94,7 +94,12 @@ namespace ChessV.Test
         // Output is 5*numFiles long: [back, pawn rank, rank3, rank4, rank5].
         private static System.Collections.Generic.List<PieceType> EmptyMinors()
         {
-            return Enumerable.Repeat<PieceType>(null, NUM_FILES * 2).ToList();
+            return EmptyMinors(NUM_FILES);
+        }
+
+        private static System.Collections.Generic.List<PieceType> EmptyMinors(int numFiles)
+        {
+            return Enumerable.Repeat<PieceType>(null, numFiles * 2).ToList();
         }
 
         // GeneratePawns is value-targeted, not count-targeted: PickPawns spends an
@@ -243,6 +248,17 @@ namespace ChessV.Test
             return Math.Max(foundPawns * 100, foundPawns * 100 + spare + 45);
         }
 
+        private static void ConfigureFoundPieceCounts(
+            int foundPawns, int foundConsuls, int foundJacks, int foundMajors, int foundMinors)
+        {
+            var core = ApmwCore.getInstance();
+            core.foundPawns = foundPawns;
+            core.foundConsuls = foundConsuls;
+            core.foundJacks = foundJacks;
+            core.foundMajors = foundMajors;
+            core.foundMinors = foundMinors;
+        }
+
         [TestMethod]
         public void PawnUpgrades_Off_PreservesBaselineDistribution()
         {
@@ -387,6 +403,56 @@ namespace ChessV.Test
             // The pre-fix bug would have produced totals approaching 1145 + 300 = 1445.
             Assert.IsTrue(totalValue <= 1145 + 200,
                 $"total piece value {totalValue} exceeds expected ceiling 1345 — spare_material may be double-spent");
+        }
+
+        [TestMethod]
+        public void PawnUpgrades_SuperMax_EightFiles_LowersGuaranteeAndKeepsPawnMaterial()
+        {
+            const int foundPawns = 5;
+            const int expectedGuarantee = 3; // 15 slots - 12 known non-pawns.
+            ApmwConfig.getInstance().PawnUpgradesInt = (int)FairyPawnUpgrades.SuperMax;
+            ConfigureFoundPieceCounts(
+                foundPawns, foundConsuls: 2, foundJacks: 3, foundMajors: 3, foundMinors: 4);
+
+            var result = handler.GeneratePawns(NUM_FILES, EmptyMinors(), 0);
+
+            int placed = result.Count(p => p != null);
+            int sergeants = CountSergeants(result);
+            int totalValue = result.Where(p => p != null).Sum(p => p.MidgameValue);
+
+            Assert.IsTrue(placed >= expectedGuarantee,
+                $"SuperMax must honor lowered guarantee {expectedGuarantee}, got {placed}");
+            Assert.IsTrue(placed < foundPawns,
+                $"SuperMax should not force all {foundPawns} found pawn slots when only {expectedGuarantee} are required");
+            Assert.IsTrue(sergeants >= 1, "excess pawn material should become sergeants");
+            Assert.IsTrue(totalValue >= foundPawns * _pawn.MidgameValue,
+                $"pawn material should not be lost: value {totalValue} < {foundPawns * _pawn.MidgameValue}");
+        }
+
+        [TestMethod]
+        public void PawnUpgrades_SuperMax_TenFiles_UsesNineteenSlotGuaranteeAndKeepsPawnMaterial()
+        {
+            const int numFiles = 10;
+            const int foundPawns = 7;
+            const int expectedGuarantee = 3; // 19 slots - 16 known non-pawns.
+            ApmwConfig.getInstance().PawnUpgradesInt = (int)FairyPawnUpgrades.SuperMax;
+            ConfigureFoundPieceCounts(
+                foundPawns, foundConsuls: 2, foundJacks: 4, foundMajors: 5, foundMinors: 5);
+
+            var result = handler.GeneratePawns(numFiles, EmptyMinors(numFiles), 0);
+
+            int placed = result.Count(p => p != null);
+            int sergeants = CountSergeants(result);
+            int totalValue = result.Where(p => p != null).Sum(p => p.MidgameValue);
+
+            Assert.AreEqual(numFiles * 5, result.Count, "10-file GeneratePawns output shape");
+            Assert.IsTrue(placed >= expectedGuarantee,
+                $"SuperMax must honor lowered guarantee {expectedGuarantee}, got {placed}");
+            Assert.IsTrue(placed < foundPawns,
+                $"SuperMax should not force all {foundPawns} found pawn slots when only {expectedGuarantee} are required");
+            Assert.IsTrue(sergeants >= 1, "excess pawn material should become sergeants");
+            Assert.IsTrue(totalValue >= foundPawns * _pawn.MidgameValue,
+                $"pawn material should not be lost: value {totalValue} < {foundPawns * _pawn.MidgameValue}");
         }
 
         [DataTestMethod]

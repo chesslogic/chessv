@@ -34,7 +34,8 @@ namespace Archipelago.APChessV
   {
     Off = 0,
     Pool = 1,
-    Max = 2
+    Max = 2,
+    SuperMax = 3
   }
 
   public class ApmwConfig

@@ -248,6 +248,7 @@ namespace Archipelago.APChessV
             picked = PickPawnPoolMode(randomPieces, pawnOptions, sergeants, adjustedPawnValues, foundPawns, workingPawns.Count);
             break;
           case FairyPawnUpgrades.Max:
+          case FairyPawnUpgrades.SuperMax:
             picked = PickPawnMaxMode(randomPieces, pawnOptions, adjustedPawnValues, foundPawns, workingPawns.Count);
             break;
           case FairyPawnUpgrades.Off:
@@ -333,7 +334,7 @@ namespace Archipelago.APChessV
         workingPawns[index] = GetNextPawn(randomPieces, pawnOptions, PawnUpgrade.Best);
         adjustedPawnValues -= workingPawns[index].MidgameValue;
       }
-      // Pool/Max already placed sergeants per-slot in PickPawns; only Off uses the legacy fallback.
+      // Pool/Max/SuperMax already placed sergeants per-slot in PickPawns; only Off uses the legacy fallback.
       if (mode != FairyPawnUpgrades.Off) return;
       UpgradeRemainingPawnsToSergeants(randomPieces, adjustedPawnValues, pawnOptions, workingPawns);
     }
@@ -350,6 +351,12 @@ namespace Archipelago.APChessV
         workingPawns[index] = GetNextPawn(randomPieces, pawnOptions, PawnUpgrade.Sergeant);
         adjustedPawnValues -= workingPawns[index].MidgameValue;
       }
+    }
+
+    internal static int SuperMaxPawnGuarantee(int numFiles, int foundPawns, int foundConsuls, int foundJacks, int foundMajors, int foundMinors)
+    {
+      int boardLocationNeeds = (numFiles == 10 ? 19 : 15) - foundConsuls - foundJacks - foundMajors - foundMinors;
+      return Math.Min(foundPawns, Math.Max(0, boardLocationNeeds));
     }
 
     public static List<PieceType> GeneratePawns(int numFiles, List<PieceType> minors, int spareMaterial)
@@ -369,7 +376,11 @@ namespace Archipelago.APChessV
         core.foundPawns * ItemGenerationValues.Pawn,
         core.foundPawns * ItemGenerationValues.Pawn + spareMaterial + 45);
 
-      List<PieceType> workingPawns = PickPawns(randomPieces, adjustedPawnValues, remainingPawnSpaces, core.foundPawns);
+      int pawnGuarantee = core.foundPawns;
+      if (ApmwConfig.getInstance().PawnUpgrades == FairyPawnUpgrades.SuperMax)
+        pawnGuarantee = SuperMaxPawnGuarantee(numFiles, core.foundPawns, core.foundConsuls, core.foundJacks, core.foundMajors, core.foundMinors);
+
+      List<PieceType> workingPawns = PickPawns(randomPieces, adjustedPawnValues, remainingPawnSpaces, pawnGuarantee);
 
       Queue<PieceType> adjustedPawns = new Queue<PieceType>(workingPawns);
       // Fill each rank

@@ -164,6 +164,55 @@ namespace ChessV.Test
         }
 
         [TestMethod]
+        public void Generation_SuperMaxUsesItemHandlerCountsForEffectivePawnGuarantee()
+        {
+            var fuzzCase = ApmwFuzzCase.DefaultStandard().With(builder =>
+            {
+                builder.CaseName = "characterization-supermax-item-handler-counts";
+                builder.FairyChessPawns = FairyPawns.Vanilla;
+                builder.FairyChessPawnUpgrades = FairyPawnUpgrades.SuperMax;
+                builder.PawnCount = 32;
+                builder.MinorPieceCount = 8;
+                builder.MajorPieceCount = 4;
+                builder.JackCount = 2;
+                builder.MajorToQueenCount = 0;
+                builder.ConsulCount = 1;
+            });
+
+            using (var scope = ApmwFuzzScope.Configure(fuzzCase))
+            {
+                var result = scope.RunItemHandlerGeneration();
+                var core = ApmwCore.getInstance();
+
+                Assert.AreEqual(FairyPawnUpgrades.SuperMax, ApmwConfig.getInstance().PawnUpgrades);
+                Assert.AreEqual(FairyPawns.Vanilla, ApmwConfig.getInstance().Pawns);
+                Assert.AreEqual(32, core.foundPawns);
+                Assert.AreEqual(8, core.foundMinors);
+                Assert.AreEqual(4, core.foundMajors);
+                Assert.AreEqual(2, core.foundJacks);
+                Assert.AreEqual(1, core.foundConsuls);
+
+                int boardLocationNeeds = (result.NumFiles == 10 ? 19 : 15) -
+                    core.foundConsuls -
+                    core.foundJacks -
+                    core.foundMajors -
+                    core.foundMinors;
+                int effectivePawnGuarantee = Math.Min(core.foundPawns, Math.Max(0, boardLocationNeeds));
+                Assert.AreEqual(0, effectivePawnGuarantee);
+
+                var generatedPieces = result.PlayerPieceSet.Values.ToList();
+                int generatedPawnFamilyCount = generatedPieces.Count(piece =>
+                    core.pawns.Contains(piece) || core.sergeants.Contains(piece));
+                Assert.IsTrue(
+                    CountFrom(generatedPieces, core.sergeants) > 0,
+                    "SuperMax should allow Sergeant/Odin Pawn after the item-handler counts reduce the pawn guarantee.");
+                Assert.IsTrue(
+                    generatedPawnFamilyCount < core.foundPawns,
+                    "SuperMax should not require every collected pawn item to become a pawn-family slot.");
+            }
+        }
+
+        [TestMethod]
         public void MajorQueenMinorGeneration_PlacesPiecesAndTracksPromotionStrings()
         {
             ConfigureStableGeneration();

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Archipelago.APChessV;
 
 namespace ChessV.Test
 {
@@ -114,6 +115,7 @@ namespace ChessV.Test
         {
             ApmwFuzzOptionSpace space = ApmwFuzzOptionSpace.CreateDefault();
             ApmwFuzzAxis pawnAxis = space.GetAxis(ApmwFuzzOptionSpace.AxisPawnCount);
+            ApmwFuzzAxis pawnUpgradeAxis = space.GetAxis(ApmwFuzzOptionSpace.AxisFairyChessPawnUpgrades);
 
             Assert.AreEqual(ApmwFuzzOptionAxisKind.Numeric, pawnAxis.Kind);
             Assert.AreEqual(2, pawnAxis.NumericBands.Count);
@@ -122,6 +124,13 @@ namespace ChessV.Test
             CollectionAssert.Contains(pawnAxis.Values.Select(value => value.CanonicalKey).ToList(), "40");
             CollectionAssert.Contains(pawnAxis.Values.Select(value => value.CanonicalKey).ToList(), "41");
             CollectionAssert.DoesNotContain(pawnAxis.Values.Select(value => value.CanonicalKey).ToList(), "2");
+            ApmwFuzzOptionValue superMax = pawnUpgradeAxis.GetValue("supermax");
+            Assert.AreEqual(FairyPawnUpgrades.SuperMax, superMax.Value);
+
+            var builder = ApmwFuzzCase.DefaultStandard().ToBuilder();
+            ApmwFuzzOptionSpace.ApplyCaseValue(builder, ApmwFuzzOptionSpace.AxisFairyChessPawnUpgrades, superMax);
+            Dictionary<string, object> slotData = builder.Build().BuildSlotData();
+            Assert.AreEqual(3, (int)slotData[ApmwConstants.SlotKeyFairyChessPawnUpgrades]);
 
             Assert.AreEqual(0, space.Validate(space.DefaultAssignment()).Count);
 
