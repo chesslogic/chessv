@@ -61,6 +61,12 @@ A recommended PopTracker pack is available at https://github.com/checkerslogic/c
  - `Asymmetric Trades: Jacks` adds `Progressive Jack`. Jacks are custom (by the author!) roughly 7-material pieces such as Agile Rook, Mullah, Zealot, Great Camel, Dragon Cannon, Mameluk, and Grazer. They can participate in castling like major pieces and unlike queens.
  - `fairy_chess_pawns` includes standard pawns, Berolina, Checkers, or one of the mixed pools. `fairy_chess_pawn_upgrades` controls stronger pawn upgrades drawn from the pawn budget: Off keeps the legacy post-selection upgrade pass, Pool adds upgrades as random pool options while guarding pawn count, Max prefers upgrades when the budget can still reach your earned pawn count, and SuperMax is an inline pawn-upgrade/Sergeant option, not a separate `pawn_count_guarantee` setting. SuperMax behaves like Max, but when the board-location pawn requirement is lower than your collected `Progressive Pawn` count, it keeps the full collected pawn material budget and can convert excess pawn material into Sergeant/Odin Pawn upgrades. The board-location guarantee counts 16 chessmen including the base King on standard boards (15 non-base-king slots), or 20 including the base King on Super-Sized boards (19 non-base-king slots); known Consuls, jacks, majors, and minors reduce how many pawn slots still need to be guaranteed.
 
+### Generating a solo room from ChessV
+
+The client can prepare a single-player ChecksMate room by saving a player YAML file and asking an installed Archipelago copy to run `Generate.py`. Use a ChecksMate client and `checksmate.apworld` from the same release, then place the world in Archipelago's `custom_worlds`/`worlds` folder or configure the Archipelago root if it is not auto-detected. Generation uses the Python bundled with that Archipelago install, writes the YAML, and produces the Archipelago output artifact such as a `.archipelago` file.
+
+If `MultiServer.py` is present, ChessV can optionally launch a local solo server for the generated room. If it is missing, YAML saving and generation can still work, but local server launch is unavailable. Version mismatches, missing `checksmate.apworld`, or custom Archipelago layouts may fail validation or surface generator errors directly from Archipelago.
+
 ### Strategic notes
 
 This is not Chess. It's an asymmetric, multi-round experience involving the rules of Chess. You only need to land the win once - and your opponent is too shortsighted to stop you from coming back stronger.

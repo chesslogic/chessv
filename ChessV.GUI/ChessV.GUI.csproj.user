@@ -26,6 +26,9 @@
     <Compile Update="Forms\ApmwForm.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Update="Forms\ApmwGenerationForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Update="Forms\AppearanceSettingsForm.cs">
       <SubType>Form</SubType>
     </Compile>

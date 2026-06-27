@@ -68,6 +68,7 @@ namespace ChessV.GUI
       label5 = new System.Windows.Forms.Label();
       checkBoxDeathlink = new System.Windows.Forms.CheckBox();
       comboBoxEnemyArmy = new System.Windows.Forms.ComboBox();
+      buttonGenerateSoloRoom = new System.Windows.Forms.Button();
       SuspendLayout();
       // 
       // txtApmwOutput
@@ -251,12 +252,23 @@ namespace ChessV.GUI
       comboBoxEnemyArmy.Size = new System.Drawing.Size(218, 33);
       comboBoxEnemyArmy.TabIndex = 17;
       comboBoxEnemyArmy.Text = "Change Enemy Army";
+      //
+      // buttonGenerateSoloRoom
+      //
+      buttonGenerateSoloRoom.Location = new System.Drawing.Point(860, 121);
+      buttonGenerateSoloRoom.Name = "buttonGenerateSoloRoom";
+      buttonGenerateSoloRoom.Size = new System.Drawing.Size(159, 33);
+      buttonGenerateSoloRoom.TabIndex = 18;
+      buttonGenerateSoloRoom.Text = "Generate Solo Room...";
+      buttonGenerateSoloRoom.UseVisualStyleBackColor = true;
+      buttonGenerateSoloRoom.Click += buttonGenerateSoloRoom_Click;
       // 
       // ApmwForm
       // 
       AutoScaleDimensions = new System.Drawing.SizeF(10F, 25F);
       AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
       ClientSize = new System.Drawing.Size(1037, 752);
+      Controls.Add(buttonGenerateSoloRoom);
       Controls.Add(comboBoxEnemyArmy);
       Controls.Add(checkBoxDeathlink);
       Controls.Add(label5);
@@ -305,5 +317,6 @@ namespace ChessV.GUI
     private System.Windows.Forms.Label label5;
     public System.Windows.Forms.ComboBox comboBox1;
     public System.Windows.Forms.ComboBox comboBoxEnemyArmy;
+    private System.Windows.Forms.Button buttonGenerateSoloRoom;
   }
 }

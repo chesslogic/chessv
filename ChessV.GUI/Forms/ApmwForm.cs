@@ -160,6 +160,12 @@ namespace ChessV.GUI
     private void button1_Click(object sender, EventArgs e)
     {
       // TODO(chesslogic): change to disconnect mode (for now, players just close the program, lol)
+      if (string.IsNullOrWhiteSpace(textBox1.Text) || string.IsNullOrWhiteSpace(textBox2.Text))
+      {
+        ShowGenerationHintForMissingConnectionDetails();
+        return;
+      }
+
       if (button1.Enabled == false)
       {
         return;
@@ -266,6 +272,31 @@ namespace ChessV.GUI
         mrHandler = (message) => pastMessages.Add(message);
         messageLog = archipelagoClient.Session.MessageLog;
         messageLog.OnMessageReceived += mrHandler;
+      }
+    }
+
+    private void buttonGenerateSoloRoom_Click(object sender, EventArgs e)
+    {
+      using (var form = new ApmwGenerationForm())
+      {
+        form.ShowDialog(this);
+      }
+    }
+
+    private void ShowGenerationHintForMissingConnectionDetails()
+    {
+      const string hint =
+        "Enter an Archipelago room and slot to connect, or use Generate Solo Room to create a local .archipelago room first.";
+      archipelagoClient.nonSessionMessages.Add(hint);
+
+      if (MessageBox.Show(
+        this,
+        hint + "\r\n\r\nOpen the ChecksMate solo room generator now?",
+        "Missing Archipelago Connection Details",
+        MessageBoxButtons.YesNo,
+        MessageBoxIcon.Information) == DialogResult.Yes)
+      {
+        buttonGenerateSoloRoom_Click(this, EventArgs.Empty);
       }
     }
 
