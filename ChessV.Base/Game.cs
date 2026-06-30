@@ -1090,12 +1090,12 @@ namespace ChessV
         throw new Exceptions.FENParseFailureException("Array", fen["array"], ex.Message, ex);
       }
 
+      gameHistoryCount = 0;
+      Ply = 1;
       //	notify all rules so they can initialize with information 
       //	contained in the fen as necessary (castling rights, etc.)
       foreach (Rule rule in rules)
         rule.PositionLoaded(fen);
-      gameHistoryCount = 0;
-      Ply = 1;
       generateMoves(CurrentSide, 1, 0);
     }
     #endregion

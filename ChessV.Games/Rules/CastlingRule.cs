@@ -150,7 +150,7 @@ namespace ChessV.Games.Rules
     #region GetPositionHashCode
     public override ulong GetPositionHashCode(int ply)
     {
-      int castlingPriv = ply == 1 ? gameHistoryPrivs[Game.GameMoveNumber + 1] : searchStackPrivs[ply - 1];
+      int castlingPriv = ply == 1 ? gameHistoryPrivs[Game.GameMoveNumber] : searchStackPrivs[ply - 1];
       return HashKeys.Keys[hashKeyIndex + castlingPriv];
     }
     #endregion

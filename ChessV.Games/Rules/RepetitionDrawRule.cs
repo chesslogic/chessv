@@ -26,6 +26,7 @@ namespace ChessV.Games.Rules
   {
     protected UInt64[] gameHistoryHashes;
     protected UInt64[] searchStackHashes;
+    protected bool[] gameHistoryHashRecorded;
 
     public RepetitionDrawRule()
     {
@@ -36,7 +37,9 @@ namespace ChessV.Games.Rules
       base.Initialize(game);
       gameHistoryHashes = new UInt64[Game.MAX_GAME_LENGTH];
       searchStackHashes = new UInt64[Game.MAX_PLY];
+      gameHistoryHashRecorded = new bool[Game.MAX_GAME_LENGTH];
       Game.MoveBeingPlayed += MoveBeingPlayedHandler;
+      Game.MoveTakenBack += MoveTakenBackHandler;
     }
 
     public override void PostInitialize()
@@ -44,15 +47,37 @@ namespace ChessV.Games.Rules
       base.PostInitialize();
     }
 
+    public override void ClearGameState()
+    {
+      Array.Clear(gameHistoryHashes, 0, gameHistoryHashes.Length);
+      Array.Clear(searchStackHashes, 0, searchStackHashes.Length);
+      Array.Clear(gameHistoryHashRecorded, 0, gameHistoryHashRecorded.Length);
+    }
+
+    public override void PositionLoaded(FEN fen)
+    {
+      ClearGameState();
+      gameHistoryHashes[0] = Game.GetPositionHashCode(1);
+      gameHistoryHashRecorded[0] = true;
+    }
+
     void MoveBeingPlayedHandler(MoveInfo move)
     {
       UInt64 hash = Game.GetPositionHashCode(2);
       gameHistoryHashes[Game.GameMoveNumber] = hash;
+      gameHistoryHashRecorded[Game.GameMoveNumber] = true;
+    }
+
+    void MoveTakenBackHandler()
+    {
+      int removedMoveNumber = Game.GameMoveNumber + 1;
+      gameHistoryHashes[removedMoveNumber] = 0;
+      gameHistoryHashRecorded[removedMoveNumber] = false;
     }
 
     public override MoveEventResponse MoveMade(MoveInfo move, int ply)
     {
-      UInt64 hash = Game.GetPositionHashCode(ply);
+      UInt64 hash = Game.GetPositionHashCode(ply + 1);
       searchStackHashes[ply] = hash;
       return MoveEventResponse.MoveOk;
     }
@@ -61,11 +86,12 @@ namespace ChessV.Games.Rules
     {
       int count = 1;
       UInt64 hash = Game.GetPositionHashCode(ply);
-      for (int x = ply - 1; x > 0; x--)
+      for (int x = ply - 2; x > 0; x--)
         if (searchStackHashes[x] == hash)
           count++;
-      for (int y = Game.GameMoveNumber - 1; count < 3 && y > 0; y--)
-        if (gameHistoryHashes[y] == hash)
+      int firstHistoryIndex = ply == 1 ? Game.GameMoveNumber - 1 : Game.GameMoveNumber;
+      for (int y = firstHistoryIndex; count < 3 && y >= 0; y--)
+        if (gameHistoryHashRecorded[y] && gameHistoryHashes[y] == hash)
           count++;
       if (count >= 3)
         return MoveEventResponse.GameDrawn;
