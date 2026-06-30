@@ -32,6 +32,7 @@ namespace Archipelago.APChessV
     public void beforeEach()
     {
       locations = new Mock<ILocationCheckHelper>();
+      locations.Setup(locs => locs.GetLocationIdFromName("ChecksMate", It.IsAny<string>())).Returns(0L);
 
       player = new Mock<Player>();
       player.SetupGet(mock => mock.IsHuman).Returns(true);
@@ -45,19 +46,10 @@ namespace Archipelago.APChessV
       game.SetupGet(mock => mock.GameTurnNumber).Returns(1);
       game.SetupGet(mock => mock.NumFiles).Returns(8);
       game.SetupGet(mock => mock.BoardMoveStack).Returns(new BoardMoveStack(board.Object));
-      board.Setup(mock => mock.GetRank(It.IsAny<int>())).Returns(0);
-      board.Setup(mock => mock.GetFile(0)).Returns(0);
-      board.Setup(mock => mock.GetFile(1)).Returns(1);
-      board.Setup(mock => mock.GetFile(2)).Returns(2);
-      board.Setup(mock => mock.GetFile(3)).Returns(3);
-      board.Setup(mock => mock.GetFile(4)).Returns(4);
-      board.Setup(mock => mock.GetFile(5)).Returns(5);
-      board.Setup(mock => mock.GetFileNotation(0)).Returns("a");
-      board.Setup(mock => mock.GetFileNotation(1)).Returns("b");
-      board.Setup(mock => mock.GetFileNotation(2)).Returns("c");
-      board.Setup(mock => mock.GetFileNotation(3)).Returns("d");
-      board.Setup(mock => mock.GetFileNotation(4)).Returns("e");
-      board.Setup(mock => mock.GetFileNotation(5)).Returns("f");
+      board.SetupGet(mock => mock.NumSquares).Returns(64);
+      board.Setup(mock => mock.GetRank(It.IsAny<int>())).Returns<int>(square => square / 8);
+      board.Setup(mock => mock.GetFile(It.IsAny<int>())).Returns<int>(square => square % 8);
+      board.Setup(mock => mock.GetFileNotation(It.IsAny<int>())).Returns<int>(file => ((char)('a' + file)).ToString());
 
       firstPieceType = new Mock<PieceType>();
       firstPiece = new Mock<Piece>();
@@ -129,6 +121,78 @@ namespace Archipelago.APChessV
       handler.HandleMove(info);
 
       locations.Verify(locs => locs.GetLocationIdFromName("ChecksMate", "Capture Piece Queen's Knight"));
+    }
+
+    [TestMethod]
+    public void moveTakenBack_restoresPieceCaptureCounter()
+    {
+      MoveInfo info = GetMoveInfo();
+      info.FromSquare = 12;
+      info.ToSquare = 0;
+      info.MoveType = MoveType.StandardCapture;
+
+      PlayMove(info);
+      TakeBackLastMove();
+      PlayMove(info);
+
+      locations.Verify(locs => locs.GetLocationIdFromName("ChecksMate", "Capture Piece Queen's Rook"), Times.Exactly(2));
+      locations.Verify(locs => locs.GetLocationIdFromName("ChecksMate", "Capture Any 2"), Times.Never());
+      locations.Verify(locs => locs.GetLocationIdFromName("ChecksMate", "Capture 2 Pieces"), Times.Never());
+    }
+
+    [TestMethod]
+    public void moveTakenBack_restoresPawnCaptureCounter()
+    {
+      MoveInfo info = GetMoveInfo();
+      info.FromSquare = 16;
+      info.ToSquare = 8;
+      info.MoveType = MoveType.StandardCapture;
+
+      PlayMove(info);
+      TakeBackLastMove();
+      PlayMove(info);
+
+      locations.Verify(locs => locs.GetLocationIdFromName("ChecksMate", "Capture Pawn A"), Times.Exactly(2));
+      locations.Verify(locs => locs.GetLocationIdFromName("ChecksMate", "Capture Any 2"), Times.Never());
+      locations.Verify(locs => locs.GetLocationIdFromName("ChecksMate", "Capture 2 Pawns"), Times.Never());
+    }
+
+    [TestMethod]
+    public void moveTakenBack_restoresOriginalSquareTracking()
+    {
+      MoveInfo firstMove = GetMoveInfo();
+      firstMove.FromSquare = 1;
+      firstMove.ToSquare = 3;
+      firstMove.PieceCaptured = null;
+      PlayMove(firstMove);
+
+      MoveInfo overwriteMove = GetMoveInfo();
+      overwriteMove.FromSquare = 2;
+      overwriteMove.ToSquare = 3;
+      overwriteMove.PieceCaptured = null;
+      PlayMove(overwriteMove);
+
+      TakeBackLastMove();
+
+      MoveInfo capture = GetMoveInfo();
+      capture.FromSquare = 5;
+      capture.ToSquare = 3;
+      capture.MoveType = MoveType.StandardCapture;
+      PlayMove(capture);
+
+      locations.Verify(locs => locs.GetLocationIdFromName("ChecksMate", "Capture Piece Queen's Knight"), Times.Once());
+      locations.Verify(locs => locs.GetLocationIdFromName("ChecksMate", "Capture Piece Queen's Bishop"), Times.Never());
+    }
+
+    private void PlayMove(MoveInfo info)
+    {
+      handler.SetupMove(info);
+      handler.HandleMove(info);
+    }
+
+    private void TakeBackLastMove()
+    {
+      handler.MoveTakenBackForTesting();
     }
 
     private MoveInfo GetMoveInfo()

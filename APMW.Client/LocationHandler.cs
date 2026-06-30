@@ -58,6 +58,7 @@ namespace Archipelago.APChessV
     {
       this.match = match;
       humanPlayer = match.GetPlayer(0).IsHuman ? 0 : 1;
+      SubscribeToMoveTakenBack(this.match.Game);
     }
 
     public void Initialize(ILocationCheckHelper locationCheckHelper, ArchipelagoSession session)
@@ -83,17 +84,40 @@ namespace Archipelago.APChessV
     private Action victory;
     private Action<string> deathlink;
     private Match match;
+    private Game moveTakenBackGame;
     public HashSet<Match> DeathlinkedMatches = new HashSet<Match>();
     private int humanPlayer;
     private int capturedPieces;
     private int capturedPawns;
     private Dictionary<int, int> currentSquaresToOriginalSquares = new Dictionary<int, int>();
     private Dictionary<int, Piece> lastPiecesSeen = new Dictionary<int, Piece>();
+    private Stack<MoveDiff> moveDiffs = new Stack<MoveDiff>();
+    private MoveDiff activeMoveDiff;
+
+    private class MoveDiff
+    {
+      public int CapturedPiecesDelta;
+      public int CapturedPawnsDelta;
+      public Dictionary<int, PreviousOriginalSquare> PreviousOriginalSquares = new Dictionary<int, PreviousOriginalSquare>();
+    }
+
+    private struct PreviousOriginalSquare
+    {
+      public bool Existed;
+      public int OriginalSquare;
+
+      public PreviousOriginalSquare(bool existed, int originalSquare)
+      {
+        Existed = existed;
+        OriginalSquare = originalSquare;
+      }
+    }
 
     public void StartMatch(Match match)
     {
       if (!Initialized && match.Game.GameAttribute.GameName == ApmwConstants.GameNameStandard)
         throw new InvalidOperationException("LocationHandler has not been initialized");
+      UnsubscribeFromMoveTakenBack();
       this.match = match;
       //match.Game.MovePlayed += (move) => this.HandleMove(move);
       humanPlayer = this.match.GetPlayer(0).IsHuman ? 0 : 1;
@@ -101,6 +125,9 @@ namespace Archipelago.APChessV
       capturedPawns = 0;
       capturedPieces = 0;
       currentSquaresToOriginalSquares = new Dictionary<int, int>();
+      moveDiffs.Clear();
+      activeMoveDiff = null;
+      SubscribeToMoveTakenBack(this.match.Game);
 
       this.match.Finished += HandleMatch;
       TryValidatePlayingArchipelago();
@@ -108,14 +135,16 @@ namespace Archipelago.APChessV
 
     public void EndMatch()
     {
-      if (!Initialized && match.Game.GameAttribute.GameName == ApmwConstants.GameNameStandard)
-        throw new InvalidOperationException("LocationHandler has not been initialized");
-      TryValidatePlayingArchipelago();
       if (this.match == null)
       {
+        UnsubscribeFromMoveTakenBack();
         // TODO(chesslogic): mention "no match to end" in logger
         return;
       }
+      if (!Initialized && match.Game.GameAttribute.GameName == ApmwConstants.GameNameStandard)
+        throw new InvalidOperationException("LocationHandler has not been initialized");
+      TryValidatePlayingArchipelago();
+      UnsubscribeFromMoveTakenBack();
       if (match.Result.Winner != this.humanPlayer)
         deathlink("resigned.");
 
@@ -125,7 +154,51 @@ namespace Archipelago.APChessV
       // seHandler = null;
       this.capturedPawns = 0;
       this.capturedPieces = 0;
+      moveDiffs.Clear();
+      activeMoveDiff = null;
       this.match.Finished -= HandleMatch;
+    }
+
+    private void SubscribeToMoveTakenBack(Game game)
+    {
+      if (game == null)
+        return;
+      moveTakenBackGame = game;
+      moveTakenBackGame.MoveTakenBack += MoveTakenBackHandler;
+    }
+
+    private void UnsubscribeFromMoveTakenBack()
+    {
+      if (moveTakenBackGame == null)
+        return;
+      moveTakenBackGame.MoveTakenBack -= MoveTakenBackHandler;
+      moveTakenBackGame = null;
+    }
+
+    private void MoveTakenBackHandler()
+    {
+      if (moveDiffs.Count == 0)
+      {
+        activeMoveDiff = null;
+        return;
+      }
+
+      MoveDiff diff = moveDiffs.Pop();
+      capturedPieces -= diff.CapturedPiecesDelta;
+      capturedPawns -= diff.CapturedPawnsDelta;
+      foreach (KeyValuePair<int, PreviousOriginalSquare> entry in diff.PreviousOriginalSquares)
+      {
+        if (entry.Value.Existed)
+          currentSquaresToOriginalSquares[entry.Key] = entry.Value.OriginalSquare;
+        else
+          currentSquaresToOriginalSquares.Remove(entry.Key);
+      }
+      activeMoveDiff = null;
+    }
+
+    internal void MoveTakenBackForTesting()
+    {
+      MoveTakenBackHandler();
     }
 
     /** unused */
@@ -152,6 +225,7 @@ namespace Archipelago.APChessV
         throw new InvalidOperationException("LocationHandler has not been initialized");
       if (!TryValidatePlayingArchipelago())
         return;
+      StartMoveDiff();
       // Store the current board state before the move
       Dictionary<int, Piece> preMoveState = new Dictionary<int, Piece>();
       for (int square = 0; square < match.Game.Board.NumSquares; square++)
@@ -165,6 +239,12 @@ namespace Archipelago.APChessV
       // Store the state for comparison in HandleMove
       lastPiecesSeen = preMoveState;
 
+    }
+
+    private void StartMoveDiff()
+    {
+      activeMoveDiff = new MoveDiff();
+      moveDiffs.Push(activeMoveDiff);
     }
 
     private void HandleCheckersMultiCapture(MoveInfo info)
@@ -446,11 +526,7 @@ namespace Archipelago.APChessV
         locations.Add(Loc(locationName));
 
         // handle piece sequence
-        int captures;
-        if (isPiece)
-          captures = ++capturedPieces;
-        else
-          captures = ++capturedPawns;
+        int captures = RecordCapture(isPiece);
         // capture any
         var totalCaptures = capturedPawns + capturedPieces;
         if (totalCaptures > 1) {
@@ -499,6 +575,22 @@ namespace Archipelago.APChessV
       //
 
       return false;
+    }
+
+    private int RecordCapture(bool isPiece)
+    {
+      if (isPiece)
+      {
+        capturedPieces++;
+        if (activeMoveDiff != null)
+          activeMoveDiff.CapturedPiecesDelta++;
+        return capturedPieces;
+      }
+
+      capturedPawns++;
+      if (activeMoveDiff != null)
+        activeMoveDiff.CapturedPawnsDelta++;
+      return capturedPawns;
     }
 
     private void RecordThreatLocations(List<long> locations)
@@ -639,6 +731,7 @@ namespace Archipelago.APChessV
       if (!TryValidatePlayingArchipelago())
         return;
       // update original positions
+      RecordPreviousOriginalSquare(info.ToSquare);
       if (currentSquaresToOriginalSquares.ContainsKey(info.FromSquare))
         currentSquaresToOriginalSquares[info.ToSquare] = currentSquaresToOriginalSquares[info.FromSquare];
       else
@@ -647,11 +740,29 @@ namespace Archipelago.APChessV
       {
         var flipBoard = 7 * (1 - humanPlayer);
         if (info.ToSquare > info.FromSquare)
+        {
+          RecordPreviousOriginalSquare(info.ToSquare - 8);
           currentSquaresToOriginalSquares[info.ToSquare - 8] = 56 + flipBoard;
+        }
         else
+        {
+          RecordPreviousOriginalSquare(info.ToSquare + 8);
           currentSquaresToOriginalSquares[info.ToSquare + 8] = 0 + flipBoard;
+        }
         // TODO: figure out where the rook moved from
       }
+    }
+
+    private void RecordPreviousOriginalSquare(int square)
+    {
+      if (activeMoveDiff == null || activeMoveDiff.PreviousOriginalSquares.ContainsKey(square))
+        return;
+
+      int originalSquare;
+      if (currentSquaresToOriginalSquares.TryGetValue(square, out originalSquare))
+        activeMoveDiff.PreviousOriginalSquares[square] = new PreviousOriginalSquare(true, originalSquare);
+      else
+        activeMoveDiff.PreviousOriginalSquares[square] = new PreviousOriginalSquare(false, 0);
     }
 
     public void HandleMatch(Match match)
