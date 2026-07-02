@@ -48,7 +48,7 @@ A recommended PopTracker pack is available at https://github.com/checkerslogic/c
  - Chaotic Material Randomization. Every game, you get new pieces in new places! Who needs an opening book?
  - Piece Limits. Under some mindsets, it can be taxing to find 6 minor pieces and no Queen. By adding certain rails to the experience, one can have a more personalized approach to a Chess randomizer, where one's army bears some resemblance to a traditional game.
  - Extra Kings. What if you had a backup King?
- - Difficulty, AI Intelligence malus, enemy army, Super Mode, DeathLink, fairy pawns, and Jacks! 
+ - Difficulty, AI Intelligence malus, enemy army, Super Mode, DeathLink, fairy pawns, Jacks, and Amazons!
 
 #### Option reference notes
 
@@ -59,6 +59,7 @@ A recommended PopTracker pack is available at https://github.com/checkerslogic/c
  - Fairy Chess Pieces allows further replayability by replacing the player pieces with modern innovations by Ralph Betza and other authors. FIDE, Betza, and Full override the custom Configure set. If you want to use `fairy_chess_pieces_configure` to choose your own subset, set Fairy Chess Pieces to Configure first.
  - Fairy Chess Army constrains generated player material to a single army among enabled armies.
  - `Asymmetric Trades: Jacks` adds `Progressive Jack`. Jacks are custom (by the author!) roughly 7-material pieces such as Agile Rook, Mullah, Zealot, Great Camel, Dragon Cannon, Mameluk, and Grazer. They can participate in castling like major pieces and unlike queens.
+ - `Asymmetric Trades: Amazons` adds `Progressive Amazon`. Amazons are roughly 13-material major-piece upgrades such as Amazon and Herald. They upgrade reserved major slots after Queen upgrades and do not add extra board slots or castling privileges.
  - `fairy_chess_pawns` includes standard pawns, Berolina, Checkers, or one of the mixed pools. `fairy_chess_pawn_upgrades` controls stronger pawn upgrades drawn from the pawn budget: Off keeps the legacy post-selection upgrade pass, Pool adds upgrades as random pool options while guarding pawn count, Max prefers upgrades when the budget can still reach your earned pawn count, and SuperMax is an inline pawn-upgrade/Sergeant option, not a separate `pawn_count_guarantee` setting. SuperMax behaves like Max, but when the board-location pawn requirement is lower than your collected `Progressive Pawn` count, it keeps the full collected pawn material budget and can convert excess pawn material into Sergeant/Odin Pawn upgrades. The board-location guarantee counts 16 chessmen including the base King on standard boards (15 non-base-king slots), or 20 including the base King on Super-Sized boards (19 non-base-king slots); known Consuls, jacks, majors, and minors reduce how many pawn slots still need to be guaranteed.
 
 ### Strategic notes
@@ -80,7 +81,7 @@ Known rough edges:
 
 ### Army PieceTypes reference
 
-This list covers army-selected non-pawn back-rank PieceTypes and promotion pools. Right-click Properties in the client to see piece info and movement diagrams. Camel and Petal include unique material partly designed by the ChecksMate author, which is why their definitions are documented here. Jacks listed below are army-specific; Great Camel is a global Jack pool piece, not a Camel or Petal army assignment.
+This list covers army-selected non-pawn back-rank PieceTypes and promotion pools. Right-click Properties in the client to see piece info and movement diagrams. Camel and Petal include unique material partly designed by the ChecksMate author, which is why their definitions are documented here. Jacks listed below are army-specific; Great Camel is a global Jack pool piece, not a Camel or Petal army assignment. Amazon-family upgrades are Amazon and Herald.
 
 #### Movement notation
 
@@ -121,7 +122,7 @@ This list covers army-selected non-pawn back-rank PieceTypes and promotion pools
  - **Minor:** Cannon/Vao.
  - **Major:** No army-specific major, so generation falls back to the broader major pool if filtering finds none.
  - **Jack:** Dragon Cannon.
- - **Queen:** Herald/Queennon.
+ - **Queen:** Queennon.
 
 #### Camel
 
@@ -137,6 +138,10 @@ This list covers army-selected non-pawn back-rank PieceTypes and promotion pools
  - **Jack:** Grazer.
  - **Queen:** Miracle.
 
+#### Amazon family
+
+ - **Amazon:** Amazon/Herald.
+
 #### Movement definitions
 
 All offsets below use the notation above. In `via` clauses, only pre-target route squares are listed; the described offset is the target square and is not repeated in the route list.
@@ -149,6 +154,7 @@ All offsets below use the notation above. In `via` clauses, only pre-target rout
 | Bishop | Slides `(s,t)`. |
 | Knight | Leaps to `(s,2t)` or `(2s,t)`; jumps blockers. |
 | Queen | Rook + Bishop. |
+| Amazon | Queen slides + Knight leaps. |
 | Wazir | Steps `(s,0)` or `(0,s)`. |
 | Ferz | Steps `(s,t)`. |
 | Elephant | Leaps `(2s,2t)`. |

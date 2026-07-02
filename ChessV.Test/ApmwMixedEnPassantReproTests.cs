@@ -145,6 +145,7 @@ namespace ChessV.Test
       core.foundMajors = -1;
       core.foundJacks = -1;
       core.foundQueens = -1;
+      core.foundAmazons = -1;
       core.foundConsuls = -1;
       core.foundKingPromotions = -1;
       core.foundPawnForwardness = -1;

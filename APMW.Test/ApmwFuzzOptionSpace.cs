@@ -467,6 +467,7 @@ namespace ChessV.Test
         internal const string AxisMajorPieceCount = "major-piece-count";
         internal const string AxisJackCount = "jack-count";
         internal const string AxisMajorToQueenCount = "major-to-queen-count";
+        internal const string AxisAmazonCount = "amazon-count";
         internal const string AxisPawnForwardnessCount = "pawn-forwardness-count";
         internal const string AxisConsulCount = "consul-count";
         internal const string AxisKingPromotionCount = "king-promotion-count";
@@ -583,6 +584,11 @@ namespace ChessV.Test
                     new ApmwFuzzNumericBand("standard-material", 1, standardMaterialCapacity, standardMaterialCapacity + StandardBoardWidth),
                     new ApmwFuzzNumericBand("super-sized-material", 1, superSizedMaterialCapacity, superSizedMaterialCapacity + SuperSizedBoardWidth)),
                 ApmwFuzzAxis.Numeric(
+                    AxisAmazonCount,
+                    0,
+                    new ApmwFuzzNumericBand("standard-material", 0, standardMaterialCapacity, standardMaterialCapacity + StandardBoardWidth),
+                    new ApmwFuzzNumericBand("super-sized-material", 0, superSizedMaterialCapacity, superSizedMaterialCapacity + SuperSizedBoardWidth)),
+                ApmwFuzzAxis.Numeric(
                     AxisPawnForwardnessCount,
                     0,
                     new ApmwFuzzNumericBand("standard-forwardness", 0, ForwardnessCapacity(StandardBoardWidth), standardPawnCapacity + 1),
@@ -620,9 +626,11 @@ namespace ChessV.Test
                     "Super-sized APMW cases should include at least one Super Size Me item.",
                     assignment => !assignment.GetBool(AxisIsSuperSized) || assignment.GetInt(AxisSuperSizeMeCount) >= 1),
                 new ApmwFuzzConstraint(
-                    "major-to-queen-count-not-above-major-count",
-                    "Major-to-queen upgrades cannot exceed available major pieces for constrained generation.",
-                    assignment => assignment.GetInt(AxisMajorToQueenCount) <= assignment.GetInt(AxisMajorPieceCount)),
+                    "major-upgrades-not-above-major-count",
+                    "Major-to-queen and amazon upgrades cannot exceed available major pieces for constrained generation.",
+                    assignment =>
+                        assignment.GetInt(AxisMajorToQueenCount) + assignment.GetInt(AxisAmazonCount) <=
+                        assignment.GetInt(AxisMajorPieceCount)),
                 new ApmwFuzzConstraint(
                     "pocket-items-fit-selected-limit",
                     "Pocket items should fit the selected per-pocket limit unless the limit is disabled.",
@@ -774,6 +782,8 @@ namespace ChessV.Test
                     return ApmwFuzzOptionValue.Numeric(fuzzCase.JackCount);
                 case AxisMajorToQueenCount:
                     return ApmwFuzzOptionValue.Numeric(fuzzCase.MajorToQueenCount);
+                case AxisAmazonCount:
+                    return ApmwFuzzOptionValue.Numeric(fuzzCase.AmazonCount);
                 case AxisPawnForwardnessCount:
                     return ApmwFuzzOptionValue.Numeric(fuzzCase.PawnForwardnessCount);
                 case AxisConsulCount:
@@ -873,6 +883,9 @@ namespace ChessV.Test
                     break;
                 case AxisMajorToQueenCount:
                     builder.MajorToQueenCount = ToInt(value);
+                    break;
+                case AxisAmazonCount:
+                    builder.AmazonCount = ToInt(value);
                     break;
                 case AxisPawnForwardnessCount:
                     builder.PawnForwardnessCount = ToInt(value);

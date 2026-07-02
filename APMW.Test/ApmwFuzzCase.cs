@@ -52,6 +52,7 @@ namespace ChessV.Test
         public int MajorPieceCount { get; }
         public int JackCount { get; }
         public int MajorToQueenCount { get; }
+        public int AmazonCount { get; }
         public int PawnForwardnessCount { get; }
         public int ConsulCount { get; }
         public int KingPromotionCount { get; }
@@ -107,6 +108,7 @@ namespace ChessV.Test
             MajorPieceCount = builder.MajorPieceCount;
             JackCount = builder.JackCount;
             MajorToQueenCount = builder.MajorToQueenCount;
+            AmazonCount = builder.AmazonCount;
             PawnForwardnessCount = builder.PawnForwardnessCount;
             ConsulCount = builder.ConsulCount;
             KingPromotionCount = builder.KingPromotionCount;
@@ -182,6 +184,7 @@ namespace ChessV.Test
                 MajorPieceCount = MajorPieceCount,
                 JackCount = JackCount,
                 MajorToQueenCount = MajorToQueenCount,
+                AmazonCount = AmazonCount,
                 PawnForwardnessCount = PawnForwardnessCount,
                 ConsulCount = ConsulCount,
                 KingPromotionCount = KingPromotionCount,
@@ -233,6 +236,7 @@ namespace ChessV.Test
             yield return (ApmwConstants.ProgressiveItems.MajorPiece, MajorPieceCount);
             yield return (ApmwConstants.ProgressiveItems.Jack, JackCount);
             yield return (ApmwConstants.ProgressiveItems.MajorToQueen, MajorToQueenCount);
+            yield return (ApmwConstants.ProgressiveItems.Amazon, AmazonCount);
             yield return (ApmwConstants.ProgressiveItems.PawnForwardness, PawnForwardnessCount);
             yield return (ApmwConstants.ProgressiveItems.Consul, ConsulCount);
             yield return (ApmwConstants.ProgressiveItems.KingPromotion, KingPromotionCount);
@@ -262,7 +266,7 @@ namespace ChessV.Test
                 "ApmwFuzzCase(CaseName=\"{0}\", Label=\"{1}\", CaseIndex={2}, MasterSeed=\"{3}\", TargetStage=\"{4}\", Category=\"{5}\", IsSuperSized={6}, GameName=\"{7}\", " +
                 "Slots=[goal={8}, enemy_piece_types={9}, piece_locations={10}, piece_types={11}, fairy_chess_army={12}, army=[{13}], fairy_chess_pawns={14}, fairy_chess_pawn_upgrades={15}, minor_limit={16}, major_limit={17}, queen_limit={18}, pocket_limit={19}, death_link={20}], " +
                 "Seeds=[pocket={21}, pawn={22}, minor={23}, major={24}, queen={25}, chaos={26}], " +
-                "Items=[pockets={27}, pocket_range={28}, pocket_gems={29}, ai_malus={30}, pawns={31}, minors={32}, majors={33}, jacks={34}, major_to_queen={35}, pawn_forwardness={36}, consuls={37}, king_promotions={38}, super_size={39}, play_as_white={40}, victory={41}])",
+                "Items=[pockets={27}, pocket_range={28}, pocket_gems={29}, ai_malus={30}, pawns={31}, minors={32}, majors={33}, jacks={34}, major_to_queen={35}, amazons={36}, pawn_forwardness={37}, consuls={38}, king_promotions={39}, super_size={40}, play_as_white={41}, victory={42}])",
                 Escape(CaseName),
                 Escape(Label),
                 CaseIndex,
@@ -299,6 +303,7 @@ namespace ChessV.Test
                 MajorPieceCount,
                 JackCount,
                 MajorToQueenCount,
+                AmazonCount,
                 PawnForwardnessCount,
                 ConsulCount,
                 KingPromotionCount,
@@ -400,6 +405,7 @@ namespace ChessV.Test
             public int MajorPieceCount { get; set; } = 2;
             public int JackCount { get; set; }
             public int MajorToQueenCount { get; set; } = 1;
+            public int AmazonCount { get; set; }
             public int PawnForwardnessCount { get; set; }
             public int ConsulCount { get; set; }
             public int KingPromotionCount { get; set; }

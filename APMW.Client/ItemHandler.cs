@@ -53,6 +53,7 @@ namespace Archipelago.APChessV
       core.foundMajors = progress.FoundMajors;
       core.foundJacks = progress.FoundJacks;
       core.foundQueens = progress.FoundQueens;
+      core.foundAmazons = progress.FoundAmazons;
       core.foundPawnForwardness = progress.FoundPawnForwardness;
       core.foundConsuls = progress.FoundConsuls;
       core.foundKingPromotions = progress.FoundKingPromotions;
@@ -71,6 +72,7 @@ namespace Archipelago.APChessV
       public int FoundMajors { get; }
       public int FoundJacks { get; }
       public int FoundQueens { get; }
+      public int FoundAmazons { get; }
       public int FoundPawnForwardness { get; }
       public int FoundConsuls { get; }
       public int FoundKingPromotions { get; }
@@ -88,6 +90,7 @@ namespace Archipelago.APChessV
         FoundMajors = Count(itemCounts, ApmwConstants.ProgressiveItems.MajorPiece);
         FoundJacks = Count(itemCounts, ApmwConstants.ProgressiveItems.Jack);
         FoundQueens = Count(itemCounts, ApmwConstants.ProgressiveItems.MajorToQueen);
+        FoundAmazons = Count(itemCounts, ApmwConstants.ProgressiveItems.Amazon);
         FoundPawnForwardness = Count(itemCounts, ApmwConstants.ProgressiveItems.PawnForwardness);
         FoundConsuls = Math.Min(2, Count(itemCounts, ApmwConstants.ProgressiveItems.Consul));
         FoundKingPromotions = Math.Min(2, Count(itemCounts, ApmwConstants.ProgressiveItems.KingPromotion));

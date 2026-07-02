@@ -76,6 +76,7 @@ namespace ChessV.Test
                 builder.MajorPieceCount = 4;
                 builder.JackCount = 1;
                 builder.MajorToQueenCount = 2;
+                builder.AmazonCount = 1;
                 builder.PawnForwardnessCount = SuperSizedBoardWidth;
                 builder.ConsulCount = 1;
                 builder.KingPromotionCount = 1;
@@ -142,6 +143,9 @@ namespace ChessV.Test
             AddAxisCases(cases, isSuperSized, "major-to-queen-count",
                 WidthAndCapacityThresholds(width, materialCapacity),
                 (builder, value) => builder.MajorToQueenCount = value);
+            AddAxisCases(cases, isSuperSized, "amazon-count",
+                WidthAndCapacityThresholds(width, materialCapacity),
+                (builder, value) => builder.AmazonCount = value);
             AddAxisCases(cases, isSuperSized, "pawn-forwardness-count",
                 PawnForwardnessThresholds(width),
                 (builder, value) => builder.PawnForwardnessCount = value);
@@ -225,12 +229,13 @@ namespace ChessV.Test
             AddCase(cases, OverCapMasterSeed, "over-cap-" + boardLabel + "-minors", isSuperSized,
                 ApmwFuzzCase.TargetStages.ItemHandlerGeneration, GenerationOverCapCategory,
                 builder => builder.MinorPieceCount = materialCapacity + width);
-            AddCase(cases, OverCapMasterSeed, "over-cap-" + boardLabel + "-majors-and-queens", isSuperSized,
+            AddCase(cases, OverCapMasterSeed, "over-cap-" + boardLabel + "-major-upgrades", isSuperSized,
                 ApmwFuzzCase.TargetStages.ItemHandlerGeneration, GenerationOverCapCategory,
                 builder =>
                 {
                     builder.MajorPieceCount = materialCapacity + width;
                     builder.MajorToQueenCount = materialCapacity + width;
+                    builder.AmazonCount = materialCapacity + width;
                 });
             AddCase(cases, OverCapMasterSeed, "over-cap-" + boardLabel + "-mixed-starting-inventory", isSuperSized,
                 ApmwFuzzCase.TargetStages.ItemHandlerGeneration, GenerationOverCapCategory,
@@ -243,6 +248,7 @@ namespace ChessV.Test
                     builder.MajorPieceCount = materialCapacity + 1;
                     builder.JackCount = width + 1;
                     builder.MajorToQueenCount = materialCapacity + 1;
+                    builder.AmazonCount = materialCapacity + 1;
                     builder.PawnForwardnessCount = pawnCapacity + 1;
                     builder.ConsulCount = 3;
                     builder.KingPromotionCount = 3;
@@ -296,7 +302,9 @@ namespace ChessV.Test
                 builder.JackCount = random.Next(0, Math.Min(2, Math.Max(0, materialCapacity - occupiedMaterialSlots)) + 1);
                 occupiedMaterialSlots += builder.JackCount;
                 builder.MajorPieceCount = random.Next(0, Math.Min(width + 1, Math.Max(0, materialCapacity - occupiedMaterialSlots)) + 1);
-                builder.MajorToQueenCount = builder.MajorPieceCount == 0 ? 0 : random.Next(0, builder.MajorPieceCount + 1);
+                int majorUpgradeCount = builder.MajorPieceCount == 0 ? 0 : random.Next(0, builder.MajorPieceCount + 1);
+                builder.MajorToQueenCount = majorUpgradeCount == 0 ? 0 : random.Next(0, majorUpgradeCount + 1);
+                builder.AmazonCount = majorUpgradeCount - builder.MajorToQueenCount;
                 occupiedMaterialSlots += builder.MajorPieceCount;
                 builder.MinorPieceCount = random.Next(0, Math.Max(0, materialCapacity - occupiedMaterialSlots) + 1);
 

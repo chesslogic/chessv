@@ -14,6 +14,7 @@ namespace Archipelago.APChessV
     public const int Weak = 75;
     public const int Jack = 700;
     public const int Queen = 900;
+    public const int Amazon = 1300;
   }
 
   internal readonly struct BoardCoordinate
@@ -126,8 +127,10 @@ namespace Archipelago.APChessV
       List<PieceType> withMajors = MajorPieceGeneration.Generate(numFiles, out order, promotions, ref spareMaterial);
       // replace some or all majors with queens
       List<PieceType> withQueens = QueenGeneration.Substitute(numFiles, withMajors, order, promotions, ref spareMaterial);
+      // replace distinct reserved major slots with amazons
+      List<PieceType> withAmazons = AmazonGeneration.Substitute(numFiles, withQueens, order, promotions, ref spareMaterial);
       // then add minor pieces until out of space
-      List<PieceType> withMinors = MinorPieceGeneration.Generate(numFiles, withQueens, promotions, ref spareMaterial);
+      List<PieceType> withMinors = MinorPieceGeneration.Generate(numFiles, withAmazons, promotions, ref spareMaterial);
       List<PieceType> withPawns = PawnGeneration.GeneratePawns(numFiles, withMinors, spareMaterial);
 
       Dictionary<KeyValuePair<int, int>, PieceType> pieces = new Dictionary<KeyValuePair<int, int>, PieceType>();
@@ -471,24 +474,73 @@ namespace Archipelago.APChessV
   {
     public static List<PieceType> Substitute(int numFiles, List<PieceType> majors, List<int> order, List<string> promotions, ref int spareMaterial)
     {
+      var core = ApmwCore.getInstance();
+      return MajorUpgradeSubstitution.Substitute(
+        numFiles,
+        majors,
+        order,
+        promotions,
+        core.queens,
+        Math.Max(0, core.foundQueens),
+        0,
+        ApmwConfig.getInstance().queenSeed,
+        ApmwConfig.getInstance().queenTypeLimit,
+        ItemGenerationValues.Queen,
+        ref spareMaterial);
+    }
+  }
+
+  internal static class AmazonGeneration
+  {
+    public static List<PieceType> Substitute(int numFiles, List<PieceType> majors, List<int> order, List<string> promotions, ref int spareMaterial)
+    {
+      var core = ApmwCore.getInstance();
+      return MajorUpgradeSubstitution.Substitute(
+        numFiles,
+        majors,
+        order,
+        promotions,
+        core.amazons,
+        Math.Max(0, core.foundAmazons),
+        Math.Max(0, core.foundQueens),
+        ApmwConfig.getInstance().queenSeed,
+        ApmwConfig.getInstance().queenTypeLimit,
+        ItemGenerationValues.Amazon,
+        ref spareMaterial);
+    }
+  }
+
+  internal static class MajorUpgradeSubstitution
+  {
+    public static List<PieceType> Substitute(
+      int numFiles,
+      List<PieceType> majors,
+      List<int> order,
+      List<string> promotions,
+      IEnumerable<PieceType> upgradePieces,
+      int upgradesToSubstitute,
+      int reservedAfter,
+      int seed,
+      int limit,
+      int expectedMaterial,
+      ref int spareMaterial)
+    {
       HashSet<string> promotionPieces = new HashSet<string>();
       Dictionary<PieceType, int> chosenPieces = new Dictionary<PieceType, int>();
+      List<PieceType> pieces = ArmyPieceFilter.Filter(upgradePieces);
+      Random random = new Random(seed);
       var core = ApmwCore.getInstance();
-      List<PieceType> queens = core.queens.ToList();
-      queens = ArmyPieceFilter.Filter(queens);
-
-      Random random = new Random(ApmwConfig.getInstance().queenSeed);
-
-      int limit = ApmwConfig.getInstance().queenTypeLimit;
       int player = core.GeriProvider();
-      int queensToSubstitute = core.foundQueens;
-      int remainingMajors = order.Count - queensToSubstitute;
-      for (int i = order.Count - 1; i >= remainingMajors && i >= 0; i--)
+
+      int majorSlotStart = Math.Min(order.Count, Math.Max(0, core.foundJacks));
+      int endExclusive = Math.Min(order.Count, Math.Max(majorSlotStart, order.Count - Math.Max(0, reservedAfter)));
+      int startInclusive = Math.Max(majorSlotStart, endExclusive - upgradesToSubstitute);
+      for (int i = endExclusive - 1; i >= startInclusive; i--)
       {
-        var piece = PieceChoice.Choose(ref queens, random, chosenPieces, limit);
+        var piece = PieceChoice.Choose(ref pieces, random, chosenPieces, limit);
         if (piece != null)
         {
-          PieceMaterialAccounting.RecordPromotion(promotionPieces, piece, player, ItemGenerationValues.Queen, ref spareMaterial);
+          PieceMaterialAccounting.RecordPromotion(promotionPieces, piece, player, expectedMaterial, ref spareMaterial);
           majors[MajorOrderIndexToPieceSetIndex(numFiles, order[i], majors.Count)] = piece;
         }
       }
@@ -496,7 +548,7 @@ namespace Archipelago.APChessV
       return majors;
     }
 
-    private static int MajorOrderIndexToPieceSetIndex(int numFiles, int orderIndex, int pieceSetCount)
+    public static int MajorOrderIndexToPieceSetIndex(int numFiles, int orderIndex, int pieceSetCount)
     {
       int kingIndex = numFiles / 2;
       int pieceSetIndex =
@@ -530,7 +582,7 @@ namespace Archipelago.APChessV
       Random randomLocations = new Random(ApmwConfig.getInstance().majorLocSeed);
 
       int limit = ApmwConfig.getInstance().majorTypeLimit;
-      int queensToBe = core.foundQueens;
+      int majorUpgradesToBe = Math.Max(0, core.foundQueens) + Math.Max(0, core.foundAmazons);
       int player = core.GeriProvider();
       int parity = 0;
 
@@ -565,7 +617,7 @@ namespace Archipelago.APChessV
         numKings,
         numJacks,
         numNonMinorPieces,
-        queensToBe);
+        majorUpgradesToBe);
 
       for (int placementIndex = numKings; placementIndex < Math.Min(placementCapacity, numNonMinorPieces); placementIndex++)
       {
@@ -608,7 +660,7 @@ namespace Archipelago.APChessV
       private readonly int numKings;
       private readonly int numJacks;
       private readonly int numNonMinorPieces;
-      private readonly int queensToBe;
+      private readonly int majorUpgradesToBe;
       private List<PieceType> majors;
       private List<PieceType> jacks;
 
@@ -624,7 +676,7 @@ namespace Archipelago.APChessV
         int numKings,
         int numJacks,
         int numNonMinorPieces,
-        int queensToBe)
+        int majorUpgradesToBe)
       {
         this.majors = majors;
         this.jacks = jacks;
@@ -637,14 +689,14 @@ namespace Archipelago.APChessV
         this.numKings = numKings;
         this.numJacks = numJacks;
         this.numNonMinorPieces = numNonMinorPieces;
-        this.queensToBe = queensToBe;
+        this.majorUpgradesToBe = majorUpgradesToBe;
       }
 
       public PieceType Pick(int placementIndex, ref int spareMaterial)
       {
         if (placementIndex < numJacks + numKings)
           return PickPromotion(ref jacks, randomJackPieces, ItemGenerationValues.Jack, ref spareMaterial);
-        if (placementIndex < numNonMinorPieces - queensToBe)
+        if (placementIndex < numNonMinorPieces - majorUpgradesToBe)
           return PickPromotion(ref majors, randomPieces, ItemGenerationValues.Major, ref spareMaterial);
 
         randomPieces.Next();

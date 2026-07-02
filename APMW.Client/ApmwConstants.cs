@@ -17,7 +17,7 @@ namespace Archipelago.APChessV
     public const string GameNameGrand = "Archipelago Multiworld Super-Sized";
 
     /// <summary>Client version string sent during connection handshake.</summary>
-    public const string ClientVersion = "0.3.2";
+    public const string ClientVersion = "0.3.3";
 
     /// <summary>Slot-data key controlling how bonus material upgrades pawns (off/pool/max).</summary>
     public const string SlotKeyFairyChessPawnUpgrades = "fairy_chess_pawn_upgrades";
@@ -35,6 +35,7 @@ namespace Archipelago.APChessV
       public const string MajorPiece = "Progressive Major Piece";
       public const string Jack = "Progressive Jack";
       public const string MajorToQueen = "Progressive Major To Queen";
+      public const string Amazon = "Progressive Amazon";
       public const string PawnForwardness = "Progressive Pawn Forwardness";
       public const string Consul = "Progressive Consul";
       public const string KingPromotion = "Progressive King Promotion";

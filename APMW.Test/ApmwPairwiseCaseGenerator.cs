@@ -102,6 +102,7 @@ namespace ChessV.Test
                 "major-piece-count=" + IntKey(fuzzCase.MajorPieceCount),
                 "jack-count=" + IntKey(fuzzCase.JackCount),
                 "major-to-queen-count=" + IntKey(fuzzCase.MajorToQueenCount),
+                "amazon-count=" + IntKey(fuzzCase.AmazonCount),
                 "pawn-forwardness-count=" + IntKey(fuzzCase.PawnForwardnessCount),
                 "consul-count=" + IntKey(fuzzCase.ConsulCount),
                 "king-promotion-count=" + IntKey(fuzzCase.KingPromotionCount),
@@ -484,6 +485,7 @@ namespace ChessV.Test
                     .With(ApmwFuzzOptionSpace.AxisMinorPieceCount, "0")
                     .With(ApmwFuzzOptionSpace.AxisMajorPieceCount, "15")
                     .With(ApmwFuzzOptionSpace.AxisMajorToQueenCount, "15")
+                    .With(ApmwFuzzOptionSpace.AxisAmazonCount, "0")
                     .With(ApmwFuzzOptionSpace.AxisJackCount, "0")
                     .With(ApmwFuzzOptionSpace.AxisConsulCount, "2"),
                 true));
@@ -491,7 +493,8 @@ namespace ChessV.Test
                 BaseAssignment(optionSpace, true)
                     .With(ApmwFuzzOptionSpace.AxisMinorPieceCount, "0")
                     .With(ApmwFuzzOptionSpace.AxisMajorPieceCount, "19")
-                    .With(ApmwFuzzOptionSpace.AxisMajorToQueenCount, "19")
+                    .With(ApmwFuzzOptionSpace.AxisMajorToQueenCount, "18")
+                    .With(ApmwFuzzOptionSpace.AxisAmazonCount, "1")
                     .With(ApmwFuzzOptionSpace.AxisJackCount, "19")
                     .With(ApmwFuzzOptionSpace.AxisConsulCount, "2")
                     .With(ApmwFuzzOptionSpace.AxisKingPromotionCount, "2"),
@@ -500,7 +503,8 @@ namespace ChessV.Test
                 BaseAssignment(optionSpace, false)
                     .With(ApmwFuzzOptionSpace.AxisMinorPieceCount, "16")
                     .With(ApmwFuzzOptionSpace.AxisMajorPieceCount, "16")
-                    .With(ApmwFuzzOptionSpace.AxisMajorToQueenCount, "16")
+                    .With(ApmwFuzzOptionSpace.AxisMajorToQueenCount, "15")
+                    .With(ApmwFuzzOptionSpace.AxisAmazonCount, "1")
                     .With(ApmwFuzzOptionSpace.AxisJackCount, "16")
                     .With(ApmwFuzzOptionSpace.AxisConsulCount, "3")
                     .With(ApmwFuzzOptionSpace.AxisKingPromotionCount, "3"),
@@ -581,6 +585,7 @@ namespace ChessV.Test
                     .With(ApmwFuzzOptionSpace.AxisMinorPieceCount, "29")
                     .With(ApmwFuzzOptionSpace.AxisMajorPieceCount, "29")
                     .With(ApmwFuzzOptionSpace.AxisMajorToQueenCount, "29")
+                    .With(ApmwFuzzOptionSpace.AxisAmazonCount, "29")
                     .With(ApmwFuzzOptionSpace.AxisJackCount, "29")
                     .With(ApmwFuzzOptionSpace.AxisPocketLimitByPocket, "4")
                     .With(ApmwFuzzOptionSpace.AxisPocketCount, "24"),
@@ -685,6 +690,7 @@ namespace ChessV.Test
                 builder.MajorPieceCount = assignment.GetInt(ApmwFuzzOptionSpace.AxisMajorPieceCount);
                 builder.JackCount = assignment.GetInt(ApmwFuzzOptionSpace.AxisJackCount);
                 builder.MajorToQueenCount = assignment.GetInt(ApmwFuzzOptionSpace.AxisMajorToQueenCount);
+                builder.AmazonCount = assignment.GetInt(ApmwFuzzOptionSpace.AxisAmazonCount);
                 builder.PawnForwardnessCount = assignment.GetInt(ApmwFuzzOptionSpace.AxisPawnForwardnessCount);
                 builder.ConsulCount = assignment.GetInt(ApmwFuzzOptionSpace.AxisConsulCount);
                 builder.KingPromotionCount = assignment.GetInt(ApmwFuzzOptionSpace.AxisKingPromotionCount);

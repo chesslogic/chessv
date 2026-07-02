@@ -52,6 +52,7 @@ namespace ChessV.Test
                 .Add(ApmwConstants.ProgressiveItems.MajorPiece, 4)
                 .Add(ApmwConstants.ProgressiveItems.Jack, 3)
                 .Add(ApmwConstants.ProgressiveItems.MajorToQueen, 2)
+                .Add(ApmwConstants.ProgressiveItems.Amazon, 4)
                 .Add(ApmwConstants.ProgressiveItems.PawnForwardness, 6)
                 .Add(ApmwConstants.ProgressiveItems.Consul, 5)
                 .Add(ApmwConstants.ProgressiveItems.KingPromotion, 4)
@@ -71,6 +72,7 @@ namespace ChessV.Test
             Assert.AreEqual(4, core.foundMajors);
             Assert.AreEqual(3, core.foundJacks);
             Assert.AreEqual(2, core.foundQueens);
+            Assert.AreEqual(4, core.foundAmazons);
             Assert.AreEqual(6, core.foundPawnForwardness);
             Assert.AreEqual(2, core.foundConsuls, "consuls cap at 2");
             Assert.AreEqual(2, core.foundKingPromotions, "king promotions cap at 2");
@@ -213,6 +215,17 @@ namespace ChessV.Test
         }
 
         [TestMethod]
+        public void EarlyPopulate_PlacesHeraldAndAmazonInAmazonFamilyOnly()
+        {
+            ConfigureStableGeneration();
+            var core = ApmwCore.getInstance();
+
+            Assert.IsFalse(core.queens.Any(piece => piece.Name == "Herald"), "Herald should no longer be a queen-family piece");
+            Assert.IsTrue(core.amazons.Any(piece => piece.Name == "Herald"), "Herald should be an amazon-family piece");
+            Assert.IsTrue(core.amazons.Any(piece => piece.Name == "Amazon"), "Amazon should be an amazon-family piece");
+        }
+
+        [TestMethod]
         public void MajorQueenMinorGeneration_PlacesPiecesAndTracksPromotionStrings()
         {
             ConfigureStableGeneration();
@@ -252,6 +265,94 @@ namespace ChessV.Test
             int player = core.GeriProvider();
             foreach (var piece in withMinors.Where(piece => piece != null && !core.kings.Contains(piece)).Distinct())
                 StringAssert.Contains(promotionText, piece.Notation[player]);
+        }
+
+        [TestMethod]
+        public void Generation_AmazonAndQueenUpgradesShareMajorSlotsWithoutOverlapAndPromote()
+        {
+            var fuzzCase = ApmwFuzzCase.DefaultStandard().With(builder =>
+            {
+                builder.CaseName = "characterization-amazon-queen-upgrades";
+                builder.PawnCount = 8;
+                builder.ArmyIndexes = new int[0];
+                builder.MinorPieceCount = 0;
+                builder.MajorPieceCount = 4;
+                builder.JackCount = 0;
+                builder.MajorToQueenCount = 1;
+                builder.AmazonCount = 2;
+                builder.QueenPieceLimitByType = 1;
+                builder.MajorSeed = 710;
+                builder.QueenSeed = 3;
+            });
+
+            using (var scope = ApmwFuzzScope.Configure(fuzzCase))
+            {
+                var result = scope.GeneratePlayerPieceSet();
+                var core = ApmwCore.getInstance();
+                var generated = result.PlayerPieceSet.Values.ToList();
+                var amazonPieces = generated.Where(piece => core.amazons.Contains(piece)).ToList();
+                var queenPieces = generated.Where(piece => core.queens.Contains(piece)).ToList();
+
+                Assert.AreEqual(1, CountFrom(generated, core.majors), "queen/amazon upgrades should consume existing major slots");
+                Assert.AreEqual(1, queenPieces.Count, "queen upgrade count");
+                Assert.AreEqual(2, amazonPieces.Count, "amazon upgrade count");
+                CollectionAssert.AreEquivalent(
+                    new[] { "Amazon", "Herald" },
+                    amazonPieces.Select(piece => piece.Name).ToArray(),
+                    "deterministic seed should exercise both amazon-family pieces; actual: " +
+                    string.Join(", ", amazonPieces.Select(piece => piece.Name)));
+
+                Assert.AreEqual(
+                    result.PlayerPieceSet.Count,
+                    result.PlayerPieceSet.Keys.Distinct().Count(),
+                    "queen and amazon upgrades must occupy distinct board coordinates");
+
+                foreach (var piece in amazonPieces.Concat(queenPieces).Distinct())
+                    StringAssert.Contains(result.PromotionTypes, piece.Notation[core.GeriProvider()]);
+            }
+        }
+
+        [TestMethod]
+        public void Generation_AmazonFamilyUpgradesDoNotCreateCastlingRookPrivileges()
+        {
+            var fuzzCase = ApmwFuzzCase.DefaultStandard().With(builder =>
+            {
+                builder.CaseName = "characterization-amazon-castling";
+                builder.PawnCount = 8;
+                builder.ArmyIndexes = new int[0];
+                builder.MinorPieceCount = 0;
+                builder.MajorPieceCount = 4;
+                builder.JackCount = 0;
+                builder.MajorToQueenCount = 1;
+                builder.AmazonCount = 2;
+                builder.QueenPieceLimitByType = 1;
+                builder.MajorSeed = 720;
+                builder.QueenSeed = 3;
+            });
+
+            using (var scope = ApmwFuzzScope.Configure(fuzzCase))
+            {
+                var generatedResult = scope.GeneratePlayerPieceSet();
+                var core = ApmwCore.getInstance();
+                var amazonBackRankFiles = generatedResult.PlayerPieceSet
+                    .Where(item => item.Key.Key == 4 && core.amazons.Contains(item.Value))
+                    .Select(item => item.Key.Value)
+                    .ToArray();
+
+                Assert.IsTrue(amazonBackRankFiles.Length > 0, "at least one amazon-family upgrade should be on the castling rank");
+                foreach (var piece in generatedResult.PlayerPieceSet.Values.Where(piece => core.amazons.Contains(piece)))
+                {
+                    Assert.IsFalse(core.majors.Contains(piece), piece.Name + " should not be a major-family castling rook");
+                    Assert.IsFalse(core.jacks.Contains(piece), piece.Name + " should not be a jack-family castling rook");
+                }
+
+                var game = (ApmwChessGame)scope.CreateGame();
+                string castleRooks = (string)game.GetCustomProperty("CastleRooks");
+                foreach (int file in amazonBackRankFiles)
+                    Assert.IsFalse(
+                        castleRooks.Contains(char.ToUpper((char)('a' + file))),
+                        "amazon-family upgrade file should not receive custom castling rights: " + file);
+            }
         }
 
         [TestMethod]
@@ -336,7 +437,8 @@ namespace ChessV.Test
                 (core.minors.Contains(piece) ||
                  core.majors.Contains(piece) ||
                  core.jacks.Contains(piece) ||
-                 core.queens.Contains(piece));
+                 core.queens.Contains(piece) ||
+                 core.amazons.Contains(piece));
         }
 
         private static int CountFrom(IEnumerable<PieceType> pieces, ISet<PieceType> set)

@@ -83,6 +83,7 @@ namespace ChessV.Games
 
     //  Misc
     public Herald Herald;
+    public Amazon Amazon;
     public Nightrider Nightrider;
     public Scout Scout;
 
@@ -112,6 +113,7 @@ namespace ChessV.Games
     public HashSet<PieceType> Majors;
     public HashSet<PieceType> Jacks;
     public HashSet<PieceType> Queens;
+    public HashSet<PieceType> Amazons;
     public HashSet<PieceType> Colorbounds;
     public List<HashSet<PieceType>> Armies;
     public List<HashSet<PieceType>> PocketSets;
@@ -134,6 +136,7 @@ namespace ChessV.Games
       Majors = new HashSet<PieceType>();
       Jacks = new HashSet<PieceType>();
       Queens = new HashSet<PieceType>();
+      Amazons = new HashSet<PieceType>();
       Colorbounds = new HashSet<PieceType>();
       Armies = new List<HashSet<PieceType>>();
       PocketSets = new List<HashSet<PieceType>>() { Pawns, Minors, Majors, Queens };
@@ -146,6 +149,7 @@ namespace ChessV.Games
       apmwCore.majors = Majors;
       apmwCore.jacks = Jacks;
       apmwCore.queens = Queens;
+      apmwCore.amazons = Amazons;
       apmwCore.colorbound = Colorbounds;
       apmwCore.armies = Armies;
       apmwCore.pocketSets = PocketSets;
@@ -329,6 +333,9 @@ namespace ChessV.Games
         if (loadableTypes.Contains(piece.Notation[HumanPlayer]))
           AddPieceType(piece);
       foreach (PieceType piece in Queens)
+        if (loadableTypes.Contains(piece.Notation[HumanPlayer]))
+          AddPieceType(piece);
+      foreach (PieceType piece in Amazons)
         if (loadableTypes.Contains(piece.Notation[HumanPlayer]))
           AddPieceType(piece);
 
@@ -549,7 +556,8 @@ namespace ChessV.Games
       Cannon = new Cannon("Cannon", "O", 400, 275);
       Vao = new Vao("Vao", "V", 300, 175);
       // Misc
-      Herald = new Herald("Herald", "D", 940, 900);
+      Herald = new Herald("Herald", "D", 1300, 1300);
+      Amazon = new Amazon("Amazon", "Â", 1300, 1300);
       Nightrider = new Nightrider("Nightrider", "J", 550, 550, "Knightsrider");
       Scout = new Scout("Scout", "U", 300, 300);
       Queennon = new Queennon("Queennon", "F", 1025, 720);
@@ -616,8 +624,10 @@ namespace ChessV.Games
       Queens.Add(Chancellor);
       Queens.Add(Colonel);
       Queens.Add(Queennon); // hilarious comedy option
-      Queens.Add(Herald); // hilarious comedy option
       Queens.Add(Miracle);
+
+      Amazons.Add(Amazon);
+      Amazons.Add(Herald);
 
       Colorbounds.Add(Bishop);
       Colorbounds.Add(WarElephant);
