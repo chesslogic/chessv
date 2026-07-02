@@ -186,7 +186,7 @@ All offsets below use the notation above. In `via` clauses, only pre-target rout
 | Phoenix | Wazir steps + Elephant leaps. |
 | War Elephant | Ferz steps + Elephant leaps + Dabbabah leaps. |
 | Cleric | Bishop slides + Dabbabah leaps. |
-| Mullah | Bishop-like diagonal slides `(s,t)` + Camel leaps `(s,3t),(3s,t)`; no Dabbabah despite source comment. |
+| Mullah | Bishop-like diagonal slides `(s,t)` + Camel leaps `(s,3t),(3s,t)`. |
 | Archbishop | Bishop slides + Knight leaps. |
 | Tower | Wazir steps + Dabbabah leaps. |
 | Short Rook | Bounded orthogonal slide up to 4 squares: targets `(ks,0)` and `(0,ks)` for `k=1..4`, straight path clear. |
