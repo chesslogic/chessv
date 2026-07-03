@@ -1,4 +1,5 @@
 using Archipelago.APChessV;
+using ChessV.Base;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -55,6 +56,34 @@ namespace ChessV.Test
         public void OverCapItemCases_RunItemGeneration()
         {
             RunCases(ApmwFuzzCaseGenerator.OverCapItemCases(), 1, ApmwFuzzStage.ItemHandlerGeneration);
+        }
+
+        [TestMethod]
+        public void NeutralUpgradeActions_DoNotConsumeDirectTargetsBeforeFallback()
+        {
+            var fuzzCase = ApmwFuzzCase.DefaultStandard().With(builder =>
+            {
+                builder.CaseName = "neutral-upgrades-preserve-direct-targets";
+                builder.Category = "generation-boundary";
+                builder.MinorPieceCount = 1;
+                builder.MajorPieceCount = 2;
+                builder.JackCount = 1;
+                builder.MajorToQueenCount = 1;
+                builder.AmazonCount = 1;
+            });
+
+            using (var scope = ApmwFuzzScope.Configure(fuzzCase))
+            {
+                var result = scope.RunItemHandlerGeneration();
+                var core = ApmwCore.getInstance();
+                var generated = result.PlayerPieceSet.Values.ToList();
+
+                Assert.AreEqual(1, generated.Count(piece => core.minors.Contains(piece)));
+                Assert.AreEqual(1, generated.Count(piece => core.majors.Contains(piece)));
+                Assert.AreEqual(1, generated.Count(piece => core.jacks.Contains(piece)));
+                Assert.AreEqual(1, generated.Count(piece => core.queens.Contains(piece)));
+                Assert.AreEqual(0, generated.Count(piece => core.amazons.Contains(piece)));
+            }
         }
 
         [TestMethod]

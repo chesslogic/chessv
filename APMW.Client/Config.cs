@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -41,20 +42,45 @@ namespace Archipelago.APChessV
 
   public class ApmwConfig
   {
-    private static readonly HashSet<string> ValidPieceUpgradePreferences =
-      new HashSet<string>(StringComparer.Ordinal)
+    public sealed class PieceUpgradeActionResolution
+    {
+      public PieceUpgradeActionResolution(string actionName, int priority, bool isEnabled)
       {
-        ApmwConstants.PieceUpgradeActions.NewPawn,
-        ApmwConstants.PieceUpgradeActions.MorePawn,
-        ApmwConstants.PieceUpgradeActions.BetterPawn,
-        ApmwConstants.PieceUpgradeActions.PoolPawnUpgrade,
-        ApmwConstants.PieceUpgradeActions.MinorToMajor,
-        ApmwConstants.PieceUpgradeActions.MajorToJack,
-        ApmwConstants.PieceUpgradeActions.MinorToJack,
-        ApmwConstants.PieceUpgradeActions.MajorToQueen,
-        ApmwConstants.PieceUpgradeActions.JackToQueen,
-        ApmwConstants.PieceUpgradeActions.QueenToAmazon,
-      };
+        ActionName = actionName;
+        Priority = priority;
+        IsEnabled = isEnabled;
+      }
+
+      public string ActionName { get; private set; }
+      public int Priority { get; private set; }
+      public bool IsEnabled { get; private set; }
+      public bool IsDisabled { get { return !IsEnabled; } }
+    }
+
+    private static readonly string[] ValidPieceUpgradeActions =
+    {
+      ApmwConstants.PieceUpgradeActions.NewPawn,
+      ApmwConstants.PieceUpgradeActions.MorePawn,
+      ApmwConstants.PieceUpgradeActions.BetterPawn,
+      ApmwConstants.PieceUpgradeActions.PoolPawnUpgrade,
+      ApmwConstants.PieceUpgradeActions.MinorToMajor,
+      ApmwConstants.PieceUpgradeActions.MajorToJack,
+      ApmwConstants.PieceUpgradeActions.MinorToJack,
+      ApmwConstants.PieceUpgradeActions.MajorToQueen,
+      ApmwConstants.PieceUpgradeActions.JackToQueen,
+      ApmwConstants.PieceUpgradeActions.QueenToAmazon,
+    };
+
+    private static readonly HashSet<string> ValidPieceUpgradePreferences =
+      new HashSet<string>(ValidPieceUpgradeActions, StringComparer.Ordinal);
+
+    private static readonly Dictionary<string, int> PieceUpgradeActionOrder =
+      ValidPieceUpgradeActions
+        .Select((actionName, index) => new { actionName, index })
+        .ToDictionary(item => item.actionName, item => item.index, StringComparer.Ordinal);
+
+    private static readonly IReadOnlyDictionary<string, PieceUpgradeActionResolution> DefaultPieceUpgradeActions =
+      ResolvePieceUpgradeActionsFromNames(LegacyPieceUpgradePreferences(FairyPawnUpgrades.Off).ToList()).Actions;
 
     public static ApmwConfig _instance;
     public static ApmwConfig getInstance()
@@ -155,28 +181,37 @@ namespace Archipelago.APChessV
     public FairyPawnUpgrades PawnUpgrades { get { return pawnUpgrades; } }
     public List<string> PieceUpgradePreferences { get; private set; } =
       LegacyPieceUpgradePreferences(FairyPawnUpgrades.Off).ToList();
+    public IReadOnlyDictionary<string, PieceUpgradeActionResolution> PieceUpgradeActions { get; private set; } =
+      DefaultPieceUpgradeActions;
     public int PawnUpgradesInt
     {
       set
       {
         pawnUpgrades = (FairyPawnUpgrades)value;
-        PieceUpgradePreferences = LegacyPieceUpgradePreferences(pawnUpgrades).ToList();
+        var pieceUpgradeResolution = ResolvePieceUpgradeActionsFromNames(
+          LegacyPieceUpgradePreferences(pawnUpgrades).ToList());
+        PieceUpgradePreferences = pieceUpgradeResolution.Preferences;
+        PieceUpgradeActions = pieceUpgradeResolution.Actions;
       }
     }
 
     public bool IsPieceUpgradeActionEnabled(string actionName)
     {
-      return PieceUpgradePreferences.Contains(actionName);
+      PieceUpgradeActionResolution action;
+      return PieceUpgradeActions.TryGetValue(actionName, out action) && action.IsEnabled;
     }
 
     public bool IsPieceUpgradeActionPreferredBefore(string actionName, string laterActionName)
     {
-      int actionIndex = PieceUpgradePreferences.IndexOf(actionName);
-      if (actionIndex < 0)
+      PieceUpgradeActionResolution action;
+      if (!PieceUpgradeActions.TryGetValue(actionName, out action) || !action.IsEnabled)
         return false;
 
-      int laterActionIndex = PieceUpgradePreferences.IndexOf(laterActionName);
-      return laterActionIndex < 0 || actionIndex < laterActionIndex;
+      PieceUpgradeActionResolution laterAction;
+      if (!PieceUpgradeActions.TryGetValue(laterActionName, out laterAction) || !laterAction.IsEnabled)
+        return true;
+
+      return action.Priority > laterAction.Priority;
     }
 
     public bool UsesSuperMaxPawnGuarantee
@@ -233,10 +268,12 @@ namespace Archipelago.APChessV
       PawnUpgradesInt = Convert.ToInt32(SlotData.GetValueOrDefault(
         ApmwConstants.SlotKeyFairyChessPawnUpgrades, FairyPawnUpgrades.Off));
       bool hasPieceUpgradePreferences = SlotData.ContainsKey(ApmwConstants.SlotKeyPieceUpgradePreferences);
-      PieceUpgradePreferences = ResolvePieceUpgradePreferences(
+      var pieceUpgradeResolution = ResolvePieceUpgradeActions(
         hasPieceUpgradePreferences ? SlotData[ApmwConstants.SlotKeyPieceUpgradePreferences] : null,
         hasPieceUpgradePreferences,
         PawnUpgrades);
+      PieceUpgradePreferences = pieceUpgradeResolution.Preferences;
+      PieceUpgradeActions = pieceUpgradeResolution.Actions;
 
       // Piece Limits
       minorTypeLimit = Convert.ToInt32(SlotData.GetValueOrDefault(
@@ -249,24 +286,145 @@ namespace Archipelago.APChessV
         "pocket_limit_by_pocket", 4));
     }
 
-    private static List<string> ResolvePieceUpgradePreferences(
+    private sealed class PieceUpgradeActionResolutionResult
+    {
+      public PieceUpgradeActionResolutionResult(
+        List<string> preferences,
+        IReadOnlyDictionary<string, PieceUpgradeActionResolution> actions)
+      {
+        Preferences = preferences;
+        Actions = actions;
+      }
+
+      public List<string> Preferences { get; private set; }
+      public IReadOnlyDictionary<string, PieceUpgradeActionResolution> Actions { get; private set; }
+    }
+
+    private static PieceUpgradeActionResolutionResult ResolvePieceUpgradeActions(
       object rawPreferences,
       bool hasPreferences,
       FairyPawnUpgrades legacyMode)
     {
       if (!hasPreferences)
-        return LegacyPieceUpgradePreferences(legacyMode).ToList();
+        return ResolvePieceUpgradeActionsFromNames(LegacyPieceUpgradePreferences(legacyMode).ToList());
+
+      if (TryReadPieceUpgradePriorityMap(rawPreferences, out var priorityMap))
+        return ResolvePieceUpgradeActionsFromPriorityMap(priorityMap);
 
       var requestedPreferences = ReadPieceUpgradePreferenceNames(rawPreferences);
       if (requestedPreferences.Count == 0)
-        return LegacyPieceUpgradePreferences(legacyMode).ToList();
+        return ResolvePieceUpgradeActionsFromNames(LegacyPieceUpgradePreferences(legacyMode).ToList());
 
       var preferences = requestedPreferences
         .Where(preference => ValidPieceUpgradePreferences.Contains(preference))
+        .Distinct(StringComparer.Ordinal)
         .ToList();
-      return preferences.Count == 0
+      return ResolvePieceUpgradeActionsFromNames(preferences.Count == 0
         ? LegacyPieceUpgradePreferences(FairyPawnUpgrades.Off).ToList()
-        : preferences;
+        : preferences);
+    }
+
+    private static PieceUpgradeActionResolutionResult ResolvePieceUpgradeActionsFromNames(List<string> preferences)
+    {
+      var priorities = new Dictionary<string, int>(StringComparer.Ordinal);
+      for (int index = 0; index < preferences.Count; index++)
+      {
+        string preference = preferences[index];
+        if (ValidPieceUpgradePreferences.Contains(preference) && !priorities.ContainsKey(preference))
+          priorities[preference] = preferences.Count - index;
+      }
+
+      var actions = ValidPieceUpgradeActions
+        .Select(actionName => new PieceUpgradeActionResolution(
+          actionName,
+          priorities.ContainsKey(actionName) ? priorities[actionName] : 0,
+          true))
+        .ToList();
+
+      return new PieceUpgradeActionResolutionResult(
+        actions.Where(action => action.IsEnabled)
+          .OrderByDescending(action => action.Priority)
+          .ThenBy(action => PieceUpgradeActionOrder[action.ActionName])
+          .Select(action => action.ActionName)
+          .ToList(),
+        actions.ToDictionary(action => action.ActionName, action => action, StringComparer.Ordinal));
+    }
+
+    private static PieceUpgradeActionResolutionResult ResolvePieceUpgradeActionsFromPriorityMap(
+      IDictionary<string, int> priorities)
+    {
+      var actions = ValidPieceUpgradeActions
+        .Select(actionName =>
+        {
+          int priority = priorities.ContainsKey(actionName) ? priorities[actionName] : 0;
+          return new PieceUpgradeActionResolution(actionName, priority, priority != -1);
+        })
+        .ToList();
+
+      return new PieceUpgradeActionResolutionResult(
+        actions.Where(action => action.IsEnabled)
+          .OrderByDescending(action => action.Priority)
+          .ThenBy(action => PieceUpgradeActionOrder[action.ActionName])
+          .Select(action => action.ActionName)
+          .ToList(),
+        actions.ToDictionary(action => action.ActionName, action => action, StringComparer.Ordinal));
+    }
+
+    private static bool TryReadPieceUpgradePriorityMap(
+      object rawPreferences,
+      out IDictionary<string, int> priorities)
+    {
+      priorities = new Dictionary<string, int>(StringComparer.Ordinal);
+
+      if (rawPreferences is JObject jObject)
+      {
+        foreach (var property in jObject.Properties())
+        {
+          if (ValidPieceUpgradePreferences.Contains(property.Name) &&
+            TryConvertPriority(property.Value, out int priority))
+            priorities[property.Name] = priority;
+        }
+
+        return true;
+      }
+
+      if (rawPreferences is IDictionary dictionary)
+      {
+        foreach (DictionaryEntry entry in dictionary)
+        {
+          string actionName = entry.Key == null ? null : entry.Key.ToString();
+          if (ValidPieceUpgradePreferences.Contains(actionName) &&
+            TryConvertPriority(entry.Value, out int priority))
+            priorities[actionName] = priority;
+        }
+
+        return true;
+      }
+
+      return false;
+    }
+
+    private static bool TryConvertPriority(object value, out int priority)
+    {
+      priority = 0;
+      if (value == null)
+        return false;
+
+      try
+      {
+        if (value is JValue jValue)
+          value = jValue.Value;
+
+        if (value is JToken jToken)
+          value = jToken.ToObject<object>();
+
+        priority = Convert.ToInt32(value);
+        return true;
+      }
+      catch (Exception)
+      {
+        return false;
+      }
     }
 
     private static IEnumerable<string> LegacyPieceUpgradePreferences(FairyPawnUpgrades legacyMode)

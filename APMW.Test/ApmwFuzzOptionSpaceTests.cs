@@ -116,6 +116,7 @@ namespace ChessV.Test
             ApmwFuzzOptionSpace space = ApmwFuzzOptionSpace.CreateDefault();
             ApmwFuzzAxis pawnAxis = space.GetAxis(ApmwFuzzOptionSpace.AxisPawnCount);
             ApmwFuzzAxis pawnUpgradeAxis = space.GetAxis(ApmwFuzzOptionSpace.AxisFairyChessPawnUpgrades);
+            ApmwFuzzAxis upgradePreferenceAxis = space.GetAxis(ApmwFuzzOptionSpace.AxisPieceUpgradePreferenceProfile);
 
             Assert.AreEqual(ApmwFuzzOptionAxisKind.Numeric, pawnAxis.Kind);
             Assert.AreEqual(2, pawnAxis.NumericBands.Count);
@@ -126,11 +127,15 @@ namespace ChessV.Test
             CollectionAssert.DoesNotContain(pawnAxis.Values.Select(value => value.CanonicalKey).ToList(), "2");
             ApmwFuzzOptionValue superMax = pawnUpgradeAxis.GetValue("supermax");
             Assert.AreEqual(FairyPawnUpgrades.SuperMax, superMax.Value);
+            ApmwFuzzOptionValue priorityMap = upgradePreferenceAxis.GetValue("prioritymapdisablemajortoqueen");
+            Assert.AreEqual(ApmwPieceUpgradePreferenceProfile.PriorityMapDisableMajorToQueen, priorityMap.Value);
 
             var builder = ApmwFuzzCase.DefaultStandard().ToBuilder();
             ApmwFuzzOptionSpace.ApplyCaseValue(builder, ApmwFuzzOptionSpace.AxisFairyChessPawnUpgrades, superMax);
+            ApmwFuzzOptionSpace.ApplyCaseValue(builder, ApmwFuzzOptionSpace.AxisPieceUpgradePreferenceProfile, priorityMap);
             Dictionary<string, object> slotData = builder.Build().BuildSlotData();
             Assert.AreEqual(3, (int)slotData[ApmwConstants.SlotKeyFairyChessPawnUpgrades]);
+            Assert.IsTrue(slotData.ContainsKey(ApmwConstants.SlotKeyPieceUpgradePreferences));
 
             Assert.AreEqual(0, space.Validate(space.DefaultAssignment()).Count);
 

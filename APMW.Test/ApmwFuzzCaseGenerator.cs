@@ -83,6 +83,18 @@ namespace ChessV.Test
                 builder.DeathLink = true;
             });
 
+            AddCase(cases, SmokeMasterSeed, "smoke-standard-source-family-upgrade-list", false,
+                ApmwFuzzCase.TargetStages.MoveGeneration, GenerationSmokeCategory, builder =>
+            {
+                builder.FairyChessPawnUpgrades = FairyPawnUpgrades.Configure;
+                builder.PieceUpgradePreferenceProfile = ApmwPieceUpgradePreferenceProfile.ListMinorToJackFirst;
+                builder.MinorPieceCount = 4;
+                builder.MajorPieceCount = 1;
+                builder.JackCount = 2;
+                builder.MajorToQueenCount = 1;
+                builder.AmazonCount = 1;
+            });
+
             return cases;
         }
 
@@ -186,6 +198,8 @@ namespace ChessV.Test
             AddAxisCases(cases, isSuperSized, "victory-count",
                 UniqueNonNegative(0, 1, 2),
                 (builder, value) => builder.VictoryCount = value);
+
+            AddPieceUpgradePreferenceBoundaryCases(cases, isSuperSized, width);
         }
 
         private static void AddOverCapItemCases(List<ApmwFuzzCase> cases, bool isSuperSized)
@@ -252,6 +266,51 @@ namespace ChessV.Test
                     builder.PawnForwardnessCount = pawnCapacity + 1;
                     builder.ConsulCount = 3;
                     builder.KingPromotionCount = 3;
+                });
+        }
+
+        private static void AddPieceUpgradePreferenceBoundaryCases(
+            List<ApmwFuzzCase> cases,
+            bool isSuperSized,
+            int width)
+        {
+            string boardLabel = BoardLabel(isSuperSized);
+
+            AddCase(cases, BoundaryMasterSeed, "boundary-" + boardLabel + "-upgrade-list-minor-to-jack-chain", isSuperSized,
+                ApmwFuzzCase.TargetStages.ItemHandlerGeneration, GenerationBoundaryCategory,
+                builder =>
+                {
+                    builder.FairyChessPawnUpgrades = FairyPawnUpgrades.Configure;
+                    builder.PieceUpgradePreferenceProfile = ApmwPieceUpgradePreferenceProfile.ListMinorToJackFirst;
+                    builder.MinorPieceCount = Math.Max(4, width / 2);
+                    builder.MajorPieceCount = 1;
+                    builder.JackCount = 2;
+                    builder.MajorToQueenCount = 1;
+                    builder.AmazonCount = 1;
+                });
+            AddCase(cases, BoundaryMasterSeed, "boundary-" + boardLabel + "-upgrade-map-disable-major-to-queen", isSuperSized,
+                ApmwFuzzCase.TargetStages.ItemHandlerGeneration, GenerationBoundaryCategory,
+                builder =>
+                {
+                    builder.FairyChessPawnUpgrades = FairyPawnUpgrades.Configure;
+                    builder.PieceUpgradePreferenceProfile = ApmwPieceUpgradePreferenceProfile.PriorityMapDisableMajorToQueen;
+                    builder.MinorPieceCount = width;
+                    builder.MajorPieceCount = Math.Max(1, width / 2);
+                    builder.JackCount = 1;
+                    builder.MajorToQueenCount = 2;
+                    builder.AmazonCount = 1;
+                });
+            AddCase(cases, BoundaryMasterSeed, "boundary-" + boardLabel + "-source-less-amazon-upgrades", isSuperSized,
+                ApmwFuzzCase.TargetStages.ItemHandlerGeneration, GenerationBoundaryCategory,
+                builder =>
+                {
+                    builder.FairyChessPawnUpgrades = FairyPawnUpgrades.Configure;
+                    builder.PieceUpgradePreferenceProfile = ApmwPieceUpgradePreferenceProfile.PriorityMapDisableMajorToQueen;
+                    builder.MinorPieceCount = 0;
+                    builder.MajorPieceCount = 0;
+                    builder.JackCount = 0;
+                    builder.MajorToQueenCount = 0;
+                    builder.AmazonCount = width;
                 });
         }
 

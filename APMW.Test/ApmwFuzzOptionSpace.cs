@@ -453,6 +453,7 @@ namespace ChessV.Test
         internal const string AxisArmy = "army";
         internal const string AxisFairyChessPawns = "fairy_chess_pawns";
         internal const string AxisFairyChessPawnUpgrades = "fairy_chess_pawn_upgrades";
+        internal const string AxisPieceUpgradePreferenceProfile = "piece_upgrade_preference_profile";
         internal const string AxisMinorPieceLimitByType = "minor_piece_limit_by_type";
         internal const string AxisMajorPieceLimitByType = "major_piece_limit_by_type";
         internal const string AxisQueenPieceLimitByType = "queen_piece_limit_by_type";
@@ -522,6 +523,7 @@ namespace ChessV.Test
                     ApmwFuzzOptionValue.IntSet("scattered-armies", new[] { 0, 3, 5, 6 })),
                 ApmwFuzzAxis.Enumeration(AxisFairyChessPawns, FairyPawns.Mixed),
                 ApmwFuzzAxis.Enumeration(AxisFairyChessPawnUpgrades, FairyPawnUpgrades.Off),
+                ApmwFuzzAxis.Enumeration(AxisPieceUpgradePreferenceProfile, ApmwPieceUpgradePreferenceProfile.Legacy),
                 ApmwFuzzAxis.Numeric(
                     AxisMinorPieceLimitByType,
                     0,
@@ -625,12 +627,6 @@ namespace ChessV.Test
                     "super-board-requests-super-size-item",
                     "Super-sized APMW cases should include at least one Super Size Me item.",
                     assignment => !assignment.GetBool(AxisIsSuperSized) || assignment.GetInt(AxisSuperSizeMeCount) >= 1),
-                new ApmwFuzzConstraint(
-                    "major-upgrades-not-above-major-count",
-                    "Major-to-queen and amazon upgrades cannot exceed available major pieces for constrained generation.",
-                    assignment =>
-                        assignment.GetInt(AxisMajorToQueenCount) + assignment.GetInt(AxisAmazonCount) <=
-                        assignment.GetInt(AxisMajorPieceCount)),
                 new ApmwFuzzConstraint(
                     "pocket-items-fit-selected-limit",
                     "Pocket items should fit the selected per-pocket limit unless the limit is disabled.",
@@ -754,6 +750,8 @@ namespace ChessV.Test
                     return ApmwFuzzOptionValue.Enumeration(fuzzCase.FairyChessPawns);
                 case AxisFairyChessPawnUpgrades:
                     return ApmwFuzzOptionValue.Enumeration(fuzzCase.FairyChessPawnUpgrades);
+                case AxisPieceUpgradePreferenceProfile:
+                    return ApmwFuzzOptionValue.Enumeration(fuzzCase.PieceUpgradePreferenceProfile);
                 case AxisMinorPieceLimitByType:
                     return ApmwFuzzOptionValue.Numeric(fuzzCase.MinorPieceLimitByType);
                 case AxisMajorPieceLimitByType:
@@ -841,6 +839,9 @@ namespace ChessV.Test
                     break;
                 case AxisFairyChessPawnUpgrades:
                     builder.FairyChessPawnUpgrades = (FairyPawnUpgrades)value.Value;
+                    break;
+                case AxisPieceUpgradePreferenceProfile:
+                    builder.PieceUpgradePreferenceProfile = (ApmwPieceUpgradePreferenceProfile)value.Value;
                     break;
                 case AxisMinorPieceLimitByType:
                     builder.MinorPieceLimitByType = ToInt(value);

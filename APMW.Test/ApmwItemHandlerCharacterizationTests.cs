@@ -9,6 +9,7 @@ using ChessV;
 using ChessV.Base;
 using ChessV.Games;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json.Linq;
 using static Archipelago.MultiClient.Net.Helpers.ReceivedItemsHelper;
 
 namespace ChessV.Test
@@ -268,7 +269,7 @@ namespace ChessV.Test
         }
 
         [TestMethod]
-        public void Generation_AmazonAndQueenUpgradesShareMajorSlotsWithoutOverlapAndPromote()
+        public void Generation_NeutralAmazonUpgradeDoesNotConsumePositiveQueenUpgrade()
         {
             var fuzzCase = ApmwFuzzCase.DefaultStandard().With(builder =>
             {
@@ -293,66 +294,240 @@ namespace ChessV.Test
                 var amazonPieces = generated.Where(piece => core.amazons.Contains(piece)).ToList();
                 var queenPieces = generated.Where(piece => core.queens.Contains(piece)).ToList();
 
-                Assert.AreEqual(1, CountFrom(generated, core.majors), "queen/amazon upgrades should consume existing major slots");
-                Assert.AreEqual(1, queenPieces.Count, "queen upgrade count");
-                Assert.AreEqual(2, amazonPieces.Count, "amazon upgrade count");
-                CollectionAssert.AreEquivalent(
-                    new[] { "Amazon", "Herald" },
-                    amazonPieces.Select(piece => piece.Name).ToArray(),
-                    "deterministic seed should exercise both amazon-family pieces; actual: " +
-                    string.Join(", ", amazonPieces.Select(piece => piece.Name)));
+                Assert.AreEqual(3, CountFrom(generated, core.majors), "major-to-queen consumes one existing major");
+                Assert.AreEqual(1, queenPieces.Count, "neutral queen-to-amazon should not consume the positive-priority queen upgrade");
+                Assert.AreEqual(0, amazonPieces.Count, "neutral source-less amazon upgrades should become pawn material instead of direct amazons");
 
                 Assert.AreEqual(
                     result.PlayerPieceSet.Count,
                     result.PlayerPieceSet.Keys.Distinct().Count(),
-                    "queen and amazon upgrades must occupy distinct board coordinates");
+                    "upgrade planning must occupy distinct board coordinates");
 
-                foreach (var piece in amazonPieces.Concat(queenPieces).Distinct())
+                foreach (var piece in queenPieces.Distinct())
                     StringAssert.Contains(result.PromotionTypes, piece.Notation[core.GeriProvider()]);
             }
         }
 
         [TestMethod]
+        public void Generation_NeutralNonPawnUpgradesDoNotPreemptDirectMajorJackMinorPlacement()
+        {
+            handler = ConfigureStableGenerationWithPieceUpgradePriorities(
+                new MutableReceivedItemsHelper()
+                    .Add(ApmwConstants.ProgressiveItems.MinorPiece)
+                    .Add(ApmwConstants.ProgressiveItems.MajorPiece)
+                    .Add(ApmwConstants.ProgressiveItems.Jack),
+                new JObject());
+
+            var generated = handler.generatePlayerPieceSet(NumFiles).Item1.Values.ToList();
+
+            Assert.AreEqual(1, CountFamily(generated, "minor"), "neutral minor-to-major should not consume direct minor placement");
+            Assert.AreEqual(1, CountFamily(generated, "major"), "neutral major-to-jack/minor-to-major should not consume direct major placement");
+            Assert.AreEqual(1, CountFamily(generated, "jack"), "neutral jack target should remain a direct jack");
+        }
+
+        [DataTestMethod]
+        [DataRow(ApmwConstants.PieceUpgradeActions.MinorToMajor, ApmwConstants.ProgressiveItems.MinorPiece, ApmwConstants.ProgressiveItems.MajorPiece, "minor", "major")]
+        [DataRow(ApmwConstants.PieceUpgradeActions.MajorToJack, ApmwConstants.ProgressiveItems.MajorPiece, ApmwConstants.ProgressiveItems.Jack, "major", "jack")]
+        [DataRow(ApmwConstants.PieceUpgradeActions.MinorToJack, ApmwConstants.ProgressiveItems.MinorPiece, ApmwConstants.ProgressiveItems.Jack, "minor", "jack")]
+        [DataRow(ApmwConstants.PieceUpgradeActions.MajorToQueen, ApmwConstants.ProgressiveItems.MajorPiece, ApmwConstants.ProgressiveItems.MajorToQueen, "major", "queen")]
+        [DataRow(ApmwConstants.PieceUpgradeActions.JackToQueen, ApmwConstants.ProgressiveItems.Jack, ApmwConstants.ProgressiveItems.MajorToQueen, "jack", "queen")]
+        public void Generation_NonPawnUpgradeActionsConvertConfiguredSourceToTarget(
+            string actionName,
+            string sourceItemName,
+            string targetItemName,
+            string sourceFamily,
+            string targetFamily)
+        {
+            handler = ConfigureStableGenerationWithPieceUpgradePriorities(
+                new MutableReceivedItemsHelper()
+                    .Add(sourceItemName)
+                    .Add(targetItemName),
+                PriorityMapWith(actionName, 10));
+
+            var result = handler.generatePlayerPieceSet(NumFiles);
+            var core = ApmwCore.getInstance();
+            var generated = result.Item1.Values.ToList();
+            var targetPieces = generated.Where(piece => FamilyContains(core, targetFamily, piece)).ToList();
+
+            Assert.AreEqual(0, CountFamily(generated, sourceFamily), actionName + " should consume its source piece");
+            Assert.AreEqual(
+                1,
+                targetPieces.Count,
+                actionName + " should create one target piece and no duplicate direct target; generated: " +
+                    string.Join(", ", generated.Select(piece => piece.Name)));
+            foreach (var piece in targetPieces.Distinct())
+                StringAssert.Contains(result.Item2, piece.Notation[core.GeriProvider()], actionName + " should add target notation to promotions");
+        }
+
+        [TestMethod]
+        public void Generation_QueenToAmazonConsumesQueenCreatedByEarlierUpgrade()
+        {
+            handler = ConfigureStableGenerationWithPieceUpgradePriorities(
+                new MutableReceivedItemsHelper()
+                    .Add(ApmwConstants.ProgressiveItems.MajorPiece)
+                    .Add(ApmwConstants.ProgressiveItems.MajorToQueen)
+                    .Add(ApmwConstants.ProgressiveItems.Amazon),
+                PriorityMapWith(
+                    ApmwConstants.PieceUpgradeActions.MajorToQueen,
+                    20,
+                    new Dictionary<string, int>
+                    {
+                        [ApmwConstants.PieceUpgradeActions.QueenToAmazon] = 10,
+                        [ApmwConstants.PieceUpgradeActions.MinorToMajor] = -1,
+                    }));
+
+            var result = handler.generatePlayerPieceSet(NumFiles);
+            var core = ApmwCore.getInstance();
+            var generated = result.Item1.Values.ToList();
+            var amazonPieces = generated.Where(piece => core.amazons.Contains(piece)).ToList();
+
+            Assert.AreEqual(0, CountFamily(generated, "major"), "major-to-queen should consume the original major");
+            Assert.AreEqual(0, CountFamily(generated, "queen"), "queen-to-amazon should consume the intermediate queen");
+            Assert.AreEqual(1, amazonPieces.Count, "queen-to-amazon should create one amazon-family target");
+            foreach (var piece in amazonPieces.Distinct())
+                StringAssert.Contains(result.Item2, piece.Notation[core.GeriProvider()]);
+        }
+
+        [DataTestMethod]
+        [DataRow(ApmwConstants.PieceUpgradeActions.MajorToJack, "major", "minor")]
+        [DataRow(ApmwConstants.PieceUpgradeActions.MinorToJack, "minor", "major")]
+        public void Generation_JackUpgradePriorityControlsWhichSourceConsumesFoundJacks(
+            string preferredAction,
+            string consumedSourceFamily,
+            string remainingSourceFamily)
+        {
+            string otherAction = preferredAction == ApmwConstants.PieceUpgradeActions.MajorToJack
+                ? ApmwConstants.PieceUpgradeActions.MinorToJack
+                : ApmwConstants.PieceUpgradeActions.MajorToJack;
+            handler = ConfigureStableGenerationWithPieceUpgradePriorities(
+                new MutableReceivedItemsHelper()
+                    .Add(ApmwConstants.ProgressiveItems.MinorPiece)
+                    .Add(ApmwConstants.ProgressiveItems.MajorPiece)
+                    .Add(ApmwConstants.ProgressiveItems.Jack),
+                PriorityMapWith(
+                    preferredAction,
+                    10,
+                    new Dictionary<string, int>
+                    {
+                        [otherAction] = 5,
+                        [ApmwConstants.PieceUpgradeActions.MinorToMajor] = -1,
+                    }));
+
+            var generated = handler.generatePlayerPieceSet(NumFiles).Item1.Values.ToList();
+
+            Assert.AreEqual(1, CountFamily(generated, "jack"), "foundJacks should only create one upgraded jack");
+            Assert.AreEqual(0, CountFamily(generated, consumedSourceFamily), preferredAction + " should consume the higher-priority source");
+            Assert.AreEqual(1, CountFamily(generated, remainingSourceFamily), otherAction + " should not also consume foundJacks");
+        }
+
+        [DataTestMethod]
+        [DataRow(ApmwConstants.PieceUpgradeActions.MajorToQueen, "major", "jack")]
+        [DataRow(ApmwConstants.PieceUpgradeActions.JackToQueen, "jack", "major")]
+        public void Generation_QueenUpgradePriorityControlsWhichSourceConsumesFoundQueens(
+            string preferredAction,
+            string consumedSourceFamily,
+            string remainingSourceFamily)
+        {
+            string otherAction = preferredAction == ApmwConstants.PieceUpgradeActions.MajorToQueen
+                ? ApmwConstants.PieceUpgradeActions.JackToQueen
+                : ApmwConstants.PieceUpgradeActions.MajorToQueen;
+            handler = ConfigureStableGenerationWithPieceUpgradePriorities(
+                new MutableReceivedItemsHelper()
+                    .Add(ApmwConstants.ProgressiveItems.MajorPiece)
+                    .Add(ApmwConstants.ProgressiveItems.Jack)
+                    .Add(ApmwConstants.ProgressiveItems.MajorToQueen),
+                PriorityMapWith(
+                    preferredAction,
+                    10,
+                    new Dictionary<string, int>
+                    {
+                        [otherAction] = 5,
+                        [ApmwConstants.PieceUpgradeActions.MinorToMajor] = -1,
+                        [ApmwConstants.PieceUpgradeActions.MajorToJack] = -1,
+                        [ApmwConstants.PieceUpgradeActions.MinorToJack] = -1,
+                        [ApmwConstants.PieceUpgradeActions.QueenToAmazon] = -1,
+                    }));
+
+            var generated = handler.generatePlayerPieceSet(NumFiles).Item1.Values.ToList();
+
+            Assert.AreEqual(1, CountFamily(generated, "queen"), "foundQueens should only create one upgraded queen");
+            Assert.AreEqual(0, CountFamily(generated, consumedSourceFamily), preferredAction + " should consume the higher-priority source");
+            Assert.AreEqual(1, CountFamily(generated, remainingSourceFamily), otherAction + " should not also consume foundQueens");
+        }
+
+        [TestMethod]
+        public void Generation_DisabledNonPawnUpgradeLeavesDirectTargetAndSourcePieces()
+        {
+            handler = ConfigureStableGenerationWithPieceUpgradePriorities(
+                new MutableReceivedItemsHelper()
+                    .Add(ApmwConstants.ProgressiveItems.MinorPiece)
+                    .Add(ApmwConstants.ProgressiveItems.MajorPiece),
+                PriorityMapWith(
+                    ApmwConstants.PieceUpgradeActions.MinorToMajor,
+                    -1));
+
+            var generated = handler.generatePlayerPieceSet(NumFiles).Item1.Values.ToList();
+
+            Assert.AreEqual(1, CountFamily(generated, "minor"), "disabled minor-to-major should not consume the minor");
+            Assert.AreEqual(1, CountFamily(generated, "major"), "disabled minor-to-major should leave the major item as a direct piece");
+        }
+
+        [TestMethod]
+        public void Generation_SourceLessUpgradeConvertsTargetBudgetToPawnMaterial()
+        {
+            handler = ConfigureStableGenerationWithPieceUpgradePriorities(
+                new MutableReceivedItemsHelper()
+                    .Add(ApmwConstants.ProgressiveItems.MajorToQueen),
+                PriorityMapWith(ApmwConstants.PieceUpgradeActions.MajorToQueen, 10));
+
+            var result = handler.generatePlayerPieceSet(NumFiles);
+            var core = ApmwCore.getInstance();
+            var generated = result.Item1.Values.ToList();
+
+            Assert.AreEqual(0, CountFamily(generated, "queen"), "source-less major-to-queen should not create a direct queen");
+            Assert.IsTrue(
+                generated.Count(piece => piece != null && (core.pawns.Contains(piece) || core.sergeants.Contains(piece))) > 0,
+                "source-less upgrade material should be available to generated pawns");
+        }
+
+        [TestMethod]
         public void Generation_AmazonFamilyUpgradesDoNotCreateCastlingRookPrivileges()
         {
-            var fuzzCase = ApmwFuzzCase.DefaultStandard().With(builder =>
+            handler = ConfigureStableGenerationWithPieceUpgradePriorities(
+                new MutableReceivedItemsHelper()
+                    .Add(ApmwConstants.ProgressiveItems.MajorPiece)
+                    .Add(ApmwConstants.ProgressiveItems.MajorToQueen)
+                    .Add(ApmwConstants.ProgressiveItems.Amazon),
+                PriorityMapWith(
+                    ApmwConstants.PieceUpgradeActions.MajorToQueen,
+                    20,
+                    new Dictionary<string, int>
+                    {
+                        [ApmwConstants.PieceUpgradeActions.QueenToAmazon] = 10,
+                        [ApmwConstants.PieceUpgradeActions.MinorToMajor] = -1,
+                    }),
+                false);
+
+            var game = (ApmwChessGame)new ChessV.Manager.Manager().CreateGame(ApmwConstants.GameNameStandard);
+            var generatedResult = handler.generatePlayerPieceSet(NumFiles);
+            var core = ApmwCore.getInstance();
+            var amazonBackRankFiles = generatedResult.Item1
+                .Where(item => item.Key.Key == 4 && core.amazons.Contains(item.Value))
+                .Select(item => item.Key.Value)
+                .ToArray();
+
+            Assert.IsTrue(amazonBackRankFiles.Length > 0, "at least one amazon-family upgrade should be on the castling rank");
+            foreach (var piece in generatedResult.Item1.Values.Where(piece => core.amazons.Contains(piece)))
             {
-                builder.CaseName = "characterization-amazon-castling";
-                builder.PawnCount = 8;
-                builder.ArmyIndexes = new int[0];
-                builder.MinorPieceCount = 0;
-                builder.MajorPieceCount = 4;
-                builder.JackCount = 0;
-                builder.MajorToQueenCount = 1;
-                builder.AmazonCount = 2;
-                builder.QueenPieceLimitByType = 1;
-                builder.MajorSeed = 720;
-                builder.QueenSeed = 3;
-            });
-
-            using (var scope = ApmwFuzzScope.Configure(fuzzCase))
-            {
-                var generatedResult = scope.GeneratePlayerPieceSet();
-                var core = ApmwCore.getInstance();
-                var amazonBackRankFiles = generatedResult.PlayerPieceSet
-                    .Where(item => item.Key.Key == 4 && core.amazons.Contains(item.Value))
-                    .Select(item => item.Key.Value)
-                    .ToArray();
-
-                Assert.IsTrue(amazonBackRankFiles.Length > 0, "at least one amazon-family upgrade should be on the castling rank");
-                foreach (var piece in generatedResult.PlayerPieceSet.Values.Where(piece => core.amazons.Contains(piece)))
-                {
-                    Assert.IsFalse(core.majors.Contains(piece), piece.Name + " should not be a major-family castling rook");
-                    Assert.IsFalse(core.jacks.Contains(piece), piece.Name + " should not be a jack-family castling rook");
-                }
-
-                var game = (ApmwChessGame)scope.CreateGame();
-                string castleRooks = (string)game.GetCustomProperty("CastleRooks");
-                foreach (int file in amazonBackRankFiles)
-                    Assert.IsFalse(
-                        castleRooks.Contains(char.ToUpper((char)('a' + file))),
-                        "amazon-family upgrade file should not receive custom castling rights: " + file);
+                Assert.IsFalse(core.majors.Contains(piece), piece.Name + " should not be a major-family castling rook");
+                Assert.IsFalse(core.jacks.Contains(piece), piece.Name + " should not be a jack-family castling rook");
             }
+
+            string castleRooks = (string)game.GetCustomProperty("CastleRooks");
+            foreach (int file in amazonBackRankFiles)
+                Assert.IsFalse(
+                    castleRooks.Contains(char.ToUpper((char)('a' + file))),
+                    "amazon-family upgrade file should not receive custom castling rights: " + file);
         }
 
         [TestMethod]
@@ -425,6 +600,40 @@ namespace ChessV.Test
             new ApmwChessGame().earlyPopulatePieceTypes();
         }
 
+        private static ItemHandler ConfigureStableGenerationWithPieceUpgradePriorities(
+            MutableReceivedItemsHelper receivedItems,
+            JObject pieceUpgradePriorities,
+            bool populatePieceTypes = true)
+        {
+            var slotData = ApmwFuzzCase.DefaultStandard().BuildSlotData();
+            slotData[ApmwConstants.SlotKeyFairyChessPawnUpgrades] = (int)FairyPawnUpgrades.Configure;
+            slotData[ApmwConstants.SlotKeyPieceUpgradePreferences] = pieceUpgradePriorities;
+            ApmwConfig.getInstance().Instantiate(slotData);
+            ApmwConfig.getInstance().seed();
+            if (populatePieceTypes)
+                new ApmwChessGame().earlyPopulatePieceTypes();
+            return new ItemHandler(receivedItems);
+        }
+
+        private static JObject PriorityMapWith(string actionName, int priority)
+        {
+            return PriorityMapWith(actionName, priority, new Dictionary<string, int>());
+        }
+
+        private static JObject PriorityMapWith(
+            string actionName,
+            int priority,
+            IDictionary<string, int> additionalPriorities)
+        {
+            var priorities = new Dictionary<string, int>
+            {
+                [actionName] = priority,
+            };
+            foreach (var additionalPriority in additionalPriorities)
+                priorities[additionalPriority.Key] = additionalPriority.Value;
+            return JObject.FromObject(priorities);
+        }
+
         private static void ConfigureStableSlotDataOnly()
         {
             ApmwConfig.getInstance().Instantiate(ApmwFuzzCase.DefaultStandard().BuildSlotData());
@@ -444,6 +653,34 @@ namespace ChessV.Test
         private static int CountFrom(IEnumerable<PieceType> pieces, ISet<PieceType> set)
         {
             return pieces.Count(piece => piece != null && set.Contains(piece));
+        }
+
+        private static int CountFamily(IEnumerable<PieceType> pieces, string familyName)
+        {
+            var core = ApmwCore.getInstance();
+            return pieces.Count(piece => FamilyContains(core, familyName, piece));
+        }
+
+        private static bool FamilyContains(ApmwCore core, string familyName, PieceType piece)
+        {
+            if (piece == null)
+                return false;
+
+            switch (familyName)
+            {
+                case "minor":
+                    return core.minors.Contains(piece);
+                case "major":
+                    return core.majors.Contains(piece);
+                case "jack":
+                    return core.jacks.Contains(piece);
+                case "queen":
+                    return core.queens.Contains(piece);
+                case "amazon":
+                    return core.amazons.Contains(piece);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(familyName), familyName, "Unknown non-pawn piece family.");
+            }
         }
 
         private static string PieceSetSignature(IReadOnlyDictionary<KeyValuePair<int, int>, PieceType> pieces)

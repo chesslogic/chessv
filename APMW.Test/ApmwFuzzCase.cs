@@ -7,6 +7,13 @@ using Newtonsoft.Json.Linq;
 
 namespace ChessV.Test
 {
+    internal enum ApmwPieceUpgradePreferenceProfile
+    {
+        Legacy = 0,
+        ListMinorToJackFirst = 1,
+        PriorityMapDisableMajorToQueen = 2,
+    }
+
     internal sealed class ApmwFuzzCase
     {
         internal const string VictoryItemName = "Victory";
@@ -30,6 +37,7 @@ namespace ChessV.Test
         public IReadOnlyList<int> ArmyIndexes { get; }
         public FairyPawns FairyChessPawns { get; }
         public FairyPawnUpgrades FairyChessPawnUpgrades { get; }
+        public ApmwPieceUpgradePreferenceProfile PieceUpgradePreferenceProfile { get; }
         public int MinorPieceLimitByType { get; }
         public int MajorPieceLimitByType { get; }
         public int QueenPieceLimitByType { get; }
@@ -86,6 +94,7 @@ namespace ChessV.Test
             ArmyIndexes = new ReadOnlyCollection<int>((builder.ArmyIndexes ?? Enumerable.Empty<int>()).ToList());
             FairyChessPawns = builder.FairyChessPawns;
             FairyChessPawnUpgrades = builder.FairyChessPawnUpgrades;
+            PieceUpgradePreferenceProfile = builder.PieceUpgradePreferenceProfile;
             MinorPieceLimitByType = builder.MinorPieceLimitByType;
             MajorPieceLimitByType = builder.MajorPieceLimitByType;
             QueenPieceLimitByType = builder.QueenPieceLimitByType;
@@ -162,6 +171,7 @@ namespace ChessV.Test
                 ArmyIndexes = ArmyIndexes.ToArray(),
                 FairyChessPawns = FairyChessPawns,
                 FairyChessPawnUpgrades = FairyChessPawnUpgrades,
+                PieceUpgradePreferenceProfile = PieceUpgradePreferenceProfile,
                 MinorPieceLimitByType = MinorPieceLimitByType,
                 MajorPieceLimitByType = MajorPieceLimitByType,
                 QueenPieceLimitByType = QueenPieceLimitByType,
@@ -222,6 +232,10 @@ namespace ChessV.Test
             if (DeterministicChaosSeed.HasValue)
                 slotData["deterministic_chaos_seed"] = DeterministicChaosSeed.Value;
 
+            object pieceUpgradePreferences = BuildPieceUpgradePreferences();
+            if (pieceUpgradePreferences != null)
+                slotData[ApmwConstants.SlotKeyPieceUpgradePreferences] = pieceUpgradePreferences;
+
             return slotData;
         }
 
@@ -264,9 +278,9 @@ namespace ChessV.Test
         {
             return string.Format(
                 "ApmwFuzzCase(CaseName=\"{0}\", Label=\"{1}\", CaseIndex={2}, MasterSeed=\"{3}\", TargetStage=\"{4}\", Category=\"{5}\", IsSuperSized={6}, GameName=\"{7}\", " +
-                "Slots=[goal={8}, enemy_piece_types={9}, piece_locations={10}, piece_types={11}, fairy_chess_army={12}, army=[{13}], fairy_chess_pawns={14}, fairy_chess_pawn_upgrades={15}, minor_limit={16}, major_limit={17}, queen_limit={18}, pocket_limit={19}, death_link={20}], " +
-                "Seeds=[pocket={21}, pawn={22}, minor={23}, major={24}, queen={25}, chaos={26}], " +
-                "Items=[pockets={27}, pocket_range={28}, pocket_gems={29}, ai_malus={30}, pawns={31}, minors={32}, majors={33}, jacks={34}, major_to_queen={35}, amazons={36}, pawn_forwardness={37}, consuls={38}, king_promotions={39}, super_size={40}, play_as_white={41}, victory={42}])",
+                "Slots=[goal={8}, enemy_piece_types={9}, piece_locations={10}, piece_types={11}, fairy_chess_army={12}, army=[{13}], fairy_chess_pawns={14}, fairy_chess_pawn_upgrades={15}, piece_upgrade_profile={16}, minor_limit={17}, major_limit={18}, queen_limit={19}, pocket_limit={20}, death_link={21}], " +
+                "Seeds=[pocket={22}, pawn={23}, minor={24}, major={25}, queen={26}, chaos={27}], " +
+                "Items=[pockets={28}, pocket_range={29}, pocket_gems={30}, ai_malus={31}, pawns={32}, minors={33}, majors={34}, jacks={35}, major_to_queen={36}, amazons={37}, pawn_forwardness={38}, consuls={39}, king_promotions={40}, super_size={41}, play_as_white={42}, victory={43}])",
                 Escape(CaseName),
                 Escape(Label),
                 CaseIndex,
@@ -283,6 +297,7 @@ namespace ChessV.Test
                 string.Join(",", ArmyIndexes),
                 (int)FairyChessPawns,
                 (int)FairyChessPawnUpgrades,
+                PieceUpgradePreferenceProfile,
                 MinorPieceLimitByType,
                 MajorPieceLimitByType,
                 QueenPieceLimitByType,
@@ -323,6 +338,31 @@ namespace ChessV.Test
             foreach (int armyIndex in ArmyIndexes)
                 army.Add(armyIndex);
             return army;
+        }
+
+        private object BuildPieceUpgradePreferences()
+        {
+            switch (PieceUpgradePreferenceProfile)
+            {
+                case ApmwPieceUpgradePreferenceProfile.ListMinorToJackFirst:
+                    return new JArray
+                    {
+                        ApmwConstants.PieceUpgradeActions.MinorToJack,
+                        ApmwConstants.PieceUpgradeActions.JackToQueen,
+                        ApmwConstants.PieceUpgradeActions.QueenToAmazon,
+                    };
+                case ApmwPieceUpgradePreferenceProfile.PriorityMapDisableMajorToQueen:
+                    return new JObject
+                    {
+                        [ApmwConstants.PieceUpgradeActions.MinorToMajor] = 4,
+                        [ApmwConstants.PieceUpgradeActions.MajorToJack] = 3,
+                        [ApmwConstants.PieceUpgradeActions.QueenToAmazon] = 2,
+                        [ApmwConstants.PieceUpgradeActions.MajorToQueen] = -1,
+                    };
+                case ApmwPieceUpgradePreferenceProfile.Legacy:
+                default:
+                    return null;
+            }
         }
 
         private static string Escape(string value)
@@ -383,6 +423,7 @@ namespace ChessV.Test
             public IEnumerable<int> ArmyIndexes { get; set; } = AllArmyIndexes;
             public FairyPawns FairyChessPawns { get; set; } = FairyPawns.Mixed;
             public FairyPawnUpgrades FairyChessPawnUpgrades { get; set; } = FairyPawnUpgrades.Off;
+            public ApmwPieceUpgradePreferenceProfile PieceUpgradePreferenceProfile { get; set; } = ApmwPieceUpgradePreferenceProfile.Legacy;
             public int MinorPieceLimitByType { get; set; }
             public int MajorPieceLimitByType { get; set; }
             public int QueenPieceLimitByType { get; set; }

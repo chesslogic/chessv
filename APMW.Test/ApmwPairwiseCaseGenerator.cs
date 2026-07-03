@@ -82,6 +82,7 @@ namespace ChessV.Test
                 "army=" + IntSetKey(fuzzCase.ArmyIndexes),
                 "fairy_chess_pawns=" + EnumKey(fuzzCase.FairyChessPawns),
                 "fairy_chess_pawn_upgrades=" + EnumKey(fuzzCase.FairyChessPawnUpgrades),
+                "piece_upgrade_preference_profile=" + EnumKey(fuzzCase.PieceUpgradePreferenceProfile),
                 "minor_piece_limit_by_type=" + IntKey(fuzzCase.MinorPieceLimitByType),
                 "major_piece_limit_by_type=" + IntKey(fuzzCase.MajorPieceLimitByType),
                 "queen_piece_limit_by_type=" + IntKey(fuzzCase.QueenPieceLimitByType),
@@ -509,6 +510,24 @@ namespace ChessV.Test
                     .With(ApmwFuzzOptionSpace.AxisConsulCount, "3")
                     .With(ApmwFuzzOptionSpace.AxisKingPromotionCount, "3"),
                 true));
+            definitions.Add(Define("majors", "interaction-majors-standard-list-minor-to-jack-chain",
+                BaseAssignment(optionSpace, false)
+                    .With(ApmwFuzzOptionSpace.AxisPieceUpgradePreferenceProfile, "listminortojackfirst")
+                    .With(ApmwFuzzOptionSpace.AxisMinorPieceCount, "4")
+                    .With(ApmwFuzzOptionSpace.AxisMajorPieceCount, "1")
+                    .With(ApmwFuzzOptionSpace.AxisJackCount, "1")
+                    .With(ApmwFuzzOptionSpace.AxisMajorToQueenCount, "1")
+                    .With(ApmwFuzzOptionSpace.AxisAmazonCount, "1"),
+                true));
+            definitions.Add(Define("majors", "interaction-majors-standard-priority-map-disable-major-to-queen",
+                BaseAssignment(optionSpace, false)
+                    .With(ApmwFuzzOptionSpace.AxisPieceUpgradePreferenceProfile, "prioritymapdisablemajortoqueen")
+                    .With(ApmwFuzzOptionSpace.AxisMinorPieceCount, "4")
+                    .With(ApmwFuzzOptionSpace.AxisMajorPieceCount, "2")
+                    .With(ApmwFuzzOptionSpace.AxisJackCount, "1")
+                    .With(ApmwFuzzOptionSpace.AxisMajorToQueenCount, "1")
+                    .With(ApmwFuzzOptionSpace.AxisAmazonCount, "1"),
+                true));
         }
 
         private static void AddArmyAndTypeLimitInteractions(
@@ -676,6 +695,7 @@ namespace ChessV.Test
                 builder.ArmyIndexes = assignment.GetIntSet(ApmwFuzzOptionSpace.AxisArmy).ToArray();
                 builder.FairyChessPawns = GetEnum<FairyPawns>(assignment, ApmwFuzzOptionSpace.AxisFairyChessPawns);
                 builder.FairyChessPawnUpgrades = GetEnum<FairyPawnUpgrades>(assignment, ApmwFuzzOptionSpace.AxisFairyChessPawnUpgrades);
+                builder.PieceUpgradePreferenceProfile = GetEnum<ApmwPieceUpgradePreferenceProfile>(assignment, ApmwFuzzOptionSpace.AxisPieceUpgradePreferenceProfile);
                 builder.MinorPieceLimitByType = assignment.GetInt(ApmwFuzzOptionSpace.AxisMinorPieceLimitByType);
                 builder.MajorPieceLimitByType = assignment.GetInt(ApmwFuzzOptionSpace.AxisMajorPieceLimitByType);
                 builder.QueenPieceLimitByType = assignment.GetInt(ApmwFuzzOptionSpace.AxisQueenPieceLimitByType);
