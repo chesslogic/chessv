@@ -1,4 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -64,6 +65,73 @@ namespace ChessV.Test
             CollectionAssert.AreEqual(
                 new[] { "B", "C", "A" },
                 Enumerable.Range(0, 3).Select(index => result[index]).ToArray());
+        }
+
+        [DataTestMethod]
+        [DataRow(FairyPawnUpgrades.Off, "new-pawn,more-pawn,better-pawn,major-to-queen")]
+        [DataRow(FairyPawnUpgrades.Pool, "new-pawn,pool-pawn-upgrade,more-pawn,better-pawn,major-to-queen")]
+        [DataRow(FairyPawnUpgrades.Max, "new-pawn,better-pawn,more-pawn,major-to-queen")]
+        [DataRow(FairyPawnUpgrades.SuperMax, "new-pawn,better-pawn,more-pawn,major-to-queen")]
+        [DataRow(FairyPawnUpgrades.Configure, "new-pawn,more-pawn,better-pawn,major-to-queen")]
+        public void Instantiate_DerivesPieceUpgradePreferencesFromLegacyMode(
+            FairyPawnUpgrades legacyMode,
+            string expectedCsv)
+        {
+            var config = new ApmwConfig();
+            config.Instantiate(new Dictionary<string, object>
+            {
+                [ApmwConstants.SlotKeyFairyChessPawnUpgrades] = (int)legacyMode,
+            });
+
+            CollectionAssert.AreEqual(
+                expectedCsv.Split(','),
+                config.PieceUpgradePreferences);
+        }
+
+        [TestMethod]
+        public void Instantiate_UsesResolvedPieceUpgradePreferencesWhenPresent()
+        {
+            var config = new ApmwConfig();
+            config.Instantiate(new Dictionary<string, object>
+            {
+                [ApmwConstants.SlotKeyFairyChessPawnUpgrades] = (int)FairyPawnUpgrades.Pool,
+                [ApmwConstants.SlotKeyPieceUpgradePreferences] =
+                    new JArray("better-pawn", "not-real", "new-pawn", "rook-to-queen"),
+            });
+
+            CollectionAssert.AreEqual(
+                new[] { "better-pawn", "new-pawn", "rook-to-queen" },
+                config.PieceUpgradePreferences);
+        }
+
+        [TestMethod]
+        public void Instantiate_DerivesLegacyPreferencesWhenResolvedListIsEmpty()
+        {
+            var config = new ApmwConfig();
+            config.Instantiate(new Dictionary<string, object>
+            {
+                [ApmwConstants.SlotKeyFairyChessPawnUpgrades] = (int)FairyPawnUpgrades.Pool,
+                [ApmwConstants.SlotKeyPieceUpgradePreferences] = new JArray(),
+            });
+
+            CollectionAssert.AreEqual(
+                new[] { "new-pawn", "pool-pawn-upgrade", "more-pawn", "better-pawn", "major-to-queen" },
+                config.PieceUpgradePreferences);
+        }
+
+        [TestMethod]
+        public void Instantiate_FallsBackToOffPreferencesWhenResolvedListHasNoValidNames()
+        {
+            var config = new ApmwConfig();
+            config.Instantiate(new Dictionary<string, object>
+            {
+                [ApmwConstants.SlotKeyFairyChessPawnUpgrades] = (int)FairyPawnUpgrades.Pool,
+                [ApmwConstants.SlotKeyPieceUpgradePreferences] = new JArray("not-real", "also-not-real"),
+            });
+
+            CollectionAssert.AreEqual(
+                new[] { "new-pawn", "more-pawn", "better-pawn", "major-to-queen" },
+                config.PieceUpgradePreferences);
         }
 
         private static int[] CaptureSeeds(ApmwConfig config)

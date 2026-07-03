@@ -35,11 +35,23 @@ namespace Archipelago.APChessV
     Off = 0,
     Pool = 1,
     Max = 2,
-    SuperMax = 3
+    SuperMax = 3,
+    Configure = 4
   }
 
   public class ApmwConfig
   {
+    private static readonly HashSet<string> ValidPieceUpgradePreferences =
+      new HashSet<string>(StringComparer.Ordinal)
+      {
+        ApmwConstants.PieceUpgradeActions.NewPawn,
+        ApmwConstants.PieceUpgradeActions.MorePawn,
+        ApmwConstants.PieceUpgradeActions.BetterPawn,
+        ApmwConstants.PieceUpgradeActions.PoolPawnUpgrade,
+        ApmwConstants.PieceUpgradeActions.RookToQueen,
+        ApmwConstants.PieceUpgradeActions.MajorToQueen,
+      };
+
     public static ApmwConfig _instance;
     public static ApmwConfig getInstance()
     {
@@ -137,6 +149,8 @@ namespace Archipelago.APChessV
     }
     private FairyPawnUpgrades pawnUpgrades;
     public FairyPawnUpgrades PawnUpgrades { get { return pawnUpgrades; } }
+    public List<string> PieceUpgradePreferences { get; private set; } =
+      LegacyPieceUpgradePreferences(FairyPawnUpgrades.Off).ToList();
     public int PawnUpgradesInt
     {
       set
@@ -184,6 +198,11 @@ namespace Archipelago.APChessV
         "fairy_chess_pawns", FairyPawns.Mixed));
       PawnUpgradesInt = Convert.ToInt32(SlotData.GetValueOrDefault(
         ApmwConstants.SlotKeyFairyChessPawnUpgrades, FairyPawnUpgrades.Off));
+      bool hasPieceUpgradePreferences = SlotData.ContainsKey(ApmwConstants.SlotKeyPieceUpgradePreferences);
+      PieceUpgradePreferences = ResolvePieceUpgradePreferences(
+        hasPieceUpgradePreferences ? SlotData[ApmwConstants.SlotKeyPieceUpgradePreferences] : null,
+        hasPieceUpgradePreferences,
+        PawnUpgrades);
 
       // Piece Limits
       minorTypeLimit = Convert.ToInt32(SlotData.GetValueOrDefault(
@@ -194,6 +213,99 @@ namespace Archipelago.APChessV
         "queen_piece_limit_by_type", 0));
       pocketLimit = Convert.ToInt32(SlotData.GetValueOrDefault(
         "pocket_limit_by_pocket", 4));
+    }
+
+    private static List<string> ResolvePieceUpgradePreferences(
+      object rawPreferences,
+      bool hasPreferences,
+      FairyPawnUpgrades legacyMode)
+    {
+      if (!hasPreferences)
+        return LegacyPieceUpgradePreferences(legacyMode).ToList();
+
+      var requestedPreferences = ReadPieceUpgradePreferenceNames(rawPreferences);
+      if (requestedPreferences.Count == 0)
+        return LegacyPieceUpgradePreferences(legacyMode).ToList();
+
+      var preferences = requestedPreferences
+        .Where(preference => ValidPieceUpgradePreferences.Contains(preference))
+        .ToList();
+      return preferences.Count == 0
+        ? LegacyPieceUpgradePreferences(FairyPawnUpgrades.Off).ToList()
+        : preferences;
+    }
+
+    private static IEnumerable<string> LegacyPieceUpgradePreferences(FairyPawnUpgrades legacyMode)
+    {
+      switch (legacyMode)
+      {
+        case FairyPawnUpgrades.Pool:
+          return new[]
+          {
+            ApmwConstants.PieceUpgradeActions.NewPawn,
+            ApmwConstants.PieceUpgradeActions.PoolPawnUpgrade,
+            ApmwConstants.PieceUpgradeActions.MorePawn,
+            ApmwConstants.PieceUpgradeActions.BetterPawn,
+            ApmwConstants.PieceUpgradeActions.MajorToQueen,
+          };
+        case FairyPawnUpgrades.Max:
+        case FairyPawnUpgrades.SuperMax:
+          return new[]
+          {
+            ApmwConstants.PieceUpgradeActions.NewPawn,
+            ApmwConstants.PieceUpgradeActions.BetterPawn,
+            ApmwConstants.PieceUpgradeActions.MorePawn,
+            ApmwConstants.PieceUpgradeActions.MajorToQueen,
+          };
+        case FairyPawnUpgrades.Off:
+        case FairyPawnUpgrades.Configure:
+        default:
+          return new[]
+          {
+            ApmwConstants.PieceUpgradeActions.NewPawn,
+            ApmwConstants.PieceUpgradeActions.MorePawn,
+            ApmwConstants.PieceUpgradeActions.BetterPawn,
+            ApmwConstants.PieceUpgradeActions.MajorToQueen,
+          };
+      }
+    }
+
+    private static List<string> ReadPieceUpgradePreferenceNames(object rawPreferences)
+    {
+      if (rawPreferences == null)
+        return new List<string>();
+
+      if (rawPreferences is JArray jArray)
+        return NormalizePieceUpgradePreferenceNames(jArray.Select(JTokenToString));
+
+      if (rawPreferences is JToken jToken)
+        return NormalizePieceUpgradePreferenceNames(new[] { JTokenToString(jToken) });
+
+      if (rawPreferences is IEnumerable<string> strings)
+        return NormalizePieceUpgradePreferenceNames(strings);
+
+      if (rawPreferences is IEnumerable<object> objects)
+        return NormalizePieceUpgradePreferenceNames(objects.Select(item => item == null ? null : item.ToString()));
+
+      return NormalizePieceUpgradePreferenceNames(new[] { rawPreferences.ToString() });
+    }
+
+    private static List<string> NormalizePieceUpgradePreferenceNames(IEnumerable<string> names)
+    {
+      return names
+        .Where(name => !string.IsNullOrWhiteSpace(name))
+        .Select(name => name.Trim())
+        .ToList();
+    }
+
+    private static string JTokenToString(JToken token)
+    {
+      if (token == null || token.Type == JTokenType.Null)
+        return null;
+
+      return token.Type == JTokenType.String
+        ? token.Value<string>()
+        : token.ToString();
     }
 
     public void seed()

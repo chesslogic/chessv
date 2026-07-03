@@ -19,8 +19,22 @@ namespace Archipelago.APChessV
     /// <summary>Client version string sent during connection handshake.</summary>
     public const string ClientVersion = "0.3.3";
 
-    /// <summary>Slot-data key controlling how bonus material upgrades pawns (off/pool/max).</summary>
+    /// <summary>Legacy slot-data key controlling how bonus material upgrades pawns.</summary>
     public const string SlotKeyFairyChessPawnUpgrades = "fairy_chess_pawn_upgrades";
+
+    /// <summary>Resolved slot-data key with the ordered piece upgrade action preference list.</summary>
+    public const string SlotKeyPieceUpgradePreferences = "piece_upgrade_preferences";
+
+    /// <summary>Action names used by piece_upgrade_preferences.</summary>
+    public static class PieceUpgradeActions
+    {
+      public const string NewPawn = "new-pawn";
+      public const string MorePawn = "more-pawn";
+      public const string BetterPawn = "better-pawn";
+      public const string PoolPawnUpgrade = "pool-pawn-upgrade";
+      public const string RookToQueen = "rook-to-queen";
+      public const string MajorToQueen = "major-to-queen";
+    }
 
     /// <summary>Names of "Progressive ..." (and a few non-progressive) items received from the Archipelago server.</summary>
     public static class ProgressiveItems
