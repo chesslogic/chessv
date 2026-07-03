@@ -96,11 +96,11 @@ namespace ChessV.Test
             {
                 [ApmwConstants.SlotKeyFairyChessPawnUpgrades] = (int)FairyPawnUpgrades.Pool,
                 [ApmwConstants.SlotKeyPieceUpgradePreferences] =
-                    new JArray("better-pawn", "not-real", "new-pawn", "rook-to-queen"),
+                    new JArray("better-pawn", "not-real", "new-pawn", "major-to-queen"),
             });
 
             CollectionAssert.AreEqual(
-                new[] { "better-pawn", "new-pawn", "rook-to-queen" },
+                new[] { "better-pawn", "new-pawn", "major-to-queen" },
                 config.PieceUpgradePreferences);
         }
 

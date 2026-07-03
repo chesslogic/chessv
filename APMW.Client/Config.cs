@@ -48,7 +48,6 @@ namespace Archipelago.APChessV
         ApmwConstants.PieceUpgradeActions.MorePawn,
         ApmwConstants.PieceUpgradeActions.BetterPawn,
         ApmwConstants.PieceUpgradeActions.PoolPawnUpgrade,
-        ApmwConstants.PieceUpgradeActions.RookToQueen,
         ApmwConstants.PieceUpgradeActions.MajorToQueen,
       };
 
