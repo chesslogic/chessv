@@ -32,7 +32,12 @@ namespace Archipelago.APChessV
       public const string MorePawn = "more-pawn";
       public const string BetterPawn = "better-pawn";
       public const string PoolPawnUpgrade = "pool-pawn-upgrade";
+      public const string MinorToMajor = "minor-to-major";
+      public const string MajorToJack = "major-to-jack";
+      public const string MinorToJack = "minor-to-jack";
       public const string MajorToQueen = "major-to-queen";
+      public const string JackToQueen = "jack-to-queen";
+      public const string QueenToAmazon = "queen-to-amazon";
     }
 
     /// <summary>Names of "Progressive ..." (and a few non-progressive) items received from the Archipelago server.</summary>

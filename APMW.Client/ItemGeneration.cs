@@ -239,39 +239,84 @@ namespace Archipelago.APChessV
 
     public static List<PieceType> PickPawns(Random randomPieces, List<PieceType> pawnOptions, int adjustedPawnValues, int remainingPawnSpaces, int foundPawns)
     {
-      var mode = ApmwConfig.getInstance().PawnUpgrades;
+      var config = ApmwConfig.getInstance();
       var sergeants = ApmwCore.getInstance().sergeants.ToList();
       List<PieceType> workingPawns = new List<PieceType>();
       while (workingPawns.Count < remainingPawnSpaces && adjustedPawnValues > 0)
       {
-        PieceType picked;
-        switch (mode)
-        {
-          case FairyPawnUpgrades.Pool:
-            picked = PickPawnPoolMode(randomPieces, pawnOptions, sergeants, adjustedPawnValues, foundPawns, workingPawns.Count);
-            break;
-          case FairyPawnUpgrades.Max:
-          case FairyPawnUpgrades.SuperMax:
-            picked = PickPawnMaxMode(randomPieces, pawnOptions, adjustedPawnValues, foundPawns, workingPawns.Count);
-            break;
-          case FairyPawnUpgrades.Off:
-          default:
-          {
-            var upgrade = adjustedPawnValues <= ItemGenerationValues.Pawn ? PawnUpgrade.Min : PawnUpgrade.Core;
-            picked = GetNextPawn(randomPieces, pawnOptions, upgrade);
-            break;
-          }
-        }
+        PieceType picked = PickPawnUsingUpgradePreferences(
+          randomPieces, pawnOptions, sergeants, adjustedPawnValues, foundPawns, workingPawns.Count, config);
         if (picked == null) break;
         workingPawns.Add(picked);
         adjustedPawnValues -= picked.MidgameValue;
       }
       // TODO(chesslogic): Add an Option not to upgrade pawns. For now, we'll always maximize material value.
-      UpgradePawns(randomPieces, adjustedPawnValues, pawnOptions, workingPawns, mode);
+      UpgradePawns(randomPieces, adjustedPawnValues, pawnOptions, workingPawns, config);
       return workingPawns;
     }
 
-    private static PieceType PickPawnPoolMode(Random randomPieces, List<PieceType> pawnOptions, List<PieceType> sergeants,
+    private static PieceType PickPawnUsingUpgradePreferences(
+        Random randomPieces, List<PieceType> pawnOptions, List<PieceType> sergeants,
+        int budget, int foundPawns, int currentCount, ApmwConfig config)
+    {
+      if (ShouldApplyPoolPawnUpgradeAction(config))
+        return ApplyPoolPawnUpgradeAction(randomPieces, pawnOptions, sergeants, budget, foundPawns, currentCount);
+
+      if (ShouldApplyBetterPawnActionBeforeMorePawn(config))
+      {
+        var upgradedPawn = ApplyBetterPawnAction(randomPieces, pawnOptions, budget, foundPawns, currentCount);
+        if (upgradedPawn != null)
+          return upgradedPawn;
+      }
+
+      return PickNewOrMorePawnAction(randomPieces, pawnOptions, budget, foundPawns, currentCount, config);
+    }
+
+    private static bool ShouldApplyPoolPawnUpgradeAction(ApmwConfig config)
+    {
+      return config.IsPieceUpgradeActionPreferredBefore(
+          ApmwConstants.PieceUpgradeActions.PoolPawnUpgrade,
+          ApmwConstants.PieceUpgradeActions.BetterPawn)
+        && config.IsPieceUpgradeActionPreferredBefore(
+          ApmwConstants.PieceUpgradeActions.PoolPawnUpgrade,
+          ApmwConstants.PieceUpgradeActions.MorePawn);
+    }
+
+    private static bool ShouldApplyBetterPawnActionBeforeMorePawn(ApmwConfig config)
+    {
+      return config.IsPieceUpgradeActionPreferredBefore(
+        ApmwConstants.PieceUpgradeActions.BetterPawn,
+        ApmwConstants.PieceUpgradeActions.MorePawn);
+    }
+
+    private static PieceType PickNewOrMorePawnAction(
+        Random randomPieces, List<PieceType> pawnOptions,
+        int budget, int foundPawns, int currentCount, ApmwConfig config)
+    {
+      if (currentCount < foundPawns)
+        return ApplyNewPawnAction(randomPieces, pawnOptions, budget, foundPawns, currentCount);
+
+      if (!config.IsPieceUpgradeActionEnabled(ApmwConstants.PieceUpgradeActions.MorePawn))
+        return null;
+
+      return ApplyMorePawnAction(randomPieces, pawnOptions, budget, foundPawns, currentCount);
+    }
+
+    private static PieceType ApplyNewPawnAction(
+        Random randomPieces, List<PieceType> pawnOptions,
+        int budget, int foundPawns, int currentCount)
+    {
+      return GetNextPawn(randomPieces, pawnOptions, FallbackUpgrade(budget, foundPawns, currentCount));
+    }
+
+    private static PieceType ApplyMorePawnAction(
+        Random randomPieces, List<PieceType> pawnOptions,
+        int budget, int foundPawns, int currentCount)
+    {
+      return GetNextPawn(randomPieces, pawnOptions, FallbackUpgrade(budget, foundPawns, currentCount));
+    }
+
+    private static PieceType ApplyPoolPawnUpgradeAction(Random randomPieces, List<PieceType> pawnOptions, List<PieceType> sergeants,
         int budget, int foundPawns, int currentCount)
     {
       var augmented = pawnOptions.Concat(sergeants).ToList();
@@ -288,7 +333,7 @@ namespace Archipelago.APChessV
       return GetNextPawn(randomPieces, nonSerg, FallbackUpgrade(budget, foundPawns, currentCount));
     }
 
-    private static PieceType PickPawnMaxMode(Random randomPieces, List<PieceType> pawnOptions,
+    private static PieceType ApplyBetterPawnAction(Random randomPieces, List<PieceType> pawnOptions,
         int budget, int foundPawns, int currentCount)
     {
       var sergeant = GetNextPawn(randomPieces, pawnOptions, PawnUpgrade.Sergeant);
@@ -296,7 +341,7 @@ namespace Archipelago.APChessV
         ? budget >= sergeant.MidgameValue
         : PigeonholeAllowsSergeant(budget, foundPawns, currentCount, sergeant.MidgameValue, pawnOptions);
       if (allowed) return sergeant;
-      return GetNextPawn(randomPieces, pawnOptions, FallbackUpgrade(budget, foundPawns, currentCount));
+      return null;
     }
 
     // Slot-aware fallback selector: if remaining budget per still-required slot cannot
@@ -323,9 +368,18 @@ namespace Archipelago.APChessV
     }
 
     private static void UpgradePawns(Random randomPieces, int adjustedPawnValues, List<PieceType> pawnOptions,
-        List<PieceType> workingPawns, FairyPawnUpgrades mode)
+        List<PieceType> workingPawns, ApmwConfig config)
     {
-      // Best-upgrade pass: replace the cheapest sub-WEAK_VALUE pieces with Best-tier alternatives.
+      if (config.IsPieceUpgradeActionEnabled(ApmwConstants.PieceUpgradeActions.BetterPawn))
+        UpgradeWeakPawnsToBetterPawns(randomPieces, ref adjustedPawnValues, pawnOptions, workingPawns);
+
+      if (!ShouldApplyDelayedBetterPawnAction(config)) return;
+      UpgradeRemainingPawnsToSergeants(randomPieces, adjustedPawnValues, pawnOptions, workingPawns);
+    }
+
+    private static void UpgradeWeakPawnsToBetterPawns(Random randomPieces, ref int adjustedPawnValues,
+        List<PieceType> pawnOptions, List<PieceType> workingPawns)
+    {
       var miniIndexes = new Queue<int>(workingPawns.Select((item, index) => new { Piece = item, Index = index })
         .Where(item => item.Piece.MidgameValue < ItemGenerationValues.Weak)
         .OrderBy(item => item.Piece.MidgameValue)
@@ -337,9 +391,14 @@ namespace Archipelago.APChessV
         workingPawns[index] = GetNextPawn(randomPieces, pawnOptions, PawnUpgrade.Best);
         adjustedPawnValues -= workingPawns[index].MidgameValue;
       }
-      // Pool/Max/SuperMax already placed sergeants per-slot in PickPawns; only Off uses the legacy fallback.
-      if (mode != FairyPawnUpgrades.Off) return;
-      UpgradeRemainingPawnsToSergeants(randomPieces, adjustedPawnValues, pawnOptions, workingPawns);
+    }
+
+    private static bool ShouldApplyDelayedBetterPawnAction(ApmwConfig config)
+    {
+      return config.IsPieceUpgradeActionPreferredBefore(
+          ApmwConstants.PieceUpgradeActions.MorePawn,
+          ApmwConstants.PieceUpgradeActions.BetterPawn)
+        && !ShouldApplyPoolPawnUpgradeAction(config);
     }
 
     private static void UpgradeRemainingPawnsToSergeants(Random randomPieces, int adjustedPawnValues, List<PieceType> pawnOptions, List<PieceType> workingPawns)
@@ -380,7 +439,7 @@ namespace Archipelago.APChessV
         core.foundPawns * ItemGenerationValues.Pawn + spareMaterial + 45);
 
       int pawnGuarantee = core.foundPawns;
-      if (ApmwConfig.getInstance().PawnUpgrades == FairyPawnUpgrades.SuperMax)
+      if (ApmwConfig.getInstance().UsesSuperMaxPawnGuarantee)
         pawnGuarantee = SuperMaxPawnGuarantee(numFiles, core.foundPawns, core.foundConsuls, core.foundJacks, core.foundMajors, core.foundMinors);
 
       List<PieceType> workingPawns = PickPawns(randomPieces, adjustedPawnValues, remainingPawnSpaces, pawnGuarantee);

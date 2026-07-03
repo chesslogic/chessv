@@ -134,6 +134,61 @@ namespace ChessV.Test
                 config.PieceUpgradePreferences);
         }
 
+        [TestMethod]
+        public void Instantiate_AcceptsFuturePieceUpgradePreferenceActionsAndFiltersInvalidNames()
+        {
+            var config = new ApmwConfig();
+            config.Instantiate(new Dictionary<string, object>
+            {
+                [ApmwConstants.SlotKeyFairyChessPawnUpgrades] = (int)FairyPawnUpgrades.Configure,
+                [ApmwConstants.SlotKeyPieceUpgradePreferences] =
+                    new JArray(
+                        "minor-to-major",
+                        "not-real",
+                        "major-to-jack",
+                        "minor-to-jack",
+                        "jack-to-queen",
+                        "queen-to-amazon"),
+            });
+
+            CollectionAssert.AreEqual(
+                new[]
+                {
+                    "minor-to-major",
+                    "major-to-jack",
+                    "minor-to-jack",
+                    "jack-to-queen",
+                    "queen-to-amazon",
+                },
+                config.PieceUpgradePreferences);
+        }
+
+        [TestMethod]
+        public void PieceUpgradePreferenceHelpers_ReflectResolvedOrderAndMajorToQueen()
+        {
+            var config = new ApmwConfig();
+            config.Instantiate(new Dictionary<string, object>
+            {
+                [ApmwConstants.SlotKeyFairyChessPawnUpgrades] = (int)FairyPawnUpgrades.Configure,
+                [ApmwConstants.SlotKeyPieceUpgradePreferences] =
+                    new JArray("new-pawn", "better-pawn", "more-pawn"),
+            });
+
+            Assert.IsTrue(config.IsPieceUpgradeActionPreferredBefore(
+                ApmwConstants.PieceUpgradeActions.BetterPawn,
+                ApmwConstants.PieceUpgradeActions.MorePawn));
+            Assert.IsFalse(config.MajorToQueenUpgradeEnabled);
+
+            config.Instantiate(new Dictionary<string, object>
+            {
+                [ApmwConstants.SlotKeyFairyChessPawnUpgrades] = (int)FairyPawnUpgrades.Configure,
+                [ApmwConstants.SlotKeyPieceUpgradePreferences] =
+                    new JArray("new-pawn", "major-to-queen"),
+            });
+
+            Assert.IsTrue(config.MajorToQueenUpgradeEnabled);
+        }
+
         private static int[] CaptureSeeds(ApmwConfig config)
         {
             return new[]

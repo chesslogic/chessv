@@ -10,6 +10,7 @@ using ChessV.Games;
 using ChessV.Games.Pieces.Berolina;
 using ChessV.Games.Pieces.OdinsRune;
 using Moq;
+using Newtonsoft.Json.Linq;
 
 namespace ChessV.Test
 {
@@ -248,6 +249,16 @@ namespace ChessV.Test
             return Math.Max(foundPawns * 100, foundPawns * 100 + spare + 45);
         }
 
+        private static void ConfigurePieceUpgradePreferences(params string[] preferences)
+        {
+            ApmwConfig.getInstance().Instantiate(new Dictionary<string, object>
+            {
+                ["fairy_chess_pawns"] = (int)FairyPawns.Vanilla,
+                [ApmwConstants.SlotKeyFairyChessPawnUpgrades] = (int)FairyPawnUpgrades.Configure,
+                [ApmwConstants.SlotKeyPieceUpgradePreferences] = new JArray(preferences),
+            });
+        }
+
         private static void ConfigureFoundPieceCounts(
             int foundPawns, int foundConsuls, int foundJacks, int foundMajors, int foundMinors)
         {
@@ -383,6 +394,25 @@ namespace ChessV.Test
 
             Assert.AreEqual(1, CountSergeants(picks), "expected exactly one sergeant before guard rejects");
             Assert.IsTrue(picks.Count >= 3, $"must end with at least foundPawns slots, got {picks.Count}");
+        }
+
+        [TestMethod]
+        public void PieceUpgradePreferences_BetterBeforeMore_ChangesPawnSpendPriority()
+        {
+            ApmwCore.getInstance().foundPawns = 3;
+
+            ConfigurePieceUpgradePreferences("new-pawn", "more-pawn", "better-pawn", "major-to-queen");
+            var moreFirst = handler.PickPawns(AlwaysMaxRandom(), PawnOnlyPool(),
+                adjustedPawnValues: 420, remainingPawnSpaces: 32, foundPawns: 3);
+
+            ConfigurePieceUpgradePreferences("new-pawn", "better-pawn", "more-pawn", "major-to-queen");
+            var betterFirst = handler.PickPawns(AlwaysMaxRandom(), PawnOnlyPool(),
+                adjustedPawnValues: 420, remainingPawnSpaces: 32, foundPawns: 3);
+
+            Assert.AreEqual(0, CountSergeants(moreFirst), "more-pawn first should spend budget on extra pawn slots");
+            Assert.AreEqual(1, CountSergeants(betterFirst), "better-pawn first should prefer an affordable sergeant upgrade");
+            Assert.IsTrue(moreFirst.Count > betterFirst.Count,
+                $"more-pawn first should create more slots than better-pawn first ({moreFirst.Count} <= {betterFirst.Count})");
         }
 
         [TestMethod]

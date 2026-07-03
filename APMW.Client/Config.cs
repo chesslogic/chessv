@@ -48,7 +48,12 @@ namespace Archipelago.APChessV
         ApmwConstants.PieceUpgradeActions.MorePawn,
         ApmwConstants.PieceUpgradeActions.BetterPawn,
         ApmwConstants.PieceUpgradeActions.PoolPawnUpgrade,
+        ApmwConstants.PieceUpgradeActions.MinorToMajor,
+        ApmwConstants.PieceUpgradeActions.MajorToJack,
+        ApmwConstants.PieceUpgradeActions.MinorToJack,
         ApmwConstants.PieceUpgradeActions.MajorToQueen,
+        ApmwConstants.PieceUpgradeActions.JackToQueen,
+        ApmwConstants.PieceUpgradeActions.QueenToAmazon,
       };
 
     public static ApmwConfig _instance;
@@ -155,7 +160,37 @@ namespace Archipelago.APChessV
       set
       {
         pawnUpgrades = (FairyPawnUpgrades)value;
+        PieceUpgradePreferences = LegacyPieceUpgradePreferences(pawnUpgrades).ToList();
       }
+    }
+
+    public bool IsPieceUpgradeActionEnabled(string actionName)
+    {
+      return PieceUpgradePreferences.Contains(actionName);
+    }
+
+    public bool IsPieceUpgradeActionPreferredBefore(string actionName, string laterActionName)
+    {
+      int actionIndex = PieceUpgradePreferences.IndexOf(actionName);
+      if (actionIndex < 0)
+        return false;
+
+      int laterActionIndex = PieceUpgradePreferences.IndexOf(laterActionName);
+      return laterActionIndex < 0 || actionIndex < laterActionIndex;
+    }
+
+    public bool UsesSuperMaxPawnGuarantee
+    {
+      get { return PawnUpgrades == FairyPawnUpgrades.SuperMax; }
+    }
+
+    /// <summary>
+    /// True when the configured upgrade list enables the major-to-queen action.
+    /// Future queen substitution should keep rook-first replacement under this action.
+    /// </summary>
+    public bool MajorToQueenUpgradeEnabled
+    {
+      get { return IsPieceUpgradeActionEnabled(ApmwConstants.PieceUpgradeActions.MajorToQueen); }
     }
 
     public void Instantiate(Dictionary<string, object> slotData)
