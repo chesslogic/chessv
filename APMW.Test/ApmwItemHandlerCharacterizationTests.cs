@@ -248,11 +248,20 @@ namespace ChessV.Test
         [TestMethod]
         public void Generation_FundamentalMaterialUsesUpgradePrioritiesWithoutAddingSlots()
         {
+            // Reaching Queen now requires the whole explicit chain (there's no more implicit
+            // Pawn -> Major shortcut): priority increases towards the goal (MajorToQueen highest)
+            // so that, once any slot reaches an intermediate tier, the simulation always pushes
+            // it further before starting a fresh chain on another slot -- concentrating this
+            // tight budget on completing exactly one full Pawn -> Queen chain, as before.
             handler = ConfigureFundamentalGeneration(
                 new MutableReceivedItemsHelper()
                     .Add(ApmwConstants.ProgressiveItems.Chessmen, 3)
                     .Add(ApmwConstants.ProgressiveItems.Material, 2),
-                PriorityMapWith(ApmwConstants.PieceUpgradeActions.MajorToQueen, 10));
+                PriorityMapWith(ApmwConstants.PieceUpgradeActions.MajorToQueen, 10, new Dictionary<string, int>
+                {
+                    [ApmwConstants.PieceUpgradeActions.MinorToMajor] = 5,
+                    [ApmwConstants.PieceUpgradeActions.PawnToMinor] = 1,
+                }));
 
             var result = handler.generatePlayerPieceSet(NumFiles);
             var core = ApmwCore.getInstance();
@@ -290,10 +299,18 @@ namespace ChessV.Test
         [TestMethod]
         public void Generation_FundamentalIgnoredCastlerDoesNotForceMajorAllocation()
         {
+            // Same rationale as Generation_FundamentalMaterialUsesUpgradePrioritiesWithoutAddingSlots:
+            // the full explicit chain must be configured, with priority increasing towards the
+            // goal, so the single available chessman slot's budget concentrates on reaching Queen.
             handler = ConfigureFundamentalGeneration(new MutableReceivedItemsHelper()
                 .Add(ApmwConstants.ProgressiveItems.Chessmen)
                 .Add(ApmwConstants.ProgressiveItems.Material, 2)
-                .Add(ApmwConstants.ProgressiveItems.Castler));
+                .Add(ApmwConstants.ProgressiveItems.Castler),
+                PriorityMapWith(ApmwConstants.PieceUpgradeActions.MajorToQueen, 10, new Dictionary<string, int>
+                {
+                    [ApmwConstants.PieceUpgradeActions.MinorToMajor] = 5,
+                    [ApmwConstants.PieceUpgradeActions.PawnToMinor] = 1,
+                }));
             ApmwCore.getInstance().IgnoreCastlersReceived = true;
 
             var result = handler.generatePlayerPieceSet(NumFiles);

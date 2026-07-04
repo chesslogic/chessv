@@ -71,6 +71,7 @@ namespace Archipelago.APChessV
       ApmwConstants.PieceUpgradeActions.MorePawn,
       ApmwConstants.PieceUpgradeActions.BetterPawn,
       ApmwConstants.PieceUpgradeActions.PoolPawnUpgrade,
+      ApmwConstants.PieceUpgradeActions.PawnToMinor,
       ApmwConstants.PieceUpgradeActions.MinorToMajor,
       ApmwConstants.PieceUpgradeActions.MajorToJack,
       ApmwConstants.PieceUpgradeActions.MinorToJack,
@@ -118,6 +119,7 @@ namespace Archipelago.APChessV
     public int majorLocSeed = -1;
     public int queenSeed = -1;
     public int queenLocSeed = -1;
+    public int fundamentalGraduationSeed = -1;
 
     internal const string DeterministicChaosSeedSlotKeyForTest = "deterministic_chaos_seed";
     internal int? DeterministicChaosSeedForTest { get; set; }
@@ -604,6 +606,11 @@ namespace Archipelago.APChessV
         majorLocSeed = random.Next();
         queenLocSeed = random.Next();
       }
+
+      // Fundamental slot graduation has no dedicated slot-data key yet (no apworld protocol
+      // change to introduce one). Derive it deterministically from the already-transmitted
+      // pocket/pawn seeds so graduation stays reproducible/stable without requiring one.
+      fundamentalGraduationSeed = unchecked(pocketSeed * 397 ^ pawnSeed);
     }
 
     /** Possibly not stable - will generate a different pocket distribution as the player progresses through different foundPockets - but it is uniform */

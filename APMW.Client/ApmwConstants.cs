@@ -41,6 +41,7 @@ namespace Archipelago.APChessV
       public const string MorePawn = "more-pawn";
       public const string BetterPawn = "better-pawn";
       public const string PoolPawnUpgrade = "pool-pawn-upgrade";
+      public const string PawnToMinor = "pawn-to-minor";
       public const string MinorToMajor = "minor-to-major";
       public const string MajorToJack = "major-to-jack";
       public const string MinorToJack = "minor-to-jack";

@@ -309,13 +309,15 @@ namespace Archipelago.APChessV
       Dictionary<NonPawnPieceFamily, int> nonPawnCounts,
       int initialSpareMaterial,
       int? nonKingPieceSlotLimit,
-      int lockedMajorCount)
+      int lockedMajorCount,
+      NonPawnGenerationPlan precomputedNonPawnPlan)
     {
       PawnSlots = Math.Max(0, pawnSlots);
       this.nonPawnCounts = nonPawnCounts ?? new Dictionary<NonPawnPieceFamily, int>();
       InitialSpareMaterial = Math.Max(0, initialSpareMaterial);
       NonKingPieceSlotLimit = nonKingPieceSlotLimit;
       LockedMajorCount = Math.Max(0, lockedMajorCount);
+      PrecomputedNonPawnPlan = precomputedNonPawnPlan;
     }
 
     public int PawnSlots { get; private set; }
@@ -323,6 +325,16 @@ namespace Archipelago.APChessV
     public int? NonKingPieceSlotLimit { get; private set; }
     public bool LimitsNonKingPieceSlots { get { return NonKingPieceSlotLimit.HasValue; } }
     public int LockedMajorCount { get; private set; }
+
+    /// <summary>
+    /// When set (Fundamental mode), this exact plan is used instead of re-deriving one via
+    /// <see cref="NonPawnUpgradeGeneration.Plan(PieceGenerationAllocation, ApmwConfig)"/>. The
+    /// slot graduation simulation already knows precisely which upgrade actions fired and how
+    /// many times, so re-netting from gross counts is unnecessary (and, for per-slot randomized
+    /// graduation, can be lossy -- see FundamentalSlotGraduationPlanner). Null for Legacy, which
+    /// continues to net gross found-item counts exactly as before.
+    /// </summary>
+    public NonPawnGenerationPlan PrecomputedNonPawnPlan { get; private set; }
 
     public int NonPawnCount(NonPawnPieceFamily family)
     {
@@ -342,7 +354,7 @@ namespace Archipelago.APChessV
     public static PieceGenerationAllocation FromCore(ApmwCore core, ApmwConfig config, int numFiles)
     {
       if (config.UsesFundamentalProgressionItemization)
-        return FundamentalMaterialAllocationPlanner.Plan(core, config, numFiles);
+        return FundamentalSlotGraduationPlanner.Plan(core, config, numFiles);
 
       return new PieceGenerationAllocation(
         core.foundPawns,
@@ -356,7 +368,8 @@ namespace Archipelago.APChessV
         },
         0,
         null,
-        0);
+        0,
+        null);
     }
 
     internal static PieceGenerationAllocation Fundamental(
@@ -364,14 +377,16 @@ namespace Archipelago.APChessV
       Dictionary<NonPawnPieceFamily, int> nonPawnCounts,
       int initialSpareMaterial,
       int nonKingPieceSlotLimit,
-      int lockedMajorCount)
+      int lockedMajorCount,
+      NonPawnGenerationPlan precomputedNonPawnPlan)
     {
       return new PieceGenerationAllocation(
         pawnSlots,
         nonPawnCounts,
         initialSpareMaterial,
         Math.Max(0, nonKingPieceSlotLimit),
-        lockedMajorCount);
+        lockedMajorCount,
+        precomputedNonPawnPlan);
     }
 
     private static bool IsNonKingPiece(PieceType piece)
@@ -384,35 +399,64 @@ namespace Archipelago.APChessV
     }
   }
 
-  internal static class FundamentalMaterialAllocationPlanner
+  internal enum ChessmanTier
+  {
+    Pawn = 0,
+    Minor = 1,
+    Major = 2,
+    Jack = 3,
+    Queen = 4,
+    Amazon = 5
+  }
+
+  /// <summary>
+  /// Fundamental-mode piece-count planner. Every one of the player's Chessmen slots starts as a
+  /// Pawn; a single seeded simulation graduates slots up through tiers (Pawn -&gt; Minor/Major/
+  /// Jack -&gt; Queen -&gt; Amazon), one real incremental step at a time, spending from a single
+  /// running material counter, until nothing more is affordable. This mirrors the "legacy
+  /// placement algorithm" it feeds -- kept completely unmodified downstream: which specific
+  /// piece type fills a slot and which board square it lands on are still decided entirely by
+  /// NonPawnUpgradeGeneration.ApplyUpgrades / NonPawnFamilySubstitution / MajorPieceGeneration /
+  /// PiecePlacement using their own existing seeds. This planner only ever decides tier counts.
+  /// </summary>
+  internal static class FundamentalSlotGraduationPlanner
   {
     private const int CastlerMaterialCost = 500;
+    private const int TierCount = 6;
 
-    private sealed class FundamentalPieceRecipe
+    private static readonly int[] TierMaterialValues =
     {
-      private readonly NonPawnPieceFamily[] countIncrements;
+      ItemGenerationValues.Pawn,
+      ItemGenerationValues.Minor,
+      ItemGenerationValues.Major,
+      ItemGenerationValues.Jack,
+      ItemGenerationValues.Queen,
+      ItemGenerationValues.Amazon,
+    };
 
-      public FundamentalPieceRecipe(
-        string key,
-        int expectedMaterial,
-        params NonPawnPieceFamily[] countIncrements)
+    private sealed class GraduationAction
+    {
+      public GraduationAction(string key, ChessmanTier fromTier, ChessmanTier toTier, int expectedMaterial, int priority)
       {
         Key = key;
+        FromTier = fromTier;
+        ToTier = toTier;
         ExpectedMaterial = expectedMaterial;
-        this.countIncrements = countIncrements;
+        Priority = priority;
       }
 
       public string Key { get; private set; }
+      public ChessmanTier FromTier { get; private set; }
+      public ChessmanTier ToTier { get; private set; }
       public int ExpectedMaterial { get; private set; }
-      public int ExtraMaterialCost
-      {
-        get { return Math.Max(0, ExpectedMaterial - ItemGenerationValues.Pawn); }
-      }
+      public int Priority { get; private set; }
 
-      public void Apply(Dictionary<NonPawnPieceFamily, int> counts)
+      // Unlike the old aggregate "relative-to-Pawn" recipe cost, this is the true marginal cost
+      // of this one step. A multi-step journey (e.g. Pawn->Minor then Minor->Major) sums its
+      // incremental costs to exactly the old aggregate recipe cost for the equivalent full chain.
+      public int IncrementalCost
       {
-        foreach (NonPawnPieceFamily family in countIncrements)
-          AddCount(counts, family);
+        get { return Math.Max(0, ExpectedMaterial - TierMaterialValues[(int)FromTier]); }
       }
     }
 
@@ -421,39 +465,278 @@ namespace Archipelago.APChessV
       int requestedSlots = Math.Max(0, core.foundChessmen);
       int placeableSlots = Math.Min(requestedSlots, MaxGeneratedNonKingPieces(numFiles));
       int nonPawnSlotCapacity = Math.Min(placeableSlots, MaxNonPawnPipelineSlots(numFiles));
-      int materialBudget = Math.Max(0, core.foundMaterialBudget);
-      int lockedMajorCount = ActiveCastlerCount(core, materialBudget, nonPawnSlotCapacity, numFiles);
-      int extraMaterial = materialBudget - lockedMajorCount * CastlerMaterialCost;
-      int nonPawnSlots = lockedMajorCount;
-      int expectedNonPawnMaterial = lockedMajorCount * ItemGenerationValues.Major;
-      Dictionary<NonPawnPieceFamily, int> counts = new Dictionary<NonPawnPieceFamily, int>();
-      AddCount(counts, NonPawnPieceFamily.Major, lockedMajorCount);
-      List<FundamentalPieceRecipe> recipes = BuildRecipes(config);
+      int spareMaterial = Math.Max(0, core.foundMaterialBudget);
 
-      while (nonPawnSlots < nonPawnSlotCapacity)
+      // Castler-locked majors are pre-seeded directly and permanently excluded from
+      // graduation: they must remain eligible to castle, so they can never be substituted
+      // away by a later upgrade. Locking is just as much a "spend" as any other graduation,
+      // so it's debited from the same unified spareMaterial counter, not carved out specially.
+      int lockedMajorCount = ActiveCastlerCount(core, spareMaterial, nonPawnSlotCapacity, numFiles);
+      spareMaterial -= lockedMajorCount * CastlerMaterialCost;
+
+      int[] tierCounts;
+      Dictionary<string, int> appliedCounts = Simulate(
+        placeableSlots,
+        lockedMajorCount,
+        nonPawnSlotCapacity,
+        config,
+        ref spareMaterial,
+        out tierCounts);
+
+      NonPawnGenerationPlan nonPawnPlan = BuildNonPawnPlan(tierCounts, appliedCounts, lockedMajorCount);
+      Dictionary<NonPawnPieceFamily, int> nonPawnCounts = new Dictionary<NonPawnPieceFamily, int>
       {
-        FundamentalPieceRecipe recipe = recipes.FirstOrDefault(item => item.ExtraMaterialCost <= extraMaterial);
-        if (recipe == null)
-          break;
+        [NonPawnPieceFamily.Minor] = tierCounts[(int)ChessmanTier.Minor],
+        [NonPawnPieceFamily.Major] = tierCounts[(int)ChessmanTier.Major],
+        [NonPawnPieceFamily.Jack] = tierCounts[(int)ChessmanTier.Jack],
+        [NonPawnPieceFamily.Queen] = tierCounts[(int)ChessmanTier.Queen],
+        [NonPawnPieceFamily.Amazon] = tierCounts[(int)ChessmanTier.Amazon],
+      };
 
-        recipe.Apply(counts);
-        extraMaterial -= recipe.ExtraMaterialCost;
-        expectedNonPawnMaterial += recipe.ExpectedMaterial;
-        nonPawnSlots++;
+      return PieceGenerationAllocation.Fundamental(
+        tierCounts[(int)ChessmanTier.Pawn],
+        nonPawnCounts,
+        spareMaterial,
+        placeableSlots,
+        lockedMajorCount,
+        nonPawnPlan);
+    }
+
+    /// <summary>
+    /// Runs the graduation simulation using pure per-tier counts (no per-slot bookkeeping):
+    /// every slot at a given tier is completely interchangeable (same available actions, same
+    /// cost), so tracking "how many" is all correctness ever requires -- individual slot
+    /// identity never affects the final counts. This keeps the simulation trivially seed/prefix
+    /// -stable: with no configured ties, the sequence of "highest-priority currently-affordable
+    /// action" is fully deterministic and simply runs longer as Chessmen/Material grow (a
+    /// smaller budget's run is always an exact prefix of a larger budget's run using the same
+    /// seed). The seeded Random is consulted only on a genuine tie -- two distinct configured
+    /// actions sharing one priority value -- and then only to weight the choice by how many
+    /// slots currently sit at each tied action's source tier.
+    /// </summary>
+    private static Dictionary<string, int> Simulate(
+      int placeableSlots,
+      int lockedMajorCount,
+      int nonPawnSlotCapacity,
+      ApmwConfig config,
+      ref int spareMaterial,
+      out int[] tierCounts)
+    {
+      List<GraduationAction> actions = BuildActions(config);
+
+      // At most one action per (priority, FromTier) pair; two configured actions could in
+      // principle share both (an explicit JSON priority map could tie them deliberately) --
+      // keep the cheaper one so that particular collision is at least deterministic.
+      Dictionary<int, Dictionary<ChessmanTier, GraduationAction>> actionsByPriority =
+        new Dictionary<int, Dictionary<ChessmanTier, GraduationAction>>();
+      foreach (GraduationAction action in actions)
+      {
+        Dictionary<ChessmanTier, GraduationAction> byFromTier;
+        if (!actionsByPriority.TryGetValue(action.Priority, out byFromTier))
+        {
+          byFromTier = new Dictionary<ChessmanTier, GraduationAction>();
+          actionsByPriority[action.Priority] = byFromTier;
+        }
+
+        GraduationAction existing;
+        if (!byFromTier.TryGetValue(action.FromTier, out existing) || action.IncrementalCost < existing.IncrementalCost)
+          byFromTier[action.FromTier] = action;
       }
 
-      int pawnSlots = placeableSlots - nonPawnSlots;
-      long totalBudget = (long)requestedSlots * ItemGenerationValues.Pawn + materialBudget;
-      long expectedMaterial = (long)pawnSlots * ItemGenerationValues.Pawn + expectedNonPawnMaterial;
-      long castlerReservedMaterial = (long)lockedMajorCount *
-        Math.Max(0, CastlerMaterialCost - (ItemGenerationValues.Major - ItemGenerationValues.Pawn));
-      int initialSpareMaterial = ClampToInt(Math.Max(0, totalBudget - expectedMaterial - castlerReservedMaterial));
-      return PieceGenerationAllocation.Fundamental(
-        pawnSlots,
-        counts,
-        initialSpareMaterial,
-        placeableSlots,
-        lockedMajorCount);
+      // Priority levels -- and which FromTiers exist at each -- are fixed once the action set
+      // is built; only the per-tier counts change as slots graduate.
+      List<int> priorityLevelsDescending = actionsByPriority.Keys.OrderByDescending(priority => priority).ToList();
+
+      tierCounts = new int[TierCount];
+      tierCounts[(int)ChessmanTier.Pawn] = Math.Max(0, placeableSlots - lockedMajorCount);
+      tierCounts[(int)ChessmanTier.Major] = lockedMajorCount;
+
+      Random random = new Random(config.fundamentalGraduationSeed);
+      Dictionary<string, int> appliedCounts = new Dictionary<string, int>(StringComparer.Ordinal);
+      List<GraduationAction> viable = new List<GraduationAction>();
+      List<int> viableWeights = new List<int>();
+
+      while (true)
+      {
+        bool applied = false;
+        foreach (int priority in priorityLevelsDescending)
+        {
+          viable.Clear();
+          viableWeights.Clear();
+          foreach (GraduationAction action in actionsByPriority[priority].Values)
+          {
+            int eligible = EligibleCount(tierCounts, lockedMajorCount, action.FromTier);
+            if (eligible <= 0)
+              continue;
+
+            if (action.FromTier == ChessmanTier.Pawn &&
+              placeableSlots - tierCounts[(int)ChessmanTier.Pawn] >= nonPawnSlotCapacity)
+              continue;
+
+            if (action.IncrementalCost > spareMaterial)
+              continue;
+
+            viable.Add(action);
+            viableWeights.Add(eligible);
+          }
+
+          if (viable.Count == 0)
+            continue; // Nothing usable at this level right now -- drop to the next-lower one.
+
+          GraduationAction chosen = viable.Count == 1 ? viable[0] : ChooseWeighted(viable, viableWeights, random);
+
+          spareMaterial -= chosen.IncrementalCost;
+          tierCounts[(int)chosen.FromTier]--;
+          tierCounts[(int)chosen.ToTier]++;
+
+          int currentCount;
+          appliedCounts[chosen.Key] = appliedCounts.TryGetValue(chosen.Key, out currentCount) ? currentCount + 1 : 1;
+
+          applied = true;
+          break; // Reset the scan to the top priority: the globally most-preferred still-
+                 // affordable action should always be tried first.
+        }
+
+        if (!applied)
+          break;
+      }
+
+      return appliedCounts;
+    }
+
+    // Locked Castler majors are baked into tierCounts[Major] but are permanently excluded from
+    // candidacy (they must remain castle-eligible), so they're subtracted back out here.
+    private static int EligibleCount(int[] tierCounts, int lockedMajorCount, ChessmanTier tier)
+    {
+      int count = tierCounts[(int)tier];
+      if (tier == ChessmanTier.Major)
+        count -= lockedMajorCount;
+      return count;
+    }
+
+    private static GraduationAction ChooseWeighted(List<GraduationAction> actions, List<int> weights, Random random)
+    {
+      int totalWeight = 0;
+      for (int i = 0; i < weights.Count; i++)
+        totalWeight += weights[i];
+
+      int r = random.Next(totalWeight);
+      int cumulative = 0;
+      for (int i = 0; i < actions.Count; i++)
+      {
+        cumulative += weights[i];
+        if (r < cumulative)
+          return actions[i];
+      }
+
+      return actions[actions.Count - 1]; // Defensive fallback; unreachable since r < totalWeight.
+    }
+
+    private static List<GraduationAction> BuildActions(ApmwConfig config)
+    {
+      List<GraduationAction> actions = new List<GraduationAction>();
+
+      // Every tier transition -- including the sole gateway out of Pawn -- is now a normal,
+      // symmetric, opt-in configured action (config.PieceUpgradeActions), exactly like Legacy's
+      // MinorToMajor/MajorToQueen/etc: none of these are unconditionally available. There is no
+      // more direct Pawn -> Major/Jack shortcut; a slot can only reach Major or Jack by first
+      // passing through Minor via PawnToMinor. If nothing is configured at all, every slot
+      // simply remains a Pawn -- a well-defined, deliberate outcome, not a special case.
+      AddConfiguredAction(actions, config, ApmwConstants.PieceUpgradeActions.PawnToMinor, ChessmanTier.Pawn, ChessmanTier.Minor, ItemGenerationValues.Minor);
+      AddConfiguredAction(actions, config, ApmwConstants.PieceUpgradeActions.MinorToMajor, ChessmanTier.Minor, ChessmanTier.Major, ItemGenerationValues.Major);
+      AddConfiguredAction(actions, config, ApmwConstants.PieceUpgradeActions.MajorToJack, ChessmanTier.Major, ChessmanTier.Jack, ItemGenerationValues.Jack);
+      AddConfiguredAction(actions, config, ApmwConstants.PieceUpgradeActions.MinorToJack, ChessmanTier.Minor, ChessmanTier.Jack, ItemGenerationValues.Jack);
+      AddConfiguredAction(actions, config, ApmwConstants.PieceUpgradeActions.MajorToQueen, ChessmanTier.Major, ChessmanTier.Queen, ItemGenerationValues.Queen);
+      AddConfiguredAction(actions, config, ApmwConstants.PieceUpgradeActions.JackToQueen, ChessmanTier.Jack, ChessmanTier.Queen, ItemGenerationValues.Queen);
+      AddConfiguredAction(actions, config, ApmwConstants.PieceUpgradeActions.QueenToAmazon, ChessmanTier.Queen, ChessmanTier.Amazon, ItemGenerationValues.Amazon);
+
+      return actions;
+    }
+
+    private static void AddConfiguredAction(
+      List<GraduationAction> actions,
+      ApmwConfig config,
+      string actionName,
+      ChessmanTier fromTier,
+      ChessmanTier toTier,
+      int expectedMaterial)
+    {
+      ApmwConfig.PieceUpgradeActionResolution action;
+      if (!config.PieceUpgradeActions.TryGetValue(actionName, out action) || !action.IsEnabled || action.Priority <= 0)
+        return;
+
+      actions.Add(new GraduationAction(actionName, fromTier, toTier, expectedMaterial, action.Priority));
+    }
+
+    private static NonPawnGenerationPlan BuildNonPawnPlan(
+      int[] finalTierCounts,
+      Dictionary<string, int> appliedCounts,
+      int lockedMajorCount)
+    {
+      // PawnToMinor is the sole gateway out of Pawn, so Minor is the unique entry point into the
+      // whole non-pawn tier graph: every slot that ever leaves Pawn gets exactly one placeholder
+      // piece, placed once as Minor. Every later tier change for that same slot -- Minor->Major,
+      // ->Jack, ->Queen, ->Amazon -- happens via in-place substitution in ApplyUpgrades below,
+      // never a second fresh placeholder. So only directCounts[Minor] needs "pass-through"
+      // additions for slots that continued beyond Minor (AppliedCount(MinorToMajor) /
+      // AppliedCount(MinorToJack)); any slot that went on to Major/Jack/Queen/Amazon already
+      // did MinorToMajor (or MinorToJack) first, so it's already counted there. Adding further
+      // counts at Major/Jack (e.g. +AppliedCount(MajorToQueen)) would double-place a piece that
+      // has no substitution left to consume it.
+      Dictionary<NonPawnPieceFamily, int> directCounts = new Dictionary<NonPawnPieceFamily, int>
+      {
+        [NonPawnPieceFamily.Minor] = finalTierCounts[(int)ChessmanTier.Minor]
+          + AppliedCount(appliedCounts, ApmwConstants.PieceUpgradeActions.MinorToMajor)
+          + AppliedCount(appliedCounts, ApmwConstants.PieceUpgradeActions.MinorToJack),
+        [NonPawnPieceFamily.Major] = finalTierCounts[(int)ChessmanTier.Major],
+        [NonPawnPieceFamily.Jack] = finalTierCounts[(int)ChessmanTier.Jack],
+        [NonPawnPieceFamily.Queen] = 0,
+        [NonPawnPieceFamily.Amazon] = 0,
+      };
+
+      // Fixed topological order over the (small, hardcoded) upgrade DAG -- every action's
+      // target tier is strictly "later" than its source tier -- so ApplyUpgrades always finds
+      // the placeholder pieces it needs already on the board when it substitutes them onward.
+      // (A slot can only ever reach Amazon by actually visiting Queen as a real simulation step
+      // first, so MajorToQueen/JackToQueen entries always precede QueenToAmazon here whenever
+      // it fired -- no special-cased compound recipe is needed, unlike the old recipe planner.)
+      List<PlannedNonPawnUpgradeAction> upgradeActions = new List<PlannedNonPawnUpgradeAction>();
+      AddPlannedAction(upgradeActions, appliedCounts, ApmwConstants.PieceUpgradeActions.MinorToMajor);
+      AddPlannedAction(upgradeActions, appliedCounts, ApmwConstants.PieceUpgradeActions.MinorToJack);
+      AddPlannedAction(upgradeActions, appliedCounts, ApmwConstants.PieceUpgradeActions.MajorToJack);
+      AddPlannedAction(upgradeActions, appliedCounts, ApmwConstants.PieceUpgradeActions.MajorToQueen);
+      AddPlannedAction(upgradeActions, appliedCounts, ApmwConstants.PieceUpgradeActions.JackToQueen);
+      AddPlannedAction(upgradeActions, appliedCounts, ApmwConstants.PieceUpgradeActions.QueenToAmazon);
+
+      Dictionary<NonPawnPieceFamily, int> unusedUpgradeCounts = new Dictionary<NonPawnPieceFamily, int>
+      {
+        [NonPawnPieceFamily.Queen] = 0,
+        [NonPawnPieceFamily.Amazon] = 0,
+      };
+
+      return new NonPawnGenerationPlan(directCounts, upgradeActions, unusedUpgradeCounts, lockedMajorCount);
+    }
+
+    private static void AddPlannedAction(
+      List<PlannedNonPawnUpgradeAction> upgradeActions,
+      Dictionary<string, int> appliedCounts,
+      string actionName)
+    {
+      int count = AppliedCount(appliedCounts, actionName);
+      if (count <= 0)
+        return;
+
+      NonPawnUpgradeActionMetadata metadata = NonPawnUpgradeGeneration.MetadataFor(actionName);
+      if (metadata == null)
+        return;
+
+      upgradeActions.Add(new PlannedNonPawnUpgradeAction(metadata, count));
+    }
+
+    private static int AppliedCount(Dictionary<string, int> appliedCounts, string key)
+    {
+      int count;
+      return appliedCounts.TryGetValue(key, out count) ? count : 0;
     }
 
     private static int ActiveCastlerCount(
@@ -469,179 +752,6 @@ namespace Archipelago.APChessV
           MaxCastlingMajorSlots(numFiles)));
     }
 
-    private static List<FundamentalPieceRecipe> BuildRecipes(ApmwConfig config)
-    {
-      List<FundamentalPieceRecipe> recipes = new List<FundamentalPieceRecipe>();
-      HashSet<string> addedRecipeKeys = new HashSet<string>(StringComparer.Ordinal);
-
-      foreach (string actionName in config.PieceUpgradePreferences)
-      {
-        if (!HasPositivePriority(config, actionName))
-          continue;
-
-        TryAddAmazonRecipeForQueenSourceAction(recipes, addedRecipeKeys, config, actionName);
-        TryAddRecipeForAction(recipes, addedRecipeKeys, actionName);
-      }
-
-      AddRecipe(
-        recipes,
-        addedRecipeKeys,
-        new FundamentalPieceRecipe(
-          "direct-jack",
-          ItemGenerationValues.Jack,
-          NonPawnPieceFamily.Jack));
-      AddRecipe(
-        recipes,
-        addedRecipeKeys,
-        new FundamentalPieceRecipe(
-          "direct-major",
-          ItemGenerationValues.Major,
-          NonPawnPieceFamily.Major));
-      AddRecipe(
-        recipes,
-        addedRecipeKeys,
-        new FundamentalPieceRecipe(
-          "direct-minor",
-          ItemGenerationValues.Minor,
-          NonPawnPieceFamily.Minor));
-
-      return recipes;
-    }
-
-    private static void TryAddRecipeForAction(
-      List<FundamentalPieceRecipe> recipes,
-      HashSet<string> addedRecipeKeys,
-      string actionName)
-    {
-      switch (actionName)
-      {
-        case ApmwConstants.PieceUpgradeActions.MinorToMajor:
-          AddRecipe(
-            recipes,
-            addedRecipeKeys,
-            new FundamentalPieceRecipe(
-              actionName,
-              ItemGenerationValues.Major,
-              NonPawnPieceFamily.Minor,
-              NonPawnPieceFamily.Major));
-          break;
-        case ApmwConstants.PieceUpgradeActions.MajorToJack:
-          AddRecipe(
-            recipes,
-            addedRecipeKeys,
-            new FundamentalPieceRecipe(
-              actionName,
-              ItemGenerationValues.Jack,
-              NonPawnPieceFamily.Major,
-              NonPawnPieceFamily.Jack));
-          break;
-        case ApmwConstants.PieceUpgradeActions.MinorToJack:
-          AddRecipe(
-            recipes,
-            addedRecipeKeys,
-            new FundamentalPieceRecipe(
-              actionName,
-              ItemGenerationValues.Jack,
-              NonPawnPieceFamily.Minor,
-              NonPawnPieceFamily.Jack));
-          break;
-        case ApmwConstants.PieceUpgradeActions.MajorToQueen:
-          AddRecipe(
-            recipes,
-            addedRecipeKeys,
-            new FundamentalPieceRecipe(
-              actionName,
-              ItemGenerationValues.Queen,
-              NonPawnPieceFamily.Major,
-              NonPawnPieceFamily.Queen));
-          break;
-        case ApmwConstants.PieceUpgradeActions.JackToQueen:
-          AddRecipe(
-            recipes,
-            addedRecipeKeys,
-            new FundamentalPieceRecipe(
-              actionName,
-              ItemGenerationValues.Queen,
-              NonPawnPieceFamily.Jack,
-              NonPawnPieceFamily.Queen));
-          break;
-      }
-    }
-
-    private static void TryAddAmazonRecipeForQueenSourceAction(
-      List<FundamentalPieceRecipe> recipes,
-      HashSet<string> addedRecipeKeys,
-      ApmwConfig config,
-      string sourceActionName)
-    {
-      if (!HasPositivePriority(config, ApmwConstants.PieceUpgradeActions.QueenToAmazon) ||
-        !config.IsPieceUpgradeActionPreferredBefore(
-          sourceActionName,
-          ApmwConstants.PieceUpgradeActions.QueenToAmazon))
-        return;
-
-      if (sourceActionName == ApmwConstants.PieceUpgradeActions.MajorToQueen)
-      {
-        AddRecipe(
-          recipes,
-          addedRecipeKeys,
-          new FundamentalPieceRecipe(
-            ApmwConstants.PieceUpgradeActions.QueenToAmazon + ":major",
-            ItemGenerationValues.Amazon,
-            NonPawnPieceFamily.Major,
-            NonPawnPieceFamily.Queen,
-            NonPawnPieceFamily.Amazon));
-      }
-      else if (sourceActionName == ApmwConstants.PieceUpgradeActions.JackToQueen)
-      {
-        AddRecipe(
-          recipes,
-          addedRecipeKeys,
-          new FundamentalPieceRecipe(
-            ApmwConstants.PieceUpgradeActions.QueenToAmazon + ":jack",
-            ItemGenerationValues.Amazon,
-            NonPawnPieceFamily.Jack,
-            NonPawnPieceFamily.Queen,
-            NonPawnPieceFamily.Amazon));
-      }
-    }
-
-    private static bool HasPositivePriority(ApmwConfig config, string actionName)
-    {
-      ApmwConfig.PieceUpgradeActionResolution action;
-      return config.PieceUpgradeActions.TryGetValue(actionName, out action) &&
-        action.IsEnabled &&
-        action.Priority > 0;
-    }
-
-    private static void AddRecipe(
-      List<FundamentalPieceRecipe> recipes,
-      HashSet<string> addedRecipeKeys,
-      FundamentalPieceRecipe recipe)
-    {
-      if (addedRecipeKeys.Add(recipe.Key))
-        recipes.Add(recipe);
-    }
-
-    private static void AddCount(
-      Dictionary<NonPawnPieceFamily, int> counts,
-      NonPawnPieceFamily family)
-    {
-      AddCount(counts, family, 1);
-    }
-
-    private static void AddCount(
-      Dictionary<NonPawnPieceFamily, int> counts,
-      NonPawnPieceFamily family,
-      int amount)
-    {
-      if (amount <= 0)
-        return;
-
-      int count;
-      counts[family] = counts.TryGetValue(family, out count) ? count + amount : amount;
-    }
-
     private static int MaxGeneratedNonKingPieces(int numFiles)
     {
       return Math.Max(0, 5 * numFiles - 1);
@@ -655,11 +765,6 @@ namespace Archipelago.APChessV
     private static int MaxCastlingMajorSlots(int numFiles)
     {
       return Math.Max(0, numFiles - 1);
-    }
-
-    private static int ClampToInt(long value)
-    {
-      return value > int.MaxValue ? int.MaxValue : (int)value;
     }
   }
 
@@ -849,7 +954,7 @@ namespace Archipelago.APChessV
       }
     }
 
-    private static NonPawnUpgradeActionMetadata MetadataFor(string actionName)
+    internal static NonPawnUpgradeActionMetadata MetadataFor(string actionName)
     {
       return UpgradeActions.FirstOrDefault(action => action.ActionName == actionName);
     }
@@ -996,7 +1101,7 @@ namespace Archipelago.APChessV
       var config = ApmwConfig.getInstance();
       PieceGenerationAllocation allocation = PieceGenerationAllocation.FromCore(core, config, numFiles);
       int spareMaterial = allocation.InitialSpareMaterial;
-      NonPawnGenerationPlan nonPawnPlan = NonPawnUpgradeGeneration.Plan(allocation, config);
+      NonPawnGenerationPlan nonPawnPlan = allocation.PrecomputedNonPawnPlan ?? NonPawnUpgradeGeneration.Plan(allocation, config);
       // Generate direct pieces only from target budgets that were not reserved by upgrade actions.
       List<PieceType> withMajors = MajorPieceGeneration.GenerateDirect(
         numFiles,

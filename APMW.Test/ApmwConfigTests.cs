@@ -68,11 +68,11 @@ namespace ChessV.Test
         }
 
         [DataTestMethod]
-        [DataRow(FairyPawnUpgrades.Off, "new-pawn,more-pawn,better-pawn,major-to-queen,pool-pawn-upgrade,minor-to-major,major-to-jack,minor-to-jack,jack-to-queen,queen-to-amazon")]
-        [DataRow(FairyPawnUpgrades.Pool, "new-pawn,pool-pawn-upgrade,more-pawn,better-pawn,major-to-queen,minor-to-major,major-to-jack,minor-to-jack,jack-to-queen,queen-to-amazon")]
-        [DataRow(FairyPawnUpgrades.Max, "new-pawn,better-pawn,more-pawn,major-to-queen,pool-pawn-upgrade,minor-to-major,major-to-jack,minor-to-jack,jack-to-queen,queen-to-amazon")]
-        [DataRow(FairyPawnUpgrades.SuperMax, "new-pawn,better-pawn,more-pawn,major-to-queen,pool-pawn-upgrade,minor-to-major,major-to-jack,minor-to-jack,jack-to-queen,queen-to-amazon")]
-        [DataRow(FairyPawnUpgrades.Configure, "new-pawn,more-pawn,better-pawn,major-to-queen,pool-pawn-upgrade,minor-to-major,major-to-jack,minor-to-jack,jack-to-queen,queen-to-amazon")]
+        [DataRow(FairyPawnUpgrades.Off, "new-pawn,more-pawn,better-pawn,major-to-queen,pool-pawn-upgrade,pawn-to-minor,minor-to-major,major-to-jack,minor-to-jack,jack-to-queen,queen-to-amazon")]
+        [DataRow(FairyPawnUpgrades.Pool, "new-pawn,pool-pawn-upgrade,more-pawn,better-pawn,major-to-queen,pawn-to-minor,minor-to-major,major-to-jack,minor-to-jack,jack-to-queen,queen-to-amazon")]
+        [DataRow(FairyPawnUpgrades.Max, "new-pawn,better-pawn,more-pawn,major-to-queen,pool-pawn-upgrade,pawn-to-minor,minor-to-major,major-to-jack,minor-to-jack,jack-to-queen,queen-to-amazon")]
+        [DataRow(FairyPawnUpgrades.SuperMax, "new-pawn,better-pawn,more-pawn,major-to-queen,pool-pawn-upgrade,pawn-to-minor,minor-to-major,major-to-jack,minor-to-jack,jack-to-queen,queen-to-amazon")]
+        [DataRow(FairyPawnUpgrades.Configure, "new-pawn,more-pawn,better-pawn,major-to-queen,pool-pawn-upgrade,pawn-to-minor,minor-to-major,major-to-jack,minor-to-jack,jack-to-queen,queen-to-amazon")]
         public void Instantiate_DerivesPieceUpgradePreferencesFromLegacyMode(
             FairyPawnUpgrades legacyMode,
             string expectedCsv)
@@ -107,6 +107,7 @@ namespace ChessV.Test
                     "major-to-queen",
                     "more-pawn",
                     "pool-pawn-upgrade",
+                    "pawn-to-minor",
                     "minor-to-major",
                     "major-to-jack",
                     "minor-to-jack",
@@ -127,7 +128,7 @@ namespace ChessV.Test
             });
 
             CollectionAssert.AreEqual(
-                new[] { "new-pawn", "pool-pawn-upgrade", "more-pawn", "better-pawn", "major-to-queen", "minor-to-major", "major-to-jack", "minor-to-jack", "jack-to-queen", "queen-to-amazon" },
+                new[] { "new-pawn", "pool-pawn-upgrade", "more-pawn", "better-pawn", "major-to-queen", "pawn-to-minor", "minor-to-major", "major-to-jack", "minor-to-jack", "jack-to-queen", "queen-to-amazon" },
                 config.PieceUpgradePreferences);
         }
 
@@ -142,7 +143,7 @@ namespace ChessV.Test
             });
 
             CollectionAssert.AreEqual(
-                new[] { "new-pawn", "more-pawn", "better-pawn", "major-to-queen", "pool-pawn-upgrade", "minor-to-major", "major-to-jack", "minor-to-jack", "jack-to-queen", "queen-to-amazon" },
+                new[] { "new-pawn", "more-pawn", "better-pawn", "major-to-queen", "pool-pawn-upgrade", "pawn-to-minor", "minor-to-major", "major-to-jack", "minor-to-jack", "jack-to-queen", "queen-to-amazon" },
                 config.PieceUpgradePreferences);
         }
 
@@ -175,6 +176,7 @@ namespace ChessV.Test
                     "more-pawn",
                     "better-pawn",
                     "pool-pawn-upgrade",
+                    "pawn-to-minor",
                     "major-to-queen",
                 },
                 config.PieceUpgradePreferences);
@@ -238,6 +240,7 @@ namespace ChessV.Test
                     ApmwConstants.PieceUpgradeActions.NewPawn,
                     ApmwConstants.PieceUpgradeActions.MorePawn,
                     ApmwConstants.PieceUpgradeActions.PoolPawnUpgrade,
+                    ApmwConstants.PieceUpgradeActions.PawnToMinor,
                     ApmwConstants.PieceUpgradeActions.MinorToMajor,
                     ApmwConstants.PieceUpgradeActions.MajorToJack,
                     ApmwConstants.PieceUpgradeActions.MinorToJack,
