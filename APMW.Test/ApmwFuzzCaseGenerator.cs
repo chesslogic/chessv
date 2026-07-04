@@ -593,6 +593,14 @@ namespace ChessV.Test
             builder.ChessmenCount = chessmenCount;
             builder.MaterialCount = materialCount;
             builder.CastlerCount = castlerCount;
+
+            // Fundamental's sole gateway out of Pawn (pawn-to-minor) is opt-in and not part of
+            // any Legacy-derived default preference list, so leaving this unset would silently
+            // exercise a degenerate "every slot stays a Pawn" path. Default every Fundamental
+            // fuzz case to @chesslogic's planned action chain so real tier graduation is
+            // actually covered; callers that want a different profile set it after this call.
+            builder.FairyChessPawnUpgrades = FairyPawnUpgrades.Configure;
+            builder.PieceUpgradePreferenceProfile = ApmwPieceUpgradePreferenceProfile.FundamentalPlannedChain;
         }
 
         private static void ResetLegacyBoardProgressionCounts(ApmwFuzzCase.Builder builder)

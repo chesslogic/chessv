@@ -12,6 +12,7 @@ namespace ChessV.Test
         Legacy = 0,
         ListMinorToJackFirst = 1,
         PriorityMapDisableMajorToQueen = 2,
+        FundamentalPlannedChain = 3,
     }
 
     internal sealed class ApmwFuzzCase
@@ -372,19 +373,47 @@ namespace ChessV.Test
             switch (PieceUpgradePreferenceProfile)
             {
                 case ApmwPieceUpgradePreferenceProfile.ListMinorToJackFirst:
+                    // pawn-to-minor is the sole gateway out of Pawn (Fundamental mode); appended
+                    // last (lowest priority) so this profile still lets a Fundamental slot ever
+                    // leave Pawn, while preserving the original MinorToJack-first ordering among
+                    // the non-pawn actions. A no-op for Legacy (which ignores unknown action names).
                     return new JArray
                     {
                         ApmwConstants.PieceUpgradeActions.MinorToJack,
                         ApmwConstants.PieceUpgradeActions.JackToQueen,
                         ApmwConstants.PieceUpgradeActions.QueenToAmazon,
+                        ApmwConstants.PieceUpgradeActions.PawnToMinor,
                     };
                 case ApmwPieceUpgradePreferenceProfile.PriorityMapDisableMajorToQueen:
+                    // Same rationale: add pawn-to-minor at the lowest positive priority so this
+                    // profile remains meaningful for Fundamental (a no-op for Legacy).
                     return new JObject
                     {
                         [ApmwConstants.PieceUpgradeActions.MinorToMajor] = 4,
                         [ApmwConstants.PieceUpgradeActions.MajorToJack] = 3,
                         [ApmwConstants.PieceUpgradeActions.QueenToAmazon] = 2,
                         [ApmwConstants.PieceUpgradeActions.MajorToQueen] = -1,
+                        [ApmwConstants.PieceUpgradeActions.PawnToMinor] = 1,
+                    };
+                case ApmwPieceUpgradePreferenceProfile.FundamentalPlannedChain:
+                    // @chesslogic's planned final action list/priorities for Fundamental mode:
+                    // "new-pawn=7, better-pawn=3, pawn-to-minor=6, minor-to-major=3,
+                    // major-to-jack=2, minor-to-jack=2, major-to-queen=1, jack-to-queen=1,
+                    // queen-to-amazon=1". Used as the default for Fundamental-mode fuzz cases so
+                    // they actually exercise real tier graduation instead of leaving every slot
+                    // a Pawn (new-pawn/better-pawn only affect PawnGeneration's separate pawn
+                    // -quality pipeline; they're not (yet) part of the slot graduation model).
+                    return new JObject
+                    {
+                        [ApmwConstants.PieceUpgradeActions.NewPawn] = 7,
+                        [ApmwConstants.PieceUpgradeActions.PawnToMinor] = 6,
+                        [ApmwConstants.PieceUpgradeActions.BetterPawn] = 3,
+                        [ApmwConstants.PieceUpgradeActions.MinorToMajor] = 3,
+                        [ApmwConstants.PieceUpgradeActions.MajorToJack] = 2,
+                        [ApmwConstants.PieceUpgradeActions.MinorToJack] = 2,
+                        [ApmwConstants.PieceUpgradeActions.MajorToQueen] = 1,
+                        [ApmwConstants.PieceUpgradeActions.JackToQueen] = 1,
+                        [ApmwConstants.PieceUpgradeActions.QueenToAmazon] = 1,
                     };
                 case ApmwPieceUpgradePreferenceProfile.Legacy:
                 default:

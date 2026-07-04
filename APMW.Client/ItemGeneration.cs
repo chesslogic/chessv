@@ -674,22 +674,22 @@ namespace Archipelago.APChessV
       int lockedMajorCount)
     {
       // PawnToMinor is the sole gateway out of Pawn, so Minor is the unique entry point into the
-      // whole non-pawn tier graph: every slot that ever leaves Pawn gets exactly one placeholder
-      // piece, placed once as Minor. Every later tier change for that same slot -- Minor->Major,
-      // ->Jack, ->Queen, ->Amazon -- happens via in-place substitution in ApplyUpgrades below,
-      // never a second fresh placeholder. So only directCounts[Minor] needs "pass-through"
-      // additions for slots that continued beyond Minor (AppliedCount(MinorToMajor) /
-      // AppliedCount(MinorToJack)); any slot that went on to Major/Jack/Queen/Amazon already
-      // did MinorToMajor (or MinorToJack) first, so it's already counted there. Adding further
-      // counts at Major/Jack (e.g. +AppliedCount(MajorToQueen)) would double-place a piece that
-      // has no substitution left to consume it.
+      // whole non-pawn tier graph: every non-locked slot that ever leaves Pawn gets exactly one
+      // placeholder piece, placed once as Minor. Every later tier change for that same slot --
+      // Minor->Major, ->Jack, ->Queen, ->Amazon -- happens via in-place substitution in
+      // ApplyUpgrades below, never a second fresh placeholder. So only directCounts[Minor] needs
+      // "pass-through" additions for slots that continued beyond Minor (AppliedCount(MinorToMajor)
+      // / AppliedCount(MinorToJack)); any slot that went on to Major/Jack/Queen/Amazon already
+      // has its physical square reserved by that Minor placeholder. The lone exception is the
+      // castler-locked Major pool: those pieces are pre-seeded directly at Major and never pass
+      // through Minor, so they alone remain in directCounts[Major].
       Dictionary<NonPawnPieceFamily, int> directCounts = new Dictionary<NonPawnPieceFamily, int>
       {
         [NonPawnPieceFamily.Minor] = finalTierCounts[(int)ChessmanTier.Minor]
           + AppliedCount(appliedCounts, ApmwConstants.PieceUpgradeActions.MinorToMajor)
           + AppliedCount(appliedCounts, ApmwConstants.PieceUpgradeActions.MinorToJack),
-        [NonPawnPieceFamily.Major] = finalTierCounts[(int)ChessmanTier.Major],
-        [NonPawnPieceFamily.Jack] = finalTierCounts[(int)ChessmanTier.Jack],
+        [NonPawnPieceFamily.Major] = lockedMajorCount,
+        [NonPawnPieceFamily.Jack] = 0,
         [NonPawnPieceFamily.Queen] = 0,
         [NonPawnPieceFamily.Amazon] = 0,
       };
