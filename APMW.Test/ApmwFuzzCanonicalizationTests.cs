@@ -1,4 +1,5 @@
 using System.Linq;
+using Archipelago.APChessV;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace ChessV.Test
@@ -28,6 +29,45 @@ namespace ChessV.Test
             Assert.AreEqual(first.CanonicalOptionKey, second.CanonicalOptionKey);
             Assert.AreNotEqual(first.ToDiagnosticString(), second.ToDiagnosticString());
             StringAssert.Contains(first.CanonicalOptionKey, "army=1,2");
+        }
+
+        [TestMethod]
+        public void CanonicalOptionKey_TracksProgressionItemizationAndActiveItemCounts()
+        {
+            ApmwFuzzCase legacy = ApmwFuzzCase.DefaultStandard();
+            ApmwFuzzCase fundamental = legacy.With(builder =>
+            {
+                builder.CaseName = "canonical-fundamental";
+                builder.ProgressionItemization = ProgressionItemization.Fundamental;
+                builder.ChessmenCount = 8;
+                builder.MaterialCount = 2;
+                builder.CastlerCount = 1;
+            });
+
+            Assert.AreNotEqual(legacy.CanonicalOptionKey, fundamental.CanonicalOptionKey);
+            StringAssert.Contains(legacy.CanonicalOptionKey, "progression_itemization=legacy");
+            StringAssert.Contains(fundamental.CanonicalOptionKey, "progression_itemization=fundamental");
+            StringAssert.Contains(fundamental.CanonicalOptionKey, "chessmen-count=8");
+            StringAssert.Contains(fundamental.CanonicalOptionKey, "material-count=2");
+            StringAssert.Contains(fundamental.CanonicalOptionKey, "castler-count=1");
+
+            Assert.IsFalse(legacy.BuildSlotData().ContainsKey(ApmwConstants.SlotKeyProgressionItemization));
+            Assert.AreEqual(
+                (int)ProgressionItemization.Fundamental,
+                (int)fundamental.BuildSlotData()[ApmwConstants.SlotKeyProgressionItemization]);
+
+            var legacyItems = legacy.BuildItemCountMap();
+            Assert.AreEqual(8, legacyItems[ApmwConstants.ProgressiveItems.Pawn]);
+            Assert.IsFalse(legacyItems.ContainsKey(ApmwConstants.ProgressiveItems.Chessmen));
+            Assert.IsFalse(legacyItems.ContainsKey(ApmwConstants.ProgressiveItems.Material));
+            Assert.IsFalse(legacyItems.ContainsKey(ApmwConstants.ProgressiveItems.Castler));
+
+            var fundamentalItems = fundamental.BuildItemCountMap();
+            Assert.AreEqual(8, fundamentalItems[ApmwConstants.ProgressiveItems.Chessmen]);
+            Assert.AreEqual(2, fundamentalItems[ApmwConstants.ProgressiveItems.Material]);
+            Assert.AreEqual(1, fundamentalItems[ApmwConstants.ProgressiveItems.Castler]);
+            Assert.IsFalse(fundamentalItems.ContainsKey(ApmwConstants.ProgressiveItems.Pawn));
+            Assert.IsFalse(fundamentalItems.ContainsKey(ApmwConstants.ProgressiveItems.MinorPiece));
         }
 
         [TestMethod]

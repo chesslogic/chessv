@@ -247,6 +247,55 @@ namespace ChessV.Test
                 config.PieceUpgradePreferences);
         }
 
+        [TestMethod]
+        public void Instantiate_DefaultsToLegacyProgressionItemization()
+        {
+            var config = new ApmwConfig();
+            config.Instantiate(new Dictionary<string, object>());
+
+            Assert.AreEqual(ProgressionItemization.Legacy, config.ProgressionItemization);
+            Assert.IsFalse(config.UsesFundamentalProgressionItemization);
+            Assert.AreEqual(ApmwConfig.DefaultMaterialItemValue, config.materialItemValue);
+            Assert.AreEqual(ApmwConfig.DefaultCastlingLocationCount, config.castlingLocationCount);
+        }
+
+        [DataTestMethod]
+        [DataRow("fundamental")]
+        [DataRow("Fundamental")]
+        [DataRow((int)ProgressionItemization.Fundamental)]
+        public void Instantiate_ParsesFundamentalProgressionItemization(object rawItemization)
+        {
+            var config = new ApmwConfig();
+            config.Instantiate(new Dictionary<string, object>
+            {
+                [ApmwConstants.SlotKeyProgressionItemization] = rawItemization,
+                [ApmwConstants.SlotKeyMaterialItemValue] = 500,
+                [ApmwConstants.SlotKeyCastlingLocationCount] = 1,
+            });
+
+            Assert.AreEqual(ProgressionItemization.Fundamental, config.ProgressionItemization);
+            Assert.IsTrue(config.UsesFundamentalProgressionItemization);
+            Assert.AreEqual(500, config.materialItemValue);
+            Assert.AreEqual(1, config.castlingLocationCount);
+        }
+
+        [TestMethod]
+        public void Instantiate_InvalidProgressionItemizationFallsBackToLegacyAndClampsCounts()
+        {
+            var config = new ApmwConfig();
+            config.Instantiate(new Dictionary<string, object>
+            {
+                [ApmwConstants.SlotKeyProgressionItemization] = "future-mode",
+                [ApmwConstants.SlotKeyMaterialItemValue] = 0,
+                [ApmwConstants.SlotKeyCastlingLocationCount] = -3,
+            });
+
+            Assert.AreEqual(ProgressionItemization.Legacy, config.ProgressionItemization);
+            Assert.IsFalse(config.UsesFundamentalProgressionItemization);
+            Assert.AreEqual(1, config.materialItemValue);
+            Assert.AreEqual(0, config.castlingLocationCount);
+        }
+
         private static int[] CaptureSeeds(ApmwConfig config)
         {
             return new[]

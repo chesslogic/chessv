@@ -39,9 +39,17 @@ namespace Archipelago.APChessV
     SuperMax = 3,
     Configure = 4
   }
+  public enum ProgressionItemization
+  {
+    Legacy = 0,
+    Fundamental = 1
+  }
 
   public class ApmwConfig
   {
+    public const int DefaultMaterialItemValue = 400;
+    public const int DefaultCastlingLocationCount = 2;
+
     public sealed class PieceUpgradeActionResolution
     {
       public PieceUpgradeActionResolution(string actionName, int priority, bool isEnabled)
@@ -118,6 +126,8 @@ namespace Archipelago.APChessV
     public int majorTypeLimit = -1;
     public int queenTypeLimit = -1;
     public int pocketLimit = -1;
+    public int materialItemValue = DefaultMaterialItemValue;
+    public int castlingLocationCount = DefaultCastlingLocationCount;
     public List<int> Army = new List<int>();
 
     private Goal goal;
@@ -219,6 +229,13 @@ namespace Archipelago.APChessV
       get { return PawnUpgrades == FairyPawnUpgrades.SuperMax; }
     }
 
+    private ProgressionItemization progressionItemization;
+    public ProgressionItemization ProgressionItemization { get { return progressionItemization; } }
+    public bool UsesFundamentalProgressionItemization
+    {
+      get { return progressionItemization == ProgressionItemization.Fundamental; }
+    }
+
     /// <summary>
     /// True when the configured upgrade list enables the major-to-queen action.
     /// Future queen substitution should keep rook-first replacement under this action.
@@ -246,6 +263,15 @@ namespace Archipelago.APChessV
       // Progressive Goal
       GoalInt = Convert.ToInt32(SlotData.GetValueOrDefault(
         "goal", Goal.Single));
+      progressionItemization = ReadProgressionItemization(SlotData.GetValueOrDefault(
+        ApmwConstants.SlotKeyProgressionItemization,
+        ProgressionItemization.Legacy));
+      materialItemValue = Math.Max(1, Convert.ToInt32(SlotData.GetValueOrDefault(
+        ApmwConstants.SlotKeyMaterialItemValue,
+        DefaultMaterialItemValue)));
+      castlingLocationCount = Math.Max(0, Convert.ToInt32(SlotData.GetValueOrDefault(
+        ApmwConstants.SlotKeyCastlingLocationCount,
+        DefaultCastlingLocationCount)));
       EnemyTypesInt = Convert.ToInt32(SlotData.GetValueOrDefault(
         "enemy_piece_types", PieceTypes.Book));
 
@@ -284,6 +310,43 @@ namespace Archipelago.APChessV
         "queen_piece_limit_by_type", 0));
       pocketLimit = Convert.ToInt32(SlotData.GetValueOrDefault(
         "pocket_limit_by_pocket", 4));
+    }
+
+    private static ProgressionItemization ReadProgressionItemization(object value)
+    {
+      if (value == null)
+        return ProgressionItemization.Legacy;
+
+      if (value is ProgressionItemization itemization)
+        return itemization;
+
+      if (value is JValue jValue)
+        value = jValue.Value;
+
+      if (value is JToken jToken)
+        value = jToken.ToObject<object>();
+
+      if (value is string itemizationName)
+      {
+        if (string.Equals(itemizationName, "fundamental", StringComparison.OrdinalIgnoreCase))
+          return ProgressionItemization.Fundamental;
+        if (string.Equals(itemizationName, "legacy", StringComparison.OrdinalIgnoreCase))
+          return ProgressionItemization.Legacy;
+      }
+
+      int rawValue;
+      try
+      {
+        rawValue = Convert.ToInt32(value);
+      }
+      catch (Exception)
+      {
+        return ProgressionItemization.Legacy;
+      }
+
+      return Enum.IsDefined(typeof(ProgressionItemization), rawValue)
+        ? (ProgressionItemization)rawValue
+        : ProgressionItemization.Legacy;
     }
 
     private sealed class PieceUpgradeActionResolutionResult

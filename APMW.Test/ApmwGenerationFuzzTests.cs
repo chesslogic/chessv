@@ -19,6 +19,24 @@ namespace ChessV.Test
         }
 
         [TestMethod]
+        public void SmokeCases_IncludeLegacyAndFundamentalProgressionItemization()
+        {
+            List<ApmwFuzzCase> cases = ApmwFuzzCaseGenerator.SmokeCases().ToList();
+
+            Assert.IsTrue(cases.Any(fuzzCase => fuzzCase.ProgressionItemization == ProgressionItemization.Legacy));
+            ApmwFuzzCase fundamental = cases.Single(fuzzCase =>
+                fuzzCase.CaseName == "smoke-standard-fundamental-material-castler");
+            Assert.AreEqual(ProgressionItemization.Fundamental, fundamental.ProgressionItemization);
+            Assert.AreEqual(
+                (int)ProgressionItemization.Fundamental,
+                (int)fundamental.BuildSlotData()[ApmwConstants.SlotKeyProgressionItemization]);
+            Dictionary<string, int> itemCounts = fundamental.BuildItemCountMap();
+            Assert.AreEqual(8, itemCounts[ApmwConstants.ProgressiveItems.Chessmen]);
+            Assert.AreEqual(2, itemCounts[ApmwConstants.ProgressiveItems.Material]);
+            Assert.AreEqual(1, itemCounts[ApmwConstants.ProgressiveItems.Castler]);
+        }
+
+        [TestMethod]
         public void BoundaryStandardMajorCountEight_RunItemGeneration()
         {
             RunItemHandlerGenerationCase(BoundaryCase("boundary-standard-major-count-8"));

@@ -47,6 +47,7 @@ A recommended PopTracker pack is available at https://github.com/checkerslogic/c
  - Fairy Chess Pieces and Fairy Chess Army. While the default is close to orthodox Chess, support for Ralph Betza's Different Armies and other fairy pieces allow you to customize the enabled set, constraining generated player material by army.
  - Chaotic Material Randomization. Every game, you get new pieces in new places! Who needs an opening book?
  - Piece Limits. Under some mindsets, it can be taxing to find 6 minor pieces and no Queen. By adding certain rails to the experience, one can have a more personalized approach to a Chess randomizer, where one's army bears some resemblance to a traditional game.
+ - Progression Itemization. Legacy seeds use family-specific board-material items; fundamental seeds use `Chessmen`, `Material`, and optional `Castler` items instead.
  - Extra Kings. What if you had a backup King?
  - Difficulty, AI Intelligence malus, enemy army, Super Mode, DeathLink, fairy pawns, Jacks, and Amazons!
 
@@ -54,6 +55,9 @@ A recommended PopTracker pack is available at https://github.com/checkerslogic/c
 
  - DeathLink is only available when enabled at generation time. If the local toggle is also enabled, losing a match or resigning sends a DeathLink, and receiving one kills the active match immediately. DeathLink cannot be enabled in a non-DeathLink seed.
  - Difficulty and AI Intelligence differ: YAML `difficulty` changes generation logic, lowering expectations at any given material value, while `Maximum Engine Penalties` controls how many `Progressive AI Intelligence Malus` items can appear. The client's "Reduce AI Intelligence" dropdown is additive to collected AI malus. AI malus causes the heuristic engine to act without thinking.
+ - `progression_itemization` may be legacy or fundamental. Fundamental replaces only board-material progression with `Chessmen`, `Material`, and optional `Castler`; pockets, AI malus, Play as White, Super-Size Me, DeathLink, and similar progression remain unchanged.
+ - In fundamental itemization, each `Chessmen` grants one non-king generated slot plus 100 base material, and each `Material` grants `material_item_value` material (default 400). `piece_upgrade_preferences` remains the spending priority contract for generated and spare material.
+ - Each active `Castler` locks one `Chessmen` plus 500 material into a rook-like/major-family castling piece, capped by `castling_location_count`; castling locations are still emitted by moves. The local, non-persisted "Ignore Castlers Received" checkbox is default off and only enabled for fundamental seeds.
  - The "Change Enemy Army" dropdown normally affords the opponent Standard/FIDE pieces, which can be replaced by Ralph Betza's Different Armies (Colourbound Clobberers, Remarkable Rookies, or Nutty Knights) for the next match. Those pieces are added to the promotion set.
  - FUN SPOILERS: Super Mode uses the larger Super-Sized board variant. Goal `Super` starts there immediately. `Progressive` puts `Super-Size Me` in the pool. `Ordered Progressive`, the default, awards `Super-Size Me` at Checkmate Minima. After you have `Super-Size Me`, the Super checkbox starts a super match.
  - Fairy Chess Pieces allows further replayability by replacing the player pieces with modern innovations by Ralph Betza and other authors. FIDE, Betza, and Full override the custom Configure set. If you want to use `fairy_chess_pieces_configure` to choose your own subset, set Fairy Chess Pieces to Configure first.

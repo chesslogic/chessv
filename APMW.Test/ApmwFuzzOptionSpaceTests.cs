@@ -116,7 +116,11 @@ namespace ChessV.Test
             ApmwFuzzOptionSpace space = ApmwFuzzOptionSpace.CreateDefault();
             ApmwFuzzAxis pawnAxis = space.GetAxis(ApmwFuzzOptionSpace.AxisPawnCount);
             ApmwFuzzAxis pawnUpgradeAxis = space.GetAxis(ApmwFuzzOptionSpace.AxisFairyChessPawnUpgrades);
+            ApmwFuzzAxis progressionAxis = space.GetAxis(ApmwFuzzOptionSpace.AxisProgressionItemization);
             ApmwFuzzAxis upgradePreferenceAxis = space.GetAxis(ApmwFuzzOptionSpace.AxisPieceUpgradePreferenceProfile);
+            ApmwFuzzAxis chessmenAxis = space.GetAxis(ApmwFuzzOptionSpace.AxisChessmenCount);
+            ApmwFuzzAxis materialAxis = space.GetAxis(ApmwFuzzOptionSpace.AxisMaterialCount);
+            ApmwFuzzAxis castlerAxis = space.GetAxis(ApmwFuzzOptionSpace.AxisCastlerCount);
 
             Assert.AreEqual(ApmwFuzzOptionAxisKind.Numeric, pawnAxis.Kind);
             Assert.AreEqual(2, pawnAxis.NumericBands.Count);
@@ -127,15 +131,32 @@ namespace ChessV.Test
             CollectionAssert.DoesNotContain(pawnAxis.Values.Select(value => value.CanonicalKey).ToList(), "2");
             ApmwFuzzOptionValue superMax = pawnUpgradeAxis.GetValue("supermax");
             Assert.AreEqual(FairyPawnUpgrades.SuperMax, superMax.Value);
+            ApmwFuzzOptionValue fundamental = progressionAxis.GetValue("fundamental");
+            Assert.AreEqual(ProgressionItemization.Fundamental, fundamental.Value);
             ApmwFuzzOptionValue priorityMap = upgradePreferenceAxis.GetValue("prioritymapdisablemajortoqueen");
             Assert.AreEqual(ApmwPieceUpgradePreferenceProfile.PriorityMapDisableMajorToQueen, priorityMap.Value);
+            CollectionAssert.Contains(chessmenAxis.Values.Select(value => value.CanonicalKey).ToList(), "8");
+            CollectionAssert.Contains(chessmenAxis.Values.Select(value => value.CanonicalKey).ToList(), "59");
+            CollectionAssert.Contains(materialAxis.Values.Select(value => value.CanonicalKey).ToList(), "2");
+            CollectionAssert.Contains(materialAxis.Values.Select(value => value.CanonicalKey).ToList(), "157");
+            CollectionAssert.Contains(castlerAxis.Values.Select(value => value.CanonicalKey).ToList(), "3");
 
             var builder = ApmwFuzzCase.DefaultStandard().ToBuilder();
             ApmwFuzzOptionSpace.ApplyCaseValue(builder, ApmwFuzzOptionSpace.AxisFairyChessPawnUpgrades, superMax);
+            ApmwFuzzOptionSpace.ApplyCaseValue(builder, ApmwFuzzOptionSpace.AxisProgressionItemization, fundamental);
             ApmwFuzzOptionSpace.ApplyCaseValue(builder, ApmwFuzzOptionSpace.AxisPieceUpgradePreferenceProfile, priorityMap);
+            ApmwFuzzOptionSpace.ApplyCaseValue(builder, ApmwFuzzOptionSpace.AxisChessmenCount, chessmenAxis.GetValue("8"));
+            ApmwFuzzOptionSpace.ApplyCaseValue(builder, ApmwFuzzOptionSpace.AxisMaterialCount, materialAxis.GetValue("2"));
+            ApmwFuzzOptionSpace.ApplyCaseValue(builder, ApmwFuzzOptionSpace.AxisCastlerCount, castlerAxis.GetValue("1"));
             Dictionary<string, object> slotData = builder.Build().BuildSlotData();
             Assert.AreEqual(3, (int)slotData[ApmwConstants.SlotKeyFairyChessPawnUpgrades]);
+            Assert.AreEqual((int)ProgressionItemization.Fundamental, (int)slotData[ApmwConstants.SlotKeyProgressionItemization]);
             Assert.IsTrue(slotData.ContainsKey(ApmwConstants.SlotKeyPieceUpgradePreferences));
+            Dictionary<string, int> itemCounts = builder.Build().BuildItemCountMap();
+            Assert.AreEqual(8, itemCounts[ApmwConstants.ProgressiveItems.Chessmen]);
+            Assert.AreEqual(2, itemCounts[ApmwConstants.ProgressiveItems.Material]);
+            Assert.AreEqual(1, itemCounts[ApmwConstants.ProgressiveItems.Castler]);
+            Assert.IsFalse(itemCounts.ContainsKey(ApmwConstants.ProgressiveItems.Pawn));
 
             Assert.AreEqual(0, space.Validate(space.DefaultAssignment()).Count);
 

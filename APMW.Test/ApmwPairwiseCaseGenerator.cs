@@ -46,6 +46,7 @@ namespace ChessV.Test
             ApmwFuzzOptionSpace.AxisFairyChessPawns,
             ApmwFuzzOptionSpace.AxisFairyChessPawnUpgrades,
             ApmwFuzzOptionSpace.AxisDeathLink,
+            ApmwFuzzOptionSpace.AxisProgressionItemization,
         };
 
         public static IReadOnlyList<string> CategoricalAxisNames
@@ -82,6 +83,7 @@ namespace ChessV.Test
                 "army=" + IntSetKey(fuzzCase.ArmyIndexes),
                 "fairy_chess_pawns=" + EnumKey(fuzzCase.FairyChessPawns),
                 "fairy_chess_pawn_upgrades=" + EnumKey(fuzzCase.FairyChessPawnUpgrades),
+                "progression_itemization=" + EnumKey(fuzzCase.ProgressionItemization),
                 "piece_upgrade_preference_profile=" + EnumKey(fuzzCase.PieceUpgradePreferenceProfile),
                 "minor_piece_limit_by_type=" + IntKey(fuzzCase.MinorPieceLimitByType),
                 "major_piece_limit_by_type=" + IntKey(fuzzCase.MajorPieceLimitByType),
@@ -107,6 +109,9 @@ namespace ChessV.Test
                 "pawn-forwardness-count=" + IntKey(fuzzCase.PawnForwardnessCount),
                 "consul-count=" + IntKey(fuzzCase.ConsulCount),
                 "king-promotion-count=" + IntKey(fuzzCase.KingPromotionCount),
+                "chessmen-count=" + IntKey(fuzzCase.ChessmenCount),
+                "material-count=" + IntKey(fuzzCase.MaterialCount),
+                "castler-count=" + IntKey(fuzzCase.CastlerCount),
                 "super-size-me-count=" + IntKey(fuzzCase.SuperSizeMeCount),
                 "play-as-white-count=" + IntKey(fuzzCase.PlayAsWhiteCount),
                 "victory-count=" + IntKey(fuzzCase.VictoryCount),
@@ -173,6 +178,8 @@ namespace ChessV.Test
                     return EnumKey(fuzzCase.FairyChessPawnUpgrades);
                 case ApmwFuzzOptionSpace.AxisDeathLink:
                     return BooleanKey(fuzzCase.DeathLink);
+                case ApmwFuzzOptionSpace.AxisProgressionItemization:
+                    return EnumKey(fuzzCase.ProgressionItemization);
                 default:
                     throw new ArgumentException("Unsupported categorical axis '" + axisName + "'.", nameof(axisName));
             }
@@ -186,6 +193,7 @@ namespace ChessV.Test
             AddPocketInteractions(optionSpace, definitions);
             AddPawnInteractions(optionSpace, definitions);
             AddMajorInteractions(optionSpace, definitions);
+            AddFundamentalInteractions(optionSpace, definitions);
             AddArmyAndTypeLimitInteractions(optionSpace, definitions);
             AddChaosSeedInteractions(optionSpace, definitions);
             AddOverCapInteractions(optionSpace, definitions);
@@ -530,6 +538,35 @@ namespace ChessV.Test
                 true));
         }
 
+        private static void AddFundamentalInteractions(
+            ApmwFuzzOptionSpace optionSpace,
+            List<InteractionDefinition> definitions)
+        {
+            definitions.Add(Define("fundamental", "interaction-fundamental-standard-chessmen-only",
+                BaseAssignment(optionSpace, false)
+                    .With(ApmwFuzzOptionSpace.AxisProgressionItemization, "fundamental")
+                    .With(ApmwFuzzOptionSpace.AxisChessmenCount, "8")
+                    .With(ApmwFuzzOptionSpace.AxisMaterialCount, "0")
+                    .With(ApmwFuzzOptionSpace.AxisCastlerCount, "0"),
+                true));
+            definitions.Add(Define("fundamental", "interaction-fundamental-standard-chessmen-material-castler",
+                BaseAssignment(optionSpace, false)
+                    .With(ApmwFuzzOptionSpace.AxisProgressionItemization, "fundamental")
+                    .With(ApmwFuzzOptionSpace.AxisPieceUpgradePreferenceProfile, "listminortojackfirst")
+                    .With(ApmwFuzzOptionSpace.AxisChessmenCount, "8")
+                    .With(ApmwFuzzOptionSpace.AxisMaterialCount, "2")
+                    .With(ApmwFuzzOptionSpace.AxisCastlerCount, "1"),
+                true));
+            definitions.Add(Define("fundamental", "interaction-fundamental-super-over-chessmen-material-castlers",
+                BaseAssignment(optionSpace, true)
+                    .With(ApmwFuzzOptionSpace.AxisProgressionItemization, "fundamental")
+                    .With(ApmwFuzzOptionSpace.AxisPieceUpgradePreferenceProfile, "prioritymapdisablemajortoqueen")
+                    .With(ApmwFuzzOptionSpace.AxisChessmenCount, "59")
+                    .With(ApmwFuzzOptionSpace.AxisMaterialCount, "157")
+                    .With(ApmwFuzzOptionSpace.AxisCastlerCount, "3"),
+                true));
+        }
+
         private static void AddArmyAndTypeLimitInteractions(
             ApmwFuzzOptionSpace optionSpace,
             List<InteractionDefinition> definitions)
@@ -646,6 +683,16 @@ namespace ChessV.Test
                     ApmwFuzzOptionSpace.AxisPawnCount,
                     IntKey(isSuperSized ? SuperSizedBoardWidth : StandardBoardWidth));
 
+            if (GetEnum<ProgressionItemization>(assignment, ApmwFuzzOptionSpace.AxisProgressionItemization) == ProgressionItemization.Fundamental)
+            {
+                if (assignment.GetInt(ApmwFuzzOptionSpace.AxisChessmenCount) == 0)
+                    assignment = assignment.With(
+                        ApmwFuzzOptionSpace.AxisChessmenCount,
+                        IntKey(isSuperSized ? SuperSizedBoardWidth : StandardBoardWidth));
+                if (assignment.GetInt(ApmwFuzzOptionSpace.AxisMaterialCount) == 0)
+                    assignment = assignment.With(ApmwFuzzOptionSpace.AxisMaterialCount, "2");
+            }
+
             return assignment;
         }
 
@@ -695,6 +742,7 @@ namespace ChessV.Test
                 builder.ArmyIndexes = assignment.GetIntSet(ApmwFuzzOptionSpace.AxisArmy).ToArray();
                 builder.FairyChessPawns = GetEnum<FairyPawns>(assignment, ApmwFuzzOptionSpace.AxisFairyChessPawns);
                 builder.FairyChessPawnUpgrades = GetEnum<FairyPawnUpgrades>(assignment, ApmwFuzzOptionSpace.AxisFairyChessPawnUpgrades);
+                builder.ProgressionItemization = GetEnum<ProgressionItemization>(assignment, ApmwFuzzOptionSpace.AxisProgressionItemization);
                 builder.PieceUpgradePreferenceProfile = GetEnum<ApmwPieceUpgradePreferenceProfile>(assignment, ApmwFuzzOptionSpace.AxisPieceUpgradePreferenceProfile);
                 builder.MinorPieceLimitByType = assignment.GetInt(ApmwFuzzOptionSpace.AxisMinorPieceLimitByType);
                 builder.MajorPieceLimitByType = assignment.GetInt(ApmwFuzzOptionSpace.AxisMajorPieceLimitByType);
@@ -714,6 +762,11 @@ namespace ChessV.Test
                 builder.PawnForwardnessCount = assignment.GetInt(ApmwFuzzOptionSpace.AxisPawnForwardnessCount);
                 builder.ConsulCount = assignment.GetInt(ApmwFuzzOptionSpace.AxisConsulCount);
                 builder.KingPromotionCount = assignment.GetInt(ApmwFuzzOptionSpace.AxisKingPromotionCount);
+                builder.ChessmenCount = assignment.GetInt(ApmwFuzzOptionSpace.AxisChessmenCount);
+                builder.MaterialCount = assignment.GetInt(ApmwFuzzOptionSpace.AxisMaterialCount);
+                builder.CastlerCount = assignment.GetInt(ApmwFuzzOptionSpace.AxisCastlerCount);
+                if (builder.ProgressionItemization == ProgressionItemization.Fundamental)
+                    ResetLegacyBoardProgressionCounts(builder);
                 builder.SuperSizeMeCount = assignment.GetInt(ApmwFuzzOptionSpace.AxisSuperSizeMeCount);
                 builder.PlayAsWhiteCount = assignment.GetInt(ApmwFuzzOptionSpace.AxisPlayAsWhiteCount);
                 builder.VictoryCount = assignment.GetInt(ApmwFuzzOptionSpace.AxisVictoryCount);
@@ -741,6 +794,19 @@ namespace ChessV.Test
         {
             return builder.PlayerPieceTypes == PieceTypes.Chaos ||
                 builder.PieceLocations == PieceLocations.Chaos;
+        }
+
+        private static void ResetLegacyBoardProgressionCounts(ApmwFuzzCase.Builder builder)
+        {
+            builder.PawnCount = 0;
+            builder.MinorPieceCount = 0;
+            builder.MajorPieceCount = 0;
+            builder.JackCount = 0;
+            builder.MajorToQueenCount = 0;
+            builder.AmazonCount = 0;
+            builder.PawnForwardnessCount = 0;
+            builder.ConsulCount = 0;
+            builder.KingPromotionCount = 0;
         }
 
         private static T GetEnum<T>(ApmwFuzzAssignment assignment, string axisName)

@@ -37,6 +37,7 @@ namespace ChessV.Test
         public IReadOnlyList<int> ArmyIndexes { get; }
         public FairyPawns FairyChessPawns { get; }
         public FairyPawnUpgrades FairyChessPawnUpgrades { get; }
+        public ProgressionItemization ProgressionItemization { get; }
         public ApmwPieceUpgradePreferenceProfile PieceUpgradePreferenceProfile { get; }
         public int MinorPieceLimitByType { get; }
         public int MajorPieceLimitByType { get; }
@@ -64,6 +65,9 @@ namespace ChessV.Test
         public int PawnForwardnessCount { get; }
         public int ConsulCount { get; }
         public int KingPromotionCount { get; }
+        public int ChessmenCount { get; }
+        public int MaterialCount { get; }
+        public int CastlerCount { get; }
         public int SuperSizeMeCount { get; }
         public int PlayAsWhiteCount { get; }
         public int VictoryCount { get; }
@@ -94,6 +98,7 @@ namespace ChessV.Test
             ArmyIndexes = new ReadOnlyCollection<int>((builder.ArmyIndexes ?? Enumerable.Empty<int>()).ToList());
             FairyChessPawns = builder.FairyChessPawns;
             FairyChessPawnUpgrades = builder.FairyChessPawnUpgrades;
+            ProgressionItemization = builder.ProgressionItemization;
             PieceUpgradePreferenceProfile = builder.PieceUpgradePreferenceProfile;
             MinorPieceLimitByType = builder.MinorPieceLimitByType;
             MajorPieceLimitByType = builder.MajorPieceLimitByType;
@@ -121,6 +126,9 @@ namespace ChessV.Test
             PawnForwardnessCount = builder.PawnForwardnessCount;
             ConsulCount = builder.ConsulCount;
             KingPromotionCount = builder.KingPromotionCount;
+            ChessmenCount = builder.ChessmenCount;
+            MaterialCount = builder.MaterialCount;
+            CastlerCount = builder.CastlerCount;
             SuperSizeMeCount = builder.SuperSizeMeCount;
             PlayAsWhiteCount = builder.PlayAsWhiteCount;
             VictoryCount = builder.VictoryCount;
@@ -171,6 +179,7 @@ namespace ChessV.Test
                 ArmyIndexes = ArmyIndexes.ToArray(),
                 FairyChessPawns = FairyChessPawns,
                 FairyChessPawnUpgrades = FairyChessPawnUpgrades,
+                ProgressionItemization = ProgressionItemization,
                 PieceUpgradePreferenceProfile = PieceUpgradePreferenceProfile,
                 MinorPieceLimitByType = MinorPieceLimitByType,
                 MajorPieceLimitByType = MajorPieceLimitByType,
@@ -198,6 +207,9 @@ namespace ChessV.Test
                 PawnForwardnessCount = PawnForwardnessCount,
                 ConsulCount = ConsulCount,
                 KingPromotionCount = KingPromotionCount,
+                ChessmenCount = ChessmenCount,
+                MaterialCount = MaterialCount,
+                CastlerCount = CastlerCount,
                 SuperSizeMeCount = SuperSizeMeCount,
                 PlayAsWhiteCount = PlayAsWhiteCount,
                 VictoryCount = VictoryCount,
@@ -235,6 +247,8 @@ namespace ChessV.Test
             object pieceUpgradePreferences = BuildPieceUpgradePreferences();
             if (pieceUpgradePreferences != null)
                 slotData[ApmwConstants.SlotKeyPieceUpgradePreferences] = pieceUpgradePreferences;
+            if (ProgressionItemization != ProgressionItemization.Legacy)
+                slotData[ApmwConstants.SlotKeyProgressionItemization] = (int)ProgressionItemization;
 
             return slotData;
         }
@@ -245,15 +259,24 @@ namespace ChessV.Test
             yield return (ApmwConstants.ProgressiveItems.PocketRange, PocketRangeCount);
             yield return (ApmwConstants.ProgressiveItems.PocketGems, PocketGemCount);
             yield return (ApmwConstants.ProgressiveItems.AIIntelligenceMalus, AIIntelligenceMalusCount);
-            yield return (ApmwConstants.ProgressiveItems.Pawn, PawnCount);
-            yield return (ApmwConstants.ProgressiveItems.MinorPiece, MinorPieceCount);
-            yield return (ApmwConstants.ProgressiveItems.MajorPiece, MajorPieceCount);
-            yield return (ApmwConstants.ProgressiveItems.Jack, JackCount);
-            yield return (ApmwConstants.ProgressiveItems.MajorToQueen, MajorToQueenCount);
-            yield return (ApmwConstants.ProgressiveItems.Amazon, AmazonCount);
-            yield return (ApmwConstants.ProgressiveItems.PawnForwardness, PawnForwardnessCount);
-            yield return (ApmwConstants.ProgressiveItems.Consul, ConsulCount);
-            yield return (ApmwConstants.ProgressiveItems.KingPromotion, KingPromotionCount);
+            if (ProgressionItemization == ProgressionItemization.Fundamental)
+            {
+                yield return (ApmwConstants.ProgressiveItems.Chessmen, ChessmenCount);
+                yield return (ApmwConstants.ProgressiveItems.Material, MaterialCount);
+                yield return (ApmwConstants.ProgressiveItems.Castler, CastlerCount);
+            }
+            else
+            {
+                yield return (ApmwConstants.ProgressiveItems.Pawn, PawnCount);
+                yield return (ApmwConstants.ProgressiveItems.MinorPiece, MinorPieceCount);
+                yield return (ApmwConstants.ProgressiveItems.MajorPiece, MajorPieceCount);
+                yield return (ApmwConstants.ProgressiveItems.Jack, JackCount);
+                yield return (ApmwConstants.ProgressiveItems.MajorToQueen, MajorToQueenCount);
+                yield return (ApmwConstants.ProgressiveItems.Amazon, AmazonCount);
+                yield return (ApmwConstants.ProgressiveItems.PawnForwardness, PawnForwardnessCount);
+                yield return (ApmwConstants.ProgressiveItems.Consul, ConsulCount);
+                yield return (ApmwConstants.ProgressiveItems.KingPromotion, KingPromotionCount);
+            }
             yield return (ApmwConstants.ProgressiveItems.SuperSizeMe, SuperSizeMeCount);
             yield return (ApmwConstants.ProgressiveItems.PlayAsWhite, PlayAsWhiteCount);
             yield return (VictoryItemName, VictoryCount);
@@ -278,9 +301,9 @@ namespace ChessV.Test
         {
             return string.Format(
                 "ApmwFuzzCase(CaseName=\"{0}\", Label=\"{1}\", CaseIndex={2}, MasterSeed=\"{3}\", TargetStage=\"{4}\", Category=\"{5}\", IsSuperSized={6}, GameName=\"{7}\", " +
-                "Slots=[goal={8}, enemy_piece_types={9}, piece_locations={10}, piece_types={11}, fairy_chess_army={12}, army=[{13}], fairy_chess_pawns={14}, fairy_chess_pawn_upgrades={15}, piece_upgrade_profile={16}, minor_limit={17}, major_limit={18}, queen_limit={19}, pocket_limit={20}, death_link={21}], " +
-                "Seeds=[pocket={22}, pawn={23}, minor={24}, major={25}, queen={26}, chaos={27}], " +
-                "Items=[pockets={28}, pocket_range={29}, pocket_gems={30}, ai_malus={31}, pawns={32}, minors={33}, majors={34}, jacks={35}, major_to_queen={36}, amazons={37}, pawn_forwardness={38}, consuls={39}, king_promotions={40}, super_size={41}, play_as_white={42}, victory={43}])",
+                "Slots=[goal={8}, enemy_piece_types={9}, piece_locations={10}, piece_types={11}, fairy_chess_army={12}, army=[{13}], fairy_chess_pawns={14}, fairy_chess_pawn_upgrades={15}, progression_itemization={16}, piece_upgrade_profile={17}, minor_limit={18}, major_limit={19}, queen_limit={20}, pocket_limit={21}, death_link={22}], " +
+                "Seeds=[pocket={23}, pawn={24}, minor={25}, major={26}, queen={27}, chaos={28}], " +
+                "Items=[pockets={29}, pocket_range={30}, pocket_gems={31}, ai_malus={32}, pawns={33}, minors={34}, majors={35}, jacks={36}, major_to_queen={37}, amazons={38}, pawn_forwardness={39}, consuls={40}, king_promotions={41}, chessmen={42}, material={43}, castlers={44}, super_size={45}, play_as_white={46}, victory={47}])",
                 Escape(CaseName),
                 Escape(Label),
                 CaseIndex,
@@ -297,6 +320,7 @@ namespace ChessV.Test
                 string.Join(",", ArmyIndexes),
                 (int)FairyChessPawns,
                 (int)FairyChessPawnUpgrades,
+                ProgressionItemization,
                 PieceUpgradePreferenceProfile,
                 MinorPieceLimitByType,
                 MajorPieceLimitByType,
@@ -322,6 +346,9 @@ namespace ChessV.Test
                 PawnForwardnessCount,
                 ConsulCount,
                 KingPromotionCount,
+                ChessmenCount,
+                MaterialCount,
+                CastlerCount,
                 SuperSizeMeCount,
                 PlayAsWhiteCount,
                 VictoryCount);
@@ -423,6 +450,7 @@ namespace ChessV.Test
             public IEnumerable<int> ArmyIndexes { get; set; } = AllArmyIndexes;
             public FairyPawns FairyChessPawns { get; set; } = FairyPawns.Mixed;
             public FairyPawnUpgrades FairyChessPawnUpgrades { get; set; } = FairyPawnUpgrades.Off;
+            public ProgressionItemization ProgressionItemization { get; set; } = ProgressionItemization.Legacy;
             public ApmwPieceUpgradePreferenceProfile PieceUpgradePreferenceProfile { get; set; } = ApmwPieceUpgradePreferenceProfile.Legacy;
             public int MinorPieceLimitByType { get; set; }
             public int MajorPieceLimitByType { get; set; }
@@ -450,6 +478,9 @@ namespace ChessV.Test
             public int PawnForwardnessCount { get; set; }
             public int ConsulCount { get; set; }
             public int KingPromotionCount { get; set; }
+            public int ChessmenCount { get; set; }
+            public int MaterialCount { get; set; }
+            public int CastlerCount { get; set; }
             public int SuperSizeMeCount { get; set; }
             public int PlayAsWhiteCount { get; set; } = 1;
             public int VictoryCount { get; set; }

@@ -25,6 +25,15 @@ namespace Archipelago.APChessV
     /// <summary>Resolved slot-data key with the ordered piece upgrade action preference list.</summary>
     public const string SlotKeyPieceUpgradePreferences = "piece_upgrade_preferences";
 
+    /// <summary>Slot-data key selecting legacy family-specific or fundamental board-material itemization.</summary>
+    public const string SlotKeyProgressionItemization = "progression_itemization";
+
+    /// <summary>Slot-data key overriding how much material each Material item grants in fundamental itemization.</summary>
+    public const string SlotKeyMaterialItemValue = "material_item_value";
+
+    /// <summary>Slot-data key describing how many castling special-move locations can be locked by Castler items.</summary>
+    public const string SlotKeyCastlingLocationCount = "castling_location_count";
+
     /// <summary>Action names used by piece_upgrade_preferences.</summary>
     public static class PieceUpgradeActions
     {
@@ -58,6 +67,9 @@ namespace Archipelago.APChessV
       public const string Consul = "Progressive Consul";
       public const string KingPromotion = "Progressive King Promotion";
       public const string SuperSizeMe = "Super-Size Me";
+      public const string Chessmen = "Chessmen";
+      public const string Material = "Material";
+      public const string Castler = "Castler";
     }
   }
 }

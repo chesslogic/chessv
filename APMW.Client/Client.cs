@@ -186,8 +186,6 @@ namespace Archipelago.APChessV
           LocationHandler = LocationHandler.GetInstance();
           LocationHandler.Initialize(session.Locations, session);
 
-          ItemHandler = new ItemHandler(session.Items);
-
           //LocationCheckBar.ItemPickupStep = ItemLogic.ItemPickupStep;
 
           //session.Socket.PacketReceived += Session_PacketReceived;
@@ -206,8 +204,9 @@ namespace Archipelago.APChessV
             session.Socket.DisconnectAsync();
             return;
           }
-          
+           
           ApmwConfig.getInstance().Instantiate(slotData);
+          ItemHandler = new ItemHandler(session.Items);
           var isDeathLink = 0 < Convert.ToInt32(slotData.GetValueOrDefault("death_link", 0));
           if (isDeathLink)
           {

@@ -279,21 +279,387 @@ namespace Archipelago.APChessV
     public NonPawnGenerationPlan(
       Dictionary<NonPawnPieceFamily, int> directCounts,
       List<PlannedNonPawnUpgradeAction> upgradeActions,
-      Dictionary<NonPawnPieceFamily, int> unusedUpgradeCounts)
+      Dictionary<NonPawnPieceFamily, int> unusedUpgradeCounts,
+      int lockedMajorCount)
     {
       DirectCounts = directCounts;
       UpgradeActions = upgradeActions;
       UnusedUpgradeCounts = unusedUpgradeCounts;
+      LockedMajorCount = Math.Max(0, lockedMajorCount);
     }
 
     public Dictionary<NonPawnPieceFamily, int> DirectCounts { get; private set; }
     public List<PlannedNonPawnUpgradeAction> UpgradeActions { get; private set; }
     public Dictionary<NonPawnPieceFamily, int> UnusedUpgradeCounts { get; private set; }
+    public int LockedMajorCount { get; private set; }
 
     public int DirectCount(NonPawnPieceFamily family)
     {
       int count;
       return DirectCounts.TryGetValue(family, out count) ? count : 0;
+    }
+  }
+
+  internal sealed class PieceGenerationAllocation
+  {
+    private readonly Dictionary<NonPawnPieceFamily, int> nonPawnCounts;
+
+    private PieceGenerationAllocation(
+      int pawnSlots,
+      Dictionary<NonPawnPieceFamily, int> nonPawnCounts,
+      int initialSpareMaterial,
+      int? nonKingPieceSlotLimit,
+      int lockedMajorCount)
+    {
+      PawnSlots = Math.Max(0, pawnSlots);
+      this.nonPawnCounts = nonPawnCounts ?? new Dictionary<NonPawnPieceFamily, int>();
+      InitialSpareMaterial = Math.Max(0, initialSpareMaterial);
+      NonKingPieceSlotLimit = nonKingPieceSlotLimit;
+      LockedMajorCount = Math.Max(0, lockedMajorCount);
+    }
+
+    public int PawnSlots { get; private set; }
+    public int InitialSpareMaterial { get; private set; }
+    public int? NonKingPieceSlotLimit { get; private set; }
+    public bool LimitsNonKingPieceSlots { get { return NonKingPieceSlotLimit.HasValue; } }
+    public int LockedMajorCount { get; private set; }
+
+    public int NonPawnCount(NonPawnPieceFamily family)
+    {
+      int count;
+      return nonPawnCounts.TryGetValue(family, out count) ? count : 0;
+    }
+
+    public int RemainingPawnSlotsAfterNonKingPieces(List<PieceType> pieces)
+    {
+      if (!LimitsNonKingPieceSlots)
+        return PawnSlots;
+
+      int occupiedNonKingSlots = pieces.Count(IsNonKingPiece);
+      return Math.Max(0, NonKingPieceSlotLimit.Value - occupiedNonKingSlots);
+    }
+
+    public static PieceGenerationAllocation FromCore(ApmwCore core, ApmwConfig config, int numFiles)
+    {
+      if (config.UsesFundamentalProgressionItemization)
+        return FundamentalMaterialAllocationPlanner.Plan(core, config, numFiles);
+
+      return new PieceGenerationAllocation(
+        core.foundPawns,
+        new Dictionary<NonPawnPieceFamily, int>
+        {
+          [NonPawnPieceFamily.Minor] = core.foundMinors,
+          [NonPawnPieceFamily.Major] = core.foundMajors,
+          [NonPawnPieceFamily.Jack] = core.foundJacks,
+          [NonPawnPieceFamily.Queen] = core.foundQueens,
+          [NonPawnPieceFamily.Amazon] = core.foundAmazons,
+        },
+        0,
+        null,
+        0);
+    }
+
+    internal static PieceGenerationAllocation Fundamental(
+      int pawnSlots,
+      Dictionary<NonPawnPieceFamily, int> nonPawnCounts,
+      int initialSpareMaterial,
+      int nonKingPieceSlotLimit,
+      int lockedMajorCount)
+    {
+      return new PieceGenerationAllocation(
+        pawnSlots,
+        nonPawnCounts,
+        initialSpareMaterial,
+        Math.Max(0, nonKingPieceSlotLimit),
+        lockedMajorCount);
+    }
+
+    private static bool IsNonKingPiece(PieceType piece)
+    {
+      if (piece == null)
+        return false;
+
+      var kings = ApmwCore.getInstance().kings;
+      return kings == null || !kings.Contains(piece);
+    }
+  }
+
+  internal static class FundamentalMaterialAllocationPlanner
+  {
+    private const int CastlerMaterialCost = 500;
+
+    private sealed class FundamentalPieceRecipe
+    {
+      private readonly NonPawnPieceFamily[] countIncrements;
+
+      public FundamentalPieceRecipe(
+        string key,
+        int expectedMaterial,
+        params NonPawnPieceFamily[] countIncrements)
+      {
+        Key = key;
+        ExpectedMaterial = expectedMaterial;
+        this.countIncrements = countIncrements;
+      }
+
+      public string Key { get; private set; }
+      public int ExpectedMaterial { get; private set; }
+      public int ExtraMaterialCost
+      {
+        get { return Math.Max(0, ExpectedMaterial - ItemGenerationValues.Pawn); }
+      }
+
+      public void Apply(Dictionary<NonPawnPieceFamily, int> counts)
+      {
+        foreach (NonPawnPieceFamily family in countIncrements)
+          AddCount(counts, family);
+      }
+    }
+
+    public static PieceGenerationAllocation Plan(ApmwCore core, ApmwConfig config, int numFiles)
+    {
+      int requestedSlots = Math.Max(0, core.foundChessmen);
+      int placeableSlots = Math.Min(requestedSlots, MaxGeneratedNonKingPieces(numFiles));
+      int nonPawnSlotCapacity = Math.Min(placeableSlots, MaxNonPawnPipelineSlots(numFiles));
+      int materialBudget = Math.Max(0, core.foundMaterialBudget);
+      int lockedMajorCount = ActiveCastlerCount(core, materialBudget, nonPawnSlotCapacity, numFiles);
+      int extraMaterial = materialBudget - lockedMajorCount * CastlerMaterialCost;
+      int nonPawnSlots = lockedMajorCount;
+      int expectedNonPawnMaterial = lockedMajorCount * ItemGenerationValues.Major;
+      Dictionary<NonPawnPieceFamily, int> counts = new Dictionary<NonPawnPieceFamily, int>();
+      AddCount(counts, NonPawnPieceFamily.Major, lockedMajorCount);
+      List<FundamentalPieceRecipe> recipes = BuildRecipes(config);
+
+      while (nonPawnSlots < nonPawnSlotCapacity)
+      {
+        FundamentalPieceRecipe recipe = recipes.FirstOrDefault(item => item.ExtraMaterialCost <= extraMaterial);
+        if (recipe == null)
+          break;
+
+        recipe.Apply(counts);
+        extraMaterial -= recipe.ExtraMaterialCost;
+        expectedNonPawnMaterial += recipe.ExpectedMaterial;
+        nonPawnSlots++;
+      }
+
+      int pawnSlots = placeableSlots - nonPawnSlots;
+      long totalBudget = (long)requestedSlots * ItemGenerationValues.Pawn + materialBudget;
+      long expectedMaterial = (long)pawnSlots * ItemGenerationValues.Pawn + expectedNonPawnMaterial;
+      long castlerReservedMaterial = (long)lockedMajorCount *
+        Math.Max(0, CastlerMaterialCost - (ItemGenerationValues.Major - ItemGenerationValues.Pawn));
+      int initialSpareMaterial = ClampToInt(Math.Max(0, totalBudget - expectedMaterial - castlerReservedMaterial));
+      return PieceGenerationAllocation.Fundamental(
+        pawnSlots,
+        counts,
+        initialSpareMaterial,
+        placeableSlots,
+        lockedMajorCount);
+    }
+
+    private static int ActiveCastlerCount(
+      ApmwCore core,
+      int materialBudget,
+      int nonPawnSlotCapacity,
+      int numFiles)
+    {
+      return Math.Min(
+        Math.Max(0, core.EffectiveFoundCastlers),
+        Math.Min(
+          Math.Min(nonPawnSlotCapacity, materialBudget / CastlerMaterialCost),
+          MaxCastlingMajorSlots(numFiles)));
+    }
+
+    private static List<FundamentalPieceRecipe> BuildRecipes(ApmwConfig config)
+    {
+      List<FundamentalPieceRecipe> recipes = new List<FundamentalPieceRecipe>();
+      HashSet<string> addedRecipeKeys = new HashSet<string>(StringComparer.Ordinal);
+
+      foreach (string actionName in config.PieceUpgradePreferences)
+      {
+        if (!HasPositivePriority(config, actionName))
+          continue;
+
+        TryAddAmazonRecipeForQueenSourceAction(recipes, addedRecipeKeys, config, actionName);
+        TryAddRecipeForAction(recipes, addedRecipeKeys, actionName);
+      }
+
+      AddRecipe(
+        recipes,
+        addedRecipeKeys,
+        new FundamentalPieceRecipe(
+          "direct-jack",
+          ItemGenerationValues.Jack,
+          NonPawnPieceFamily.Jack));
+      AddRecipe(
+        recipes,
+        addedRecipeKeys,
+        new FundamentalPieceRecipe(
+          "direct-major",
+          ItemGenerationValues.Major,
+          NonPawnPieceFamily.Major));
+      AddRecipe(
+        recipes,
+        addedRecipeKeys,
+        new FundamentalPieceRecipe(
+          "direct-minor",
+          ItemGenerationValues.Minor,
+          NonPawnPieceFamily.Minor));
+
+      return recipes;
+    }
+
+    private static void TryAddRecipeForAction(
+      List<FundamentalPieceRecipe> recipes,
+      HashSet<string> addedRecipeKeys,
+      string actionName)
+    {
+      switch (actionName)
+      {
+        case ApmwConstants.PieceUpgradeActions.MinorToMajor:
+          AddRecipe(
+            recipes,
+            addedRecipeKeys,
+            new FundamentalPieceRecipe(
+              actionName,
+              ItemGenerationValues.Major,
+              NonPawnPieceFamily.Minor,
+              NonPawnPieceFamily.Major));
+          break;
+        case ApmwConstants.PieceUpgradeActions.MajorToJack:
+          AddRecipe(
+            recipes,
+            addedRecipeKeys,
+            new FundamentalPieceRecipe(
+              actionName,
+              ItemGenerationValues.Jack,
+              NonPawnPieceFamily.Major,
+              NonPawnPieceFamily.Jack));
+          break;
+        case ApmwConstants.PieceUpgradeActions.MinorToJack:
+          AddRecipe(
+            recipes,
+            addedRecipeKeys,
+            new FundamentalPieceRecipe(
+              actionName,
+              ItemGenerationValues.Jack,
+              NonPawnPieceFamily.Minor,
+              NonPawnPieceFamily.Jack));
+          break;
+        case ApmwConstants.PieceUpgradeActions.MajorToQueen:
+          AddRecipe(
+            recipes,
+            addedRecipeKeys,
+            new FundamentalPieceRecipe(
+              actionName,
+              ItemGenerationValues.Queen,
+              NonPawnPieceFamily.Major,
+              NonPawnPieceFamily.Queen));
+          break;
+        case ApmwConstants.PieceUpgradeActions.JackToQueen:
+          AddRecipe(
+            recipes,
+            addedRecipeKeys,
+            new FundamentalPieceRecipe(
+              actionName,
+              ItemGenerationValues.Queen,
+              NonPawnPieceFamily.Jack,
+              NonPawnPieceFamily.Queen));
+          break;
+      }
+    }
+
+    private static void TryAddAmazonRecipeForQueenSourceAction(
+      List<FundamentalPieceRecipe> recipes,
+      HashSet<string> addedRecipeKeys,
+      ApmwConfig config,
+      string sourceActionName)
+    {
+      if (!HasPositivePriority(config, ApmwConstants.PieceUpgradeActions.QueenToAmazon) ||
+        !config.IsPieceUpgradeActionPreferredBefore(
+          sourceActionName,
+          ApmwConstants.PieceUpgradeActions.QueenToAmazon))
+        return;
+
+      if (sourceActionName == ApmwConstants.PieceUpgradeActions.MajorToQueen)
+      {
+        AddRecipe(
+          recipes,
+          addedRecipeKeys,
+          new FundamentalPieceRecipe(
+            ApmwConstants.PieceUpgradeActions.QueenToAmazon + ":major",
+            ItemGenerationValues.Amazon,
+            NonPawnPieceFamily.Major,
+            NonPawnPieceFamily.Queen,
+            NonPawnPieceFamily.Amazon));
+      }
+      else if (sourceActionName == ApmwConstants.PieceUpgradeActions.JackToQueen)
+      {
+        AddRecipe(
+          recipes,
+          addedRecipeKeys,
+          new FundamentalPieceRecipe(
+            ApmwConstants.PieceUpgradeActions.QueenToAmazon + ":jack",
+            ItemGenerationValues.Amazon,
+            NonPawnPieceFamily.Jack,
+            NonPawnPieceFamily.Queen,
+            NonPawnPieceFamily.Amazon));
+      }
+    }
+
+    private static bool HasPositivePriority(ApmwConfig config, string actionName)
+    {
+      ApmwConfig.PieceUpgradeActionResolution action;
+      return config.PieceUpgradeActions.TryGetValue(actionName, out action) &&
+        action.IsEnabled &&
+        action.Priority > 0;
+    }
+
+    private static void AddRecipe(
+      List<FundamentalPieceRecipe> recipes,
+      HashSet<string> addedRecipeKeys,
+      FundamentalPieceRecipe recipe)
+    {
+      if (addedRecipeKeys.Add(recipe.Key))
+        recipes.Add(recipe);
+    }
+
+    private static void AddCount(
+      Dictionary<NonPawnPieceFamily, int> counts,
+      NonPawnPieceFamily family)
+    {
+      AddCount(counts, family, 1);
+    }
+
+    private static void AddCount(
+      Dictionary<NonPawnPieceFamily, int> counts,
+      NonPawnPieceFamily family,
+      int amount)
+    {
+      if (amount <= 0)
+        return;
+
+      int count;
+      counts[family] = counts.TryGetValue(family, out count) ? count + amount : amount;
+    }
+
+    private static int MaxGeneratedNonKingPieces(int numFiles)
+    {
+      return Math.Max(0, 5 * numFiles - 1);
+    }
+
+    private static int MaxNonPawnPipelineSlots(int numFiles)
+    {
+      return Math.Max(0, 2 * numFiles - 1);
+    }
+
+    private static int MaxCastlingMajorSlots(int numFiles)
+    {
+      return Math.Max(0, numFiles - 1);
+    }
+
+    private static int ClampToInt(long value)
+    {
+      return value > int.MaxValue ? int.MaxValue : (int)value;
     }
   }
 
@@ -346,11 +712,35 @@ namespace Archipelago.APChessV
         Math.Max(0, core.foundAmazons),
       };
 
+      return Plan(foundCounts, config, 0);
+    }
+
+    public static NonPawnGenerationPlan Plan(PieceGenerationAllocation allocation, ApmwConfig config)
+    {
+      int[] foundCounts =
+      {
+        Math.Max(0, allocation.NonPawnCount(NonPawnPieceFamily.Minor)),
+        Math.Max(0, allocation.NonPawnCount(NonPawnPieceFamily.Major)),
+        Math.Max(0, allocation.NonPawnCount(NonPawnPieceFamily.Jack)),
+        Math.Max(0, allocation.NonPawnCount(NonPawnPieceFamily.Queen)),
+        Math.Max(0, allocation.NonPawnCount(NonPawnPieceFamily.Amazon)),
+      };
+
+      return Plan(foundCounts, config, allocation.LockedMajorCount);
+    }
+
+    private static NonPawnGenerationPlan Plan(int[] foundCounts, ApmwConfig config, int lockedMajorCount)
+    {
+      foundCounts = (int[])foundCounts.Clone();
+      for (int index = 0; index < foundCounts.Length; index++)
+        foundCounts[index] = Math.Max(0, foundCounts[index]);
+      lockedMajorCount = Math.Min(Math.Max(0, lockedMajorCount), foundCounts[(int)NonPawnPieceFamily.Major]);
+
       int[,] currentByFamilyAndOrigin = new int[FamilyCount, FamilyCount];
       currentByFamilyAndOrigin[(int)NonPawnPieceFamily.Minor, (int)NonPawnPieceFamily.Minor] =
         foundCounts[(int)NonPawnPieceFamily.Minor];
       currentByFamilyAndOrigin[(int)NonPawnPieceFamily.Major, (int)NonPawnPieceFamily.Major] =
-        foundCounts[(int)NonPawnPieceFamily.Major];
+        Math.Max(0, foundCounts[(int)NonPawnPieceFamily.Major] - lockedMajorCount);
       currentByFamilyAndOrigin[(int)NonPawnPieceFamily.Jack, (int)NonPawnPieceFamily.Jack] =
         foundCounts[(int)NonPawnPieceFamily.Jack];
 
@@ -405,7 +795,7 @@ namespace Archipelago.APChessV
         [NonPawnPieceFamily.Amazon] = remainingTargetBudgets[(int)NonPawnPieceFamily.Amazon],
       };
 
-      return new NonPawnGenerationPlan(directCounts, plannedActions, unusedUpgradeCounts);
+      return new NonPawnGenerationPlan(directCounts, plannedActions, unusedUpgradeCounts, lockedMajorCount);
     }
 
     public static List<PieceType> ApplyUpgrades(
@@ -424,7 +814,7 @@ namespace Archipelago.APChessV
             pieces,
             promotions,
             PiecesForFamily(metadata.SourceFamily),
-            PreferredSourceIndices(metadata, numFiles, majorOrder, pieces.Count),
+            PreferredSourceIndices(metadata, numFiles, majorOrder, pieces.Count, plan.LockedMajorCount),
             false,
             PiecesForFamily(metadata.TargetFamily),
             plannedAction.RequestedUpgrades,
@@ -558,26 +948,39 @@ namespace Archipelago.APChessV
       NonPawnUpgradeActionMetadata metadata,
       int numFiles,
       List<int> majorOrder,
-      int pieceSetCount)
+      int pieceSetCount,
+      int lockedMajorCount)
     {
       if (metadata.SourceFamily != NonPawnPieceFamily.Major &&
         metadata.SourceFamily != NonPawnPieceFamily.Jack)
         return null;
 
       List<int> preferredIndices = new List<int>();
-      foreach (int orderIndex in majorOrder.AsEnumerable().Reverse())
+      HashSet<int> lockedPieceSetIndices = new HashSet<int>();
+      int lockedOrderCount = 0;
+      if (metadata.SourceFamily == NonPawnPieceFamily.Major)
+      {
+        lockedOrderCount = Math.Min(Math.Max(0, lockedMajorCount), majorOrder.Count);
+        foreach (int lockedOrderIndex in majorOrder.Take(lockedOrderCount))
+          lockedPieceSetIndices.Add(MajorUpgradeSubstitution.MajorOrderIndexToPieceSetIndex(
+            numFiles,
+            lockedOrderIndex,
+            pieceSetCount));
+      }
+
+      foreach (int orderIndex in majorOrder.Skip(lockedOrderCount).Reverse())
       {
         int pieceSetIndex = MajorUpgradeSubstitution.MajorOrderIndexToPieceSetIndex(
           numFiles,
           orderIndex,
           pieceSetCount);
-        if (!preferredIndices.Contains(pieceSetIndex))
+        if (!lockedPieceSetIndices.Contains(pieceSetIndex) && !preferredIndices.Contains(pieceSetIndex))
           preferredIndices.Add(pieceSetIndex);
       }
 
       preferredIndices.AddRange(
         Enumerable.Range(0, pieceSetCount)
-          .Where(index => !preferredIndices.Contains(index)));
+          .Where(index => !lockedPieceSetIndices.Contains(index) && !preferredIndices.Contains(index)));
       return preferredIndices;
     }
   }
@@ -586,19 +989,20 @@ namespace Archipelago.APChessV
   {
     public static (Dictionary<KeyValuePair<int, int>, PieceType>, string) Generate(int numFiles)
     {
-      int spareMaterial = 0;
-
       ApmwConfig.getInstance().seed();
       List<string> promotions = new List<string>();
       List<int> order;
       var core = ApmwCore.getInstance();
       var config = ApmwConfig.getInstance();
-      NonPawnGenerationPlan nonPawnPlan = NonPawnUpgradeGeneration.Plan(core, config);
+      PieceGenerationAllocation allocation = PieceGenerationAllocation.FromCore(core, config, numFiles);
+      int spareMaterial = allocation.InitialSpareMaterial;
+      NonPawnGenerationPlan nonPawnPlan = NonPawnUpgradeGeneration.Plan(allocation, config);
       // Generate direct pieces only from target budgets that were not reserved by upgrade actions.
       List<PieceType> withMajors = MajorPieceGeneration.GenerateDirect(
         numFiles,
         nonPawnPlan.DirectCount(NonPawnPieceFamily.Major),
         nonPawnPlan.DirectCount(NonPawnPieceFamily.Jack),
+        nonPawnPlan.LockedMajorCount,
         out order,
         promotions,
         ref spareMaterial);
@@ -615,7 +1019,22 @@ namespace Archipelago.APChessV
         nonPawnPlan,
         promotions,
         ref spareMaterial);
-      List<PieceType> withPawns = PawnGeneration.GeneratePawns(numFiles, withUpgrades, spareMaterial);
+      List<PieceType> withPawns;
+      if (allocation.LimitsNonKingPieceSlots)
+      {
+        int remainingPawnSlots = allocation.RemainingPawnSlotsAfterNonKingPieces(withUpgrades);
+        withPawns = PawnGeneration.GeneratePawns(
+          numFiles,
+          withUpgrades,
+          spareMaterial,
+          allocation.PawnSlots,
+          remainingPawnSlots,
+          remainingPawnSlots);
+      }
+      else
+      {
+        withPawns = PawnGeneration.GeneratePawns(numFiles, withUpgrades, spareMaterial);
+      }
 
       Dictionary<KeyValuePair<int, int>, PieceType> pieces = new Dictionary<KeyValuePair<int, int>, PieceType>();
       for (int rankIndex = 0; rankIndex < 5; rankIndex++)
@@ -908,6 +1327,29 @@ namespace Archipelago.APChessV
     public static List<PieceType> GeneratePawns(int numFiles, List<PieceType> minors, int spareMaterial)
     {
       var core = ApmwCore.getInstance();
+      int foundPawnMaterialCount = core.foundPawns;
+      int pawnGuarantee = core.foundPawns;
+      if (ApmwConfig.getInstance().UsesSuperMaxPawnGuarantee)
+        pawnGuarantee = SuperMaxPawnGuarantee(numFiles, core.foundPawns, core.foundConsuls, core.foundJacks, core.foundMajors, core.foundMinors);
+
+      return GeneratePawns(
+        numFiles,
+        minors,
+        spareMaterial,
+        foundPawnMaterialCount,
+        pawnGuarantee,
+        -1);
+    }
+
+    public static List<PieceType> GeneratePawns(
+      int numFiles,
+      List<PieceType> minors,
+      int spareMaterial,
+      int foundPawnMaterialCount,
+      int pawnGuarantee,
+      int maxPawnPieces)
+    {
+      var core = ApmwCore.getInstance();
       List<PieceType> thirdRank = Enumerable.Repeat<PieceType>(null, numFiles).ToList();
       List<PieceType> fourthRank = Enumerable.Repeat<PieceType>(null, numFiles).ToList();
       List<PieceType> finalRank = Enumerable.Repeat<PieceType>(null, numFiles).ToList();
@@ -917,16 +1359,18 @@ namespace Archipelago.APChessV
       Random randomLocations = new Random(ApmwConfig.getInstance().pawnLocSeed);
       int startingPieces = pawnRank.Count((item) => item != null);
       int remainingPawnSpaces = 4 * numFiles - startingPieces;
+      int pawnSpaceLimit = remainingPawnSpaces;
+      if (maxPawnPieces >= 0)
+        pawnSpaceLimit = Math.Min(remainingPawnSpaces, Math.Max(0, maxPawnPieces));
 
       int adjustedPawnValues = Math.Max(
-        core.foundPawns * ItemGenerationValues.Pawn,
-        core.foundPawns * ItemGenerationValues.Pawn + spareMaterial + 45);
+        foundPawnMaterialCount * ItemGenerationValues.Pawn,
+        foundPawnMaterialCount * ItemGenerationValues.Pawn + spareMaterial + 45);
 
-      int pawnGuarantee = core.foundPawns;
-      if (ApmwConfig.getInstance().UsesSuperMaxPawnGuarantee)
-        pawnGuarantee = SuperMaxPawnGuarantee(numFiles, core.foundPawns, core.foundConsuls, core.foundJacks, core.foundMajors, core.foundMinors);
+      if (maxPawnPieces >= 0)
+        pawnGuarantee = Math.Min(Math.Max(0, pawnGuarantee), pawnSpaceLimit);
 
-      List<PieceType> workingPawns = PickPawns(randomPieces, adjustedPawnValues, remainingPawnSpaces, pawnGuarantee);
+      List<PieceType> workingPawns = PickPawns(randomPieces, adjustedPawnValues, pawnSpaceLimit, pawnGuarantee);
 
       Queue<PieceType> adjustedPawns = new Queue<PieceType>(workingPawns);
       // Fill each rank
@@ -1188,6 +1632,7 @@ namespace Archipelago.APChessV
         Math.Max(0, core.foundMajors),
         Math.Max(0, core.foundJacks),
         majorUpgradesToBe,
+        0,
         out order,
         promotions,
         ref spareMaterial);
@@ -1201,11 +1646,31 @@ namespace Archipelago.APChessV
       List<string> promotions,
       ref int spareMaterial)
     {
+      return GenerateDirect(
+        numFiles,
+        directMajorCount,
+        directJackCount,
+        0,
+        out order,
+        promotions,
+        ref spareMaterial);
+    }
+
+    public static List<PieceType> GenerateDirect(
+      int numFiles,
+      int directMajorCount,
+      int directJackCount,
+      int lockedMajorCount,
+      out List<int> order,
+      List<string> promotions,
+      ref int spareMaterial)
+    {
       return GenerateWithCounts(
         numFiles,
         Math.Max(0, directMajorCount),
         Math.Max(0, directJackCount),
         0,
+        Math.Max(0, lockedMajorCount),
         out order,
         promotions,
         ref spareMaterial);
@@ -1216,6 +1681,7 @@ namespace Archipelago.APChessV
       int majorSlotCount,
       int jackCount,
       int majorUpgradesToBe,
+      int lockedMajorCount,
       out List<int> order,
       List<string> promotions,
       ref int spareMaterial)
@@ -1255,6 +1721,7 @@ namespace Archipelago.APChessV
       int numJacks = jackCount;
       int reservedUpgradeSlots = Math.Min(Math.Max(0, majorUpgradesToBe), Math.Max(0, majorSlotCount));
       int numDirectMajors = Math.Max(0, majorSlotCount - reservedUpgradeSlots);
+      int numLockedMajors = Math.Min(Math.Max(0, lockedMajorCount), numDirectMajors);
       int numNonMinorPieces = numDirectMajors + reservedUpgradeSlots + numKings + numJacks;
       int backRankCapacity = numFiles - 1;
       int outerRankCapacity = numFiles;
@@ -1269,6 +1736,7 @@ namespace Archipelago.APChessV
         player,
         promotionPieces,
         numKings,
+        numLockedMajors,
         numJacks,
         numNonMinorPieces,
         reservedUpgradeSlots);
@@ -1283,6 +1751,7 @@ namespace Archipelago.APChessV
       }
       RecordUnplacedDirectMajorMaterial(
         numKings,
+        numLockedMajors,
         numJacks,
         numDirectMajors,
         reservedUpgradeSlots,
@@ -1297,6 +1766,7 @@ namespace Archipelago.APChessV
 
     private static void RecordUnplacedDirectMajorMaterial(
       int numKings,
+      int numLockedMajors,
       int numJacks,
       int numDirectMajors,
       int reservedUpgradeSlots,
@@ -1304,13 +1774,17 @@ namespace Archipelago.APChessV
       ref int spareMaterial)
     {
       int remainingCapacity = Math.Max(0, placementCapacity - numKings);
+      int placedLockedMajors = Math.Min(numLockedMajors, remainingCapacity);
+      remainingCapacity -= placedLockedMajors;
       int placedJacks = Math.Min(numJacks, remainingCapacity);
       remainingCapacity -= placedJacks;
-      int placedMajors = Math.Min(numDirectMajors, remainingCapacity);
+      int nonLockedDirectMajors = Math.Max(0, numDirectMajors - numLockedMajors);
+      int placedMajors = Math.Min(nonLockedDirectMajors, remainingCapacity);
       remainingCapacity -= placedMajors;
 
+      spareMaterial += Math.Max(0, numLockedMajors - placedLockedMajors) * ItemGenerationValues.Major;
       spareMaterial += Math.Max(0, numJacks - placedJacks) * ItemGenerationValues.Jack;
-      spareMaterial += Math.Max(0, numDirectMajors - placedMajors) * ItemGenerationValues.Major;
+      spareMaterial += Math.Max(0, nonLockedDirectMajors - placedMajors) * ItemGenerationValues.Major;
 
       // Legacy reserved queen/amazon major slots are accounted by their substitution step.
     }
@@ -1338,6 +1812,7 @@ namespace Archipelago.APChessV
       private readonly int player;
       private readonly HashSet<string> promotionPieces;
       private readonly int numKings;
+      private readonly int numLockedMajors;
       private readonly int numJacks;
       private readonly int numNonMinorPieces;
       private readonly int majorUpgradesToBe;
@@ -1354,6 +1829,7 @@ namespace Archipelago.APChessV
         int player,
         HashSet<string> promotionPieces,
         int numKings,
+        int numLockedMajors,
         int numJacks,
         int numNonMinorPieces,
         int majorUpgradesToBe)
@@ -1367,6 +1843,7 @@ namespace Archipelago.APChessV
         this.player = player;
         this.promotionPieces = promotionPieces;
         this.numKings = numKings;
+        this.numLockedMajors = numLockedMajors;
         this.numJacks = numJacks;
         this.numNonMinorPieces = numNonMinorPieces;
         this.majorUpgradesToBe = majorUpgradesToBe;
@@ -1374,7 +1851,9 @@ namespace Archipelago.APChessV
 
       public PieceType Pick(int placementIndex, ref int spareMaterial)
       {
-        if (placementIndex < numJacks + numKings)
+        if (placementIndex < numKings + numLockedMajors)
+          return PickPromotion(ref majors, randomPieces, ItemGenerationValues.Major, ref spareMaterial);
+        if (placementIndex < numJacks + numKings + numLockedMajors)
           return PickPromotion(ref jacks, randomJackPieces, ItemGenerationValues.Jack, ref spareMaterial);
         if (placementIndex < numNonMinorPieces - majorUpgradesToBe)
           return PickPromotion(ref majors, randomPieces, ItemGenerationValues.Major, ref spareMaterial);

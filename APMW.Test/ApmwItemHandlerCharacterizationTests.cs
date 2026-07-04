@@ -40,7 +40,7 @@ namespace ChessV.Test
         }
 
         [TestMethod]
-        public void Hook_MapsItemCountsAndCapsCoreFields()
+        public void Hook_LegacyItemizationMapsLegacyCountsAndIgnoresFundamentalItems()
         {
             var helper = new MutableReceivedItemsHelper()
                 .Add(ApmwConstants.ProgressiveItems.Pocket, 15)
@@ -57,6 +57,9 @@ namespace ChessV.Test
                 .Add(ApmwConstants.ProgressiveItems.PawnForwardness, 6)
                 .Add(ApmwConstants.ProgressiveItems.Consul, 5)
                 .Add(ApmwConstants.ProgressiveItems.KingPromotion, 4)
+                .Add(ApmwConstants.ProgressiveItems.Chessmen, 7)
+                .Add(ApmwConstants.ProgressiveItems.Material, 3)
+                .Add(ApmwConstants.ProgressiveItems.Castler, 5)
                 .Add(ApmwConstants.ProgressiveItems.SuperSizeMe);
 
             var core = ApmwCore.getInstance();
@@ -77,11 +80,66 @@ namespace ChessV.Test
             Assert.AreEqual(6, core.foundPawnForwardness);
             Assert.AreEqual(2, core.foundConsuls, "consuls cap at 2");
             Assert.AreEqual(2, core.foundKingPromotions, "king promotions cap at 2");
+            Assert.AreEqual(0, core.foundChessmen);
+            Assert.AreEqual(0, core.foundMaterialBudget);
+            Assert.AreEqual(0, core.foundCastlers);
             Assert.IsTrue(core.isGrand);
             Assert.AreEqual(0, core.GeriProvider(), "Play as White selects player 0");
             Assert.AreEqual(5, core.EngineWeakeningProvider(), "AI malus caps at 5");
             Assert.AreNotSame(originalPieceProvider, core.PlayerPieceSetProvider);
             Assert.AreNotSame(originalPocketProvider, core.PlayerPocketPiecesProvider);
+        }
+
+        [TestMethod]
+        public void Hook_FundamentalItemizationMapsFundamentalCountsAndSuppressesLegacyBoardMaterial()
+        {
+            ApmwConfig.getInstance().Instantiate(new Dictionary<string, object>
+            {
+                [ApmwConstants.SlotKeyProgressionItemization] = "fundamental",
+                [ApmwConstants.SlotKeyMaterialItemValue] = 125,
+                [ApmwConstants.SlotKeyCastlingLocationCount] = 2,
+            });
+            var helper = new MutableReceivedItemsHelper()
+                .Add(ApmwConstants.ProgressiveItems.Pocket, 15)
+                .Add(ApmwConstants.ProgressiveItems.PocketRange, 9)
+                .Add(ApmwConstants.ProgressiveItems.PocketGems, 4)
+                .Add(ApmwConstants.ProgressiveItems.PlayAsWhite)
+                .Add(ApmwConstants.ProgressiveItems.AIIntelligenceMalus, 7)
+                .Add(ApmwConstants.ProgressiveItems.Pawn, 8)
+                .Add(ApmwConstants.ProgressiveItems.MinorPiece, 5)
+                .Add(ApmwConstants.ProgressiveItems.MajorPiece, 4)
+                .Add(ApmwConstants.ProgressiveItems.Jack, 3)
+                .Add(ApmwConstants.ProgressiveItems.MajorToQueen, 2)
+                .Add(ApmwConstants.ProgressiveItems.Amazon, 4)
+                .Add(ApmwConstants.ProgressiveItems.PawnForwardness, 6)
+                .Add(ApmwConstants.ProgressiveItems.Consul, 5)
+                .Add(ApmwConstants.ProgressiveItems.KingPromotion, 4)
+                .Add(ApmwConstants.ProgressiveItems.Chessmen, 7)
+                .Add(ApmwConstants.ProgressiveItems.Material, 3)
+                .Add(ApmwConstants.ProgressiveItems.Castler, 5)
+                .Add(ApmwConstants.ProgressiveItems.SuperSizeMe);
+
+            handler = new ItemHandler(helper);
+            var core = ApmwCore.getInstance();
+
+            Assert.AreEqual(12, core.foundPockets, "pockets cap at 12");
+            Assert.AreEqual(6, core.foundPocketRange, "pocket range caps at 6");
+            Assert.AreEqual(4, core.foundPocketGems);
+            Assert.AreEqual(0, core.foundPawns);
+            Assert.AreEqual(0, core.foundMinors);
+            Assert.AreEqual(0, core.foundMajors);
+            Assert.AreEqual(0, core.foundJacks);
+            Assert.AreEqual(0, core.foundQueens);
+            Assert.AreEqual(0, core.foundAmazons);
+            Assert.AreEqual(0, core.foundPawnForwardness);
+            Assert.AreEqual(0, core.foundConsuls);
+            Assert.AreEqual(0, core.foundKingPromotions);
+            Assert.AreEqual(7, core.foundChessmen);
+            Assert.AreEqual(375, core.foundMaterialBudget);
+            Assert.AreEqual(2, core.foundCastlers, "castlers cap at configured castling locations");
+            Assert.IsTrue(core.isGrand);
+            Assert.AreEqual(0, core.GeriProvider(), "Play as White selects player 0");
+            Assert.AreEqual(5, core.EngineWeakeningProvider(), "AI malus caps at 5");
         }
 
         [TestMethod]
@@ -128,6 +186,124 @@ namespace ChessV.Test
             var directPockets = handler.generatePocketItems();
             var providerPockets = core.PlayerPocketPiecesProvider();
             CollectionAssert.AreEqual(PieceNames(directPockets), PieceNames(providerPockets));
+        }
+
+        [TestMethod]
+        public void Generation_LegacyItemizationIgnoresFundamentalBudgetItems()
+        {
+            ConfigureStableGeneration();
+            handler = new ItemHandler(new MutableReceivedItemsHelper()
+                .Add(ApmwConstants.ProgressiveItems.Pawn, 6)
+                .Add(ApmwConstants.ProgressiveItems.MinorPiece, 2)
+                .Add(ApmwConstants.ProgressiveItems.MajorPiece)
+                .Add(ApmwConstants.ProgressiveItems.MajorToQueen));
+            var baseline = handler.generatePlayerPieceSet(NumFiles);
+
+            handler.Unhook();
+            handler = null;
+            ResetSingletons();
+
+            ConfigureStableGeneration();
+            handler = new ItemHandler(new MutableReceivedItemsHelper()
+                .Add(ApmwConstants.ProgressiveItems.Pawn, 6)
+                .Add(ApmwConstants.ProgressiveItems.MinorPiece, 2)
+                .Add(ApmwConstants.ProgressiveItems.MajorPiece)
+                .Add(ApmwConstants.ProgressiveItems.MajorToQueen)
+                .Add(ApmwConstants.ProgressiveItems.Chessmen, 20)
+                .Add(ApmwConstants.ProgressiveItems.Material, 10)
+                .Add(ApmwConstants.ProgressiveItems.Castler, 2));
+            var withFundamentalItems = handler.generatePlayerPieceSet(NumFiles);
+
+            Assert.AreEqual(PieceSetSignature(baseline.Item1), PieceSetSignature(withFundamentalItems.Item1));
+            Assert.AreEqual(baseline.Item2, withFundamentalItems.Item2);
+        }
+
+        [TestMethod]
+        public void Generation_FundamentalChessmenOnlyUsesChessmenSlotsAndIgnoresLegacyBoardMaterial()
+        {
+            handler = ConfigureFundamentalGeneration(new MutableReceivedItemsHelper()
+                .Add(ApmwConstants.ProgressiveItems.Pawn, 8)
+                .Add(ApmwConstants.ProgressiveItems.MinorPiece, 4)
+                .Add(ApmwConstants.ProgressiveItems.MajorPiece, 4)
+                .Add(ApmwConstants.ProgressiveItems.Jack, 2)
+                .Add(ApmwConstants.ProgressiveItems.MajorToQueen, 2)
+                .Add(ApmwConstants.ProgressiveItems.Amazon)
+                .Add(ApmwConstants.ProgressiveItems.Chessmen, 6));
+
+            var result = handler.generatePlayerPieceSet(NumFiles);
+            var core = ApmwCore.getInstance();
+            var generated = result.Item1.Values.ToList();
+
+            Assert.AreEqual(0, core.foundPawns);
+            Assert.AreEqual(0, core.foundMinors);
+            Assert.AreEqual(0, core.foundMajors);
+            Assert.AreEqual(0, core.foundJacks);
+            Assert.AreEqual(0, core.foundQueens);
+            Assert.AreEqual(0, core.foundAmazons);
+            Assert.AreEqual(6, CountNonKingPieces(generated));
+            Assert.AreEqual(6, CountFrom(generated, core.pawns) + CountFrom(generated, core.sergeants));
+            Assert.AreEqual(0, CountNonPawnFamilies(generated));
+        }
+
+        [TestMethod]
+        public void Generation_FundamentalMaterialUsesUpgradePrioritiesWithoutAddingSlots()
+        {
+            handler = ConfigureFundamentalGeneration(
+                new MutableReceivedItemsHelper()
+                    .Add(ApmwConstants.ProgressiveItems.Chessmen, 3)
+                    .Add(ApmwConstants.ProgressiveItems.Material, 2),
+                PriorityMapWith(ApmwConstants.PieceUpgradeActions.MajorToQueen, 10));
+
+            var result = handler.generatePlayerPieceSet(NumFiles);
+            var core = ApmwCore.getInstance();
+            var generated = result.Item1.Values.ToList();
+            var queens = generated.Where(piece => FamilyContains(core, "queen", piece)).ToList();
+
+            Assert.AreEqual(3, CountNonKingPieces(generated));
+            Assert.AreEqual(1, queens.Count);
+            Assert.AreEqual(0, CountFamily(generated, "major"));
+            Assert.AreEqual(2, CountFrom(generated, core.pawns) + CountFrom(generated, core.sergeants));
+            foreach (var piece in queens.Distinct())
+                StringAssert.Contains(result.Item2, piece.Notation[core.GeriProvider()]);
+        }
+
+        [TestMethod]
+        public void Generation_FundamentalCastlerLocksMajorCastlingPieceWithinChessmenSlot()
+        {
+            handler = ConfigureFundamentalGeneration(new MutableReceivedItemsHelper()
+                .Add(ApmwConstants.ProgressiveItems.Chessmen)
+                .Add(ApmwConstants.ProgressiveItems.Material, 2)
+                .Add(ApmwConstants.ProgressiveItems.Castler));
+
+            var result = handler.generatePlayerPieceSet(NumFiles);
+            var core = ApmwCore.getInstance();
+            var generated = result.Item1.Values.ToList();
+
+            Assert.AreEqual(1, core.foundCastlers);
+            Assert.AreEqual(1, CountNonKingPieces(generated), "Castler must consume an existing Chessmen slot.");
+            Assert.AreEqual(1, CountFamily(generated, "major"), "Castler should force a major-family castling piece.");
+            Assert.IsTrue(
+                result.Item1.Any(item => item.Key.Key == 4 && core.majors.Contains(item.Value)),
+                "Castler major should be generated on the castling rank.");
+        }
+
+        [TestMethod]
+        public void Generation_FundamentalIgnoredCastlerDoesNotForceMajorAllocation()
+        {
+            handler = ConfigureFundamentalGeneration(new MutableReceivedItemsHelper()
+                .Add(ApmwConstants.ProgressiveItems.Chessmen)
+                .Add(ApmwConstants.ProgressiveItems.Material, 2)
+                .Add(ApmwConstants.ProgressiveItems.Castler));
+            ApmwCore.getInstance().IgnoreCastlersReceived = true;
+
+            var result = handler.generatePlayerPieceSet(NumFiles);
+            var core = ApmwCore.getInstance();
+            var generated = result.Item1.Values.ToList();
+
+            Assert.AreEqual(1, core.foundCastlers);
+            Assert.AreEqual(1, CountNonKingPieces(generated));
+            Assert.AreEqual(0, CountFamily(generated, "major"), "Ignored Castler should not lock a major-family piece.");
+            Assert.AreEqual(1, CountFamily(generated, "queen"), "Existing fundamental material planning should continue normally.");
         }
 
         [TestMethod]
@@ -615,6 +791,25 @@ namespace ChessV.Test
             return new ItemHandler(receivedItems);
         }
 
+        private static ItemHandler ConfigureFundamentalGeneration(
+            MutableReceivedItemsHelper receivedItems,
+            JObject pieceUpgradePriorities = null)
+        {
+            var slotData = ApmwFuzzCase.DefaultStandard().BuildSlotData();
+            slotData[ApmwConstants.SlotKeyProgressionItemization] = "fundamental";
+            slotData[ApmwConstants.SlotKeyMaterialItemValue] = ApmwConfig.DefaultMaterialItemValue;
+            if (pieceUpgradePriorities != null)
+            {
+                slotData[ApmwConstants.SlotKeyFairyChessPawnUpgrades] = (int)FairyPawnUpgrades.Configure;
+                slotData[ApmwConstants.SlotKeyPieceUpgradePreferences] = pieceUpgradePriorities;
+            }
+
+            ApmwConfig.getInstance().Instantiate(slotData);
+            ApmwConfig.getInstance().seed();
+            new ApmwChessGame().earlyPopulatePieceTypes();
+            return new ItemHandler(receivedItems);
+        }
+
         private static JObject PriorityMapWith(string actionName, int priority)
         {
             return PriorityMapWith(actionName, priority, new Dictionary<string, int>());
@@ -653,6 +848,21 @@ namespace ChessV.Test
         private static int CountFrom(IEnumerable<PieceType> pieces, ISet<PieceType> set)
         {
             return pieces.Count(piece => piece != null && set.Contains(piece));
+        }
+
+        private static int CountNonKingPieces(IEnumerable<PieceType> pieces)
+        {
+            var kings = ApmwCore.getInstance().kings;
+            return pieces.Count(piece => piece != null && (kings == null || !kings.Contains(piece)));
+        }
+
+        private static int CountNonPawnFamilies(IEnumerable<PieceType> pieces)
+        {
+            return CountFamily(pieces, "minor") +
+                CountFamily(pieces, "major") +
+                CountFamily(pieces, "jack") +
+                CountFamily(pieces, "queen") +
+                CountFamily(pieces, "amazon");
         }
 
         private static int CountFamily(IEnumerable<PieceType> pieces, string familyName)

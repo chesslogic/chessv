@@ -83,6 +83,25 @@ namespace ChessV.Test
                 builder.DeathLink = true;
             });
 
+            AddCase(cases, SmokeMasterSeed, "smoke-standard-fundamental-material-castler", false,
+                ApmwFuzzCase.TargetStages.ItemHandlerGeneration, GenerationSmokeCategory, builder =>
+            {
+                ConfigureFundamentalProgression(builder, StandardBoardWidth, 2, 1);
+                builder.Goal = Goal.Progressive;
+                builder.FairyChessPawnUpgrades = FairyPawnUpgrades.Configure;
+                builder.PieceUpgradePreferenceProfile = ApmwPieceUpgradePreferenceProfile.ListMinorToJackFirst;
+            });
+
+            AddCase(cases, SmokeMasterSeed, "smoke-super-sized-fundamental-rich-material", true,
+                ApmwFuzzCase.TargetStages.ItemHandlerGeneration, GenerationSmokeCategory, builder =>
+            {
+                ConfigureFundamentalProgression(builder, SuperSizedBoardWidth + 2, 4, 2);
+                builder.Goal = Goal.Super;
+                builder.FairyChessPawns = FairyPawns.AnyClassical;
+                builder.FairyChessPawnUpgrades = FairyPawnUpgrades.Max;
+                builder.PieceUpgradePreferenceProfile = ApmwPieceUpgradePreferenceProfile.PriorityMapDisableMajorToQueen;
+            });
+
             AddCase(cases, SmokeMasterSeed, "smoke-standard-source-family-upgrade-list", false,
                 ApmwFuzzCase.TargetStages.MoveGeneration, GenerationSmokeCategory, builder =>
             {
@@ -200,6 +219,7 @@ namespace ChessV.Test
                 (builder, value) => builder.VictoryCount = value);
 
             AddPieceUpgradePreferenceBoundaryCases(cases, isSuperSized, width);
+            AddFundamentalBoundaryCases(cases, isSuperSized, width);
         }
 
         private static void AddOverCapItemCases(List<ApmwFuzzCase> cases, bool isSuperSized)
@@ -267,6 +287,13 @@ namespace ChessV.Test
                     builder.ConsulCount = 3;
                     builder.KingPromotionCount = 3;
                 });
+            AddCase(cases, OverCapMasterSeed, "over-cap-" + boardLabel + "-fundamental-chessmen-material", isSuperSized,
+                ApmwFuzzCase.TargetStages.ItemHandlerGeneration, GenerationOverCapCategory,
+                builder => ConfigureFundamentalProgression(
+                    builder,
+                    MaxGeneratedNonKingPieces(width) + width,
+                    FundamentalMaterialItemCapacity(width) + width,
+                    ApmwConfig.DefaultCastlingLocationCount + 1));
         }
 
         private static void AddPieceUpgradePreferenceBoundaryCases(
@@ -314,6 +341,49 @@ namespace ChessV.Test
                 });
         }
 
+        private static void AddFundamentalBoundaryCases(
+            List<ApmwFuzzCase> cases,
+            bool isSuperSized,
+            int width)
+        {
+            AddFundamentalAxisCases(cases, isSuperSized, "fundamental-chessmen-count",
+                FundamentalChessmenThresholds(width),
+                (builder, value) => builder.ChessmenCount = value);
+            AddFundamentalAxisCases(cases, isSuperSized, "fundamental-material-count",
+                FundamentalMaterialThresholds(width),
+                (builder, value) => builder.MaterialCount = value);
+            AddFundamentalAxisCases(cases, isSuperSized, "fundamental-castler-count",
+                CastlerThresholds(),
+                (builder, value) =>
+                {
+                    builder.CastlerCount = value;
+                    builder.MaterialCount = Math.Max(builder.MaterialCount, value * 2);
+                });
+        }
+
+        private static void AddFundamentalAxisCases(
+            List<ApmwFuzzCase> cases,
+            bool isSuperSized,
+            string axisName,
+            IEnumerable<int> values,
+            Action<ApmwFuzzCase.Builder, int> setValue)
+        {
+            int width = BoardWidth(isSuperSized);
+            foreach (int value in values)
+            {
+                AddCase(cases, BoundaryMasterSeed,
+                    "boundary-" + BoardLabel(isSuperSized) + "-" + axisName + "-" + value,
+                    isSuperSized,
+                    ApmwFuzzCase.TargetStages.ItemHandlerGeneration,
+                    GenerationBoundaryCategory,
+                    builder =>
+                    {
+                        ConfigureFundamentalProgression(builder, width, 2, 0);
+                        setValue(builder, value);
+                    });
+            }
+        }
+
         private static ApmwFuzzCase BuildRandomCase(string masterSeed, int caseIndex, int caseSeed)
         {
             var random = new Random(caseSeed);
@@ -334,6 +404,7 @@ namespace ChessV.Test
                 builder.ArmyIndexes = PickArmyIndexes(random);
                 builder.FairyChessPawns = Pick(random, EnumValues<FairyPawns>());
                 builder.FairyChessPawnUpgrades = Pick(random, EnumValues<FairyPawnUpgrades>());
+                builder.ProgressionItemization = Pick(random, EnumValues<ProgressionItemization>());
                 builder.MinorPieceLimitByType = Pick(random, new[] { 0, 1, 2, 3 });
                 builder.MajorPieceLimitByType = Pick(random, new[] { 0, 1, 2, 3 });
                 builder.QueenPieceLimitByType = Pick(random, new[] { 0, 1, 2, 3 });
@@ -372,6 +443,14 @@ namespace ChessV.Test
                 builder.SuperSizeMeCount = isSuperSized ? 1 : 0;
                 builder.PlayAsWhiteCount = random.Next(0, 2);
                 builder.VictoryCount = random.Next(0, 2);
+
+                if (builder.ProgressionItemization == ProgressionItemization.Fundamental)
+                {
+                    ResetLegacyBoardProgressionCounts(builder);
+                    builder.ChessmenCount = random.Next(0, MaxGeneratedNonKingPieces(width) + width + 1);
+                    builder.MaterialCount = random.Next(0, FundamentalMaterialItemCapacity(width) + width + 1);
+                    builder.CastlerCount = random.Next(0, ApmwConfig.DefaultCastlingLocationCount + 2);
+                }
             });
         }
 
@@ -493,10 +572,64 @@ namespace ChessV.Test
             return boardWidth * 4;
         }
 
+        private static int MaxGeneratedNonKingPieces(int boardWidth)
+        {
+            return Math.Max(0, 5 * boardWidth - 1);
+        }
+
+        private static int FundamentalMaterialItemCapacity(int boardWidth)
+        {
+            return MaxGeneratedNonKingPieces(boardWidth) * 3;
+        }
+
+        private static void ConfigureFundamentalProgression(
+            ApmwFuzzCase.Builder builder,
+            int chessmenCount,
+            int materialCount,
+            int castlerCount)
+        {
+            builder.ProgressionItemization = ProgressionItemization.Fundamental;
+            ResetLegacyBoardProgressionCounts(builder);
+            builder.ChessmenCount = chessmenCount;
+            builder.MaterialCount = materialCount;
+            builder.CastlerCount = castlerCount;
+        }
+
+        private static void ResetLegacyBoardProgressionCounts(ApmwFuzzCase.Builder builder)
+        {
+            builder.PawnCount = 0;
+            builder.MinorPieceCount = 0;
+            builder.MajorPieceCount = 0;
+            builder.JackCount = 0;
+            builder.MajorToQueenCount = 0;
+            builder.AmazonCount = 0;
+            builder.PawnForwardnessCount = 0;
+            builder.ConsulCount = 0;
+            builder.KingPromotionCount = 0;
+        }
+
         private static IEnumerable<int> WidthAndCapacityThresholds(int boardWidth, int capacity)
         {
             return UniqueNonNegative(0, 1, boardWidth - 1, boardWidth, boardWidth + 1,
                 capacity - 1, capacity, capacity + 1);
+        }
+
+        private static IEnumerable<int> FundamentalChessmenThresholds(int boardWidth)
+        {
+            return WidthAndCapacityThresholds(boardWidth, MaxGeneratedNonKingPieces(boardWidth));
+        }
+
+        private static IEnumerable<int> FundamentalMaterialThresholds(int boardWidth)
+        {
+            return UniqueNonNegative(0, 1, 2, 4, boardWidth - 1, boardWidth, boardWidth + 1,
+                FundamentalMaterialItemCapacity(boardWidth) - 1,
+                FundamentalMaterialItemCapacity(boardWidth),
+                FundamentalMaterialItemCapacity(boardWidth) + 1);
+        }
+
+        private static IEnumerable<int> CastlerThresholds()
+        {
+            return UniqueNonNegative(0, 1, ApmwConfig.DefaultCastlingLocationCount, ApmwConfig.DefaultCastlingLocationCount + 1);
         }
 
         private static IEnumerable<int> PawnForwardnessThresholds(int boardWidth)

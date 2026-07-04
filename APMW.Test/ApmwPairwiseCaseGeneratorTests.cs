@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Archipelago.APChessV;
 
 namespace ChessV.Test
 {
@@ -33,7 +34,11 @@ namespace ChessV.Test
             Assert.AreEqual(cases.Count, cases.Select(fuzzCase => fuzzCase.CaseName).Distinct().Count());
 
             Assert.IsTrue(cases.Where(fuzzCase => fuzzCase.IsSuperSized)
-                .All(fuzzCase => fuzzCase.SuperSizeMeCount == 1 && fuzzCase.PawnCount == 10));
+                .All(fuzzCase => fuzzCase.SuperSizeMeCount == 1 &&
+                    (fuzzCase.ProgressionItemization == ProgressionItemization.Fundamental || fuzzCase.PawnCount == 10)));
+            Assert.IsTrue(cases.Any(fuzzCase => fuzzCase.ProgressionItemization == ProgressionItemization.Legacy));
+            Assert.IsTrue(cases.Any(fuzzCase => fuzzCase.ProgressionItemization == ProgressionItemization.Fundamental));
+            AssertFundamentalCasesUseFundamentalItemCounts(cases);
             AssertAllCategoricalPairsCovered(cases);
         }
 
@@ -70,6 +75,7 @@ namespace ChessV.Test
                 "interaction-pawns-super-over-forwardness-any-classical",
                 "interaction-majors-standard-queen-conversion-cap",
                 "interaction-majors-standard-list-minor-to-jack-chain",
+                "interaction-fundamental-standard-chessmen-material-castler",
                 "interaction-chaos-locations-seeded-max",
                 "interaction-over-cap-super-material-and-pockets",
             };
@@ -81,6 +87,24 @@ namespace ChessV.Test
                 subset,
                 1,
                 ApmwFuzzStage.ItemHandlerGeneration));
+        }
+
+        private static void AssertFundamentalCasesUseFundamentalItemCounts(IReadOnlyList<ApmwFuzzCase> cases)
+        {
+            ApmwFuzzCase legacy = cases.First(fuzzCase => fuzzCase.ProgressionItemization == ProgressionItemization.Legacy);
+            Assert.IsFalse(legacy.BuildSlotData().ContainsKey(ApmwConstants.SlotKeyProgressionItemization));
+            Assert.IsFalse(legacy.BuildItemCountMap().ContainsKey(ApmwConstants.ProgressiveItems.Chessmen));
+
+            ApmwFuzzCase fundamental = cases.First(fuzzCase => fuzzCase.ProgressionItemization == ProgressionItemization.Fundamental);
+            Assert.AreEqual(
+                (int)ProgressionItemization.Fundamental,
+                (int)fundamental.BuildSlotData()[ApmwConstants.SlotKeyProgressionItemization]);
+            Dictionary<string, int> itemCounts = fundamental.BuildItemCountMap();
+            Assert.IsTrue(itemCounts.ContainsKey(ApmwConstants.ProgressiveItems.Chessmen));
+            Assert.IsTrue(itemCounts.ContainsKey(ApmwConstants.ProgressiveItems.Material));
+            Assert.IsTrue(itemCounts.ContainsKey(ApmwConstants.ProgressiveItems.Castler));
+            Assert.IsFalse(itemCounts.ContainsKey(ApmwConstants.ProgressiveItems.Pawn));
+            Assert.IsFalse(itemCounts.ContainsKey(ApmwConstants.ProgressiveItems.MinorPiece));
         }
 
         private static void AssertAllCategoricalPairsCovered(IReadOnlyList<ApmwFuzzCase> cases)
@@ -167,6 +191,9 @@ namespace ChessV.Test
                 "interaction-majors-standard-over-cap-mixed",
                 "interaction-majors-standard-list-minor-to-jack-chain",
                 "interaction-majors-standard-priority-map-disable-major-to-queen",
+                "interaction-fundamental-standard-chessmen-only",
+                "interaction-fundamental-standard-chessmen-material-castler",
+                "interaction-fundamental-super-over-chessmen-material-castlers",
                 "interaction-army-limited-empty-type-limits-one",
                 "interaction-army-stable-scattered-standard-width-limits",
                 "interaction-army-chaos-opening-super-over-width-limits",

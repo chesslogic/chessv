@@ -67,6 +67,7 @@ namespace ChessV.GUI
       labelDivider = new System.Windows.Forms.Label();
       label5 = new System.Windows.Forms.Label();
       checkBoxDeathlink = new System.Windows.Forms.CheckBox();
+      checkBoxIgnoreCastlersReceived = new System.Windows.Forms.CheckBox();
       comboBoxEnemyArmy = new System.Windows.Forms.ComboBox();
       SuspendLayout();
       // 
@@ -242,6 +243,19 @@ namespace ChessV.GUI
       checkBoxDeathlink.UseVisualStyleBackColor = true;
       checkBoxDeathlink.CheckedChanged += checkBoxDeathlink_CheckedChanged;
       // 
+      // checkBoxIgnoreCastlersReceived
+      // 
+      checkBoxIgnoreCastlersReceived.AutoSize = true;
+      checkBoxIgnoreCastlersReceived.Enabled = false;
+      checkBoxIgnoreCastlersReceived.Font = new System.Drawing.Font("Segoe UI", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+      checkBoxIgnoreCastlersReceived.Location = new System.Drawing.Point(858, 128);
+      checkBoxIgnoreCastlersReceived.Name = "checkBoxIgnoreCastlersReceived";
+      checkBoxIgnoreCastlersReceived.Size = new System.Drawing.Size(160, 23);
+      checkBoxIgnoreCastlersReceived.TabIndex = 18;
+      checkBoxIgnoreCastlersReceived.Text = "Ignore Castlers Received";
+      checkBoxIgnoreCastlersReceived.UseVisualStyleBackColor = true;
+      checkBoxIgnoreCastlersReceived.CheckedChanged += checkBoxIgnoreCastlersReceived_CheckedChanged;
+      // 
       // comboBoxEnemyArmy
       // 
       comboBoxEnemyArmy.FormattingEnabled = true;
@@ -257,6 +271,7 @@ namespace ChessV.GUI
       AutoScaleDimensions = new System.Drawing.SizeF(10F, 25F);
       AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
       ClientSize = new System.Drawing.Size(1037, 752);
+      Controls.Add(checkBoxIgnoreCastlersReceived);
       Controls.Add(comboBoxEnemyArmy);
       Controls.Add(checkBoxDeathlink);
       Controls.Add(label5);
@@ -303,6 +318,7 @@ namespace ChessV.GUI
     private System.Windows.Forms.CheckBox checkBoxDeathlink;
     private System.Windows.Forms.Label labelDivider;
     private System.Windows.Forms.Label label5;
+    private System.Windows.Forms.CheckBox checkBoxIgnoreCastlersReceived;
     public System.Windows.Forms.ComboBox comboBox1;
     public System.Windows.Forms.ComboBox comboBoxEnemyArmy;
   }

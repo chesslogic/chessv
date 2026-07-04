@@ -57,6 +57,9 @@ namespace Archipelago.APChessV
       core.foundPawnForwardness = progress.FoundPawnForwardness;
       core.foundConsuls = progress.FoundConsuls;
       core.foundKingPromotions = progress.FoundKingPromotions;
+      core.foundChessmen = progress.FoundChessmen;
+      core.foundMaterialBudget = progress.FoundMaterialBudget;
+      core.foundCastlers = progress.FoundCastlers;
       core.isGrand = progress.IsGrand;
     }
 
@@ -76,24 +79,48 @@ namespace Archipelago.APChessV
       public int FoundPawnForwardness { get; }
       public int FoundConsuls { get; }
       public int FoundKingPromotions { get; }
+      public int FoundChessmen { get; }
+      public int FoundMaterialBudget { get; }
+      public int FoundCastlers { get; }
       public bool IsGrand { get; }
 
-      private ItemProgressSnapshot(Dictionary<string, int> itemCounts)
+      private ItemProgressSnapshot(Dictionary<string, int> itemCounts, ApmwConfig config)
       {
         FoundPocketRange = Math.Min(6, Count(itemCounts, ApmwConstants.ProgressiveItems.PocketRange));
         FoundPocketGems = Count(itemCounts, ApmwConstants.ProgressiveItems.PocketGems);
         GeriProviderPlayer = Any(itemCounts, ApmwConstants.ProgressiveItems.PlayAsWhite) ? 0 : 1;
         EngineWeakening = Math.Min(5, Count(itemCounts, ApmwConstants.ProgressiveItems.AIIntelligenceMalus));
         FoundPockets = Math.Min(12, Count(itemCounts, ApmwConstants.ProgressiveItems.Pocket));
-        FoundPawns = Count(itemCounts, ApmwConstants.ProgressiveItems.Pawn);
-        FoundMinors = Count(itemCounts, ApmwConstants.ProgressiveItems.MinorPiece);
-        FoundMajors = Count(itemCounts, ApmwConstants.ProgressiveItems.MajorPiece);
-        FoundJacks = Count(itemCounts, ApmwConstants.ProgressiveItems.Jack);
-        FoundQueens = Count(itemCounts, ApmwConstants.ProgressiveItems.MajorToQueen);
-        FoundAmazons = Count(itemCounts, ApmwConstants.ProgressiveItems.Amazon);
-        FoundPawnForwardness = Count(itemCounts, ApmwConstants.ProgressiveItems.PawnForwardness);
-        FoundConsuls = Math.Min(2, Count(itemCounts, ApmwConstants.ProgressiveItems.Consul));
-        FoundKingPromotions = Math.Min(2, Count(itemCounts, ApmwConstants.ProgressiveItems.KingPromotion));
+        if (config.UsesFundamentalProgressionItemization)
+        {
+          FoundPawns = 0;
+          FoundMinors = 0;
+          FoundMajors = 0;
+          FoundJacks = 0;
+          FoundQueens = 0;
+          FoundAmazons = 0;
+          FoundPawnForwardness = 0;
+          FoundConsuls = 0;
+          FoundKingPromotions = 0;
+          FoundChessmen = Count(itemCounts, ApmwConstants.ProgressiveItems.Chessmen);
+          FoundMaterialBudget = Count(itemCounts, ApmwConstants.ProgressiveItems.Material) * config.materialItemValue;
+          FoundCastlers = Math.Min(Math.Max(0, config.castlingLocationCount), Count(itemCounts, ApmwConstants.ProgressiveItems.Castler));
+        }
+        else
+        {
+          FoundPawns = Count(itemCounts, ApmwConstants.ProgressiveItems.Pawn);
+          FoundMinors = Count(itemCounts, ApmwConstants.ProgressiveItems.MinorPiece);
+          FoundMajors = Count(itemCounts, ApmwConstants.ProgressiveItems.MajorPiece);
+          FoundJacks = Count(itemCounts, ApmwConstants.ProgressiveItems.Jack);
+          FoundQueens = Count(itemCounts, ApmwConstants.ProgressiveItems.MajorToQueen);
+          FoundAmazons = Count(itemCounts, ApmwConstants.ProgressiveItems.Amazon);
+          FoundPawnForwardness = Count(itemCounts, ApmwConstants.ProgressiveItems.PawnForwardness);
+          FoundConsuls = Math.Min(2, Count(itemCounts, ApmwConstants.ProgressiveItems.Consul));
+          FoundKingPromotions = Math.Min(2, Count(itemCounts, ApmwConstants.ProgressiveItems.KingPromotion));
+          FoundChessmen = 0;
+          FoundMaterialBudget = 0;
+          FoundCastlers = 0;
+        }
         IsGrand = Any(itemCounts, ApmwConstants.ProgressiveItems.SuperSizeMe);
       }
 
@@ -105,7 +132,7 @@ namespace Archipelago.APChessV
           .GroupBy(name => name)
           .ToDictionary(group => group.Key, group => group.Count());
 
-        return new ItemProgressSnapshot(itemCounts);
+        return new ItemProgressSnapshot(itemCounts, ApmwConfig.getInstance());
       }
 
       private static int Count(Dictionary<string, int> itemCounts, string name)

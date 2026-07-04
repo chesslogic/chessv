@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Archipelago.APChessV;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace ChessV.Test
@@ -61,6 +62,7 @@ namespace ChessV.Test
 
             Assert.IsTrue(expandedCases.Count > ApmwPairwiseCaseGenerator.PeripheryCases().Count);
             Assert.AreEqual(0, ApmwFuzzSuite.RegressionCases().Count);
+            Assert.IsTrue(expandedCases.Any(fuzzCase => fuzzCase.ProgressionItemization == ProgressionItemization.Fundamental));
             AssertNoDuplicateCanonicalKeys(expandedCases);
             AssertNoDuplicateCanonicalKeys(ApmwFuzzSuite.CiExpandedPeripheryPairwiseSubset().Cases);
         }

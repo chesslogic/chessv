@@ -453,6 +453,7 @@ namespace ChessV.Test
         internal const string AxisArmy = "army";
         internal const string AxisFairyChessPawns = "fairy_chess_pawns";
         internal const string AxisFairyChessPawnUpgrades = "fairy_chess_pawn_upgrades";
+        internal const string AxisProgressionItemization = ApmwConstants.SlotKeyProgressionItemization;
         internal const string AxisPieceUpgradePreferenceProfile = "piece_upgrade_preference_profile";
         internal const string AxisMinorPieceLimitByType = "minor_piece_limit_by_type";
         internal const string AxisMajorPieceLimitByType = "major_piece_limit_by_type";
@@ -472,6 +473,9 @@ namespace ChessV.Test
         internal const string AxisPawnForwardnessCount = "pawn-forwardness-count";
         internal const string AxisConsulCount = "consul-count";
         internal const string AxisKingPromotionCount = "king-promotion-count";
+        internal const string AxisChessmenCount = "chessmen-count";
+        internal const string AxisMaterialCount = "material-count";
+        internal const string AxisCastlerCount = "castler-count";
         internal const string AxisSuperSizeMeCount = "super-size-me-count";
         internal const string AxisPlayAsWhiteCount = "play-as-white-count";
         internal const string AxisVictoryCount = "victory-count";
@@ -523,6 +527,7 @@ namespace ChessV.Test
                     ApmwFuzzOptionValue.IntSet("scattered-armies", new[] { 0, 3, 5, 6 })),
                 ApmwFuzzAxis.Enumeration(AxisFairyChessPawns, FairyPawns.Mixed),
                 ApmwFuzzAxis.Enumeration(AxisFairyChessPawnUpgrades, FairyPawnUpgrades.Off),
+                ApmwFuzzAxis.Enumeration(AxisProgressionItemization, ProgressionItemization.Legacy),
                 ApmwFuzzAxis.Enumeration(AxisPieceUpgradePreferenceProfile, ApmwPieceUpgradePreferenceProfile.Legacy),
                 ApmwFuzzAxis.Numeric(
                     AxisMinorPieceLimitByType,
@@ -603,6 +608,20 @@ namespace ChessV.Test
                     AxisKingPromotionCount,
                     0,
                     new ApmwFuzzNumericBand("king-promotions", 0, 2, 3)),
+                ApmwFuzzAxis.Numeric(
+                    AxisChessmenCount,
+                    0,
+                    new ApmwFuzzNumericBand("standard-chessmen", 0, MaxGeneratedNonKingPieces(StandardBoardWidth), StandardBoardWidth, MaxGeneratedNonKingPieces(StandardBoardWidth) + StandardBoardWidth),
+                    new ApmwFuzzNumericBand("super-sized-chessmen", 0, MaxGeneratedNonKingPieces(SuperSizedBoardWidth), SuperSizedBoardWidth, MaxGeneratedNonKingPieces(SuperSizedBoardWidth) + SuperSizedBoardWidth)),
+                ApmwFuzzAxis.Numeric(
+                    AxisMaterialCount,
+                    0,
+                    new ApmwFuzzNumericBand("standard-material-items", 0, FundamentalMaterialItemCapacity(StandardBoardWidth), 2, 4, FundamentalMaterialItemCapacity(StandardBoardWidth) + StandardBoardWidth),
+                    new ApmwFuzzNumericBand("super-sized-material-items", 0, FundamentalMaterialItemCapacity(SuperSizedBoardWidth), 2, 4, FundamentalMaterialItemCapacity(SuperSizedBoardWidth) + SuperSizedBoardWidth)),
+                ApmwFuzzAxis.Numeric(
+                    AxisCastlerCount,
+                    0,
+                    new ApmwFuzzNumericBand("castlers", 0, ApmwConfig.DefaultCastlingLocationCount, ApmwConfig.DefaultCastlingLocationCount + 1)),
                 ApmwFuzzAxis.Numeric(
                     AxisSuperSizeMeCount,
                     0,
@@ -750,6 +769,8 @@ namespace ChessV.Test
                     return ApmwFuzzOptionValue.Enumeration(fuzzCase.FairyChessPawns);
                 case AxisFairyChessPawnUpgrades:
                     return ApmwFuzzOptionValue.Enumeration(fuzzCase.FairyChessPawnUpgrades);
+                case AxisProgressionItemization:
+                    return ApmwFuzzOptionValue.Enumeration(fuzzCase.ProgressionItemization);
                 case AxisPieceUpgradePreferenceProfile:
                     return ApmwFuzzOptionValue.Enumeration(fuzzCase.PieceUpgradePreferenceProfile);
                 case AxisMinorPieceLimitByType:
@@ -788,6 +809,12 @@ namespace ChessV.Test
                     return ApmwFuzzOptionValue.Numeric(fuzzCase.ConsulCount);
                 case AxisKingPromotionCount:
                     return ApmwFuzzOptionValue.Numeric(fuzzCase.KingPromotionCount);
+                case AxisChessmenCount:
+                    return ApmwFuzzOptionValue.Numeric(fuzzCase.ChessmenCount);
+                case AxisMaterialCount:
+                    return ApmwFuzzOptionValue.Numeric(fuzzCase.MaterialCount);
+                case AxisCastlerCount:
+                    return ApmwFuzzOptionValue.Numeric(fuzzCase.CastlerCount);
                 case AxisSuperSizeMeCount:
                     return ApmwFuzzOptionValue.Numeric(fuzzCase.SuperSizeMeCount);
                 case AxisPlayAsWhiteCount:
@@ -839,6 +866,9 @@ namespace ChessV.Test
                     break;
                 case AxisFairyChessPawnUpgrades:
                     builder.FairyChessPawnUpgrades = (FairyPawnUpgrades)value.Value;
+                    break;
+                case AxisProgressionItemization:
+                    builder.ProgressionItemization = (ProgressionItemization)value.Value;
                     break;
                 case AxisPieceUpgradePreferenceProfile:
                     builder.PieceUpgradePreferenceProfile = (ApmwPieceUpgradePreferenceProfile)value.Value;
@@ -897,6 +927,15 @@ namespace ChessV.Test
                 case AxisKingPromotionCount:
                     builder.KingPromotionCount = ToInt(value);
                     break;
+                case AxisChessmenCount:
+                    builder.ChessmenCount = ToInt(value);
+                    break;
+                case AxisMaterialCount:
+                    builder.MaterialCount = ToInt(value);
+                    break;
+                case AxisCastlerCount:
+                    builder.CastlerCount = ToInt(value);
+                    break;
                 case AxisSuperSizeMeCount:
                     builder.SuperSizeMeCount = ToInt(value);
                     break;
@@ -939,6 +978,16 @@ namespace ChessV.Test
         private static int PawnCapacity(int boardWidth)
         {
             return boardWidth * BoardRanks / 2;
+        }
+
+        private static int MaxGeneratedNonKingPieces(int boardWidth)
+        {
+            return Math.Max(0, 5 * boardWidth - 1);
+        }
+
+        private static int FundamentalMaterialItemCapacity(int boardWidth)
+        {
+            return MaxGeneratedNonKingPieces(boardWidth) * 3;
         }
 
         private static int ForwardnessCapacity(int boardWidth)

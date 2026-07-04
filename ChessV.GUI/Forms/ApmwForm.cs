@@ -72,6 +72,7 @@ namespace ChessV.GUI
 
       checkBoxDeathlink.Enabled = false;
       checkBoxDeathlink.Checked = false;
+      UpdateIgnoreCastlersReceivedCheckbox();
     }
 
     private void timer_Tick(object sender, EventArgs e)
@@ -107,6 +108,7 @@ namespace ChessV.GUI
         checkBoxSuper.Checked = true;
       }
       checkBoxSuper.Enabled = ApmwCore.getInstance().isGrand;
+      UpdateIgnoreCastlersReceivedCheckbox();
     }
 
     private void ApmwForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -206,6 +208,7 @@ namespace ChessV.GUI
             button2.Enabled = true;
             checkBoxDeathlink.Enabled = isDeathLink;
             checkBoxDeathlink.Checked = isDeathLink;
+            UpdateIgnoreCastlersReceivedCheckbox();
           });
 
           if (isDeathLink)
@@ -252,6 +255,9 @@ namespace ChessV.GUI
         this.Invoke((MethodInvoker)delegate {
           checkBoxDeathlink.Enabled = false;
           checkBoxDeathlink.Checked = false;
+          checkBoxIgnoreCastlersReceived.Enabled = false;
+          checkBoxIgnoreCastlersReceived.Checked = false;
+          ApmwCore.getInstance().IgnoreCastlersReceived = false;
         });
         deathLinkService = null;
       };
@@ -313,6 +319,31 @@ namespace ChessV.GUI
           deathLinkService.DisableDeathLink();
         }
       }
+    }
+
+    private void checkBoxIgnoreCastlersReceived_CheckedChanged(object sender, EventArgs e)
+    {
+      ApmwCore.getInstance().IgnoreCastlersReceived =
+        checkBoxIgnoreCastlersReceived.Enabled && checkBoxIgnoreCastlersReceived.Checked;
+    }
+
+    private void UpdateIgnoreCastlersReceivedCheckbox()
+    {
+      bool enabled = false;
+      try
+      {
+        enabled = archipelagoClient.Session != null &&
+          archipelagoClient.Session.ConnectionInfo != null &&
+          archipelagoClient.Session.ConnectionInfo.Slot != -1 &&
+          ApmwConfig.getInstance().UsesFundamentalProgressionItemization;
+      }
+      catch (NullReferenceException ex) { }
+
+      checkBoxIgnoreCastlersReceived.Enabled = enabled;
+      if (!enabled)
+        checkBoxIgnoreCastlersReceived.Checked = false;
+      ApmwCore.getInstance().IgnoreCastlersReceived =
+        enabled && checkBoxIgnoreCastlersReceived.Checked;
     }
   }
 }

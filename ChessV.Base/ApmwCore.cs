@@ -34,7 +34,16 @@ namespace ChessV.Base
     public int foundConsuls = -1;
     public int foundKingPromotions = -1;
     public int foundPawnForwardness = -1;
+    public int foundChessmen = -1;
+    public int foundMaterialBudget = -1;
+    public int foundCastlers = -1;
+    public bool IgnoreCastlersReceived { get; set; } = false;
     public bool isGrand = false;
+
+    public int EffectiveFoundCastlers
+    {
+      get { return IgnoreCastlersReceived ? 0 : Math.Max(0, foundCastlers); }
+    }
 
     public PieceType king;
     public List<PieceType> kings;
