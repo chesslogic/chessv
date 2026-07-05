@@ -339,6 +339,36 @@ namespace ChessV.Test
                     builder.MajorToQueenCount = 0;
                     builder.AmazonCount = width;
                 });
+            AddCase(cases, BoundaryMasterSeed, "boundary-" + boardLabel + "-legacy-tied-graduation-proportions", isSuperSized,
+                ApmwFuzzCase.TargetStages.ItemHandlerGeneration, GenerationBoundaryCategory,
+                builder =>
+                {
+                    // Legacy mode: minor-to-major/minor-to-jack (shared SourceFamily=Minor) and
+                    // major-to-queen/jack-to-queen (shared TargetFamily=Queen) are genuinely tied
+                    // by TiedGraduationWithProportions -- exercises NonPawnUpgradeGeneration.Plan's
+                    // per-unit weighted-draw tie-break (and its companion proportion dictionary)
+                    // under fuzzing with real, scarce, contested source/target material.
+                    builder.FairyChessPawnUpgrades = FairyPawnUpgrades.Configure;
+                    builder.PieceUpgradePreferenceProfile = ApmwPieceUpgradePreferenceProfile.TiedGraduationWithProportions;
+                    builder.MinorPieceCount = Math.Max(4, width / 2);
+                    builder.MajorPieceCount = Math.Max(2, width / 4);
+                    builder.JackCount = Math.Max(2, width / 4);
+                    builder.MajorToQueenCount = 1;
+                    builder.AmazonCount = 1;
+                });
+            AddCase(cases, BoundaryMasterSeed, "boundary-" + boardLabel + "-fundamental-tied-graduation-proportions", isSuperSized,
+                ApmwFuzzCase.TargetStages.ItemHandlerGeneration, GenerationBoundaryCategory,
+                builder =>
+                {
+                    // Fundamental mode: additionally exercises pawn-to-minor/pawn-to-major (shared
+                    // FromTier=Pawn), the redesign's original motivating tie, via the same profile.
+                    ConfigureFundamentalProgression(
+                        builder,
+                        MaxGeneratedNonKingPieces(width),
+                        FundamentalMaterialItemCapacity(width) / 2,
+                        1);
+                    builder.PieceUpgradePreferenceProfile = ApmwPieceUpgradePreferenceProfile.TiedGraduationWithProportions;
+                });
         }
 
         private static void AddFundamentalBoundaryCases(
@@ -594,11 +624,13 @@ namespace ChessV.Test
             builder.MaterialCount = materialCount;
             builder.CastlerCount = castlerCount;
 
-            // Fundamental's sole gateway out of Pawn (pawn-to-minor) is opt-in and not part of
-            // any Legacy-derived default preference list, so leaving this unset would silently
-            // exercise a degenerate "every slot stays a Pawn" path. Default every Fundamental
-            // fuzz case to @chesslogic's planned action chain so real tier graduation is
-            // actually covered; callers that want a different profile set it after this call.
+            // Fundamental's own defaults (used whenever piece_upgrade_preferences is omitted
+            // entirely) now include pawn-to-minor/pawn-to-major/minor-to-major/major-to-queen
+            // tied at priority 1, so leaving this unset no longer degenerates to "every slot
+            // stays a Pawn". Default every Fundamental fuzz case to @chesslogic's planned action
+            // chain anyway, so real tier graduation is covered by an explicit, well-understood
+            // priority spread rather than relying on the tied default; callers that want a
+            // different profile set it after this call.
             builder.FairyChessPawnUpgrades = FairyPawnUpgrades.Configure;
             builder.PieceUpgradePreferenceProfile = ApmwPieceUpgradePreferenceProfile.FundamentalPlannedChain;
         }

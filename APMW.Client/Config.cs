@@ -52,17 +52,25 @@ namespace Archipelago.APChessV
 
     public sealed class PieceUpgradeActionResolution
     {
-      public PieceUpgradeActionResolution(string actionName, int priority, bool isEnabled)
+      public PieceUpgradeActionResolution(string actionName, int priority, bool isEnabled, double proportion = 1.0)
       {
         ActionName = actionName;
         Priority = priority;
         IsEnabled = isEnabled;
+        Proportion = proportion > 0 ? proportion : 0;
       }
 
       public string ActionName { get; private set; }
       public int Priority { get; private set; }
       public bool IsEnabled { get; private set; }
       public bool IsDisabled { get { return !IsEnabled; } }
+
+      /// <summary>
+      /// Relative per-draw weight used only to arbitrate among actions tied at the same
+      /// <see cref="Priority"/> (see <see cref="ApmwConstants.SlotKeyPieceUpgradeProportions"/>).
+      /// Never negative; defaults to 1 when not explicitly configured.
+      /// </summary>
+      public double Proportion { get; private set; }
     }
 
     private static readonly string[] ValidPieceUpgradeActions =
@@ -72,6 +80,7 @@ namespace Archipelago.APChessV
       ApmwConstants.PieceUpgradeActions.BetterPawn,
       ApmwConstants.PieceUpgradeActions.PoolPawnUpgrade,
       ApmwConstants.PieceUpgradeActions.PawnToMinor,
+      ApmwConstants.PieceUpgradeActions.PawnToMajor,
       ApmwConstants.PieceUpgradeActions.MinorToMajor,
       ApmwConstants.PieceUpgradeActions.MajorToJack,
       ApmwConstants.PieceUpgradeActions.MinorToJack,
@@ -89,7 +98,7 @@ namespace Archipelago.APChessV
         .ToDictionary(item => item.actionName, item => item.index, StringComparer.Ordinal);
 
     private static readonly IReadOnlyDictionary<string, PieceUpgradeActionResolution> DefaultPieceUpgradeActions =
-      ResolvePieceUpgradeActionsFromNames(LegacyPieceUpgradePreferences(FairyPawnUpgrades.Off).ToList()).Actions;
+      ResolvePieceUpgradeActionsFromLegacyDefaults(FairyPawnUpgrades.Off, ProgressionItemization.Legacy, null).Actions;
 
     public static ApmwConfig _instance;
     public static ApmwConfig getInstance()
@@ -192,7 +201,7 @@ namespace Archipelago.APChessV
     private FairyPawnUpgrades pawnUpgrades;
     public FairyPawnUpgrades PawnUpgrades { get { return pawnUpgrades; } }
     public List<string> PieceUpgradePreferences { get; private set; } =
-      LegacyPieceUpgradePreferences(FairyPawnUpgrades.Off).ToList();
+      ResolvePieceUpgradeActionsFromLegacyDefaults(FairyPawnUpgrades.Off, ProgressionItemization.Legacy, null).Preferences;
     public IReadOnlyDictionary<string, PieceUpgradeActionResolution> PieceUpgradeActions { get; private set; } =
       DefaultPieceUpgradeActions;
     public int PawnUpgradesInt
@@ -200,8 +209,12 @@ namespace Archipelago.APChessV
       set
       {
         pawnUpgrades = (FairyPawnUpgrades)value;
-        var pieceUpgradeResolution = ResolvePieceUpgradeActionsFromNames(
-          LegacyPieceUpgradePreferences(pawnUpgrades).ToList());
+        // Always resolves Legacy-mode defaults here, independent of the shared config's current
+        // ProgressionItemization: Instantiate() immediately re-resolves and overwrites
+        // PieceUpgradePreferences/PieceUpgradeActions afterward using the real mode (see below), so
+        // this setter's own resolution only actually matters for tests that poke PawnUpgradesInt
+        // directly (bypassing Instantiate) -- and those are all Legacy pawn-distribution tests.
+        var pieceUpgradeResolution = ResolvePieceUpgradeActionsFromLegacyDefaults(pawnUpgrades, ProgressionItemization.Legacy, null);
         PieceUpgradePreferences = pieceUpgradeResolution.Preferences;
         PieceUpgradeActions = pieceUpgradeResolution.Actions;
       }
@@ -296,10 +309,14 @@ namespace Archipelago.APChessV
       PawnUpgradesInt = Convert.ToInt32(SlotData.GetValueOrDefault(
         ApmwConstants.SlotKeyFairyChessPawnUpgrades, FairyPawnUpgrades.Off));
       bool hasPieceUpgradePreferences = SlotData.ContainsKey(ApmwConstants.SlotKeyPieceUpgradePreferences);
+      IDictionary<string, double> pieceUpgradeProportions = ReadPieceUpgradeProportions(
+        SlotData.GetValueOrDefault(ApmwConstants.SlotKeyPieceUpgradeProportions, null));
       var pieceUpgradeResolution = ResolvePieceUpgradeActions(
         hasPieceUpgradePreferences ? SlotData[ApmwConstants.SlotKeyPieceUpgradePreferences] : null,
         hasPieceUpgradePreferences,
-        PawnUpgrades);
+        PawnUpgrades,
+        progressionItemization,
+        pieceUpgradeProportions);
       PieceUpgradePreferences = pieceUpgradeResolution.Preferences;
       PieceUpgradeActions = pieceUpgradeResolution.Actions;
 
@@ -368,28 +385,47 @@ namespace Archipelago.APChessV
     private static PieceUpgradeActionResolutionResult ResolvePieceUpgradeActions(
       object rawPreferences,
       bool hasPreferences,
-      FairyPawnUpgrades legacyMode)
+      FairyPawnUpgrades legacyMode,
+      ProgressionItemization progressionItemization,
+      IDictionary<string, double> proportions)
     {
       if (!hasPreferences)
-        return ResolvePieceUpgradeActionsFromNames(LegacyPieceUpgradePreferences(legacyMode).ToList());
+        return ResolvePieceUpgradeActionsFromLegacyDefaults(legacyMode, progressionItemization, proportions);
 
       if (TryReadPieceUpgradePriorityMap(rawPreferences, out var priorityMap))
-        return ResolvePieceUpgradeActionsFromPriorityMap(priorityMap);
+        return ResolvePieceUpgradeActionsFromPriorityMap(priorityMap, proportions);
 
       var requestedPreferences = ReadPieceUpgradePreferenceNames(rawPreferences);
       if (requestedPreferences.Count == 0)
-        return ResolvePieceUpgradeActionsFromNames(LegacyPieceUpgradePreferences(legacyMode).ToList());
+        return ResolvePieceUpgradeActionsFromLegacyDefaults(legacyMode, progressionItemization, proportions);
 
       var preferences = requestedPreferences
         .Where(preference => ValidPieceUpgradePreferences.Contains(preference))
         .Distinct(StringComparer.Ordinal)
         .ToList();
-      return ResolvePieceUpgradeActionsFromNames(preferences.Count == 0
-        ? LegacyPieceUpgradePreferences(FairyPawnUpgrades.Off).ToList()
-        : preferences);
+      return preferences.Count == 0
+        ? ResolvePieceUpgradeActionsFromLegacyDefaults(FairyPawnUpgrades.Off, progressionItemization, proportions)
+        : ResolvePieceUpgradeActionsFromNames(preferences, proportions);
     }
 
-    private static PieceUpgradeActionResolutionResult ResolvePieceUpgradeActionsFromNames(List<string> preferences)
+    // The only entry point that consults LegacyPieceUpgradePreferences: converts its weighted
+    // (name, priority) pairs into a priority map so ties (e.g. the default Fundamental-mode
+    // Configure/Off action set, which the game intentionally wants tied) resolve exactly like an
+    // explicit slot-data priority map would -- see ResolvePieceUpgradeActionsFromPriorityMap.
+    private static PieceUpgradeActionResolutionResult ResolvePieceUpgradeActionsFromLegacyDefaults(
+      FairyPawnUpgrades legacyMode,
+      ProgressionItemization progressionItemization,
+      IDictionary<string, double> proportions)
+    {
+      var priorities = LegacyPieceUpgradePreferences(legacyMode, progressionItemization)
+        .GroupBy(pair => pair.ActionName, StringComparer.Ordinal)
+        .ToDictionary(group => group.Key, group => group.First().Priority, StringComparer.Ordinal);
+      return ResolvePieceUpgradeActionsFromPriorityMap(priorities, proportions);
+    }
+
+    private static PieceUpgradeActionResolutionResult ResolvePieceUpgradeActionsFromNames(
+      List<string> preferences,
+      IDictionary<string, double> proportions)
     {
       var priorities = new Dictionary<string, int>(StringComparer.Ordinal);
       for (int index = 0; index < preferences.Count; index++)
@@ -403,7 +439,8 @@ namespace Archipelago.APChessV
         .Select(actionName => new PieceUpgradeActionResolution(
           actionName,
           priorities.ContainsKey(actionName) ? priorities[actionName] : 0,
-          true))
+          true,
+          ProportionFor(actionName, proportions)))
         .ToList();
 
       return new PieceUpgradeActionResolutionResult(
@@ -416,13 +453,14 @@ namespace Archipelago.APChessV
     }
 
     private static PieceUpgradeActionResolutionResult ResolvePieceUpgradeActionsFromPriorityMap(
-      IDictionary<string, int> priorities)
+      IDictionary<string, int> priorities,
+      IDictionary<string, double> proportions)
     {
       var actions = ValidPieceUpgradeActions
         .Select(actionName =>
         {
           int priority = priorities.ContainsKey(actionName) ? priorities[actionName] : 0;
-          return new PieceUpgradeActionResolution(actionName, priority, priority != -1);
+          return new PieceUpgradeActionResolution(actionName, priority, priority != -1, ProportionFor(actionName, proportions));
         })
         .ToList();
 
@@ -492,39 +530,178 @@ namespace Archipelago.APChessV
       }
     }
 
-    private static IEnumerable<string> LegacyPieceUpgradePreferences(FairyPawnUpgrades legacyMode)
+    // Reads the optional piece_upgrade_proportion slot-data dictionary (action name -> relative
+    // weight). Mirrors TryReadPieceUpgradePriorityMap's JObject/IDictionary handling, but values
+    // are doubles and there's no "true/parsed at all" distinction to report: any action absent
+    // from the map (or an entirely absent/unparseable raw value) simply falls back to weight 1
+    // via ProportionFor.
+    private static IDictionary<string, double> ReadPieceUpgradeProportions(object rawProportions)
+    {
+      var proportions = new Dictionary<string, double>(StringComparer.Ordinal);
+      if (rawProportions == null)
+        return proportions;
+
+      if (rawProportions is JObject jObject)
+      {
+        foreach (var property in jObject.Properties())
+        {
+          if (ValidPieceUpgradePreferences.Contains(property.Name) &&
+            TryConvertProportion(property.Value, out double proportion))
+            proportions[property.Name] = proportion;
+        }
+
+        return proportions;
+      }
+
+      if (rawProportions is IDictionary dictionary)
+      {
+        foreach (DictionaryEntry entry in dictionary)
+        {
+          string actionName = entry.Key == null ? null : entry.Key.ToString();
+          if (ValidPieceUpgradePreferences.Contains(actionName) &&
+            TryConvertProportion(entry.Value, out double proportion))
+            proportions[actionName] = proportion;
+        }
+      }
+
+      return proportions;
+    }
+
+    private static bool TryConvertProportion(object value, out double proportion)
+    {
+      proportion = 1.0;
+      if (value == null)
+        return false;
+
+      try
+      {
+        if (value is JValue jValue)
+          value = jValue.Value;
+
+        if (value is JToken jToken)
+          value = jToken.ToObject<object>();
+
+        proportion = Convert.ToDouble(value);
+        return true;
+      }
+      catch (Exception)
+      {
+        return false;
+      }
+    }
+
+    private static double ProportionFor(string actionName, IDictionary<string, double> proportions)
+    {
+      double proportion;
+      return proportions != null && proportions.TryGetValue(actionName, out proportion) ? proportion : 1.0;
+    }
+
+    private static IEnumerable<(string ActionName, int Priority)> LegacyPieceUpgradePreferences(
+      FairyPawnUpgrades legacyMode,
+      ProgressionItemization progressionItemization)
+    {
+      // @chesslogic confirmed (2026-07) that the new tied graduation-action default set is scoped
+      // to Fundamental-mode slot graduation only -- Legacy mode's default action set (and its
+      // dependent tests, e.g. ApmwGenerationFuzzTests' Neutral*/ApmwItemHandlerCharacterizationTests'
+      // Generation_NeutralAmazonUpgrade* cases) must keep behaving exactly as before, since
+      // minor-to-major is a real, functioning action for Legacy (unlike pawn-to-minor/pawn-to-major,
+      // which have no Legacy metadata and are pure no-ops there either way).
+      if (progressionItemization != ProgressionItemization.Fundamental)
+        return LegacyModePieceUpgradePreferences(legacyMode);
+
+      // @chesslogic's confirmed default action set for Fundamental-mode slot graduation: these 5
+      // are a deliberately unordered tie at the same priority, differentiated only by proportion
+      // (PieceUpgradeActionResolution.Proportion), not by priority order. NewPawn rides along
+      // untouched by this tie: PickNewOrMorePawnAction/UpgradePawns (ItemGeneration.cs) only ever
+      // check whether NewPawn is *enabled*, never compare its priority against another action, so
+      // folding it into this tied group is behaviorally free in every legacy mode.
+      var graduationDefaults = TiedAtPriorityOne(
+        ApmwConstants.PieceUpgradeActions.NewPawn,
+        ApmwConstants.PieceUpgradeActions.PawnToMinor,
+        ApmwConstants.PieceUpgradeActions.MinorToMajor,
+        ApmwConstants.PieceUpgradeActions.PawnToMajor,
+        ApmwConstants.PieceUpgradeActions.MajorToQueen);
+
+      // PoolPawnUpgrade/MorePawn/BetterPawn are a disjoint subsystem (pawn board-slot *variant*
+      // selection, not ChessmanTier graduation) whose exact relative priority order is load-bearing:
+      // ShouldApplyPoolPawnUpgradeAction/ShouldApplyBetterPawnActionBeforeMorePawn/
+      // ShouldApplyDelayedBetterPawnAction (ItemGeneration.cs) compare these three actions' priorities
+      // directly via IsPieceUpgradeActionPreferredBefore (strict >), so their original per-mode
+      // relative order must be preserved verbatim -- only their exact values changed here (folded
+      // out of the same flat list NewPawn/MajorToQueen used to share), not their mutual ordering.
+      switch (legacyMode)
+      {
+        case FairyPawnUpgrades.Pool:
+          return graduationDefaults.Concat(new[]
+          {
+            (ApmwConstants.PieceUpgradeActions.PoolPawnUpgrade, 4),
+            (ApmwConstants.PieceUpgradeActions.MorePawn, 3),
+            (ApmwConstants.PieceUpgradeActions.BetterPawn, 2),
+          });
+        case FairyPawnUpgrades.Max:
+        case FairyPawnUpgrades.SuperMax:
+          return graduationDefaults.Concat(new[]
+          {
+            (ApmwConstants.PieceUpgradeActions.BetterPawn, 3),
+            (ApmwConstants.PieceUpgradeActions.MorePawn, 2),
+          });
+        case FairyPawnUpgrades.Off:
+        case FairyPawnUpgrades.Configure:
+        default:
+          return graduationDefaults.Concat(new[]
+          {
+            (ApmwConstants.PieceUpgradeActions.MorePawn, 3),
+            (ApmwConstants.PieceUpgradeActions.BetterPawn, 2),
+          });
+      }
+    }
+
+    // Legacy mode's original default tables (byte-for-byte identical to pre-Fundamental-redesign
+    // behavior): only major-to-queen is a default-enabled graduation action; pawn-to-minor/
+    // minor-to-major/pawn-to-major stay at priority 0 (disabled) unless explicitly requested via
+    // slot data. Preserved verbatim so Legacy generation/tests are unaffected by the Fundamental
+    // default-table redesign.
+    private static IEnumerable<(string ActionName, int Priority)> LegacyModePieceUpgradePreferences(FairyPawnUpgrades legacyMode)
     {
       switch (legacyMode)
       {
         case FairyPawnUpgrades.Pool:
-          return new[]
-          {
+          return OrderedByListPosition(
             ApmwConstants.PieceUpgradeActions.NewPawn,
             ApmwConstants.PieceUpgradeActions.PoolPawnUpgrade,
             ApmwConstants.PieceUpgradeActions.MorePawn,
             ApmwConstants.PieceUpgradeActions.BetterPawn,
-            ApmwConstants.PieceUpgradeActions.MajorToQueen,
-          };
+            ApmwConstants.PieceUpgradeActions.MajorToQueen);
         case FairyPawnUpgrades.Max:
         case FairyPawnUpgrades.SuperMax:
-          return new[]
-          {
+          return OrderedByListPosition(
             ApmwConstants.PieceUpgradeActions.NewPawn,
             ApmwConstants.PieceUpgradeActions.BetterPawn,
             ApmwConstants.PieceUpgradeActions.MorePawn,
-            ApmwConstants.PieceUpgradeActions.MajorToQueen,
-          };
+            ApmwConstants.PieceUpgradeActions.MajorToQueen);
         case FairyPawnUpgrades.Off:
         case FairyPawnUpgrades.Configure:
         default:
-          return new[]
-          {
+          return OrderedByListPosition(
             ApmwConstants.PieceUpgradeActions.NewPawn,
             ApmwConstants.PieceUpgradeActions.MorePawn,
             ApmwConstants.PieceUpgradeActions.BetterPawn,
-            ApmwConstants.PieceUpgradeActions.MajorToQueen,
-          };
+            ApmwConstants.PieceUpgradeActions.MajorToQueen);
       }
+    }
+
+    // Mirrors the strictly-decreasing priority formula ResolvePieceUpgradeActionsFromNames applies
+    // to an ordered slot-data array (preferences.Count - index): first entry gets the highest
+    // priority, ties are impossible. Used only for Legacy mode's original default tables, where
+    // this strict ordering is load-bearing (see LegacyModePieceUpgradePreferences).
+    private static IEnumerable<(string ActionName, int Priority)> OrderedByListPosition(params string[] actionNames)
+    {
+      return actionNames.Select((actionName, index) => (actionName, actionNames.Length - index));
+    }
+
+    private static IEnumerable<(string ActionName, int Priority)> TiedAtPriorityOne(params string[] actionNames)
+    {
+      return actionNames.Select(actionName => (actionName, 1));
     }
 
     private static List<string> ReadPieceUpgradePreferenceNames(object rawPreferences)
@@ -607,9 +784,12 @@ namespace Archipelago.APChessV
         queenLocSeed = random.Next();
       }
 
-      // Fundamental slot graduation has no dedicated slot-data key yet (no apworld protocol
-      // change to introduce one). Derive it deterministically from the already-transmitted
-      // pocket/pawn seeds so graduation stays reproducible/stable without requiring one.
+      // Used to break ties among equally-preferred piece-upgrade/graduation actions
+      // (FundamentalSlotGraduationPlanner.Simulate for Fundamental mode; NonPawnUpgradeGeneration.
+      // Plan for Legacy mode -- the two are mutually exclusive per game, so sharing one seed is
+      // safe). No dedicated slot-data key exists for this yet (no apworld protocol change to
+      // introduce one), so it's derived deterministically from the already-transmitted
+      // pocket/pawn seeds, keeping tie-breaking reproducible/stable without requiring one.
       fundamentalGraduationSeed = unchecked(pocketSeed * 397 ^ pawnSeed);
     }
 

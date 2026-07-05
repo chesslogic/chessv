@@ -68,11 +68,11 @@ namespace ChessV.Test
         }
 
         [DataTestMethod]
-        [DataRow(FairyPawnUpgrades.Off, "new-pawn,more-pawn,better-pawn,major-to-queen,pool-pawn-upgrade,pawn-to-minor,minor-to-major,major-to-jack,minor-to-jack,jack-to-queen,queen-to-amazon")]
-        [DataRow(FairyPawnUpgrades.Pool, "new-pawn,pool-pawn-upgrade,more-pawn,better-pawn,major-to-queen,pawn-to-minor,minor-to-major,major-to-jack,minor-to-jack,jack-to-queen,queen-to-amazon")]
-        [DataRow(FairyPawnUpgrades.Max, "new-pawn,better-pawn,more-pawn,major-to-queen,pool-pawn-upgrade,pawn-to-minor,minor-to-major,major-to-jack,minor-to-jack,jack-to-queen,queen-to-amazon")]
-        [DataRow(FairyPawnUpgrades.SuperMax, "new-pawn,better-pawn,more-pawn,major-to-queen,pool-pawn-upgrade,pawn-to-minor,minor-to-major,major-to-jack,minor-to-jack,jack-to-queen,queen-to-amazon")]
-        [DataRow(FairyPawnUpgrades.Configure, "new-pawn,more-pawn,better-pawn,major-to-queen,pool-pawn-upgrade,pawn-to-minor,minor-to-major,major-to-jack,minor-to-jack,jack-to-queen,queen-to-amazon")]
+        [DataRow(FairyPawnUpgrades.Off, "new-pawn,more-pawn,better-pawn,major-to-queen,pool-pawn-upgrade,pawn-to-minor,pawn-to-major,minor-to-major,major-to-jack,minor-to-jack,jack-to-queen,queen-to-amazon")]
+        [DataRow(FairyPawnUpgrades.Pool, "new-pawn,pool-pawn-upgrade,more-pawn,better-pawn,major-to-queen,pawn-to-minor,pawn-to-major,minor-to-major,major-to-jack,minor-to-jack,jack-to-queen,queen-to-amazon")]
+        [DataRow(FairyPawnUpgrades.Max, "new-pawn,better-pawn,more-pawn,major-to-queen,pool-pawn-upgrade,pawn-to-minor,pawn-to-major,minor-to-major,major-to-jack,minor-to-jack,jack-to-queen,queen-to-amazon")]
+        [DataRow(FairyPawnUpgrades.SuperMax, "new-pawn,better-pawn,more-pawn,major-to-queen,pool-pawn-upgrade,pawn-to-minor,pawn-to-major,minor-to-major,major-to-jack,minor-to-jack,jack-to-queen,queen-to-amazon")]
+        [DataRow(FairyPawnUpgrades.Configure, "new-pawn,more-pawn,better-pawn,major-to-queen,pool-pawn-upgrade,pawn-to-minor,pawn-to-major,minor-to-major,major-to-jack,minor-to-jack,jack-to-queen,queen-to-amazon")]
         public void Instantiate_DerivesPieceUpgradePreferencesFromLegacyMode(
             FairyPawnUpgrades legacyMode,
             string expectedCsv)
@@ -108,6 +108,7 @@ namespace ChessV.Test
                     "more-pawn",
                     "pool-pawn-upgrade",
                     "pawn-to-minor",
+                    "pawn-to-major",
                     "minor-to-major",
                     "major-to-jack",
                     "minor-to-jack",
@@ -128,7 +129,7 @@ namespace ChessV.Test
             });
 
             CollectionAssert.AreEqual(
-                new[] { "new-pawn", "pool-pawn-upgrade", "more-pawn", "better-pawn", "major-to-queen", "pawn-to-minor", "minor-to-major", "major-to-jack", "minor-to-jack", "jack-to-queen", "queen-to-amazon" },
+                new[] { "new-pawn", "pool-pawn-upgrade", "more-pawn", "better-pawn", "major-to-queen", "pawn-to-minor", "pawn-to-major", "minor-to-major", "major-to-jack", "minor-to-jack", "jack-to-queen", "queen-to-amazon" },
                 config.PieceUpgradePreferences);
         }
 
@@ -143,7 +144,7 @@ namespace ChessV.Test
             });
 
             CollectionAssert.AreEqual(
-                new[] { "new-pawn", "more-pawn", "better-pawn", "major-to-queen", "pool-pawn-upgrade", "pawn-to-minor", "minor-to-major", "major-to-jack", "minor-to-jack", "jack-to-queen", "queen-to-amazon" },
+                new[] { "new-pawn", "more-pawn", "better-pawn", "major-to-queen", "pool-pawn-upgrade", "pawn-to-minor", "pawn-to-major", "minor-to-major", "major-to-jack", "minor-to-jack", "jack-to-queen", "queen-to-amazon" },
                 config.PieceUpgradePreferences);
         }
 
@@ -177,6 +178,7 @@ namespace ChessV.Test
                     "better-pawn",
                     "pool-pawn-upgrade",
                     "pawn-to-minor",
+                    "pawn-to-major",
                     "major-to-queen",
                 },
                 config.PieceUpgradePreferences);
@@ -241,6 +243,7 @@ namespace ChessV.Test
                     ApmwConstants.PieceUpgradeActions.MorePawn,
                     ApmwConstants.PieceUpgradeActions.PoolPawnUpgrade,
                     ApmwConstants.PieceUpgradeActions.PawnToMinor,
+                    ApmwConstants.PieceUpgradeActions.PawnToMajor,
                     ApmwConstants.PieceUpgradeActions.MinorToMajor,
                     ApmwConstants.PieceUpgradeActions.MajorToJack,
                     ApmwConstants.PieceUpgradeActions.MinorToJack,
@@ -248,6 +251,97 @@ namespace ChessV.Test
                     ApmwConstants.PieceUpgradeActions.QueenToAmazon,
                 },
                 config.PieceUpgradePreferences);
+        }
+
+        [TestMethod]
+        public void Instantiate_ResolvesPieceUpgradeProportionsFromDictionaryAndDefaultsOmittedActionsToOne()
+        {
+            var config = new ApmwConfig();
+            config.Instantiate(new Dictionary<string, object>
+            {
+                [ApmwConstants.SlotKeyFairyChessPawnUpgrades] = (int)FairyPawnUpgrades.Configure,
+                [ApmwConstants.SlotKeyPieceUpgradePreferences] =
+                    JObject.FromObject(new Dictionary<string, int>
+                    {
+                        [ApmwConstants.PieceUpgradeActions.PawnToMinor] = 1,
+                        [ApmwConstants.PieceUpgradeActions.PawnToMajor] = 1,
+                    }),
+                [ApmwConstants.SlotKeyPieceUpgradeProportions] =
+                    JObject.FromObject(new Dictionary<string, double>
+                    {
+                        [ApmwConstants.PieceUpgradeActions.PawnToMinor] = 3,
+                        ["not-real"] = 100,
+                    }),
+            });
+
+            Assert.AreEqual(3.0, config.PieceUpgradeActions[ApmwConstants.PieceUpgradeActions.PawnToMinor].Proportion);
+            Assert.AreEqual(
+                1.0,
+                config.PieceUpgradeActions[ApmwConstants.PieceUpgradeActions.PawnToMajor].Proportion,
+                "an action absent from the proportion dictionary defaults to weight 1");
+            Assert.IsFalse(config.PieceUpgradeActions.ContainsKey("not-real"));
+        }
+
+        [TestMethod]
+        public void Instantiate_DefaultsAllProportionsToOneWhenProportionKeyIsAbsentEntirely()
+        {
+            var config = new ApmwConfig();
+            config.Instantiate(new Dictionary<string, object>
+            {
+                [ApmwConstants.SlotKeyFairyChessPawnUpgrades] = (int)FairyPawnUpgrades.Configure,
+                [ApmwConstants.SlotKeyPieceUpgradePreferences] =
+                    new JArray("new-pawn", "pawn-to-minor", "pawn-to-major"),
+            });
+
+            foreach (var action in config.PieceUpgradeActions.Values)
+                Assert.AreEqual(1.0, action.Proportion, "action " + action.ActionName);
+        }
+
+        [TestMethod]
+        public void Instantiate_ClampsNonPositiveProportionToZero()
+        {
+            var config = new ApmwConfig();
+            config.Instantiate(new Dictionary<string, object>
+            {
+                [ApmwConstants.SlotKeyFairyChessPawnUpgrades] = (int)FairyPawnUpgrades.Configure,
+                [ApmwConstants.SlotKeyPieceUpgradePreferences] =
+                    JObject.FromObject(new Dictionary<string, int>
+                    {
+                        [ApmwConstants.PieceUpgradeActions.PawnToMinor] = 1,
+                        [ApmwConstants.PieceUpgradeActions.PawnToMajor] = 1,
+                    }),
+                [ApmwConstants.SlotKeyPieceUpgradeProportions] =
+                    JObject.FromObject(new Dictionary<string, double>
+                    {
+                        [ApmwConstants.PieceUpgradeActions.PawnToMinor] = 0,
+                        [ApmwConstants.PieceUpgradeActions.PawnToMajor] = -5,
+                    }),
+            });
+
+            Assert.AreEqual(0.0, config.PieceUpgradeActions[ApmwConstants.PieceUpgradeActions.PawnToMinor].Proportion);
+            Assert.AreEqual(0.0, config.PieceUpgradeActions[ApmwConstants.PieceUpgradeActions.PawnToMajor].Proportion);
+        }
+
+        [TestMethod]
+        public void Instantiate_FallsBackToOneWhenProportionValueIsNotNumeric()
+        {
+            var config = new ApmwConfig();
+            config.Instantiate(new Dictionary<string, object>
+            {
+                [ApmwConstants.SlotKeyFairyChessPawnUpgrades] = (int)FairyPawnUpgrades.Configure,
+                [ApmwConstants.SlotKeyPieceUpgradePreferences] =
+                    JObject.FromObject(new Dictionary<string, int>
+                    {
+                        [ApmwConstants.PieceUpgradeActions.PawnToMinor] = 1,
+                    }),
+                [ApmwConstants.SlotKeyPieceUpgradeProportions] =
+                    JObject.FromObject(new Dictionary<string, string>
+                    {
+                        [ApmwConstants.PieceUpgradeActions.PawnToMinor] = "not-a-number",
+                    }),
+            });
+
+            Assert.AreEqual(1.0, config.PieceUpgradeActions[ApmwConstants.PieceUpgradeActions.PawnToMinor].Proportion);
         }
 
         [TestMethod]

@@ -25,6 +25,13 @@ namespace Archipelago.APChessV
     /// <summary>Resolved slot-data key with the ordered piece upgrade action preference list.</summary>
     public const string SlotKeyPieceUpgradePreferences = "piece_upgrade_preferences";
 
+    /// <summary>
+    /// Slot-data key for the optional per-action proportion (relative draw weight) map, consulted
+    /// only to arbitrate among actions tied at the same priority in <see cref="SlotKeyPieceUpgradePreferences"/>.
+    /// An action absent from this map (or when the key itself is absent) defaults to weight 1.
+    /// </summary>
+    public const string SlotKeyPieceUpgradeProportions = "piece_upgrade_proportion";
+
     /// <summary>Slot-data key selecting legacy family-specific or fundamental board-material itemization.</summary>
     public const string SlotKeyProgressionItemization = "progression_itemization";
 
@@ -42,6 +49,7 @@ namespace Archipelago.APChessV
       public const string BetterPawn = "better-pawn";
       public const string PoolPawnUpgrade = "pool-pawn-upgrade";
       public const string PawnToMinor = "pawn-to-minor";
+      public const string PawnToMajor = "pawn-to-major";
       public const string MinorToMajor = "minor-to-major";
       public const string MajorToJack = "major-to-jack";
       public const string MinorToJack = "minor-to-jack";

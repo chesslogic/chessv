@@ -13,6 +13,7 @@ namespace ChessV.Test
         ListMinorToJackFirst = 1,
         PriorityMapDisableMajorToQueen = 2,
         FundamentalPlannedChain = 3,
+        TiedGraduationWithProportions = 4,
     }
 
     internal sealed class ApmwFuzzCase
@@ -248,6 +249,9 @@ namespace ChessV.Test
             object pieceUpgradePreferences = BuildPieceUpgradePreferences();
             if (pieceUpgradePreferences != null)
                 slotData[ApmwConstants.SlotKeyPieceUpgradePreferences] = pieceUpgradePreferences;
+            object pieceUpgradeProportions = BuildPieceUpgradeProportions();
+            if (pieceUpgradeProportions != null)
+                slotData[ApmwConstants.SlotKeyPieceUpgradeProportions] = pieceUpgradeProportions;
             if (ProgressionItemization != ProgressionItemization.Legacy)
                 slotData[ApmwConstants.SlotKeyProgressionItemization] = (int)ProgressionItemization;
 
@@ -415,7 +419,50 @@ namespace ChessV.Test
                         [ApmwConstants.PieceUpgradeActions.JackToQueen] = 1,
                         [ApmwConstants.PieceUpgradeActions.QueenToAmazon] = 1,
                     };
+                case ApmwPieceUpgradePreferenceProfile.TiedGraduationWithProportions:
+                    // Deliberately ties two pairs of actions at shared priority levels so fuzzing
+                    // actually drives the seeded weighted-draw tie-break (WeightedTieBreak, shared
+                    // by FundamentalSlotGraduationPlanner and NonPawnUpgradeGeneration.Plan)
+                    // instead of only ever exercising the strictly-ordered, no-tie path: pawn-to
+                    // -minor/pawn-to-major share FromTier=Pawn (Fundamental-only), and minor-to
+                    // -major/minor-to-jack share SourceFamily=Minor (meaningful in both modes).
+                    // major-to-queen/jack-to-queen also tie, sharing TargetFamily=Queen. Paired
+                    // with a non-uniform BuildPieceUpgradeProportions() map so the proportion
+                    // dictionary itself (not just equal-weight defaults) gets fuzzed too.
+                    return new JObject
+                    {
+                        [ApmwConstants.PieceUpgradeActions.NewPawn] = 8,
+                        [ApmwConstants.PieceUpgradeActions.PawnToMinor] = 6,
+                        [ApmwConstants.PieceUpgradeActions.PawnToMajor] = 6,
+                        [ApmwConstants.PieceUpgradeActions.MinorToMajor] = 5,
+                        [ApmwConstants.PieceUpgradeActions.MinorToJack] = 5,
+                        [ApmwConstants.PieceUpgradeActions.MajorToQueen] = 3,
+                        [ApmwConstants.PieceUpgradeActions.JackToQueen] = 3,
+                        [ApmwConstants.PieceUpgradeActions.QueenToAmazon] = 1,
+                    };
                 case ApmwPieceUpgradePreferenceProfile.Legacy:
+                default:
+                    return null;
+            }
+        }
+
+        private object BuildPieceUpgradeProportions()
+        {
+            switch (PieceUpgradePreferenceProfile)
+            {
+                case ApmwPieceUpgradePreferenceProfile.TiedGraduationWithProportions:
+                    // Deliberately non-uniform so the proportion dictionary genuinely biases
+                    // ties instead of degenerating to the all-1.0 default (which would leave the
+                    // weighted draw statistically indistinguishable from a uniform coin flip).
+                    return new JObject
+                    {
+                        [ApmwConstants.PieceUpgradeActions.PawnToMinor] = 3,
+                        [ApmwConstants.PieceUpgradeActions.PawnToMajor] = 1,
+                        [ApmwConstants.PieceUpgradeActions.MinorToMajor] = 2,
+                        [ApmwConstants.PieceUpgradeActions.MinorToJack] = 1,
+                        [ApmwConstants.PieceUpgradeActions.MajorToQueen] = 1,
+                        [ApmwConstants.PieceUpgradeActions.JackToQueen] = 1,
+                    };
                 default:
                     return null;
             }

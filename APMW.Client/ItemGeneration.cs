@@ -410,6 +410,41 @@ namespace Archipelago.APChessV
   }
 
   /// <summary>
+  /// Shared per-unit weighted tie-break used by both graduation/upgrade consumers
+  /// (FundamentalSlotGraduationPlanner.Simulate and NonPawnUpgradeGeneration.Plan) so their
+  /// tie-break behavior can never independently drift apart. Weight is always
+  /// eligibleCount * proportion, decided fresh for each single unit applied -- callers
+  /// recompute the candidate list and weights every time something might have changed
+  /// eligibility (i.e. after every applied unit), never once per whole batch.
+  /// </summary>
+  internal static class WeightedTieBreak
+  {
+    public static int ChooseIndex(IReadOnlyList<double> weights, Random random)
+    {
+      double totalWeight = 0;
+      for (int i = 0; i < weights.Count; i++)
+        totalWeight += weights[i];
+
+      if (totalWeight <= 0)
+        return random.Next(weights.Count); // Every tied candidate has zero weight (e.g.
+                                            // proportion explicitly configured to 0 for all of
+                                            // them) -- fall back to a uniform pick rather than
+                                            // always favoring the first.
+
+      double r = random.NextDouble() * totalWeight;
+      double cumulative = 0;
+      for (int i = 0; i < weights.Count; i++)
+      {
+        cumulative += weights[i];
+        if (r < cumulative)
+          return i;
+      }
+
+      return weights.Count - 1; // Defensive fallback; unreachable since r < totalWeight.
+    }
+  }
+
+  /// <summary>
   /// Fundamental-mode piece-count planner. Every one of the player's Chessmen slots starts as a
   /// Pawn; a single seeded simulation graduates slots up through tiers (Pawn -&gt; Minor/Major/
   /// Jack -&gt; Queen -&gt; Amazon), one real incremental step at a time, spending from a single
@@ -436,13 +471,14 @@ namespace Archipelago.APChessV
 
     private sealed class GraduationAction
     {
-      public GraduationAction(string key, ChessmanTier fromTier, ChessmanTier toTier, int expectedMaterial, int priority)
+      public GraduationAction(string key, ChessmanTier fromTier, ChessmanTier toTier, int expectedMaterial, int priority, double proportion)
       {
         Key = key;
         FromTier = fromTier;
         ToTier = toTier;
         ExpectedMaterial = expectedMaterial;
         Priority = priority;
+        Proportion = proportion;
       }
 
       public string Key { get; private set; }
@@ -450,6 +486,14 @@ namespace Archipelago.APChessV
       public ChessmanTier ToTier { get; private set; }
       public int ExpectedMaterial { get; private set; }
       public int Priority { get; private set; }
+
+      // Per-draw relative weight used only to arbitrate among actions tied at the same
+      // Priority -- see ApmwConfig.PieceUpgradeActionResolution.Proportion. Two actions tied at
+      // the same priority AND the same FromTier (e.g. pawn-to-minor/pawn-to-major, both
+      // Pawn-sourced) previously collapsed to "silently keep the cheaper one"; now every tied
+      // action is genuinely competed for via weighted draw, exactly like today's existing
+      // cross-FromTier ties (e.g. major-to-jack vs minor-to-jack).
+      public double Proportion { get; private set; }
 
       // Unlike the old aggregate "relative-to-Pawn" recipe cost, this is the true marginal cost
       // of this one step. A multi-step journey (e.g. Pawn->Minor then Minor->Major) sums its
@@ -510,9 +554,10 @@ namespace Archipelago.APChessV
     /// -stable: with no configured ties, the sequence of "highest-priority currently-affordable
     /// action" is fully deterministic and simply runs longer as Chessmen/Material grow (a
     /// smaller budget's run is always an exact prefix of a larger budget's run using the same
-    /// seed). The seeded Random is consulted only on a genuine tie -- two distinct configured
-    /// actions sharing one priority value -- and then only to weight the choice by how many
-    /// slots currently sit at each tied action's source tier.
+    /// seed). The seeded Random is consulted only on a genuine tie -- two or more distinct
+    /// configured actions sharing one priority value, including two that also share the same
+    /// FromTier (e.g. pawn-to-minor/pawn-to-major, both gateways out of Pawn) -- weighted by
+    /// eligible-count-at-that-tier times each action's configured proportion.
     /// </summary>
     private static Dictionary<string, int> Simulate(
       int placeableSlots,
@@ -524,27 +569,17 @@ namespace Archipelago.APChessV
     {
       List<GraduationAction> actions = BuildActions(config);
 
-      // At most one action per (priority, FromTier) pair; two configured actions could in
-      // principle share both (an explicit JSON priority map could tie them deliberately) --
-      // keep the cheaper one so that particular collision is at least deterministic.
-      Dictionary<int, Dictionary<ChessmanTier, GraduationAction>> actionsByPriority =
-        new Dictionary<int, Dictionary<ChessmanTier, GraduationAction>>();
-      foreach (GraduationAction action in actions)
-      {
-        Dictionary<ChessmanTier, GraduationAction> byFromTier;
-        if (!actionsByPriority.TryGetValue(action.Priority, out byFromTier))
-        {
-          byFromTier = new Dictionary<ChessmanTier, GraduationAction>();
-          actionsByPriority[action.Priority] = byFromTier;
-        }
+      // Every action sharing a priority level is a genuine competitor for that level's single
+      // per-iteration draw -- including two actions that share both priority and FromTier
+      // (e.g. pawn-to-minor/pawn-to-major). There is no more "keep the cheaper one" collision
+      // -avoidance: ties are the point of the proportion mechanism, not an error case to route
+      // around.
+      Dictionary<int, List<GraduationAction>> actionsByPriority = actions
+        .GroupBy(action => action.Priority)
+        .ToDictionary(group => group.Key, group => group.ToList());
 
-        GraduationAction existing;
-        if (!byFromTier.TryGetValue(action.FromTier, out existing) || action.IncrementalCost < existing.IncrementalCost)
-          byFromTier[action.FromTier] = action;
-      }
-
-      // Priority levels -- and which FromTiers exist at each -- are fixed once the action set
-      // is built; only the per-tier counts change as slots graduate.
+      // Priority levels -- and which actions exist at each -- are fixed once the action set is
+      // built; only the per-tier counts change as slots graduate.
       List<int> priorityLevelsDescending = actionsByPriority.Keys.OrderByDescending(priority => priority).ToList();
 
       tierCounts = new int[TierCount];
@@ -554,7 +589,7 @@ namespace Archipelago.APChessV
       Random random = new Random(config.fundamentalGraduationSeed);
       Dictionary<string, int> appliedCounts = new Dictionary<string, int>(StringComparer.Ordinal);
       List<GraduationAction> viable = new List<GraduationAction>();
-      List<int> viableWeights = new List<int>();
+      List<double> viableWeights = new List<double>();
 
       while (true)
       {
@@ -563,7 +598,7 @@ namespace Archipelago.APChessV
         {
           viable.Clear();
           viableWeights.Clear();
-          foreach (GraduationAction action in actionsByPriority[priority].Values)
+          foreach (GraduationAction action in actionsByPriority[priority])
           {
             int eligible = EligibleCount(tierCounts, lockedMajorCount, action.FromTier);
             if (eligible <= 0)
@@ -577,7 +612,7 @@ namespace Archipelago.APChessV
               continue;
 
             viable.Add(action);
-            viableWeights.Add(eligible);
+            viableWeights.Add(eligible * action.Proportion);
           }
 
           if (viable.Count == 0)
@@ -614,35 +649,24 @@ namespace Archipelago.APChessV
       return count;
     }
 
-    private static GraduationAction ChooseWeighted(List<GraduationAction> actions, List<int> weights, Random random)
+    private static GraduationAction ChooseWeighted(List<GraduationAction> actions, List<double> weights, Random random)
     {
-      int totalWeight = 0;
-      for (int i = 0; i < weights.Count; i++)
-        totalWeight += weights[i];
-
-      int r = random.Next(totalWeight);
-      int cumulative = 0;
-      for (int i = 0; i < actions.Count; i++)
-      {
-        cumulative += weights[i];
-        if (r < cumulative)
-          return actions[i];
-      }
-
-      return actions[actions.Count - 1]; // Defensive fallback; unreachable since r < totalWeight.
+      return actions[WeightedTieBreak.ChooseIndex(weights, random)];
     }
 
     private static List<GraduationAction> BuildActions(ApmwConfig config)
     {
       List<GraduationAction> actions = new List<GraduationAction>();
 
-      // Every tier transition -- including the sole gateway out of Pawn -- is now a normal,
+      // Every tier transition -- including the two gateways out of Pawn -- is now a normal,
       // symmetric, opt-in configured action (config.PieceUpgradeActions), exactly like Legacy's
-      // MinorToMajor/MajorToQueen/etc: none of these are unconditionally available. There is no
-      // more direct Pawn -> Major/Jack shortcut; a slot can only reach Major or Jack by first
-      // passing through Minor via PawnToMinor. If nothing is configured at all, every slot
-      // simply remains a Pawn -- a well-defined, deliberate outcome, not a special case.
+      // MinorToMajor/MajorToQueen/etc: none of these are unconditionally available. A slot can
+      // reach Major either by first passing through Minor (PawnToMinor then MinorToMajor) or
+      // directly (PawnToMajor); Jack is still only reachable via Minor/Major. If nothing is
+      // configured at all, every slot simply remains a Pawn -- a well-defined, deliberate
+      // outcome, not a special case.
       AddConfiguredAction(actions, config, ApmwConstants.PieceUpgradeActions.PawnToMinor, ChessmanTier.Pawn, ChessmanTier.Minor, ItemGenerationValues.Minor);
+      AddConfiguredAction(actions, config, ApmwConstants.PieceUpgradeActions.PawnToMajor, ChessmanTier.Pawn, ChessmanTier.Major, ItemGenerationValues.Major);
       AddConfiguredAction(actions, config, ApmwConstants.PieceUpgradeActions.MinorToMajor, ChessmanTier.Minor, ChessmanTier.Major, ItemGenerationValues.Major);
       AddConfiguredAction(actions, config, ApmwConstants.PieceUpgradeActions.MajorToJack, ChessmanTier.Major, ChessmanTier.Jack, ItemGenerationValues.Jack);
       AddConfiguredAction(actions, config, ApmwConstants.PieceUpgradeActions.MinorToJack, ChessmanTier.Minor, ChessmanTier.Jack, ItemGenerationValues.Jack);
@@ -665,7 +689,7 @@ namespace Archipelago.APChessV
       if (!config.PieceUpgradeActions.TryGetValue(actionName, out action) || !action.IsEnabled || action.Priority <= 0)
         return;
 
-      actions.Add(new GraduationAction(actionName, fromTier, toTier, expectedMaterial, action.Priority));
+      actions.Add(new GraduationAction(actionName, fromTier, toTier, expectedMaterial, action.Priority, action.Proportion));
     }
 
     private static NonPawnGenerationPlan BuildNonPawnPlan(
@@ -673,22 +697,27 @@ namespace Archipelago.APChessV
       Dictionary<string, int> appliedCounts,
       int lockedMajorCount)
     {
-      // PawnToMinor is the sole gateway out of Pawn, so Minor is the unique entry point into the
-      // whole non-pawn tier graph: every non-locked slot that ever leaves Pawn gets exactly one
-      // placeholder piece, placed once as Minor. Every later tier change for that same slot --
-      // Minor->Major, ->Jack, ->Queen, ->Amazon -- happens via in-place substitution in
-      // ApplyUpgrades below, never a second fresh placeholder. So only directCounts[Minor] needs
-      // "pass-through" additions for slots that continued beyond Minor (AppliedCount(MinorToMajor)
-      // / AppliedCount(MinorToJack)); any slot that went on to Major/Jack/Queen/Amazon already
-      // has its physical square reserved by that Minor placeholder. The lone exception is the
-      // castler-locked Major pool: those pieces are pre-seeded directly at Major and never pass
-      // through Minor, so they alone remain in directCounts[Major].
+      // PawnToMinor and PawnToMajor are the two gateways out of Pawn. Minor is still the entry
+      // point for the Minor->Major/->Jack/->Queen/->Amazon branch of the tier graph: every
+      // non-locked slot that leaves Pawn via PawnToMinor gets exactly one placeholder piece,
+      // placed once as Minor, and every later tier change for that same slot happens via
+      // in-place substitution in ApplyUpgrades below, never a second fresh placeholder. So only
+      // directCounts[Minor] needs "pass-through" additions for slots that continued beyond Minor
+      // (AppliedCount(MinorToMajor) / AppliedCount(MinorToJack)); any slot that went on to
+      // Major/Jack/Queen/Amazon from there already has its physical square reserved by that
+      // Minor placeholder. PawnToMajor is a second, direct gateway straight to Major -- those
+      // slots never have a Minor placeholder at all, so they're seeded directly into
+      // directCounts[Major] instead, exactly like the castler-locked Major pool (which is also
+      // pre-seeded directly and never passes through Minor). Both direct-Major populations are
+      // still fully eligible for further substitution (MajorToJack/MajorToQueen) except the
+      // locked ones, which PreferredSourceIndices protects by majorOrder position, not by count.
       Dictionary<NonPawnPieceFamily, int> directCounts = new Dictionary<NonPawnPieceFamily, int>
       {
         [NonPawnPieceFamily.Minor] = finalTierCounts[(int)ChessmanTier.Minor]
           + AppliedCount(appliedCounts, ApmwConstants.PieceUpgradeActions.MinorToMajor)
           + AppliedCount(appliedCounts, ApmwConstants.PieceUpgradeActions.MinorToJack),
-        [NonPawnPieceFamily.Major] = lockedMajorCount,
+        [NonPawnPieceFamily.Major] = lockedMajorCount
+          + AppliedCount(appliedCounts, ApmwConstants.PieceUpgradeActions.PawnToMajor),
         [NonPawnPieceFamily.Jack] = 0,
         [NonPawnPieceFamily.Queen] = 0,
         [NonPawnPieceFamily.Amazon] = 0,
@@ -850,7 +879,6 @@ namespace Archipelago.APChessV
         foundCounts[(int)NonPawnPieceFamily.Jack];
 
       int[] remainingTargetBudgets = (int[])foundCounts.Clone();
-      List<PlannedNonPawnUpgradeAction> plannedActions = new List<PlannedNonPawnUpgradeAction>();
       Dictionary<NonPawnPieceFamily, int> directCounts = new Dictionary<NonPawnPieceFamily, int>
       {
         [NonPawnPieceFamily.Minor] = foundCounts[(int)NonPawnPieceFamily.Minor],
@@ -860,39 +888,94 @@ namespace Archipelago.APChessV
         [NonPawnPieceFamily.Amazon] = 0,
       };
 
-      foreach (string actionName in config.PieceUpgradePreferences)
+      // Grouped once by current priority, descending -- config doesn't change mid-plan -- and,
+      // within a group, in the same fixed declaration order as UpgradeActions/
+      // ValidPieceUpgradeActions. Mirrors FundamentalSlotGraduationPlanner.Simulate: a genuine
+      // tie (two actions sharing both priority AND SourceFamily, e.g. minor-to-major/
+      // minor-to-jack, both Minor-sourced) is now resolved by the same weighted-per-unit-draw
+      // discipline instead of silently handing the whole shared budget to whichever action
+      // happens to sit first in this fixed order.
+      List<List<NonPawnUpgradeActionMetadata>> actionsByPriorityDescending = UpgradeActions
+        .Where(metadata => config.IsPieceUpgradeActionEnabled(metadata.ActionName)
+          && config.PieceUpgradeActions[metadata.ActionName].Priority > 0)
+        .GroupBy(metadata => config.PieceUpgradeActions[metadata.ActionName].Priority)
+        .OrderByDescending(group => group.Key)
+        .Select(group => group.ToList())
+        .ToList();
+
+      Random random = new Random(config.fundamentalGraduationSeed);
+      Dictionary<string, int> appliedCounts = new Dictionary<string, int>(StringComparer.Ordinal);
+      List<NonPawnUpgradeActionMetadata> viable = new List<NonPawnUpgradeActionMetadata>();
+      List<double> viableWeights = new List<double>();
+
+      while (true)
       {
-        NonPawnUpgradeActionMetadata metadata = MetadataFor(actionName);
-        if (metadata == null || !config.IsPieceUpgradeActionEnabled(actionName))
-          continue;
+        bool applied = false;
+        foreach (List<NonPawnUpgradeActionMetadata> actionsAtPriority in actionsByPriorityDescending)
+        {
+          viable.Clear();
+          viableWeights.Clear();
+          foreach (NonPawnUpgradeActionMetadata metadata in actionsAtPriority)
+          {
+            int targetFamily = (int)metadata.TargetFamily;
+            bool hasTargetBudget = IsUpgradeOnlyFamily(metadata.TargetFamily)
+              ? remainingTargetBudgets[targetFamily] > 0
+              : remainingTargetBudgets[targetFamily] > 0 && currentByFamilyAndOrigin[targetFamily, targetFamily] > 0;
+            if (!hasTargetBudget)
+              continue;
 
-        int targetFamily = (int)metadata.TargetFamily;
-        int requestedUpgrades = IsUpgradeOnlyFamily(metadata.TargetFamily)
-          ? remainingTargetBudgets[targetFamily]
-          : Math.Min(remainingTargetBudgets[targetFamily], currentByFamilyAndOrigin[targetFamily, targetFamily]);
-        if (requestedUpgrades <= 0)
-          continue;
+            // An upgrade can only actually happen for as many pieces as the source family
+            // currently has available. Without this check, a target-side-only budget (e.g.
+            // minor-to-major with 0 minors on the board) would still "reserve"
+            // directCounts/remainingTargetBudgets/currentByFamilyAndOrigin for a piece that
+            // MovePlannedSources below can never actually supply -- silently vanishing a piece
+            // that no action ever really touched, instead of just leaving the action a no-op.
+            int sourceEligible = CurrentFamilyCount(currentByFamilyAndOrigin, (int)metadata.SourceFamily);
+            if (sourceEligible <= 0)
+              continue;
 
-        if (config.PieceUpgradeActions[actionName].Priority <= 0)
-          continue;
+            viable.Add(metadata);
+            viableWeights.Add(sourceEligible * config.PieceUpgradeActions[metadata.ActionName].Proportion);
+          }
 
-        remainingTargetBudgets[targetFamily] -= requestedUpgrades;
-        if (directCounts.ContainsKey(metadata.TargetFamily))
-          directCounts[metadata.TargetFamily] = Math.Max(0, directCounts[metadata.TargetFamily] - requestedUpgrades);
-        if (!IsUpgradeOnlyFamily(metadata.TargetFamily))
-          currentByFamilyAndOrigin[targetFamily, targetFamily] =
-            Math.Max(0, currentByFamilyAndOrigin[targetFamily, targetFamily] - requestedUpgrades);
+          if (viable.Count == 0)
+            continue; // Nothing usable at this level right now -- drop to the next-lower one.
 
-        int replacementsToPlan = Math.Min(
-          requestedUpgrades,
-          CurrentFamilyCount(currentByFamilyAndOrigin, (int)metadata.SourceFamily));
-        MovePlannedSources(
-          currentByFamilyAndOrigin,
-          (int)metadata.SourceFamily,
-          targetFamily,
-          replacementsToPlan);
-        plannedActions.Add(new PlannedNonPawnUpgradeAction(metadata, requestedUpgrades));
+          NonPawnUpgradeActionMetadata chosen = viable.Count == 1
+            ? viable[0]
+            : viable[WeightedTieBreak.ChooseIndex(viableWeights, random)];
+
+          int chosenTargetFamily = (int)chosen.TargetFamily;
+          remainingTargetBudgets[chosenTargetFamily] -= 1;
+          if (directCounts.ContainsKey(chosen.TargetFamily))
+            directCounts[chosen.TargetFamily] = Math.Max(0, directCounts[chosen.TargetFamily] - 1);
+          if (!IsUpgradeOnlyFamily(chosen.TargetFamily))
+            currentByFamilyAndOrigin[chosenTargetFamily, chosenTargetFamily] =
+              Math.Max(0, currentByFamilyAndOrigin[chosenTargetFamily, chosenTargetFamily] - 1);
+
+          MovePlannedSources(currentByFamilyAndOrigin, (int)chosen.SourceFamily, chosenTargetFamily, 1);
+
+          int currentCount;
+          appliedCounts[chosen.ActionName] = appliedCounts.TryGetValue(chosen.ActionName, out currentCount) ? currentCount + 1 : 1;
+
+          applied = true;
+          break; // Reset the scan to the top priority: the globally most-preferred still-
+                 // viable action should always be tried first for the next unit too.
+        }
+
+        if (!applied)
+          break;
       }
+
+      // Same priority-descending, declaration-order-tiebreak sequence as the actions were
+      // drawn in, now flattened to one aggregated entry per action name (regardless of how many
+      // individual per-unit draws contributed to its total, or how they were interleaved with
+      // any tied competitor).
+      List<PlannedNonPawnUpgradeAction> plannedActions = actionsByPriorityDescending
+        .SelectMany(actionsAtPriority => actionsAtPriority)
+        .Where(metadata => appliedCounts.ContainsKey(metadata.ActionName))
+        .Select(metadata => new PlannedNonPawnUpgradeAction(metadata, appliedCounts[metadata.ActionName]))
+        .ToList();
 
       Dictionary<NonPawnPieceFamily, int> unusedUpgradeCounts = new Dictionary<NonPawnPieceFamily, int>
       {

@@ -324,6 +324,37 @@ namespace ChessV.Test
         }
 
         [TestMethod]
+        public void Generation_FundamentalCastlerLockedMajorSurvivesPawnToMajorThenMajorToQueenSubstitution()
+        {
+            // The Castler-lock protection (PreferredSourceIndices, keyed off
+            // MajorPieceGeneration's shared placement-order list) was written against Legacy's
+            // directly-generated majors, long before PawnToMajor existed. This proves it also
+            // protects a locked major when the *other* majors on the board arrived via
+            // PawnToMajor instead: both are placed through the exact same
+            // MajorPieceGeneration.GenerateDirect/order pipeline, so MajorToQueen substituting
+            // two PawnToMajor-graduated majors into queens must never touch the one locked
+            // Castler square, regardless of which mechanism produced the candidate majors.
+            handler = ConfigureFundamentalGeneration(
+                new MutableReceivedItemsHelper()
+                    .Add(ApmwConstants.ProgressiveItems.Chessmen, 3)
+                    .Add(ApmwConstants.ProgressiveItems.Material, 6)
+                    .Add(ApmwConstants.ProgressiveItems.Castler),
+                PriorityMapWith(ApmwConstants.PieceUpgradeActions.MajorToQueen, 10, new Dictionary<string, int>
+                {
+                    [ApmwConstants.PieceUpgradeActions.PawnToMajor] = 5,
+                }));
+
+            var result = handler.generatePlayerPieceSet(NumFiles);
+            var core = ApmwCore.getInstance();
+            var generated = result.Item1.Values.ToList();
+
+            Assert.AreEqual(1, core.foundCastlers);
+            Assert.AreEqual(3, CountNonKingPieces(generated), "no piece should vanish or be double-counted");
+            Assert.AreEqual(1, CountFamily(generated, "major"), "only the locked Castler major should remain at Major");
+            Assert.AreEqual(2, CountFamily(generated, "queen"), "both non-locked Chessmen slots should complete Pawn->Major->Queen");
+        }
+
+        [TestMethod]
         public void Generation_RespectsArmyFilteringForPiecesAndPockets()
         {
             var fuzzCase = ApmwFuzzCase.DefaultStandard().With(builder =>

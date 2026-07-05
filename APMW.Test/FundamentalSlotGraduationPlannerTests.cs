@@ -245,7 +245,93 @@ namespace ChessV.Test
                     + string.Join(", ", outcomes));
         }
 
-        private static ApmwConfig ConfigurePlanner(JObject priorities, int pocketSeed = 5011, int pawnSeed = 9077)
+        [TestMethod]
+        public void Plan_PawnToMinorAndPawnToMajorTieAtSameFromTierProducesMixedSeedDependentOutcomes()
+        {
+            // The actual motivating scenario for this whole redesign: pawn-to-minor and
+            // pawn-to-major share BOTH priority AND FromTier (Pawn). Before the actionsByPriority
+            // restructuring (Dictionary<int, List<GraduationAction>> instead of
+            // Dictionary<int, Dictionary<ChessmanTier, GraduationAction>>), two actions sharing a
+            // FromTier silently collapsed to "keep the cheaper one" -- pawn-to-major could never
+            // fire at all as long as pawn-to-minor was also configured at the same priority. This
+            // proves both are now genuine per-draw competitors: not just varying across seeds
+            // (already covered by the cross-FromTier tie test above), but actually co-occurring
+            // -- both minor > 0 and major > 0 -- within a single run.
+            var priorities = new Dictionary<string, int>
+            {
+                [ApmwConstants.PieceUpgradeActions.PawnToMinor] = 5,
+                [ApmwConstants.PieceUpgradeActions.PawnToMajor] = 5,
+            };
+            JObject priorityMap = JObject.FromObject(priorities);
+
+            var outcomes = new HashSet<(int Minor, int Major)>();
+            bool sawBothNonZeroInSameRun = false;
+            for (int i = 0; i < 40; i++)
+            {
+                ApmwConfig config = ConfigurePlanner(priorityMap, pocketSeed: 3001 + i, pawnSeed: 4507 + i * 7);
+                ApmwCore core = ConfigureCore(chessmen: 12, material: 1200); // stops partway through the chain
+
+                PieceGenerationAllocation allocation = FundamentalSlotGraduationPlanner.Plan(core, config, NumFiles);
+                int minor = allocation.NonPawnCount(NonPawnPieceFamily.Minor);
+                int major = allocation.NonPawnCount(NonPawnPieceFamily.Major);
+
+                Assert.AreEqual(
+                    12,
+                    allocation.PawnSlots + minor + major,
+                    "every slot must be accounted for in exactly one tier");
+                outcomes.Add((minor, major));
+                if (minor > 0 && major > 0)
+                    sawBothNonZeroInSameRun = true;
+            }
+
+            Assert.IsTrue(
+                outcomes.Count > 1,
+                "seeded tie-breaking should explore more than one outcome across many different seeds, got: "
+                    + string.Join(", ", outcomes));
+            Assert.IsTrue(
+                sawBothNonZeroInSameRun,
+                "pawn-to-minor and pawn-to-major must be able to both fire within the same run -- "
+                    + "a same-FromTier tie must not collapse to a single winner, got: "
+                    + string.Join(", ", outcomes));
+        }
+
+        [TestMethod]
+        public void Plan_ZeroProportionExcludesActionFromTiedDraw()
+        {
+            // piece_upgrade_proportion is consulted only to arbitrate ties; a weight of exactly 0
+            // must deterministically remove that action from every draw (as long as at least one
+            // competitor has nonzero weight, so the "fall back to uniform on all-zero" guard never
+            // engages) -- this is fully deterministic, unlike the statistical-bias case, so it can
+            // be asserted with zero flakiness across many different seeds.
+            var priorities = new Dictionary<string, int>
+            {
+                [ApmwConstants.PieceUpgradeActions.PawnToMinor] = 5,
+                [ApmwConstants.PieceUpgradeActions.PawnToMajor] = 5,
+            };
+            var proportions = new Dictionary<string, double>
+            {
+                [ApmwConstants.PieceUpgradeActions.PawnToMajor] = 0,
+            };
+            JObject priorityMap = JObject.FromObject(priorities);
+            JObject proportionMap = JObject.FromObject(proportions);
+
+            for (int i = 0; i < 20; i++)
+            {
+                ApmwConfig config = ConfigurePlanner(priorityMap, pocketSeed: 6101 + i, pawnSeed: 8209 + i * 7, proportions: proportionMap);
+                ApmwCore core = ConfigureCore(chessmen: 6, material: 1200); // ample budget for all 6 to reach Minor
+
+                PieceGenerationAllocation allocation = FundamentalSlotGraduationPlanner.Plan(core, config, NumFiles);
+
+                Assert.AreEqual(0, allocation.NonPawnCount(NonPawnPieceFamily.Major), "seed index " + i);
+                Assert.AreEqual(6, allocation.NonPawnCount(NonPawnPieceFamily.Minor), "seed index " + i);
+            }
+        }
+
+        private static ApmwConfig ConfigurePlanner(
+            JObject priorities,
+            int pocketSeed = 5011,
+            int pawnSeed = 9077,
+            JObject proportions = null)
         {
             ApmwFuzzCase.Builder builder = ApmwFuzzCase.DefaultStandard().ToBuilder();
             builder.PocketSeed = pocketSeed;
@@ -256,6 +342,8 @@ namespace ChessV.Test
             slotData[ApmwConstants.SlotKeyMaterialItemValue] = ApmwConfig.DefaultMaterialItemValue;
             slotData[ApmwConstants.SlotKeyFairyChessPawnUpgrades] = (int)FairyPawnUpgrades.Configure;
             slotData[ApmwConstants.SlotKeyPieceUpgradePreferences] = priorities;
+            if (proportions != null)
+                slotData[ApmwConstants.SlotKeyPieceUpgradeProportions] = proportions;
 
             ApmwConfig config = ApmwConfig.getInstance();
             config.Instantiate(slotData);
