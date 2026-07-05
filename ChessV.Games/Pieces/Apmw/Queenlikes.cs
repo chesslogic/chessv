@@ -62,4 +62,27 @@ namespace ChessV.Games.Pieces.Apmw
       type.CannonMove(new Direction(-1, 2));
     }
   }
+
+  [PieceType("Paladin", "APMW Custom Pieces")]
+  public class Paladin : PieceType
+  {
+    public Paladin(string name, string notation, int midgameValue, int endgameValue, string preferredImageName = null) :
+      base("Paladin", name, notation, midgameValue, endgameValue, preferredImageName)
+    {
+      AddMoves(this);
+    }
+
+    public static new void AddMoves(PieceType type)
+    {
+      Miracle.AddMoves(type);
+      Elephant.AddMoves(type);
+      // Sideways-only Knight moves (2 files, 1 rank) - the file-dominant half of the Knight's
+      // leaps. Deliberately excludes the rank-dominant (forward/rearward) half that NarrowKnight
+      // uses (Direction(2,1) etc.), so the Paladin never "charges" forward or retreats like a Knight.
+      type.Step(new Direction(1, 2));
+      type.Step(new Direction(1, -2));
+      type.Step(new Direction(-1, 2));
+      type.Step(new Direction(-1, -2));
+    }
+  }
 }

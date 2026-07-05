@@ -84,6 +84,7 @@ namespace ChessV.Games
     //  Misc
     public Herald Herald;
     public Amazon Amazon;
+    public Paladin Paladin;
     public Nightrider Nightrider;
     public Scout Scout;
 
@@ -558,6 +559,7 @@ namespace ChessV.Games
       // Misc
       Herald = new Herald("Herald", "D", 1300, 1300);
       Amazon = new Amazon("Amazon", "Â", 1300, 1300);
+      Paladin = new Paladin("Paladin", "Ṕ", 1300, 1350);
       Nightrider = new Nightrider("Nightrider", "J", 550, 550, "Knightsrider");
       Scout = new Scout("Scout", "U", 300, 300);
       Queennon = new Queennon("Queennon", "F", 1025, 720);
@@ -628,6 +630,7 @@ namespace ChessV.Games
 
       Amazons.Add(Amazon);
       Amazons.Add(Herald);
+      Amazons.Add(Paladin);
 
       Colorbounds.Add(Bishop);
       Colorbounds.Add(WarElephant);
