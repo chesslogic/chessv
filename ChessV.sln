@@ -1,3 +1,4 @@
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.6.33815.320
@@ -44,6 +45,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "APMW.Test", "APMW.Test\APMW
 	ProjectSection(ProjectDependencies) = postProject
 		{40788B95-CFAF-4922-984E-DB38859F3362} = {40788B95-CFAF-4922-984E-DB38859F3362}
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChessV.PieceAnalysis", "ChessV.PieceAnalysis\ChessV.PieceAnalysis.csproj", "{9AF81618-1380-432D-97DA-9362899C5191}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -197,6 +200,22 @@ Global
 		{E0A264CD-3B7C-4408-A57D-12CC34719A44}.Release|x64.Build.0 = Release|Any CPU
 		{E0A264CD-3B7C-4408-A57D-12CC34719A44}.Release|x86.ActiveCfg = Release|Any CPU
 		{E0A264CD-3B7C-4408-A57D-12CC34719A44}.Release|x86.Build.0 = Release|Any CPU
+		{9AF81618-1380-432D-97DA-9362899C5191}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9AF81618-1380-432D-97DA-9362899C5191}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9AF81618-1380-432D-97DA-9362899C5191}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{9AF81618-1380-432D-97DA-9362899C5191}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{9AF81618-1380-432D-97DA-9362899C5191}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{9AF81618-1380-432D-97DA-9362899C5191}.Debug|x64.Build.0 = Debug|Any CPU
+		{9AF81618-1380-432D-97DA-9362899C5191}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{9AF81618-1380-432D-97DA-9362899C5191}.Debug|x86.Build.0 = Debug|Any CPU
+		{9AF81618-1380-432D-97DA-9362899C5191}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9AF81618-1380-432D-97DA-9362899C5191}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9AF81618-1380-432D-97DA-9362899C5191}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{9AF81618-1380-432D-97DA-9362899C5191}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{9AF81618-1380-432D-97DA-9362899C5191}.Release|x64.ActiveCfg = Release|Any CPU
+		{9AF81618-1380-432D-97DA-9362899C5191}.Release|x64.Build.0 = Release|Any CPU
+		{9AF81618-1380-432D-97DA-9362899C5191}.Release|x86.ActiveCfg = Release|Any CPU
+		{9AF81618-1380-432D-97DA-9362899C5191}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
