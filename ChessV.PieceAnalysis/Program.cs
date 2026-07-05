@@ -62,7 +62,7 @@ namespace ChessV.PieceAnalysis
       public string OutputPath { get; set; }
     }
 
-    private static int Main(string[] args)
+    internal static int Main(string[] args)
     {
       try
       {

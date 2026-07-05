@@ -48,6 +48,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "APMW.Test", "APMW.Test\APMW
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChessV.PieceAnalysis", "ChessV.PieceAnalysis\ChessV.PieceAnalysis.csproj", "{9AF81618-1380-432D-97DA-9362899C5191}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChessV.PieceAnalysis.Test", "ChessV.PieceAnalysis.Test\ChessV.PieceAnalysis.Test.csproj", "{12BC03D8-D783-4BBD-B234-1357DB640CFC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -216,6 +218,22 @@ Global
 		{9AF81618-1380-432D-97DA-9362899C5191}.Release|x64.Build.0 = Release|Any CPU
 		{9AF81618-1380-432D-97DA-9362899C5191}.Release|x86.ActiveCfg = Release|Any CPU
 		{9AF81618-1380-432D-97DA-9362899C5191}.Release|x86.Build.0 = Release|Any CPU
+		{12BC03D8-D783-4BBD-B234-1357DB640CFC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12BC03D8-D783-4BBD-B234-1357DB640CFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12BC03D8-D783-4BBD-B234-1357DB640CFC}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{12BC03D8-D783-4BBD-B234-1357DB640CFC}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{12BC03D8-D783-4BBD-B234-1357DB640CFC}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{12BC03D8-D783-4BBD-B234-1357DB640CFC}.Debug|x64.Build.0 = Debug|Any CPU
+		{12BC03D8-D783-4BBD-B234-1357DB640CFC}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{12BC03D8-D783-4BBD-B234-1357DB640CFC}.Debug|x86.Build.0 = Debug|Any CPU
+		{12BC03D8-D783-4BBD-B234-1357DB640CFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12BC03D8-D783-4BBD-B234-1357DB640CFC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12BC03D8-D783-4BBD-B234-1357DB640CFC}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{12BC03D8-D783-4BBD-B234-1357DB640CFC}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{12BC03D8-D783-4BBD-B234-1357DB640CFC}.Release|x64.ActiveCfg = Release|Any CPU
+		{12BC03D8-D783-4BBD-B234-1357DB640CFC}.Release|x64.Build.0 = Release|Any CPU
+		{12BC03D8-D783-4BBD-B234-1357DB640CFC}.Release|x86.ActiveCfg = Release|Any CPU
+		{12BC03D8-D783-4BBD-B234-1357DB640CFC}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
