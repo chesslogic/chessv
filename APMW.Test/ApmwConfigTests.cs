@@ -10,6 +10,27 @@ namespace ChessV.Test
     [TestClass]
     public class ApmwConfigTests
     {
+        private sealed class UnexpectedFailureConvertible : IConvertible
+        {
+            public TypeCode GetTypeCode() { throw new ApplicationException("unexpected conversion failure"); }
+            public bool ToBoolean(IFormatProvider provider) { throw new ApplicationException("unexpected conversion failure"); }
+            public byte ToByte(IFormatProvider provider) { throw new ApplicationException("unexpected conversion failure"); }
+            public char ToChar(IFormatProvider provider) { throw new ApplicationException("unexpected conversion failure"); }
+            public DateTime ToDateTime(IFormatProvider provider) { throw new ApplicationException("unexpected conversion failure"); }
+            public decimal ToDecimal(IFormatProvider provider) { throw new ApplicationException("unexpected conversion failure"); }
+            public double ToDouble(IFormatProvider provider) { throw new ApplicationException("unexpected conversion failure"); }
+            public short ToInt16(IFormatProvider provider) { throw new ApplicationException("unexpected conversion failure"); }
+            public int ToInt32(IFormatProvider provider) { throw new ApplicationException("unexpected conversion failure"); }
+            public long ToInt64(IFormatProvider provider) { throw new ApplicationException("unexpected conversion failure"); }
+            public sbyte ToSByte(IFormatProvider provider) { throw new ApplicationException("unexpected conversion failure"); }
+            public float ToSingle(IFormatProvider provider) { throw new ApplicationException("unexpected conversion failure"); }
+            public string ToString(IFormatProvider provider) { throw new ApplicationException("unexpected conversion failure"); }
+            public object ToType(Type conversionType, IFormatProvider provider) { throw new ApplicationException("unexpected conversion failure"); }
+            public ushort ToUInt16(IFormatProvider provider) { throw new ApplicationException("unexpected conversion failure"); }
+            public uint ToUInt32(IFormatProvider provider) { throw new ApplicationException("unexpected conversion failure"); }
+            public ulong ToUInt64(IFormatProvider provider) { throw new ApplicationException("unexpected conversion failure"); }
+        }
+
         private sealed class AlwaysZeroRandom : Random
         {
             public override int Next(int maxValue)
@@ -86,6 +107,170 @@ namespace ChessV.Test
             CollectionAssert.AreEqual(
                 expectedCsv.Split(','),
                 config.PieceUpgradePreferences);
+        }
+
+        [TestMethod]
+        public void Instantiate_CurrentWorldShapeMapsThreeToConfigureAndReadsCanonicalRatio()
+        {
+            var config = new ApmwConfig();
+            config.Instantiate(new Dictionary<string, object>
+            {
+                [ApmwConstants.SlotKeyFairyChessPawnUpgrades] = 3,
+                [ApmwConstants.SlotKeyPieceUpgradePreferences] = new JArray("more-pawn", "new-pawn"),
+                [ApmwConstants.SlotKeyPieceUpgradeRatio] = JObject.FromObject(new Dictionary<string, double>
+                {
+                    [ApmwConstants.PieceUpgradeActions.MorePawn] = 5,
+                }),
+            });
+
+            Assert.AreEqual(FairyPawnUpgrades.Configure, config.PawnUpgrades);
+            Assert.IsFalse(config.UsesSuperMaxPawnGuarantee);
+            Assert.AreEqual(5.0, config.PieceUpgradeActions[ApmwConstants.PieceUpgradeActions.MorePawn].Proportion);
+        }
+
+        [TestMethod]
+        public void Instantiate_CurrentConfigureWithoutOptionalRatioUsesResolvedPreferencesAsSchemaMarker()
+        {
+            var config = new ApmwConfig();
+            config.Instantiate(new Dictionary<string, object>
+            {
+                [ApmwConstants.SlotKeyFairyChessPawnUpgrades] = 3,
+                [ApmwConstants.SlotKeyPieceUpgradePreferences] = new JArray("more-pawn", "new-pawn"),
+            });
+
+            Assert.AreEqual(FairyPawnUpgrades.Configure, config.PawnUpgrades);
+            Assert.IsFalse(config.UsesSuperMaxPawnGuarantee);
+            Assert.IsFalse(
+                config.UsesCurrentContract,
+                "A markerless preference list selects parsing compatibility, not the v2 item boundary.");
+            CollectionAssert.AreEqual(
+                new[]
+                {
+                    ApmwConstants.PieceUpgradeActions.MorePawn,
+                    ApmwConstants.PieceUpgradeActions.NewPawn,
+                    ApmwConstants.PieceUpgradeActions.BetterPawn,
+                    ApmwConstants.PieceUpgradeActions.PoolPawnUpgrade,
+                    ApmwConstants.PieceUpgradeActions.PawnToMinor,
+                    ApmwConstants.PieceUpgradeActions.PawnToMajor,
+                    ApmwConstants.PieceUpgradeActions.MinorToMajor,
+                    ApmwConstants.PieceUpgradeActions.MajorToJack,
+                    ApmwConstants.PieceUpgradeActions.MinorToJack,
+                    ApmwConstants.PieceUpgradeActions.MajorToQueen,
+                    ApmwConstants.PieceUpgradeActions.JackToQueen,
+                    ApmwConstants.PieceUpgradeActions.QueenToAmazon,
+                },
+                config.PieceUpgradePreferences);
+        }
+
+        [TestMethod]
+        public void Instantiate_LegacyWorldShapeMapsThreeToSuperMaxAndReadsHistoricalProportion()
+        {
+            var config = new ApmwConfig();
+            config.Instantiate(new Dictionary<string, object>
+            {
+                [ApmwConstants.SlotKeyFairyChessPawnUpgrades] = 3,
+                [ApmwConstants.LegacySlotKeyPieceUpgradeProportion] =
+                    JObject.FromObject(new Dictionary<string, double>
+                    {
+                        [ApmwConstants.PieceUpgradeActions.BetterPawn] = 4,
+                    }),
+            });
+
+            Assert.AreEqual(FairyPawnUpgrades.SuperMax, config.PawnUpgrades);
+            Assert.IsTrue(config.UsesSuperMaxPawnGuarantee);
+            Assert.AreEqual(4.0, config.PieceUpgradeActions[ApmwConstants.PieceUpgradeActions.BetterPawn].Proportion);
+        }
+
+        [TestMethod]
+        public void Instantiate_LegacyConfigureValueFourRemainsSupported()
+        {
+            var config = new ApmwConfig();
+            config.Instantiate(new Dictionary<string, object>
+            {
+                [ApmwConstants.SlotKeyFairyChessPawnUpgrades] = 4,
+                [ApmwConstants.SlotKeyPieceUpgradePreferences] = new JArray("more-pawn"),
+            });
+
+            Assert.AreEqual(FairyPawnUpgrades.Configure, config.PawnUpgrades);
+            Assert.IsFalse(config.UsesSuperMaxPawnGuarantee);
+            Assert.IsTrue(config.IsPieceUpgradeActionEnabled(ApmwConstants.PieceUpgradeActions.MorePawn));
+        }
+
+        [DataTestMethod]
+        [DataRow("not-a-number")]
+        [DataRow(long.MaxValue)]
+        public void Instantiate_MalformedPawnUpgradeValueSafelyFallsBackToOff(object rawValue)
+        {
+            var config = new ApmwConfig();
+            config.Instantiate(new Dictionary<string, object>
+            {
+                [ApmwConstants.SlotKeyFairyChessPawnUpgrades] = rawValue,
+            });
+
+            Assert.AreEqual(FairyPawnUpgrades.Off, config.PawnUpgrades);
+        }
+
+        [TestMethod]
+        public void Instantiate_UnexpectedPawnUpgradeConversionFailureIsNotSwallowed()
+        {
+            var config = new ApmwConfig();
+            Assert.ThrowsException<ApplicationException>(() => config.Instantiate(
+                new Dictionary<string, object>
+                {
+                    [ApmwConstants.SlotKeyFairyChessPawnUpgrades] = new UnexpectedFailureConvertible(),
+                }));
+        }
+
+        [TestMethod]
+        public void Instantiate_HistoricalProportionForcesLegacyWhenCurrentMarkersAreAlsoPresent()
+        {
+            var config = new ApmwConfig();
+            config.Instantiate(new Dictionary<string, object>
+            {
+                [ApmwConstants.SlotKeyFairyChessPawnUpgrades] = 3,
+                [ApmwConstants.SlotKeyPieceUpgradePreferences] = new JArray("better-pawn"),
+                [ApmwConstants.SlotKeyPieceUpgradeRatio] = "malformed",
+                [ApmwConstants.LegacySlotKeyPieceUpgradeProportion] =
+                    JObject.FromObject(new Dictionary<string, double>
+                    {
+                        [ApmwConstants.PieceUpgradeActions.BetterPawn] = 9,
+                    }),
+            });
+
+            Assert.AreEqual(FairyPawnUpgrades.SuperMax, config.PawnUpgrades);
+            Assert.IsTrue(config.UsesSuperMaxPawnGuarantee);
+            Assert.AreEqual(
+                9.0,
+                config.PieceUpgradeActions[ApmwConstants.PieceUpgradeActions.BetterPawn].Proportion);
+        }
+
+        [TestMethod]
+        public void Instantiate_ExplicitCurrentContractOverridesHistoricalProportionFallback()
+        {
+            var config = new ApmwConfig();
+            config.Instantiate(new Dictionary<string, object>
+            {
+                ["apmw_contract"] = ApmwContractTestFixture.Document(),
+                [ApmwConstants.SlotKeyFairyChessPawnUpgrades] = 3,
+                [ApmwConstants.SlotKeyPieceUpgradePreferences] = new JArray("better-pawn"),
+                [ApmwConstants.SlotKeyPieceUpgradeRatio] =
+                    JObject.FromObject(new Dictionary<string, double>
+                    {
+                        [ApmwConstants.PieceUpgradeActions.BetterPawn] = 5,
+                    }),
+                [ApmwConstants.LegacySlotKeyPieceUpgradeProportion] =
+                    JObject.FromObject(new Dictionary<string, double>
+                    {
+                        [ApmwConstants.PieceUpgradeActions.BetterPawn] = 9,
+                    }),
+            });
+
+            Assert.IsTrue(config.UsesCurrentContract);
+            Assert.AreEqual(FairyPawnUpgrades.Configure, config.PawnUpgrades);
+            Assert.IsFalse(config.UsesSuperMaxPawnGuarantee);
+            Assert.AreEqual(
+                5.0,
+                config.PieceUpgradeActions[ApmwConstants.PieceUpgradeActions.BetterPawn].Proportion);
         }
 
         [TestMethod]
@@ -266,7 +451,7 @@ namespace ChessV.Test
                         [ApmwConstants.PieceUpgradeActions.PawnToMinor] = 1,
                         [ApmwConstants.PieceUpgradeActions.PawnToMajor] = 1,
                     }),
-                [ApmwConstants.SlotKeyPieceUpgradeProportions] =
+                [ApmwConstants.SlotKeyPieceUpgradeRatio] =
                     JObject.FromObject(new Dictionary<string, double>
                     {
                         [ApmwConstants.PieceUpgradeActions.PawnToMinor] = 3,
@@ -310,7 +495,7 @@ namespace ChessV.Test
                         [ApmwConstants.PieceUpgradeActions.PawnToMinor] = 1,
                         [ApmwConstants.PieceUpgradeActions.PawnToMajor] = 1,
                     }),
-                [ApmwConstants.SlotKeyPieceUpgradeProportions] =
+                [ApmwConstants.SlotKeyPieceUpgradeRatio] =
                     JObject.FromObject(new Dictionary<string, double>
                     {
                         [ApmwConstants.PieceUpgradeActions.PawnToMinor] = 0,
@@ -334,7 +519,7 @@ namespace ChessV.Test
                     {
                         [ApmwConstants.PieceUpgradeActions.PawnToMinor] = 1,
                     }),
-                [ApmwConstants.SlotKeyPieceUpgradeProportions] =
+                [ApmwConstants.SlotKeyPieceUpgradeRatio] =
                     JObject.FromObject(new Dictionary<string, string>
                     {
                         [ApmwConstants.PieceUpgradeActions.PawnToMinor] = "not-a-number",

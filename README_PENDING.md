@@ -67,3 +67,23 @@ Add this row to the "Orthodox baseline and atoms" table (after the `Queen` row):
 ```
 | Amazon | Queen slides + Knight leaps. |
 ```
+
+## Runtime board geometry and reserves
+
+Add this subsection after the ChecksMate Client option reference notes:
+
+```
+### Board geometry, reserves, and contract v2
+
+Current-contract ChecksMate worlds can unlock five board profiles: 8x8, 10x8, 10x10, 12x10, and 12x12. `Board Files` and `Board Ranks` advance independently in two-square steps, while the client only offers the valid profile pairs published by the world. The board selector defaults to the largest unlocked profile on connection, can select a smaller unlocked board as a handicap, and is locked while a match is active. Legacy worlds retain their original 8x8 / Super-Sized 10x8 behavior.
+
+Your generated roster is owned independently of the selected board. The client projects that roster onto the selected profile using stable source roles and deterministic material-first priority; pieces that do not fit become reserves rather than disappearing or entering pockets. The connection panel previews the active count, reserve count, missing expected material, and unspent Pawn Forwardness for the highlighted board. Reserves cannot enter during a match, and reserve-only promotion types are unavailable until a larger board activates the corresponding pieces.
+
+Expanded profiles use geometry-derived player formation bands, Pawn Forwardness, CPU layouts, promotions, castling, capture thresholds, and checkmate locations. Twelve-file armies have explicit inner and outer attendant bands. Current-contract Progressive and Ordered Progressive goals advance through 10x8, 10x10, 12x10, and 12x12; Super starts beyond 8x8, while Single remains an 8x8 goal.
+
+Fundamental's exact shared-wave roster can still redistribute tiers when additional `Chessmen` arrive. ChessV uses that exact result for board setup and reserve diagnostics, but the Archipelago world uses a conservative monotonic, stage-local strength envelope for reachability so collecting an item cannot revoke an already-reachable location. A later geometry unlock permanently certifies earlier-stage strength checks.
+
+Contract v2 requires ChecksMate client 0.4.0 or newer. The client validates the canonical contract hash and finite geometry list before enabling these profiles. A client and `checksmate.apworld` from the same release remain the supported pairing.
+
+APMW saved-game reconstruction remains unsupported. Finish an active match before changing board profile, and reconnect to rebuild unlock state after disconnecting.
+```

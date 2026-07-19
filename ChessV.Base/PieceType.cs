@@ -226,13 +226,18 @@ namespace ChessV
       //	initialize hash keys
       hashKeyIndex = new int[game.NumPlayers];
       pawnHashKeyIndex = new int[game.NumPlayers];
-      materialHashKeyIndex = new int[game.NumPlayers, NumSlices];
+      materialHashKeyIndices = new int[game.NumPlayers, NumSlices][];
       for (int player = 0; player < game.NumPlayers; player++)
       {
         hashKeyIndex[player] = game.HashKeys.TakeKeys(game.Board.NumSquaresExtended);
         pawnHashKeyIndex[player] = 0;
         for (int slice = 0; slice < NumSlices; slice++)
-          materialHashKeyIndex[player, slice] = game.HashKeys.TakeMaterialKeys(32);
+        {
+          int firstKey = game.HashKeys.TakeMaterialKeys(INITIAL_MATERIAL_HASH_KEY_COUNT);
+          materialHashKeyIndices[player, slice] = new int[INITIAL_MATERIAL_HASH_KEY_COUNT];
+          for (int count = 0; count < INITIAL_MATERIAL_HASH_KEY_COUNT; count++)
+            materialHashKeyIndices[player, slice][count] = firstKey + count;
+        }
       }
 
       //	initialize PST
@@ -654,7 +659,40 @@ namespace ChessV
     { return HashKeys.Keys[pawnHashKeyIndex[player] + square]; }
 
     public UInt64 GetMaterialHashKey(int player, int nSlice, int nPieces)
-    { return HashKeys.Keys[materialHashKeyIndex[player, nSlice] + nPieces]; }
+    {
+      if (nPieces < 0 || nPieces > Board.NumSquaresExtended)
+        throw new ArgumentOutOfRangeException(nameof(nPieces),
+          $"Material piece count {nPieces} is outside the supported range 0-{Board.NumSquaresExtended}.");
+
+      EnsureMaterialHashKeyCapacity(player, nSlice, nPieces + 1);
+      return HashKeys.Keys[materialHashKeyIndices[player, nSlice][nPieces]];
+    }
+
+    private void EnsureMaterialHashKeyCapacity(int player, int nSlice, int requiredCapacity)
+    {
+      int[] indices = materialHashKeyIndices[player, nSlice];
+      if (requiredCapacity <= indices.Length)
+        return;
+
+      lock (materialHashKeyGrowthLock)
+      {
+        indices = materialHashKeyIndices[player, nSlice];
+        if (requiredCapacity <= indices.Length)
+          return;
+
+        int newCapacity = indices.Length;
+        int maximumCapacity = Board.NumSquaresExtended + 1;
+        while (newCapacity < requiredCapacity)
+          newCapacity = Math.Min(checked(newCapacity * 2), maximumCapacity);
+
+        int oldCapacity = indices.Length;
+        int firstKey = Game.HashKeys.TakeMaterialKeys(newCapacity - oldCapacity);
+        Array.Resize(ref indices, newCapacity);
+        for (int count = oldCapacity; count < newCapacity; count++)
+          indices[count] = firstKey + count - oldCapacity;
+        materialHashKeyIndices[player, nSlice] = indices;
+      }
+    }
 
 
     // *** HELPER FUNCTIONS *** //
@@ -701,7 +739,9 @@ namespace ChessV
     protected int nMoveCapabilities;
     protected int[] hashKeyIndex;
     protected int[] pawnHashKeyIndex;
-    protected int[,] materialHashKeyIndex;
+    private const int INITIAL_MATERIAL_HASH_KEY_COUNT = 32;
+    protected int[,][] materialHashKeyIndices;
+    private readonly object materialHashKeyGrowthLock = new object();
 
     protected int[] pstSmallCenterAttacks;
     protected int[] pstLargeCenterAttacks;

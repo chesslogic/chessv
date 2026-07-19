@@ -25,7 +25,8 @@ namespace ChessV.Boards
   {
     public int HandSize;
 
-    public BoardWithCards(int nFiles, int nRanks, int handSize, int numPlayers = 2) : base(nFiles, nRanks, nRanks * nFiles + handSize * numPlayers)
+    public BoardWithCards(int nFiles, int nRanks, int handSize, int numPlayers = 2)
+      : base(nFiles, nRanks, CalculateExtendedSquareCount(nFiles, nRanks, handSize, numPlayers))
     {
       HandSize = handSize;
       for (int player = 0; player < numPlayers; player++)
@@ -37,6 +38,15 @@ namespace ChessV.Boards
           fileBySquare[square] = -handIndex;
         }
       }
+    }
+
+    private static int CalculateExtendedSquareCount(int nFiles, int nRanks, int handSize, int numPlayers)
+    {
+      if (handSize < 0)
+        throw new System.ArgumentOutOfRangeException(nameof(handSize), "Card hand size cannot be negative.");
+      if (numPlayers <= 0)
+        throw new System.ArgumentOutOfRangeException(nameof(numPlayers), "BoardWithCards requires at least one player.");
+      return checked(nFiles * nRanks + handSize * numPlayers);
     }
 
     //	Lookup for the notaiton of a square

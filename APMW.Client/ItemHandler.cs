@@ -8,6 +8,27 @@ using static Archipelago.MultiClient.Net.Helpers.ReceivedItemsHelper;
 
 namespace Archipelago.APChessV
 {
+  internal static class ApmwEffectiveMaxima
+  {
+    public const int PlayAsWhite = 1;
+    public const int AIIntelligenceMalus = 5;
+    public const int Pocket = 12;
+    public const int PocketRange = 6;
+    public const int KingPromotion = 2;
+    public const int Consul = 2;
+    public const int Pawn = 60;
+    public const int PawnForwardness = 13;
+    public const int Minor = 15;
+    public const int Major = 11;
+    public const int MajorToQueen = 9;
+    public const int Jack = 9;
+    public const int Chessmen = 107;
+    public const int Material = 321;
+    public const int Castler = 2;
+    public const int BoardFiles = 2;
+    public const int BoardRanks = 2;
+  }
+
   public class ItemHandler
   {
     public ItemHandler(IReceivedItemsHelper receivedItemsHelper)
@@ -22,10 +43,17 @@ namespace Archipelago.APChessV
       // Save original providers before overwriting global state
       ApmwCore core = ApmwCore.getInstance();
       originalPlayerPieceSetProvider = core.PlayerPieceSetProvider;
+      originalGeometryAwarePlayerPieceSetProvider =
+        core.GeometryAwarePlayerPieceSetProvider;
       originalPlayerPocketPiecesProvider = core.PlayerPocketPiecesProvider;
 
       // overwrite global state
       core.PlayerPieceSetProvider = (numFiles) => GeneratePlayerPieceSet(numFiles);
+      if (ApmwConfig.getInstance().UsesCurrentContract)
+      {
+        core.GeometryAwarePlayerPieceSetProvider =
+          (numFiles, numRanks) => GenerateProjectedPlayerPieceSet(numFiles, numRanks);
+      }
       core.PlayerPocketPiecesProvider = () => GeneratePocketItems();
     }
 
@@ -33,12 +61,20 @@ namespace Archipelago.APChessV
     private readonly ItemReceivedHandler irHandler;
     private bool isHooked;
     private Func<int, (Dictionary<KeyValuePair<int, int>, PieceType>, string)> originalPlayerPieceSetProvider;
+    private Func<int, int, (Dictionary<KeyValuePair<int, int>, PieceType>, string)>
+      originalGeometryAwarePlayerPieceSetProvider;
     private Func<List<PieceType>> originalPlayerPocketPiecesProvider;
+
+    public event EventHandler ReceivedItemsChanged;
+    public ApmwGeometryUnlockSnapshot GeometryUnlocks { get; private set; } =
+      ApmwGeometryUnlockSnapshot.Empty;
 
     public void Hook()
     {
       ItemProgressSnapshot progress = ItemProgressSnapshot.FromReceivedItems(ReceivedItemsHelper);
       ApplyProgressSnapshot(ApmwCore.getInstance(), progress);
+      GeometryUnlocks = progress.GeometryUnlocks;
+      ReceivedItemsChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private static void ApplyProgressSnapshot(ApmwCore core, ItemProgressSnapshot progress)
@@ -60,6 +96,7 @@ namespace Archipelago.APChessV
       core.foundChessmen = progress.FoundChessmen;
       core.foundMaterialBudget = progress.FoundMaterialBudget;
       core.foundCastlers = progress.FoundCastlers;
+      core.foundPlayAsWhite = progress.FoundPlayAsWhite;
       core.isGrand = progress.IsGrand;
     }
 
@@ -82,15 +119,20 @@ namespace Archipelago.APChessV
       public int FoundChessmen { get; }
       public int FoundMaterialBudget { get; }
       public int FoundCastlers { get; }
+      public int FoundPlayAsWhite { get; }
       public bool IsGrand { get; }
+      public ApmwGeometryUnlockSnapshot GeometryUnlocks { get; }
 
       private ItemProgressSnapshot(Dictionary<string, int> itemCounts, ApmwConfig config)
       {
-        FoundPocketRange = Math.Min(6, Count(itemCounts, ApmwConstants.ProgressiveItems.PocketRange));
+        FoundPocketRange = Math.Min(ApmwEffectiveMaxima.PocketRange, Count(itemCounts, ApmwConstants.ProgressiveItems.PocketRange));
         FoundPocketGems = Count(itemCounts, ApmwConstants.ProgressiveItems.PocketGems);
-        GeriProviderPlayer = Any(itemCounts, ApmwConstants.ProgressiveItems.PlayAsWhite) ? 0 : 1;
-        EngineWeakening = Math.Min(5, Count(itemCounts, ApmwConstants.ProgressiveItems.AIIntelligenceMalus));
-        FoundPockets = Math.Min(12, Count(itemCounts, ApmwConstants.ProgressiveItems.Pocket));
+        FoundPlayAsWhite = Math.Min(ApmwEffectiveMaxima.PlayAsWhite, Count(itemCounts, ApmwConstants.ProgressiveItems.PlayAsWhite));
+        GeriProviderPlayer = FoundPlayAsWhite > 0 ? 0 : 1;
+        EngineWeakening = Math.Min(ApmwEffectiveMaxima.AIIntelligenceMalus, Count(itemCounts, ApmwConstants.ProgressiveItems.AIIntelligenceMalus));
+        FoundPockets = Math.Min(ApmwEffectiveMaxima.Pocket, Count(itemCounts, ApmwConstants.ProgressiveItems.Pocket));
+        FoundConsuls = Math.Min(ApmwEffectiveMaxima.Consul, Count(itemCounts, ApmwConstants.ProgressiveItems.Consul));
+        FoundKingPromotions = Math.Min(ApmwEffectiveMaxima.KingPromotion, Count(itemCounts, ApmwConstants.ProgressiveItems.KingPromotion));
         if (config.UsesFundamentalProgressionItemization)
         {
           FoundPawns = 0;
@@ -100,32 +142,45 @@ namespace Archipelago.APChessV
           FoundQueens = 0;
           FoundAmazons = 0;
           FoundPawnForwardness = 0;
-          FoundConsuls = 0;
-          FoundKingPromotions = 0;
-          FoundChessmen = Count(itemCounts, ApmwConstants.ProgressiveItems.Chessmen);
-          FoundMaterialBudget = Count(itemCounts, ApmwConstants.ProgressiveItems.Material) * config.materialItemValue;
-          FoundCastlers = Math.Min(Math.Max(0, config.castlingLocationCount), Count(itemCounts, ApmwConstants.ProgressiveItems.Castler));
+          FoundChessmen = Math.Min(ApmwEffectiveMaxima.Chessmen, Count(itemCounts, ApmwConstants.ProgressiveItems.Chessmen));
+          FoundMaterialBudget = Math.Min(ApmwEffectiveMaxima.Material, Count(itemCounts, ApmwConstants.ProgressiveItems.Material)) * config.materialItemValue;
+          FoundCastlers = Math.Min(
+            ApmwEffectiveMaxima.Castler,
+            Math.Min(
+              Math.Max(0, config.castlingLocationCount),
+              Count(itemCounts, ApmwConstants.ProgressiveItems.Castler)));
         }
         else
         {
-          FoundPawns = Count(itemCounts, ApmwConstants.ProgressiveItems.Pawn);
-          FoundMinors = Count(itemCounts, ApmwConstants.ProgressiveItems.MinorPiece);
-          FoundMajors = Count(itemCounts, ApmwConstants.ProgressiveItems.MajorPiece);
-          FoundJacks = Count(itemCounts, ApmwConstants.ProgressiveItems.Jack);
-          FoundQueens = Count(itemCounts, ApmwConstants.ProgressiveItems.MajorToQueen);
-          FoundAmazons = Count(itemCounts, ApmwConstants.ProgressiveItems.Amazon);
-          FoundPawnForwardness = Count(itemCounts, ApmwConstants.ProgressiveItems.PawnForwardness);
-          FoundConsuls = Math.Min(2, Count(itemCounts, ApmwConstants.ProgressiveItems.Consul));
-          FoundKingPromotions = Math.Min(2, Count(itemCounts, ApmwConstants.ProgressiveItems.KingPromotion));
+          FoundPawns = Math.Min(ApmwEffectiveMaxima.Pawn, Count(itemCounts, ApmwConstants.ProgressiveItems.Pawn));
+          FoundMinors = Math.Min(ApmwEffectiveMaxima.Minor, Count(itemCounts, ApmwConstants.ProgressiveItems.MinorPiece));
+          FoundMajors = Math.Min(ApmwEffectiveMaxima.Major, Count(itemCounts, ApmwConstants.ProgressiveItems.MajorPiece));
+          FoundJacks = Math.Min(ApmwEffectiveMaxima.Jack, Count(itemCounts, ApmwConstants.ProgressiveItems.Jack));
+          FoundQueens = Math.Min(ApmwEffectiveMaxima.MajorToQueen, Count(itemCounts, ApmwConstants.ProgressiveItems.MajorToQueen));
+          FoundAmazons = config.UsesCurrentContract
+            ? 0
+            : Count(itemCounts, ApmwConstants.ProgressiveItems.Amazon);
+          FoundPawnForwardness = Math.Min(ApmwEffectiveMaxima.PawnForwardness, Count(itemCounts, ApmwConstants.ProgressiveItems.PawnForwardness));
           FoundChessmen = 0;
           FoundMaterialBudget = 0;
           FoundCastlers = 0;
         }
         IsGrand = Any(itemCounts, ApmwConstants.ProgressiveItems.SuperSizeMe);
+        GeometryUnlocks = new ApmwGeometryUnlockSnapshot(
+          Math.Min(
+            ApmwEffectiveMaxima.BoardFiles,
+            Count(itemCounts, ApmwConstants.ProgressiveItems.BoardFiles)),
+          Math.Min(
+            ApmwEffectiveMaxima.BoardRanks,
+            Count(itemCounts, ApmwConstants.ProgressiveItems.BoardRanks)),
+          IsGrand);
       }
 
       public static ItemProgressSnapshot FromReceivedItems(IReceivedItemsHelper receivedItemsHelper)
       {
+        // TODO(chesslogic): Grouped counts cannot reconstruct acquisition/experiential continuity.
+        // Preserving that would require stable received-item identities or an explicit replay
+        // contract; see ApmwItemHandlerCharacterizationTests and the v2 roster plan.
         var itemCounts = receivedItemsHelper.AllItemsReceived
           .Select(item => receivedItemsHelper.GetItemName(item.ItemId, ApmwConstants.TrackerName))
           .Where(name => name != null)
@@ -157,6 +212,8 @@ namespace Archipelago.APChessV
       // Restore original providers
       ApmwCore core = ApmwCore.getInstance();
       core.PlayerPieceSetProvider = originalPlayerPieceSetProvider;
+      core.GeometryAwarePlayerPieceSetProvider =
+        originalGeometryAwarePlayerPieceSetProvider;
       core.PlayerPocketPiecesProvider = originalPlayerPocketPiecesProvider;
     }
 
@@ -172,6 +229,61 @@ namespace Archipelago.APChessV
     internal (Dictionary<KeyValuePair<int, int>, PieceType>, string) GeneratePlayerPieceSet(int numFiles)
     {
       return PlayerPieceSetGeneration.Generate(numFiles);
+    }
+
+    internal GeneratedRoster GenerateOwnedRoster()
+    {
+      return OwnedRosterGeneration.Generate();
+    }
+
+    internal ActiveRosterProjection ProjectOwnedRoster(ProjectionGeometry geometry)
+    {
+      return GeneratedRosterProjector.Project(
+        GenerateOwnedRoster(),
+        geometry,
+        Math.Max(0, ApmwCore.getInstance().foundPawnForwardness),
+        ApmwConfig.getInstance());
+    }
+
+    internal (Dictionary<KeyValuePair<int, int>, PieceType>, string)
+      GenerateProjectedPlayerPieceSet(int numFiles, int numRanks)
+    {
+      ActiveRosterProjection projection = ProjectOwnedRoster(
+        ProjectionGeometry.For(numFiles, numRanks));
+      var pieces = new Dictionary<KeyValuePair<int, int>, PieceType>();
+      int backSourceRank = projection.Geometry.HumanFormationRanks - 1;
+      pieces.Add(
+        new KeyValuePair<int, int>(
+          backSourceRank - projection.PrimaryKingPlacement.Coordinate.RelativeRank,
+          projection.PrimaryKingPlacement.Coordinate.File),
+        projection.PrimaryKing);
+
+      foreach (ProjectedRosterPiece projectedPiece in projection.ActivePieces)
+      {
+        if (projectedPiece.ConcretePieceType == null ||
+            projectedPiece.Placement == null)
+        {
+          throw new InvalidOperationException(
+            "Active APMW projection pieces require concrete types and placements.");
+        }
+
+        ProjectionCoordinate coordinate = projectedPiece.Placement.Coordinate;
+        pieces.Add(
+          new KeyValuePair<int, int>(
+            backSourceRank - coordinate.RelativeRank,
+            coordinate.File),
+          projectedPiece.ConcretePieceType);
+      }
+
+      return (
+        pieces,
+        string.Concat(projection.ActivePromotionCatalog));
+    }
+
+    public ApmwGeometryPreview GetGeometryPreview(int files, int ranks)
+    {
+      return ApmwGeometryPreview.FromProjection(
+        ProjectOwnedRoster(ProjectionGeometry.For(files, ranks)));
     }
 
     public List<PieceType> GeneratePawns(int numFiles, List<PieceType> minors, int spare_material)

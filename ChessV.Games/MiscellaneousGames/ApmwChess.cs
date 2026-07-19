@@ -39,7 +39,7 @@ namespace ChessV.Games
   //
   //**********************************************************************
 
-  [Game("Archipelago Multiworld", typeof(Geometry.Rectangular), 8, 8, 3,
+  [Game(ApmwProfiles.StandardGameName, typeof(Geometry.Rectangular), 8, 8, 3,
       Invented = "2019",
       InventedBy = "Berserker",
       Tags = "Chess Variant,Multiple Boards,Popular,Different Armies")]
@@ -123,10 +123,7 @@ namespace ChessV.Games
     protected Dictionary<KeyValuePair<int, int>, PieceType> startingPosition;
     protected string promotions;
     public int HumanPlayer;
-
-    private const string COLOURBOUND_CLOBBERERS_PIECES = "gxeakexg";
-    private const string REMARKABLE_ROOKIES_PIECES = "stickits";
-    private const string NUTTY_KNIGHTS_PIECES = "hlmykmlh";
+    private ApmwCpuArmyProfile cpuArmyProfile;
 
     public ApmwChessGame()
     {
@@ -158,12 +155,24 @@ namespace ChessV.Games
 
     // *** INITIALIZATION *** //
 
+    public virtual ApmwGeometryProfile ApmwProfile
+    {
+      get { return ApmwProfiles.Standard; }
+    }
+
+    protected override void ConfigureBoardGeometry(ref int nFiles, ref int nRanks)
+    {
+      ApmwProfile.ValidateMetadata(GameAttribute);
+      nFiles = ApmwProfile.Files;
+      nRanks = ApmwProfile.Ranks;
+    }
+
     #region CreateBoard
     //	We override the CreateBoard function so the game uses a board of 
     //	type BoardWithCards instead of Board.  This is enough to trigger the 
     //	board with cards architecture and proper rendering to the display.
     public override Board CreateBoard(int nPlayers, int nFiles, int nRanks, Symmetry symmetry)
-    { return new Boards.BoardWithCards(nFiles, nRanks, 3); }
+    { return new Boards.BoardWithCards(nFiles, nRanks, ApmwProfile.CardSlotsPerPlayer); }
     #endregion
 
     #region AddRules
@@ -297,7 +306,7 @@ namespace ChessV.Games
       base.SetGameVariables();
       FENFormat = "{array} {current player} {pieces in hand} {castling} {en-passant} {half-move clock} {turn number}";
       FENStart = "#{Array} w #{PocketPieces} #{CastleRooks} - 0 1";
-      Array = "#{BlackPieces}/#{BlackPawns}/#{BlackOuter}/#{BlackFourth}/#{WhiteFourth}/#{WhiteOuter}/#{WhitePawns}/#{WhitePieces}";
+      Array = ApmwProfile.FenArrayTemplate;
       Castling.RemoveChoice("Flexible");
       PawnDoubleMove = true;
       EnPassant = true;
@@ -362,74 +371,32 @@ namespace ChessV.Games
 
       earlyPopulatePieceTypes();
       (Dictionary<KeyValuePair<int, int>, PieceType>, string) pieceSet =
-        starter.PlayerPieceSetProvider(NumFiles);
+        starter.GeometryAwarePlayerPieceSetProvider != null
+          ? starter.GeometryAwarePlayerPieceSetProvider(NumFiles, NumRanks)
+          : starter.PlayerPieceSetProvider(NumFiles);
       startingPosition = pieceSet.Item1;
       promotions = pieceSet.Item2;
       List<PieceType> pocketPieces = ApmwCore.getInstance().PlayerPocketPiecesProvider();
 
-      string humanPrefix = "Black";
-      string cpuPrefix = "White";
-      string pawns = "pppppppp";
-      // Standard (FIDE)
-      //new HashSet<PieceType>() { Bishop, Knight, Rook, Queen, AgileRook },
-      string pieces = "rnbqkbnr";
       string enemyArmy = (string)GetCustomProperty("EnemyArmy");
-      if (enemyArmy != null)
-      {
-        // Colourbound Clobberers (Betza)
-        //new HashSet<PieceType>() { WarElephant, Phoenix, Cleric, Archbishop, Mullah },
-        if (enemyArmy == "Colourbound Clobberers (Betza)")
-        {
-          pieces = COLOURBOUND_CLOBBERERS_PIECES;
-        }
-        // Remarkable Rookies (Betza)
-        //new HashSet<PieceType>() { Tower, ShortRook, Lion, Chancellor, Zealot },
-        else if (enemyArmy == "Remarkable Rookies (Betza)")
-        {
-          pieces = REMARKABLE_ROOKIES_PIECES;
-        }
-        // Nutty Knights (Betza)
-        //new HashSet<PieceType>() { ChargingKnight, NarrowKnight, ChargingRook, Colonel, Mameluk },
-        else if (enemyArmy == "Nutty Knights (Betza)")
-        {
-          pieces = NUTTY_KNIGHTS_PIECES;
-        }
-      }
-      if (humanPlayer == 0)
-      {
-        (humanPrefix, cpuPrefix) = (cpuPrefix, humanPrefix);
-
-        // TODO(chesslogic): CPU gets 1 piece per checkmate (as location?), Goal is to checkmate a "full" CPU army
-        // TODO(chesslogic): CPU different armies
-        SetCustomProperty("BlackOuter", "8");
-        SetCustomProperty("BlackPawns", pawns);
-        SetCustomProperty("BlackPieces", pieces);
-      }
-      else
-      {
-        SetCustomProperty("WhiteOuter", "8");
-        SetCustomProperty("WhitePawns", pawns.ToUpper());
-        SetCustomProperty("WhitePieces", pieces.ToUpper());
-      }
+      cpuArmyProfile = ApmwProfile.ResolveCpuArmy(enemyArmy);
 
       // Handle all promotion-related logic in one place
       var basePromotions = pieceSet.Item2;
       var pocketPromotions = string.Join("", pocketPieces
         .Select(p => p != null ? p.Notation[humanPlayer] : "")
         .Where(p => !basePromotions.Contains(p) && !Pawns.Select(pn => pn.Notation[humanPlayer]).Contains(p)));
-      var armyPromotions = "";
-      if (enemyArmy != null)
-      {
-        // Add the army's specific pieces to promotions
-        armyPromotions = pieces.Substring(0, 4);
-      }
-      
-      promotions = basePromotions + pocketPromotions + armyPromotions;
+      var armyPromotions = enemyArmy == null ? "" : cpuArmyProfile.PromotionPieces;
+      promotions =
+        basePromotions +
+        pocketPromotions +
+        armyPromotions +
+        cpuArmyProfile.AttendantPromotions;
       PromotionTypes += promotions;
 
       //	determine player's board
       // TODO(chesslogic): incorporate ApmwCore
-      Dictionary<int, string> notations = new Dictionary<int, string>();
+      string[] humanFormationRows = new string[ApmwProfile.HumanFormationRanks];
       StringBuilder CastleRooks = new StringBuilder();
       if (humanPlayer == 0)
       {
@@ -441,24 +408,25 @@ namespace ChessV.Games
       }
 
       // Set castling pieces
-      for (int rank = 0; rank < this.NumRanks; rank++)
+      for (int rank = 0; rank < ApmwProfile.HumanFormationRanks; rank++)
       {
-        notations[rank] = "";
+        StringBuilder notation = new StringBuilder();
         int emptySpaceCount = 0;
-        for (int file = 0; file < this.NumFiles; file++)
+        for (int file = 0; file < ApmwProfile.Files; file++)
         {
           var place = new KeyValuePair<int, int>(rank, file);
           if (startingPosition.ContainsKey(place))
           {
             if (emptySpaceCount > 0)
             {
-              notations[rank] += Convert.ToChar('0' + emptySpaceCount);
+              notation.Append(emptySpaceCount);
               emptySpaceCount = 0;
             }
 
             PieceType pieceType = startingPosition[place];
-            notations[rank] += pieceType.Notation[humanPlayer];
-            if (rank == 4 && Majors.Contains(pieceType))
+            notation.Append(pieceType.Notation[humanPlayer]);
+            if (rank == ApmwProfile.PlayerBackRank &&
+                (Majors.Contains(pieceType) || Jacks.Contains(pieceType)))
             {
               var newCastlingRook = (char)('a' + file);
               if (humanPlayer == 0)
@@ -474,17 +442,21 @@ namespace ChessV.Games
           }
         }
         if (emptySpaceCount > 0)
-        {
-          if (emptySpaceCount > 9)
-          {
-            emptySpaceCount -= 10;
-            notations[rank] += "1";
-          }
-          notations[rank] += Convert.ToChar('0' + emptySpaceCount);
-          emptySpaceCount = 0;
-        }
+          notation.Append(emptySpaceCount);
+        humanFormationRows[rank] = notation.ToString();
       }
       SetCustomProperty("CastleRooks", CastleRooks.ToString());
+
+      string[] fenRows = ApmwProfile.ComposeFenRows(
+        humanPlayer,
+        cpuArmyProfile,
+        humanFormationRows);
+      for (int rank = 0; rank < ApmwProfile.Ranks; rank++)
+      {
+        SetCustomProperty(
+          ApmwProfile.FenRankPropertyNames[rank],
+          fenRows[rank]);
+      }
 
       // determine pockets
       SetCustomProperty("PocketPieces",
@@ -493,20 +465,6 @@ namespace ChessV.Games
           .Select((PieceType piece) => piece == null ? "1" : piece.Notation[humanPlayer])
           .Aggregate("", (string piece, string notation) => notation + piece)
           + (humanPlayer == 0 ? "3" : ""));
-     
-      if (humanPlayer == 0)
-      {
-        SetCustomProperty("BlackFourth", notations[0]);
-        SetCustomProperty("WhiteFourth", notations[1]);
-      }
-      else
-      {
-        SetCustomProperty("WhiteFourth", notations[0]);
-        SetCustomProperty("BlackFourth", notations[1]);
-      }
-      SetCustomProperty(humanPrefix + "Outer", notations[2]);
-      SetCustomProperty(humanPrefix + "Pawns", notations[3]);
-      SetCustomProperty(humanPrefix + "Pieces", notations[4]);
     }
     #endregion
 
@@ -686,14 +644,11 @@ namespace ChessV.Games
 
     private void AddCustomBackRankCastlingMoves()
     {
-      Dictionary<string, string> majorsFromAndTo = new Dictionary<string, string>();
       int humanPlayer = ApmwCore.getInstance().GeriProvider();
-      int rank = humanPlayer * 7;
-      // TODO(chesslogic): the starting position dict chesslogic made uses rank=4 for back line. why? u ever heard front to back?
-      int positionRank = 4;
-      bool isGrand = NumFiles > 8;
-      Location kingFrom = new Location(rank, isGrand ? 5 : 4);
-      for (int i = 0; i < NumFiles; i++)
+      int rank = ApmwProfile.HomeRank(humanPlayer);
+      int positionRank = ApmwProfile.PlayerBackRank;
+      Location kingFrom = new Location(rank, ApmwProfile.KingFile);
+      for (int i = 0; i < ApmwProfile.Files; i++)
       {
         var rookFromPair = new KeyValuePair<int, int>(positionRank, i);
         if (!startingPosition.ContainsKey(rookFromPair))
@@ -701,22 +656,12 @@ namespace ChessV.Games
         PieceType rookPiece = startingPosition[rookFromPair];
         if (Majors.Contains(rookPiece) || Jacks.Contains(rookPiece))
         {
-          var kingMoveAmt = i < (NumFiles / 2) ? -2 : 2;
-          Location kingTo = new Location(rank, kingFrom.File + kingMoveAmt);
-          Location rookFrom = new Location(rank, i);
-          Location rookTo = new Location(rank, kingFrom.File + (kingMoveAmt / 2));
-          if (Colorbounds.Contains(rookPiece))
-          {
-            int parity = rookFrom.File % 2;
-            if (parity != rookTo.File % 2)
-              rookTo = new Location(rookTo.Rank, kingFrom.File);
-          }
-          if (kingTo == rookTo)
-          {
-            throw new InvalidOperationException(
-              string.Format("chesslogic fucked up some castling math: {0}, {1}, {2}, {3}, {4}",
-                  humanPlayer, kingFrom, kingTo, rookFrom, rookTo));
-          }
+          ApmwCastlingPlan plan = ApmwProfile.CreateCastlingPlan(
+            i,
+            Colorbounds.Contains(rookPiece));
+          Location kingTo = new Location(rank, plan.KingToFile);
+          Location rookFrom = new Location(rank, plan.CastlerFromFile);
+          Location rookTo = new Location(rank, plan.CastlerToFile);
           char privChar = (char)('a' + i);
           if (humanPlayer == 0)
             privChar = Char.ToUpper(privChar);
@@ -733,39 +678,28 @@ namespace ChessV.Games
     private void AddDefaultCastlingMoves()
     {
       int humanPlayer = ApmwCore.getInstance().GeriProvider();
-      // TODO(chesslogic): support CPU different armies
-      // TODO(chesslogic): name these tiles by role so the semantic is more obvious, e.g. KINGSTARTSQUARE
-      // check if grand chess is in play
-      if (NumFiles == 8)
-      {
-        // computer is black
-        if (humanPlayer == 0)
-        {
-          CastlingMove(1, "e8", "g8", "h8", "f8", 'k');
-          CastlingMove(1, "e8", "c8", "a8", "d8", 'q');
-        }
-        // computer is white
-        else
-        {
-          CastlingMove(0, "e1", "g1", "h1", "f1", 'K');
-          CastlingMove(0, "e1", "c1", "a1", "d1", 'Q');
-        }
-      }
-      else
-      {
-        // computer is black
-        if (humanPlayer == 0)
-        {
-          CastlingMove(1, "f8", "h8", "j8", "g8", 'k');
-          CastlingMove(1, "f8", "d8", "a8", "e8", 'q');
-        }
-        // computer is white
-        else
-        {
-          CastlingMove(0, "f1", "h1", "j1", "g1", 'K');
-          CastlingMove(0, "f1", "d1", "a1", "e1", 'Q');
-        }
-      }
+      int cpuPlayer = humanPlayer ^ 1;
+      int homeRank = ApmwProfile.HomeRank(cpuPlayer);
+      AddDefaultCastlingMove(cpuPlayer, homeRank, ApmwProfile.KingSideCornerFile);
+      AddDefaultCastlingMove(cpuPlayer, homeRank, ApmwProfile.QueenSideCornerFile);
+    }
+
+    private void AddDefaultCastlingMove(int player, int rank, int castlerSourceFile)
+    {
+      ApmwCastlingPlan plan = ApmwProfile.CreateCastlingPlan(
+        castlerSourceFile,
+        cpuArmyProfile.CornerCastlersAreColorbound);
+      char privilege = plan.KingSide ? 'k' : 'q';
+      if (player == 0)
+        privilege = Char.ToUpperInvariant(privilege);
+
+      castlingMove(
+        player,
+        Board.LocationToSquare(new Location(rank, plan.KingFromFile)),
+        Board.LocationToSquare(new Location(rank, plan.KingToFile)),
+        Board.LocationToSquare(new Location(rank, plan.CastlerFromFile)),
+        Board.LocationToSquare(new Location(rank, plan.CastlerToFile)),
+        privilege);
     }
   }
 }

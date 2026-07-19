@@ -2,6 +2,8 @@
 using ChessV;
 using ChessV.Base;
 using Moq;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Archipelago.APChessV
 {
@@ -124,6 +126,146 @@ namespace Archipelago.APChessV
     }
 
     [TestMethod]
+    public void locationProfile_scalesCaptureBandsAndCheckmatesThroughTwelveByTwelve()
+    {
+      ApmwLocationProfile profile = ApmwLocationProfile.For(12, 12);
+
+      Assert.AreEqual(12, profile.CpuPawnCount);
+      Assert.AreEqual(11, profile.CpuNonKingCount);
+      Assert.AreEqual(22, profile.MaximumAnyCaptureCount);
+      Assert.AreEqual("Checkmate 12x12", profile.CheckmateLocation);
+      CollectionAssert.AreEqual(
+        new[]
+        {
+          "Checkmate Minima",
+          "Checkmate Maxima",
+          "Checkmate 10x10",
+          "Checkmate 12x10",
+          "Checkmate 12x12",
+        },
+        profile.CheckmateLocationsThroughStage().ToArray());
+    }
+
+    [TestMethod]
+    public void goalStage_preservesLegacyTenByEightAndUsesCurrentTwelveByTwelve()
+    {
+      Assert.IsTrue(LocationHandler.IsGoalStage(
+        ApmwLocationProfile.For(10, 8),
+        Goal.Progressive,
+        hasGeometryContract: false));
+      Assert.IsFalse(LocationHandler.IsGoalStage(
+        ApmwLocationProfile.For(10, 8),
+        Goal.Progressive,
+        hasGeometryContract: true));
+      Assert.IsTrue(LocationHandler.IsGoalStage(
+        ApmwLocationProfile.For(12, 12),
+        Goal.Progressive,
+        hasGeometryContract: true));
+      Assert.IsFalse(LocationHandler.IsGoalStage(
+        ApmwLocationProfile.For(12, 12),
+        Goal.Progressive,
+        hasGeometryContract: false));
+      Assert.IsTrue(LocationHandler.IsCaptureEverythingStage(
+        ApmwLocationProfile.For(10, 8),
+        Goal.Progressive,
+        hasGeometryContract: false));
+      Assert.IsTrue(LocationHandler.IsCaptureEverythingStage(
+        ApmwLocationProfile.For(12, 10),
+        Goal.Progressive,
+        hasGeometryContract: true));
+      Assert.IsFalse(LocationHandler.IsCaptureEverythingStage(
+        ApmwLocationProfile.For(10, 10),
+        Goal.Progressive,
+        hasGeometryContract: true));
+    }
+
+    [TestMethod]
+    public void captureLookup_mapsTwelveFileOuterAttendants()
+    {
+      var lookup = new CaptureLookup();
+
+      Assert.AreEqual(
+        "Capture Piece Queen's Outer Attendant",
+        lookup.fileToLocation(12, "B"));
+      Assert.AreEqual(
+        "Capture Piece King's Outer Attendant",
+        lookup.fileToLocation(12, "K"));
+      Assert.AreEqual(
+        "Capture Piece King's Rook",
+        lookup.fileToLocation(12, "L"));
+    }
+
+    [TestMethod]
+    public void handleMove_usesTwelveFileOriginalBackRankMapping()
+    {
+      ConfigureBoard(12, 10);
+      MoveInfo capture = GetMoveInfo();
+      capture.FromSquare = 24;
+      capture.ToSquare = 10;
+      capture.MoveType = MoveType.StandardCapture;
+
+      handler.HandleMove(capture);
+
+      locations.Verify(locs => locs.GetLocationIdFromName(
+        "ChecksMate",
+        "Capture Piece King's Outer Attendant"));
+    }
+
+    [TestMethod]
+    public void findSecondaryMove_tracksActualInnerCastlerDestination()
+    {
+      object king = new object();
+      object outerCastler = new object();
+      object innerCastler = new object();
+      var before = new Dictionary<int, object>
+      {
+        [1] = outerCastler,
+        [4] = king,
+        [8] = innerCastler,
+      };
+      var after = new Dictionary<int, object>
+      {
+        [1] = outerCastler,
+        [5] = innerCastler,
+        [6] = king,
+      };
+
+      LocationHandler.SecondaryMove moved = LocationHandler.FindSecondaryMove(
+        before,
+        after,
+        primaryFromSquare: 4);
+
+      Assert.IsNotNull(moved);
+      Assert.AreEqual(8, moved.FromSquare);
+      Assert.AreEqual(5, moved.ToSquare);
+    }
+
+    [TestMethod]
+    public void findSecondaryMove_rejectsAmbiguousMultiPieceMoves()
+    {
+      object king = new object();
+      object first = new object();
+      object second = new object();
+      var before = new Dictionary<int, object>
+      {
+        [0] = king,
+        [1] = first,
+        [2] = second,
+      };
+      var after = new Dictionary<int, object>
+      {
+        [1] = second,
+        [2] = first,
+        [3] = king,
+      };
+
+      Assert.IsNull(LocationHandler.FindSecondaryMove(
+        before,
+        after,
+        primaryFromSquare: 0));
+    }
+
+    [TestMethod]
     public void moveTakenBack_restoresPieceCaptureCounter()
     {
       MoveInfo info = GetMoveInfo();
@@ -206,6 +348,16 @@ namespace Archipelago.APChessV
       info.PieceMoved = secondPiece.Object;
       info.PieceCaptured = firstPiece.Object;
       return info;
+    }
+
+    private void ConfigureBoard(int files, int ranks)
+    {
+      game.SetupGet(mock => mock.NumFiles).Returns(files);
+      board.SetupGet(mock => mock.NumSquares).Returns(files * ranks);
+      board.Setup(mock => mock.GetRank(It.IsAny<int>())).Returns<int>(square => square / files);
+      board.Setup(mock => mock.GetFile(It.IsAny<int>())).Returns<int>(square => square % files);
+      board.Setup(mock => mock.GetFileNotation(It.IsAny<int>()))
+        .Returns<int>(file => ((char)('a' + file)).ToString());
     }
   }
 }

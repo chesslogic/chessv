@@ -67,7 +67,7 @@ namespace Archipelago.APChessV
 
       /// <summary>
       /// Relative per-draw weight used only to arbitrate among actions tied at the same
-      /// <see cref="Priority"/> (see <see cref="ApmwConstants.SlotKeyPieceUpgradeProportions"/>).
+      /// <see cref="Priority"/> (see <see cref="ApmwConstants.SlotKeyPieceUpgradeRatio"/>).
       /// Never negative; defaults to 1 when not explicitly configured.
       /// </summary>
       public double Proportion { get; private set; }
@@ -117,6 +117,8 @@ namespace Archipelago.APChessV
     }
 
     public Dictionary<string, object> SlotData { get; private set; }
+    public bool UsesCurrentContract { get; private set; }
+    public ApmwContractV2 CurrentContract { get; private set; }
 
     public int pocketSeed = -1;
     public List<int> pocketChoiceSeed { get; private set; } = new List<int>();
@@ -208,16 +210,21 @@ namespace Archipelago.APChessV
     {
       set
       {
-        pawnUpgrades = (FairyPawnUpgrades)value;
-        // Always resolves Legacy-mode defaults here, independent of the shared config's current
-        // ProgressionItemization: Instantiate() immediately re-resolves and overwrites
-        // PieceUpgradePreferences/PieceUpgradeActions afterward using the real mode (see below), so
-        // this setter's own resolution only actually matters for tests that poke PawnUpgradesInt
-        // directly (bypassing Instantiate) -- and those are all Legacy pawn-distribution tests.
-        var pieceUpgradeResolution = ResolvePieceUpgradeActionsFromLegacyDefaults(pawnUpgrades, ProgressionItemization.Legacy, null);
-        PieceUpgradePreferences = pieceUpgradeResolution.Preferences;
-        PieceUpgradeActions = pieceUpgradeResolution.Actions;
+        SetPawnUpgrades(ReadLegacyPawnUpgradeMode(value));
       }
+    }
+
+    private void SetPawnUpgrades(FairyPawnUpgrades value)
+    {
+      pawnUpgrades = value;
+      // Always resolves Legacy-mode defaults here, independent of the shared config's current
+      // ProgressionItemization: Instantiate() immediately re-resolves and overwrites
+      // PieceUpgradePreferences/PieceUpgradeActions afterward using the real mode (see below), so
+      // this setter's own resolution only actually matters for tests that poke PawnUpgradesInt
+      // directly (bypassing Instantiate) -- and those are all Legacy pawn-distribution tests.
+      var pieceUpgradeResolution = ResolvePieceUpgradeActionsFromLegacyDefaults(pawnUpgrades, ProgressionItemization.Legacy, null);
+      PieceUpgradePreferences = pieceUpgradeResolution.Preferences;
+      PieceUpgradeActions = pieceUpgradeResolution.Actions;
     }
 
     public bool IsPieceUpgradeActionEnabled(string actionName)
@@ -260,9 +267,17 @@ namespace Archipelago.APChessV
       get { return IsPieceUpgradeActionEnabled(ApmwConstants.PieceUpgradeActions.MajorToQueen); }
     }
 
-    public void Instantiate(Dictionary<string, object> slotData)
+    public void Instantiate(
+      Dictionary<string, object> slotData,
+      ApmwContractV2 validatedContract = null)
     {
       SlotData = slotData;
+      CurrentContract = SlotData.ContainsKey("apmw_contract")
+        ? validatedContract ?? ApmwGeometryResolver.ParseCurrentContract(SlotData["apmw_contract"])
+        : null;
+      SlotDataContract slotDataContract = DetectSlotDataContract(SlotData);
+      UsesCurrentContract = SlotData.ContainsKey("apmw_contract") ||
+        SlotData.ContainsKey(ApmwConstants.SlotKeyPieceUpgradeRatio);
       DeterministicChaosSeedForTest = SlotData.ContainsKey(DeterministicChaosSeedSlotKeyForTest)
         ? Convert.ToInt32(SlotData[DeterministicChaosSeedSlotKeyForTest])
         : (int?)null;
@@ -306,11 +321,16 @@ namespace Archipelago.APChessV
       // Non-Fairy Chess
       PawnsInt = Convert.ToInt32(SlotData.GetValueOrDefault(
         "fairy_chess_pawns", FairyPawns.Mixed));
-      PawnUpgradesInt = Convert.ToInt32(SlotData.GetValueOrDefault(
-        ApmwConstants.SlotKeyFairyChessPawnUpgrades, FairyPawnUpgrades.Off));
+      SetPawnUpgrades(ReadPawnUpgradeMode(
+        SlotData.GetValueOrDefault(ApmwConstants.SlotKeyFairyChessPawnUpgrades, FairyPawnUpgrades.Off),
+        slotDataContract));
       bool hasPieceUpgradePreferences = SlotData.ContainsKey(ApmwConstants.SlotKeyPieceUpgradePreferences);
       IDictionary<string, double> pieceUpgradeProportions = ReadPieceUpgradeProportions(
-        SlotData.GetValueOrDefault(ApmwConstants.SlotKeyPieceUpgradeProportions, null));
+        SlotData.GetValueOrDefault(
+          slotDataContract == SlotDataContract.Current
+            ? ApmwConstants.SlotKeyPieceUpgradeRatio
+            : ApmwConstants.LegacySlotKeyPieceUpgradeProportion,
+          null));
       var pieceUpgradeResolution = ResolvePieceUpgradeActions(
         hasPieceUpgradePreferences ? SlotData[ApmwConstants.SlotKeyPieceUpgradePreferences] : null,
         hasPieceUpgradePreferences,
@@ -329,6 +349,75 @@ namespace Archipelago.APChessV
         "queen_piece_limit_by_type", 0));
       pocketLimit = Convert.ToInt32(SlotData.GetValueOrDefault(
         "pocket_limit_by_pocket", 4));
+    }
+
+    public void ResetConnectionState()
+    {
+      SlotData = null;
+      CurrentContract = null;
+      UsesCurrentContract = false;
+    }
+
+    private enum SlotDataContract
+    {
+      Legacy,
+      Current,
+    }
+
+    private static SlotDataContract DetectSlotDataContract(IDictionary<string, object> slotData)
+    {
+      if (slotData.ContainsKey("apmw_contract"))
+        return SlotDataContract.Current;
+
+      if (slotData.ContainsKey(ApmwConstants.LegacySlotKeyPieceUpgradeProportion))
+        return SlotDataContract.Legacy;
+
+      return slotData.ContainsKey(ApmwConstants.SlotKeyPieceUpgradeRatio) ||
+        slotData.ContainsKey(ApmwConstants.SlotKeyPieceUpgradePreferences)
+          ? SlotDataContract.Current
+          : SlotDataContract.Legacy;
+    }
+
+    private static FairyPawnUpgrades ReadPawnUpgradeMode(object rawValue, SlotDataContract slotDataContract)
+    {
+      int value;
+      try
+      {
+        value = Convert.ToInt32(rawValue);
+      }
+      catch (FormatException)
+      {
+        return FairyPawnUpgrades.Off;
+      }
+      catch (InvalidCastException)
+      {
+        return FairyPawnUpgrades.Off;
+      }
+      catch (OverflowException)
+      {
+        return FairyPawnUpgrades.Off;
+      }
+
+      switch (value)
+      {
+        case 1:
+          return FairyPawnUpgrades.Pool;
+        case 2:
+          return FairyPawnUpgrades.Max;
+        case 3:
+          return slotDataContract == SlotDataContract.Current
+            ? FairyPawnUpgrades.Configure
+            : FairyPawnUpgrades.SuperMax;
+        case 4:
+          return FairyPawnUpgrades.Configure;
+        default:
+          return FairyPawnUpgrades.Off;
+      }
+    }
+
+    private static FairyPawnUpgrades ReadLegacyPawnUpgradeMode(int value)
+    {
+      return ReadPawnUpgradeMode(value, SlotDataContract.Legacy);
     }
 
     private static ProgressionItemization ReadProgressionItemization(object value)
@@ -530,7 +619,7 @@ namespace Archipelago.APChessV
       }
     }
 
-    // Reads the optional piece_upgrade_proportion slot-data dictionary (action name -> relative
+    // Reads the selected contract's optional ratio/proportion slot-data dictionary (action name -> relative
     // weight). Mirrors TryReadPieceUpgradePriorityMap's JObject/IDictionary handling, but values
     // are doubles and there's no "true/parsed at all" distinction to report: any action absent
     // from the map (or an entirely absent/unparseable raw value) simply falls back to weight 1

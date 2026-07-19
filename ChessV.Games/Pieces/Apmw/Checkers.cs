@@ -47,27 +47,9 @@ namespace ChessV.Games.Pieces.Apmw
     {
       if (piece.Square < 0 || piece.Square >= Game.Board.NumSquaresExtended) return false;
 
-      // Check if we're approaching move list limits - be more conservative for Checkers
-      if (moveList.Count > MoveList.MAX_MOVES - 200)
-      {
-        // Stop generating moves if we're close to the limit
-        return true;
-      }
-
-      int initialMoveCount = moveList.Count;
-      
       // Start positions for potential captures
       GenerateJumpCaptures(piece.Square, piece.Square, piece.Player, moveList, new List<int>(), 0);
-      
-      // Log if we generated an excessive number of moves
-      int movesGenerated = moveList.Count - initialMoveCount;
-      if (movesGenerated > 50)
-      {
-        // We generated too many moves, this might be contributing to crashes
-        // Consider this a sign that the position is too complex for safe analysis
-        return true;
-      }
-      
+
       return true;
     }
 
@@ -76,10 +58,6 @@ namespace ChessV.Games.Pieces.Apmw
     {
       // Prevent infinite recursion and excessive move generation
       if (depth >= MAX_CAPTURE_DEPTH || jumpedSquares.Count >= MAX_CAPTURE_DEPTH)
-        return;
-
-      // Check move list capacity
-      if (moveList.Count > MoveList.MAX_MOVES - 50)
         return;
 
       // Validate current square
@@ -193,12 +171,9 @@ namespace ChessV.Games.Pieces.Apmw
           return; // Invalid capture sequence
       }
 
-      // Check move list capacity before adding
-      if (moveList.Count >= MoveList.MAX_MOVES - 10)
-        return;
-
       // Create move for this capture chain
-      moveList.BeginMoveAdd(moveType, startSquare, landingSquare, nextJumps.Count > 0 ? nextJumps[0] : 0);
+      if (!moveList.BeginMoveAdd(moveType, startSquare, landingSquare, nextJumps.Count > 0 ? nextJumps[0] : 0))
+        return;
 
       // Pick up the moving piece
       Piece pickedPiece = moveList.AddPickup(startSquare);

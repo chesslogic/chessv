@@ -13,11 +13,11 @@ namespace Archipelago.APChessV
     /// <summary>The ChessV GameAttribute.GameName for the standard 8x8 APMW game.</summary>
     public const string GameNameStandard = "Archipelago Multiworld";
 
-    /// <summary>The ChessV GameAttribute.GameName for the 10x10 grand variant.</summary>
-    public const string GameNameGrand = "Archipelago Multiworld Super-Sized";
+    /// <summary>The ChessV GameAttribute.GameName for the 10x8 Super-Sized variant.</summary>
+    public const string GameNameSuperSized = "Archipelago Multiworld Super-Sized";
 
     /// <summary>Client version string sent during connection handshake.</summary>
-    public const string ClientVersion = "0.3.3";
+    public const string ClientVersion = "0.4.0";
 
     /// <summary>Legacy slot-data key controlling how bonus material upgrades pawns.</summary>
     public const string SlotKeyFairyChessPawnUpgrades = "fairy_chess_pawn_upgrades";
@@ -26,11 +26,14 @@ namespace Archipelago.APChessV
     public const string SlotKeyPieceUpgradePreferences = "piece_upgrade_preferences";
 
     /// <summary>
-    /// Slot-data key for the optional per-action proportion (relative draw weight) map, consulted
+    /// Current slot-data key for the optional per-action ratio (relative draw weight) map, consulted
     /// only to arbitrate among actions tied at the same priority in <see cref="SlotKeyPieceUpgradePreferences"/>.
     /// An action absent from this map (or when the key itself is absent) defaults to weight 1.
     /// </summary>
-    public const string SlotKeyPieceUpgradeProportions = "piece_upgrade_proportion";
+    public const string SlotKeyPieceUpgradeRatio = "piece_upgrade_ratio";
+
+    /// <summary>Historical spelling accepted only when parsing legacy slot-data shapes.</summary>
+    public const string LegacySlotKeyPieceUpgradeProportion = "piece_upgrade_proportion";
 
     /// <summary>Slot-data key selecting legacy family-specific or fundamental board-material itemization.</summary>
     public const string SlotKeyProgressionItemization = "progression_itemization";
@@ -76,6 +79,8 @@ namespace Archipelago.APChessV
       public const string Consul = "Progressive Consul";
       public const string KingPromotion = "Progressive King Promotion";
       public const string SuperSizeMe = "Super-Size Me";
+      public const string BoardFiles = "Board Files";
+      public const string BoardRanks = "Board Ranks";
       public const string Chessmen = "Chessmen";
       public const string Material = "Material";
       public const string Castler = "Castler";

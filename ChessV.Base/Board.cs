@@ -158,8 +158,8 @@ namespace ChessV
     //	The maximum number of ranks that can be supported
     public const int MAX_RANKS = 16;
 
-    //	The maximum number of squares that can be supported
-    public const int MAX_SQUARES = MAX_FILES * MAX_RANKS;
+    //	The maximum total number of main and extended squares supported
+    public const int MAX_SQUARES = BitBoard.MAX_BITS;
 
     //	Internal indicator for movement matrices that a square is disconnected
     public const int NOT_CONNECTED = -1;
@@ -440,9 +440,24 @@ namespace ChessV
 
     protected Board(int nFiles, int nRanks, int nSquaresExtended)
     {
+      if (nFiles <= 0 || nFiles > MAX_FILES)
+        throw new ArgumentOutOfRangeException(nameof(nFiles), $"Board files must be between 1 and {MAX_FILES}.");
+      if (nRanks <= 0 || nRanks > MAX_RANKS)
+        throw new ArgumentOutOfRangeException(nameof(nRanks), $"Board ranks must be between 1 and {MAX_RANKS}.");
+
+      int nSquares = checked(nFiles * nRanks);
+      if (nSquaresExtended < nSquares)
+        throw new ArgumentOutOfRangeException(nameof(nSquaresExtended),
+          $"Extended square count {nSquaresExtended} cannot be smaller than the {nSquares}-square main board.");
+      if (nSquaresExtended > BitBoard.MAX_BITS)
+        throw new NotSupportedException(
+          $"Boards with {nSquaresExtended} total squares are unsupported. BitBoard supports at most {BitBoard.MAX_BITS} squares.");
+      if (nSquaresExtended > Movement.MAX_ENCODED_SQUARES)
+        throw new NotSupportedException(
+          $"Boards with {nSquaresExtended} total squares are unsupported. Move encoding supports at most {Movement.MAX_ENCODED_SQUARES} squares.");
+
       NumFiles = nFiles;
       NumRanks = nRanks;
-      int nSquares = nFiles * nRanks;
       NumSquares = nSquares;
       NumSquaresExtended = nSquaresExtended;
       DisableSimpleMoveGeneration = false;

@@ -44,6 +44,8 @@ namespace ChessV
 
   public class Movement
   {
+    public const int MAX_ENCODED_SQUARES = 256;
+
     // *** PROPERTIES *** //
 
     #region Properties 

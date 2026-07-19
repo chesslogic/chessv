@@ -62,10 +62,11 @@ namespace ChessV.GUI
       button2 = new System.Windows.Forms.Button();
       textBox3 = new System.Windows.Forms.TextBox();
       label4 = new System.Windows.Forms.Label();
-      checkBoxSuper = new System.Windows.Forms.CheckBox();
+      comboBoxGeometry = new System.Windows.Forms.ComboBox();
       comboBoxDifficulty = new System.Windows.Forms.ComboBox();
       labelDivider = new System.Windows.Forms.Label();
       label5 = new System.Windows.Forms.Label();
+      labelGeometryDiagnostics = new System.Windows.Forms.Label();
       checkBoxDeathlink = new System.Windows.Forms.CheckBox();
       checkBoxIgnoreCastlersReceived = new System.Windows.Forms.CheckBox();
       comboBoxEnemyArmy = new System.Windows.Forms.ComboBox();
@@ -74,14 +75,14 @@ namespace ChessV.GUI
       // txtApmwOutput
       // 
       txtApmwOutput.BackColor = System.Drawing.Color.White;
-      txtApmwOutput.Location = new System.Drawing.Point(15, 166);
+      txtApmwOutput.Location = new System.Drawing.Point(15, 190);
       txtApmwOutput.Margin = new System.Windows.Forms.Padding(6, 5, 6, 5);
       txtApmwOutput.MaxLength = 8388352;
       txtApmwOutput.Multiline = true;
       txtApmwOutput.Name = "txtApmwOutput";
       txtApmwOutput.ReadOnly = true;
       txtApmwOutput.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-      txtApmwOutput.Size = new System.Drawing.Size(1003, 578);
+      txtApmwOutput.Size = new System.Drawing.Size(1003, 554);
       txtApmwOutput.TabIndex = 0;
       // 
       // timer
@@ -193,17 +194,16 @@ namespace ChessV.GUI
       label4.TabIndex = 11;
       label4.Text = "Archipelago Password";
       // 
-      // checkBoxSuper
+      // comboBoxGeometry
       // 
-      checkBoxSuper.AutoSize = true;
-      checkBoxSuper.Checked = true;
-      checkBoxSuper.CheckState = System.Windows.Forms.CheckState.Checked;
-      checkBoxSuper.Location = new System.Drawing.Point(145, 125);
-      checkBoxSuper.Name = "checkBoxSuper";
-      checkBoxSuper.Size = new System.Drawing.Size(92, 29);
-      checkBoxSuper.TabIndex = 12;
-      checkBoxSuper.Text = "Super?";
-      checkBoxSuper.UseVisualStyleBackColor = true;
+      comboBoxGeometry.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+      comboBoxGeometry.Enabled = false;
+      comboBoxGeometry.FormattingEnabled = true;
+      comboBoxGeometry.Location = new System.Drawing.Point(93, 121);
+      comboBoxGeometry.Name = "comboBoxGeometry";
+      comboBoxGeometry.Size = new System.Drawing.Size(144, 33);
+      comboBoxGeometry.TabIndex = 12;
+      comboBoxGeometry.SelectedIndexChanged += comboBoxGeometry_SelectedIndexChanged;
       // 
       // comboBoxDifficulty
       // 
@@ -228,9 +228,19 @@ namespace ChessV.GUI
       label5.AutoSize = true;
       label5.Location = new System.Drawing.Point(15, 126);
       label5.Name = "label5";
-      label5.Size = new System.Drawing.Size(82, 25);
+      label5.Size = new System.Drawing.Size(66, 25);
       label5.TabIndex = 15;
-      label5.Text = "settings?";
+      label5.Text = "Board:";
+      //
+      // labelGeometryDiagnostics
+      //
+      labelGeometryDiagnostics.AutoSize = true;
+      labelGeometryDiagnostics.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+      labelGeometryDiagnostics.Location = new System.Drawing.Point(93, 160);
+      labelGeometryDiagnostics.Name = "labelGeometryDiagnostics";
+      labelGeometryDiagnostics.Size = new System.Drawing.Size(117, 23);
+      labelGeometryDiagnostics.TabIndex = 19;
+      labelGeometryDiagnostics.Text = "Disconnected";
       // 
       // checkBoxDeathlink
       // 
@@ -274,10 +284,11 @@ namespace ChessV.GUI
       Controls.Add(checkBoxIgnoreCastlersReceived);
       Controls.Add(comboBoxEnemyArmy);
       Controls.Add(checkBoxDeathlink);
+      Controls.Add(labelGeometryDiagnostics);
       Controls.Add(label5);
       Controls.Add(labelDivider);
       Controls.Add(comboBoxDifficulty);
-      Controls.Add(checkBoxSuper);
+      Controls.Add(comboBoxGeometry);
       Controls.Add(label4);
       Controls.Add(textBox3);
       Controls.Add(button2);
@@ -313,11 +324,12 @@ namespace ChessV.GUI
     private System.Windows.Forms.Button button2;
     private System.Windows.Forms.TextBox textBox3;
     private System.Windows.Forms.Label label4;
-    private System.Windows.Forms.CheckBox checkBoxSuper;
+    private System.Windows.Forms.ComboBox comboBoxGeometry;
     public System.Windows.Forms.ComboBox comboBoxDifficulty;
     private System.Windows.Forms.CheckBox checkBoxDeathlink;
     private System.Windows.Forms.Label labelDivider;
     private System.Windows.Forms.Label label5;
+    private System.Windows.Forms.Label labelGeometryDiagnostics;
     private System.Windows.Forms.CheckBox checkBoxIgnoreCastlersReceived;
     public System.Windows.Forms.ComboBox comboBox1;
     public System.Windows.Forms.ComboBox comboBoxEnemyArmy;

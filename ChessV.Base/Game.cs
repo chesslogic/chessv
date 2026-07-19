@@ -37,7 +37,8 @@ namespace ChessV
     #region Constants
     public const int MAX_DIRECTIONS = 96;
     public const int MAX_PIECE_TYPES = 64;
-    public const int MAX_PIECES = 64;
+    public const int INITIAL_PIECE_CAPACITY = 64;
+    public const int MAX_PIECES = INITIAL_PIECE_CAPACITY;
     public const int MAX_PLY = 128;
     //	Internal indicator for movement matrices that a square is disconnected
     public const int NOT_CONNECTED = -1;
@@ -274,7 +275,7 @@ namespace ChessV
       nDisabledPieceTypes = 0;
       for (int player = 0; player < nPlayers; player++)
         TimeUsed[player] = 0;
-      pieces = new Piece[nPlayers, MAX_PIECES];
+      pieces = new Piece[nPlayers, INITIAL_PIECE_CAPACITY];
       nPieces = new int[nPlayers];
       moveLists = new MoveList[MAX_PLY];
       searchStack = new SearchStack[MAX_PLY];
@@ -332,6 +333,12 @@ namespace ChessV
 
       try
       {
+        int boardFiles = NumFiles;
+        int boardRanks = NumRanks;
+        ConfigureBoardGeometry(ref boardFiles, ref boardRanks);
+        NumFiles = boardFiles;
+        NumRanks = boardRanks;
+
         // Create board with virtual function
         Board = CreateBoard(NumPlayers, NumFiles, NumRanks, Symmetry);
         Board.PostCreate(this);
@@ -925,6 +932,12 @@ namespace ChessV
 
 
     #region ** Overridable Game Initialization Functions **
+    #region ConfigureBoardGeometry
+    protected virtual void ConfigureBoardGeometry(ref int nFiles, ref int nRanks)
+    {
+    }
+    #endregion
+
     #region CreateBoard
     public virtual Board CreateBoard(int nPlayers, int nFiles, int nRanks, Symmetry symmetry)
     { return new Board(nFiles, nRanks); }
@@ -1104,7 +1117,7 @@ namespace ChessV
     public virtual void ClearGameState()
     {
       Board.ClearBoard();
-      pieces = new Piece[NumPlayers, MAX_PIECES];
+      pieces = new Piece[NumPlayers, GetInitialPieceCapacity()];
       nPieces = new int[NumPlayers];
       moveLists = new MoveList[MAX_PLY];
       searchStack = new SearchStack[MAX_PLY];
@@ -1177,71 +1190,14 @@ namespace ChessV
     {
       UInt64 countermove = ply == 1 ? 0 : countermoves[SearchPath[ply - 1].FromSquare, SearchPath[ply - 1].ToSquare];
       moveLists[ply].Reset(movehash, countermove);
-      
-      // Track how many pieces have custom move generators to better manage capacity
-      int customMoveGeneratorCount = 0;
-      for (int nPiece = 0; nPiece < nPieces[player]; nPiece++)
-      {
-        if (pieces[player, nPiece].Square >= 0 && pieces[player, nPiece].PieceType.CustomMoveGenerator != null)
-          customMoveGeneratorCount++;
-      }
-      
-      // Calculate safe move limits based on number of custom generators
-      int safeMoveLimitPerPiece = customMoveGeneratorCount > 0 ? 
-        Math.Max(50, (MoveList.MAX_MOVES - 200) / (nPieces[player] + customMoveGeneratorCount * 2)) : 
-        MoveList.MAX_MOVES - 100;
-      
+
       for (int nPiece = 0; nPiece < nPieces[player]; nPiece++)
       {
         if (pieces[player, nPiece].Square >= 0)
-        {
-          // Check if we're approaching move list capacity before generating moves for this piece
-          if (moveLists[ply].Count > MoveList.MAX_MOVES - MoveList.MAX_MOVES_TRY_STOP_DELTA)
-          {
-            // Log warning and stop generating moves to prevent crash
-            if (MessageLog != null)
-            {
-              MessageLog.DebugMessage($"Move generation stopped early: {moveLists[ply].Count} moves already generated. " +
-                $"Piece: {pieces[player, nPiece].PieceType.Name}, " +
-                $"Player: {player}, Ply: {ply}, CustomGens: {customMoveGeneratorCount}");
-            }
-            break;
-          }
-          
-          // For pieces with custom move generators, be more conservative
-          if (pieces[player, nPiece].PieceType.CustomMoveGenerator != null && 
-              moveLists[ply].Count > safeMoveLimitPerPiece)
-          {
-                         if (MessageLog != null)
-             {
-               MessageLog.DebugMessage($"Skipping custom move generator for {pieces[player, nPiece].PieceType.Name} " +
-                 $"due to move count {moveLists[ply].Count} exceeding safe limit {safeMoveLimitPerPiece}");
-             }
-            continue;
-          }
-          
-          int moveCountBefore = moveLists[ply].Count;
           pieces[player, nPiece].GenerateMoves(moveLists[ply], capturesOnly);
-          int movesGenerated = moveLists[ply].Count - moveCountBefore;
-          
-                     // Log excessive move generation
-           if (movesGenerated > 200 && MessageLog != null)
-           {
-             MessageLog.DebugMessage($"Piece {pieces[player, nPiece].PieceType.Name} generated {movesGenerated} moves " +
-               $"(total: {moveLists[ply].Count})");
-           }
-        }
       }
-      
-      // Only generate special moves if we still have capacity
-      if (moveLists[ply].Count < MoveList.MAX_MOVES - MoveList.MAX_MOVES_TRY_STOP_DELTA)
-      {
-        GenerateSpecialMoves(moveLists[ply], capturesOnly);
-      }
-             else if (MessageLog != null)
-       {
-         MessageLog.DebugMessage($"Skipping special moves generation due to high move count: {moveLists[ply].Count}");
-       }
+
+      GenerateSpecialMoves(moveLists[ply], capturesOnly);
     }
     #endregion
 
@@ -1509,9 +1465,39 @@ namespace ChessV
 
     public void AddPiece(Piece piece)
     {
+      if (piece == null)
+        throw new ArgumentNullException(nameof(piece));
+      if (piece.Player < 0 || piece.Player >= NumPlayers)
+        throw new ArgumentOutOfRangeException(nameof(piece), $"Piece player {piece.Player} is outside the valid range 0-{NumPlayers - 1}.");
+
+      EnsurePieceCapacity(nPieces[piece.Player] + 1);
       pieces[piece.Player, nPieces[piece.Player]++] = piece;
       if (piece.Square >= 0)
         Board[piece.Square] = piece;
+    }
+
+    private int GetInitialPieceCapacity()
+    {
+      return Board == null
+        ? INITIAL_PIECE_CAPACITY
+        : Math.Max(INITIAL_PIECE_CAPACITY, Board.NumSquaresExtended);
+    }
+
+    private void EnsurePieceCapacity(int requiredCapacity)
+    {
+      int currentCapacity = pieces.GetLength(1);
+      if (requiredCapacity <= currentCapacity)
+        return;
+
+      int newCapacity = currentCapacity;
+      while (newCapacity < requiredCapacity)
+        newCapacity = checked(newCapacity * 2);
+
+      Piece[,] expanded = new Piece[NumPlayers, newCapacity];
+      for (int player = 0; player < NumPlayers; player++)
+        for (int index = 0; index < nPieces[player]; index++)
+          expanded[player, index] = pieces[player, index];
+      pieces = expanded;
     }
 
     public List<string> GetPieceTypeNotes(PieceType type)

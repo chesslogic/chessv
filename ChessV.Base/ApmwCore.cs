@@ -37,6 +37,7 @@ namespace ChessV.Base
     public int foundChessmen = -1;
     public int foundMaterialBudget = -1;
     public int foundCastlers = -1;
+    public int foundPlayAsWhite = -1;
     public bool IgnoreCastlersReceived { get; set; } = false;
     public bool isGrand = false;
 
@@ -65,6 +66,8 @@ namespace ChessV.Base
     /** ChessV.Base.PieceType */
     public Func<int, (Dictionary<KeyValuePair<int, int>, PieceType>, string)> PlayerPieceSetProvider =
       (numFiles) => (new Dictionary<KeyValuePair<int, int>, PieceType>(), "");
+    public Func<int, int, (Dictionary<KeyValuePair<int, int>, PieceType>, string)>
+      GeometryAwarePlayerPieceSetProvider;
     public Func<List<PieceType>> PlayerPocketPiecesProvider =
       () => new List<PieceType>();
     /** Provides 0 if the player has found PlayAsWhite item, otherwise provides 1 */

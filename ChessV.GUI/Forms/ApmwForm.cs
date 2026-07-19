@@ -41,6 +41,11 @@ namespace ChessV.GUI
       archipelagoClient = ArchipelagoClient.getInstance();
       this.mainForm = mainForm;
       thisForm = this;
+      archipelagoClient.OnConnect += ArchipelagoClient_OnConnect;
+      archipelagoClient.OnClientDisconnect += ArchipelagoClient_OnClientDisconnect;
+      archipelagoClient.GeometryStateChanged += ArchipelagoClient_GeometryStateChanged;
+      archipelagoClient.MatchStateChanged += ArchipelagoClient_MatchStateChanged;
+      Disposed += ApmwForm_Disposed;
     }
 
     public static ApmwForm thisForm;
@@ -56,6 +61,7 @@ namespace ChessV.GUI
     private DeathLinkService deathLinkService;
     private Match currentMatch;
     private LocationHandler locationHandler;
+    private bool updatingGeometrySelection;
 
     private void ApmwForm_Load(object sender, EventArgs e)
     {
@@ -64,32 +70,15 @@ namespace ChessV.GUI
       textBox1.Text += convenience.getRecentUrl();
       textBox2.Text += convenience.getRecentSlotName();
 
-      checkBoxSuper.Enabled = ApmwCore.getInstance().isGrand;
-      if (!checkBoxSuper.Enabled)
-      {
-        checkBoxSuper.Checked = false;
-      }
-
       checkBoxDeathlink.Enabled = false;
       checkBoxDeathlink.Checked = false;
+      RefreshGeometryControls();
       UpdateIgnoreCastlersReceivedCheckbox();
     }
 
     private void timer_Tick(object sender, EventArgs e)
     {
-      var enableButton = false;
-      try
-      {
-        if (archipelagoClient.Session != null
-          && archipelagoClient.Session.ConnectionInfo != null)
-        {
-          enableButton = archipelagoClient.Session.ConnectionInfo.Slot != -1;
-          // TODO(chesslogic): disable while a game is active, enable once it ends
-        }
-      }
-      catch (NullReferenceException ex) { }
-      if (button2.Enabled != enableButton)
-        button2.Enabled = enableButton;
+      UpdateLaunchState();
 
       StringBuilder append = new StringBuilder(10000);
       if (pastMessages != null)
@@ -103,11 +92,6 @@ namespace ChessV.GUI
       pastMessages = new List<LogMessage>();
       linesSeen = 0;
 
-      if (!checkBoxSuper.Enabled && ApmwCore.getInstance().isGrand)
-      {
-        checkBoxSuper.Checked = true;
-      }
-      checkBoxSuper.Enabled = ApmwCore.getInstance().isGrand;
       UpdateIgnoreCastlersReceivedCheckbox();
     }
 
@@ -188,79 +172,14 @@ namespace ChessV.GUI
         archipelagoClient.nonSessionMessages.Add(ex.Message);
         return;
       }
+      catch (InvalidOperationException)
+      {
+        archipelagoClient.nonSessionMessages.Add(
+          "Enter an Archipelago room address containing a host and port.");
+        return;
+      }
       var slot = textBox2.Text;
       var password = textBox3.Text ?? null;
-      //messageLog.OnMessageReceived -= (message) => pastMessages.Add(message);
-      archipelagoClient.OnConnect += (Archipelago.MultiClient.Net.ArchipelagoSession session) => {
-        archipelagoClient.nonSessionMessages.Add("Thank you for playing today. UI updating based on slot data ...");
-        try {
-          // Get slot data from ApmwConfig instead of DataStorage
-          var config = ApmwConfig.getInstance();
-          if (config.SlotData == null)
-          {
-            archipelagoClient.nonSessionMessages.Add("Error: Slot data is not yet initialized");
-            return;
-          }
-
-          bool isDeathLink = 0 < Convert.ToInt32(config.SlotData.GetValueOrDefault("death_link", 0));
-          
-          this.Invoke((MethodInvoker)delegate {
-            button2.Enabled = true;
-            checkBoxDeathlink.Enabled = isDeathLink;
-            checkBoxDeathlink.Checked = isDeathLink;
-            UpdateIgnoreCastlersReceivedCheckbox();
-          });
-
-          if (isDeathLink)
-          {
-            deathLinkService = session.CreateDeathLinkService();
-            locationHandler = LocationHandler.GetInstance();
-            
-            if (checkBoxDeathlink.Checked)
-            {
-              deathLinkService.EnableDeathLink();
-            }
-            archipelagoClient.nonSessionMessages.Add("DeathLink service initialized");
-            deathLinkService.OnDeathLinkReceived += (DeathLink deathLink) =>
-            {
-              bool shouldProcess = false;
-              this.Invoke((MethodInvoker)delegate {
-                shouldProcess = currentMatch != null && checkBoxDeathlink.Checked;
-              });
-              
-              if (!shouldProcess)
-                return;
-                  
-              lock (locationHandler.DeathlinkedMatches)
-              {
-                if (locationHandler.DeathlinkedMatches.Contains(currentMatch))
-                  return;
-                locationHandler.DeathlinkedMatches.Add(currentMatch);
-              }
-              string reason = string.Join(" ", deathLink.Source, deathLink.Cause);
-              archipelagoClient.nonSessionMessages.Add(string.Join(" ", "DeathLink received:", reason));
-              currentMatch.Death(reason);
-            };
-          }
-        }
-        catch (Exception ex) {
-          archipelagoClient.nonSessionMessages.Add($"Error in OnConnect: {ex.Message}");
-          if (ex.InnerException != null) {
-            archipelagoClient.nonSessionMessages.Add($"Inner exception: {ex.InnerException.Message}");
-          }
-        }
-      };
-
-      archipelagoClient.OnClientDisconnect += (code, reason, wasClean) => {
-        this.Invoke((MethodInvoker)delegate {
-          checkBoxDeathlink.Enabled = false;
-          checkBoxDeathlink.Checked = false;
-          checkBoxIgnoreCastlersReceived.Enabled = false;
-          checkBoxIgnoreCastlersReceived.Checked = false;
-          ApmwCore.getInstance().IgnoreCastlersReceived = false;
-        });
-        deathLinkService = null;
-      };
 
       archipelagoClient.Connect(host, port, slot, password);
       if (archipelagoClient.Session != null && messageLog != archipelagoClient.Session.MessageLog)
@@ -269,7 +188,7 @@ namespace ChessV.GUI
         {
           messageLog.OnMessageReceived -= mrHandler;
         }
-        mrHandler = (message) => pastMessages.Add(message);
+        mrHandler = (message) => InvokeOnUiThread(() => pastMessages.Add(message));
         messageLog = archipelagoClient.Session.MessageLog;
         messageLog.OnMessageReceived += mrHandler;
       }
@@ -277,9 +196,12 @@ namespace ChessV.GUI
 
     private void button2_Click(object sender, EventArgs e)
     {
-      // check if we've received Super-Size Me from the ItemHandler
-      ApmwCore core = ApmwCore.getInstance();
-      Game game;
+      ApmwGeometryOption selectedGeometry =
+        comboBoxGeometry.SelectedItem as ApmwGeometryOption ??
+        archipelagoClient.GeometrySelection.SelectedOption;
+      if (selectedGeometry == null || archipelagoClient.IsMatchActive)
+        return;
+
       Dictionary<string, string> options = null;
       if (comboBoxEnemyArmy.SelectedItem != null)
       {
@@ -289,17 +211,10 @@ namespace ChessV.GUI
         // TODO(chesslogic): Apparently if I pass the player army here it'll be stored in save files?
         // This would mean calling out to ItemHandler from external to the ApmwChess instance.
       }
-      if (core.isGrand && checkBoxSuper.Enabled && checkBoxSuper.Checked)
-      {
-        game = mainForm.Manager.CreateGame("Archipelago Multiworld Super-Sized", options);
-      }
-      else
-      {
-        game = mainForm.Manager.CreateGame("Archipelago Multiworld", options);
-      }
+      Game game = mainForm.Manager.CreateGame(selectedGeometry.RegisteredGameName, options);
       game.StartMatch();
       currentMatch = game.Match;
-      game.Match.Finished += (match) => { 
+      game.Match.Finished += (match) => {
         archipelagoClient.UnloadMatch();
         currentMatch = null;
       };
@@ -329,21 +244,179 @@ namespace ChessV.GUI
 
     private void UpdateIgnoreCastlersReceivedCheckbox()
     {
-      bool enabled = false;
-      try
-      {
-        enabled = archipelagoClient.Session != null &&
-          archipelagoClient.Session.ConnectionInfo != null &&
-          archipelagoClient.Session.ConnectionInfo.Slot != -1 &&
-          ApmwConfig.getInstance().UsesFundamentalProgressionItemization;
-      }
-      catch (NullReferenceException ex) { }
+      bool enabled = archipelagoClient.GeometrySelection.IsConnected &&
+        ApmwConfig.getInstance().UsesFundamentalProgressionItemization;
 
       checkBoxIgnoreCastlersReceived.Enabled = enabled;
       if (!enabled)
         checkBoxIgnoreCastlersReceived.Checked = false;
       ApmwCore.getInstance().IgnoreCastlersReceived =
         enabled && checkBoxIgnoreCastlersReceived.Checked;
+    }
+
+    private void ArchipelagoClient_OnConnect(
+      Archipelago.MultiClient.Net.ArchipelagoSession session)
+    {
+      archipelagoClient.nonSessionMessages.Add(
+        "Thank you for playing today. UI updating based on slot data ...");
+      var config = ApmwConfig.getInstance();
+      if (config.SlotData == null)
+        throw new InvalidOperationException("Slot data was not initialized before OnConnect.");
+
+      bool isDeathLink = 0 < Convert.ToInt32(
+        config.SlotData.GetValueOrDefault("death_link", 0));
+      InvokeOnUiThread(() =>
+      {
+        checkBoxDeathlink.Enabled = isDeathLink;
+        checkBoxDeathlink.Checked = isDeathLink;
+        RefreshGeometryControls();
+        UpdateIgnoreCastlersReceivedCheckbox();
+      });
+
+      if (!isDeathLink)
+        return;
+
+      deathLinkService = session.CreateDeathLinkService();
+      locationHandler = LocationHandler.GetInstance();
+      if (checkBoxDeathlink.Checked)
+        deathLinkService.EnableDeathLink();
+      archipelagoClient.nonSessionMessages.Add("DeathLink service initialized");
+      deathLinkService.OnDeathLinkReceived += (DeathLink deathLink) =>
+      {
+        Match matchToKill = null;
+        InvokeOnUiThread(() =>
+        {
+          if (checkBoxDeathlink.Checked)
+            matchToKill = currentMatch;
+        });
+        if (matchToKill == null)
+          return;
+
+        lock (locationHandler.DeathlinkedMatches)
+        {
+          if (locationHandler.DeathlinkedMatches.Contains(matchToKill))
+            return;
+          locationHandler.DeathlinkedMatches.Add(matchToKill);
+        }
+        string reason = string.Join(" ", deathLink.Source, deathLink.Cause);
+        archipelagoClient.nonSessionMessages.Add(
+          string.Join(" ", "DeathLink received:", reason));
+        matchToKill.Death(reason);
+      };
+    }
+
+    private void ArchipelagoClient_OnClientDisconnect(
+      ushort code,
+      string reason,
+      bool wasClean)
+    {
+      InvokeOnUiThread(() =>
+      {
+        checkBoxDeathlink.Enabled = false;
+        checkBoxDeathlink.Checked = false;
+        checkBoxIgnoreCastlersReceived.Enabled = false;
+        checkBoxIgnoreCastlersReceived.Checked = false;
+        ApmwCore.getInstance().IgnoreCastlersReceived = false;
+        RefreshGeometryControls();
+      });
+      deathLinkService = null;
+      locationHandler = null;
+    }
+
+    private void ArchipelagoClient_GeometryStateChanged(object sender, EventArgs e)
+    {
+      InvokeOnUiThread(RefreshGeometryControls);
+    }
+
+    private void ArchipelagoClient_MatchStateChanged(object sender, EventArgs e)
+    {
+      InvokeOnUiThread(() =>
+      {
+        UpdateLaunchState();
+        UpdateIgnoreCastlersReceivedCheckbox();
+      });
+    }
+
+    private void comboBoxGeometry_SelectedIndexChanged(object sender, EventArgs e)
+    {
+      if (updatingGeometrySelection ||
+          !(comboBoxGeometry.SelectedItem is ApmwGeometryOption option))
+      {
+        return;
+      }
+
+      if (archipelagoClient.SelectGeometry(option.StageId))
+        RefreshGeometryPreview(option);
+    }
+
+    private void RefreshGeometryControls()
+    {
+      ApmwGeometrySelectionModel selection = archipelagoClient.GeometrySelection;
+      updatingGeometrySelection = true;
+      comboBoxGeometry.Items.Clear();
+      comboBoxGeometry.Items.AddRange(selection.AvailableOptions.Cast<object>().ToArray());
+      comboBoxGeometry.SelectedItem = selection.AvailableOptions.FirstOrDefault(
+        option => option.StageId == selection.SelectedOption.StageId);
+      updatingGeometrySelection = false;
+
+      comboBoxGeometry.Enabled = selection.IsConnected && !archipelagoClient.IsMatchActive;
+      RefreshGeometryPreview(selection.IsConnected ? selection.SelectedOption : null);
+      UpdateLaunchState();
+    }
+
+    private void RefreshGeometryPreview(ApmwGeometryOption option)
+    {
+      ApmwGeometryPreview preview = option == null
+        ? null
+        : archipelagoClient.GetGeometryPreview(option);
+      if (preview == null)
+      {
+        labelGeometryDiagnostics.Text = "Disconnected";
+        return;
+      }
+
+      var diagnostics = new List<string>
+      {
+        "Active " + preview.ActiveCount,
+        "Reserves " + preview.ReserveCount,
+        "Missing " + preview.MissingMaterial,
+      };
+      if (preview.DormantMaterial != 0)
+        diagnostics.Add("Dormant " + preview.DormantMaterial);
+      if (preview.UnallocatedMaterial != 0)
+        diagnostics.Add("Unallocated " + preview.UnallocatedMaterial);
+      if (preview.UnspentForwardness != 0)
+        diagnostics.Add("Forwardness " + preview.UnspentForwardness);
+      labelGeometryDiagnostics.Text = string.Join(" | ", diagnostics);
+    }
+
+    private void UpdateLaunchState()
+    {
+      bool matchActive = archipelagoClient.IsMatchActive;
+      comboBoxGeometry.Enabled =
+        archipelagoClient.GeometrySelection.IsConnected && !matchActive;
+      button2.Enabled =
+        archipelagoClient.GeometrySelection.IsConnected && !matchActive;
+    }
+
+    private void InvokeOnUiThread(Action action)
+    {
+      if (IsDisposed || Disposing || !IsHandleCreated)
+        return;
+      if (InvokeRequired)
+        Invoke((MethodInvoker)(() => action()));
+      else
+        action();
+    }
+
+    private void ApmwForm_Disposed(object sender, EventArgs e)
+    {
+      archipelagoClient.OnConnect -= ArchipelagoClient_OnConnect;
+      archipelagoClient.OnClientDisconnect -= ArchipelagoClient_OnClientDisconnect;
+      archipelagoClient.GeometryStateChanged -= ArchipelagoClient_GeometryStateChanged;
+      archipelagoClient.MatchStateChanged -= ArchipelagoClient_MatchStateChanged;
+      if (messageLog != null && mrHandler != null)
+        messageLog.OnMessageReceived -= mrHandler;
     }
   }
 }

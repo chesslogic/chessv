@@ -24,11 +24,15 @@ namespace ChessV
 {
   public struct BitBoard
   {
+    public const int MAX_BITS = 192;
+
     // *** CONSTRUCTION *** //
 
     #region Constructors
     public BitBoard(int nBits)
     {
+      if (nBits <= 0 || nBits > MAX_BITS)
+        throw new ArgumentOutOfRangeException(nameof(nBits), $"BitBoard supports between 1 and {MAX_BITS} bits.");
       bits2 = 0;
       bits1 = 0;
       bits0 = 0;
@@ -38,6 +42,8 @@ namespace ChessV
 
     public BitBoard(int capacity, UInt64 bits0, UInt64 bits1 = 0UL, UInt64 bits2 = 0UL)
     {
+      if (capacity < 0 || capacity > 2)
+        throw new ArgumentOutOfRangeException(nameof(capacity), "BitBoard capacity must identify one to three 64-bit groups.");
       this.bits0 = bits0;
       this.bits1 = bits1;
       this.bits2 = bits2;

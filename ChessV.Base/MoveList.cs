@@ -40,9 +40,12 @@ namespace ChessV
 
     public Game Game { get; private set; }
 
-    // This is the maximum number of moves that can be stored, but the implementation of nonstandard moves ("Special Moves")
-    // means that the actual number of turns we can look forward can be less. A pickup and drop is 2 moves, in 1 ply.
-    public const int MAX_MOVES = 2048;
+    public const int INITIAL_CAPACITY = 2048;
+    // Move selection scans the remaining candidates, so search cost is quadratic.
+    // 16K is eight times the legacy capacity and averages over 100 candidates for
+    // every square on the 150-square target board, while still bounding one ply's
+    // buffers and rejecting positions impractical for the current search design.
+    public const int MAX_MOVES = 16 * 1024;
     public const int MAX_MOVES_TRY_STOP_DELTA = 100;
     public const int MAX_MOVES_HARD_STOP_DELTA = 50;
     public const int MAX_MOVES_CRASH_STOP_DELTA = 5;
@@ -61,6 +64,9 @@ namespace ChessV
     // used by production code paths.
     public int PickupCursorForTest { get { return pickupCursor; } }
     public int DropCursorForTest { get { return dropCursor; } }
+    public int MoveCapacityForTest { get { return moves.Length; } }
+    public int PickupCapacityForTest { get { return pickups.Length; } }
+    public int DropCapacityForTest { get { return drops.Length; } }
     public Pickup GetPickupForTest(int index) { return pickups[index]; }
     public Drop GetDropForTest(int index) { return drops[index]; }
     public MoveInfo GetMoveForTest(int index) { return moves[index]; }
@@ -73,8 +79,12 @@ namespace ChessV
     public void PerformDropForTest(int index) { PerformDrop(index); }
     public void UndoPickupForTest(int index) { UndoPickup(index); }
     public void UndoDropForTest(int index) { UndoDrop(index); }
-    public void SetPickupForTest(int index, Pickup p) { pickups[index] = p; }
-    public void SetDropForTest(int index, Drop d) { drops[index] = d; }
+    public void SetPickupForTest(int index, Pickup p) { EnsurePickupCapacity(index + 1); pickups[index] = p; }
+    public void SetDropForTest(int index, Drop d) { EnsureDropCapacity(index + 1); drops[index] = d; }
+    public void EnsureMoveCapacityForTest(int requiredCapacity) { EnsureMoveCapacity(requiredCapacity); }
+    public void EnsurePickupCapacityForTest(int requiredCapacity) { EnsurePickupCapacity(requiredCapacity); }
+    public void EnsureDropCapacityForTest(int requiredCapacity) { EnsureDropCapacity(requiredCapacity); }
+    public void UnmakeMoveForTest(int index) { UnmakeMove(index); }
     public void RollbackPartialApplyForTest(
       int firstPickup, int lastAppliedPickup,
       int firstDrop, int lastAppliedDrop)
@@ -111,10 +121,10 @@ namespace ChessV
       Board = board;
       Game = board.Game;
       LegalMovesOnly = false;
-      moves = new MoveInfo[MAX_MOVES];
-      pickups = new Pickup[MAX_MOVES];
-      drops = new Drop[MAX_MOVES];
-      moveOrder = new int[MAX_MOVES];
+      moves = new MoveInfo[INITIAL_CAPACITY];
+      pickups = new Pickup[INITIAL_CAPACITY];
+      drops = new Drop[INITIAL_CAPACITY];
+      moveOrder = new int[INITIAL_CAPACITY];
       this.searchStack = searchStack;
       this.killers1 = killers1;
       this.killers2 = killers2;
@@ -355,12 +365,6 @@ namespace ChessV
     #region AddMove
     public bool AddMove(int fromSquare, int toSquare, bool direct = false)
     {
-      // Check for move list overflow before proceeding
-      if (moveCursor >= MAX_MOVES - MAX_MOVES_CRASH_STOP_DELTA)
-      {
-        return false;
-      }
-
       if (!direct && Board.Game.MoveBeingGenerated(this, fromSquare, toSquare, MoveType.StandardMove))
         return true; // Move was handled, consider it successful
 
@@ -379,6 +383,10 @@ namespace ChessV
       {
         return false; // No piece to move, return false instead of throwing
       }
+
+      EnsureMoveCapacity(moveCursor + 1);
+      EnsurePickupCapacity(pickupCursor + 1);
+      EnsureDropCapacity(dropCursor + 1);
 
       //	initialize pickups and drops
       pickups[pickupCursor].Piece = null;
@@ -493,13 +501,6 @@ namespace ChessV
     #region AddCapture
     public bool AddCapture(int fromSquare, int toSquare, bool direct = false)
     {
-      // Check for move list overflow - return false instead of throwing
-      if (moveCursor >= MAX_MOVES - MAX_MOVES_CRASH_STOP_DELTA)
-      {
-        // Log the issue if possible but don't crash
-        return false;
-      }
-
       if (!direct && Board.Game.MoveBeingGenerated(this, fromSquare, toSquare, MoveType.StandardCapture))
         return true; // Move was handled, consider it successful
 
@@ -521,6 +522,10 @@ namespace ChessV
         // Log the issue but don't crash - just skip this move
         return false;
       }
+
+      EnsureMoveCapacity(moveCursor + 1);
+      EnsurePickupCapacity(pickupCursor + 2);
+      EnsureDropCapacity(dropCursor + 1);
 
       //	initialize pickups and drops
       pickups[pickupCursor].Piece = null;
@@ -627,12 +632,6 @@ namespace ChessV
     #region AddRifleCapture
     public bool AddRifleCapture(int fromSquare, int toSquare, bool direct = false)
     {
-      // Check for move list overflow
-      if (moveCursor >= MAX_MOVES - MAX_MOVES_CRASH_STOP_DELTA)
-      {
-        return false;
-      }
-
       if (!direct && Board.Game.MoveBeingGenerated(this, fromSquare, toSquare, MoveType.BaroqueCapture))
         return true;
 
@@ -643,6 +642,9 @@ namespace ChessV
       {
         return false;
       }
+
+      EnsureMoveCapacity(moveCursor + 1);
+      EnsurePickupCapacity(pickupCursor + 1);
 
       //	initialize pickup
       pickups[pickupCursor].Piece = null;
@@ -693,12 +695,6 @@ namespace ChessV
         int toSquare,
         int tag = 0)
     {
-      // Check for move list overflow before proceeding - return false instead of throwing
-      if (moveCursor >= MAX_MOVES - MAX_MOVES_HARD_STOP_DELTA)
-      {
-        return false;
-      }
-
       // Validate square bounds - return false instead of throwing
       if (fromSquare != -1 && (fromSquare < 0 || fromSquare >= Board.NumSquaresExtended))
       {
@@ -708,6 +704,8 @@ namespace ChessV
       {
         return false;
       }
+
+      EnsureMoveCapacity(moveCursor + 1);
 
       moves[moveCursor].MoveType = moveType;
       moves[moveCursor].Tag = tag;
@@ -782,17 +780,13 @@ namespace ChessV
         return null;
       }
 
-      // Check pickup capacity - return null instead of throwing
-      if (pickupCursor >= MAX_MOVES - MAX_MOVES_CRASH_STOP_DELTA)
-      {
-        return null;
-      }
-
       Piece pieceOnSquare = Board[square];
       if (pieceOnSquare == null)
       {
         return null;
       }
+
+      EnsurePickupCapacity(pickupCursor + 1);
 
       pickups[pickupCursor].Piece = null;
       pickups[pickupCursor++].Square = square;
@@ -819,12 +813,7 @@ namespace ChessV
         return false;
       }
 
-      // Check drop capacity - return false instead of throwing
-      if (dropCursor >= MAX_MOVES - MAX_MOVES_CRASH_STOP_DELTA)
-      {
-        return false;
-      }
-
+      EnsureDropCapacity(dropCursor + 1);
       if (moves[moveCursor].PieceCaptured == piece)
         moves[moveCursor].PieceCaptured = null;
       drops[dropCursor].NewType = newType;
@@ -882,15 +871,6 @@ namespace ChessV
       else if (moves[moveCursor].Hash == countermove)
         moves[moveCursor].Evaluation += 250;
       moveCursor++;
-
-      // Final bounds check - return false instead of throwing
-      if (moveCursor >= MAX_MOVES)
-      {
-        moveCursor--; // Rollback the increment
-        pickupCursor = tempPickupCursor;
-        dropCursor = tempDropCursor;
-        return false;
-      }
 
       if (LegalMovesOnly)
       {
@@ -963,34 +943,58 @@ namespace ChessV
     #endregion
 
     #region Capacity Management
-    
-    /// <summary>
-    /// Check if we can safely add more moves of a given type
-    /// </summary>
+
+    private void EnsureMoveCapacity(int requiredCapacity)
+    {
+      EnsureCapacity(ref moves, requiredCapacity, "moves");
+      if (moveOrder.Length < requiredCapacity)
+        GrowArray(ref moveOrder, requiredCapacity, "move order");
+    }
+
+    private void EnsurePickupCapacity(int requiredCapacity)
+    {
+      EnsureCapacity(ref pickups, requiredCapacity, "pickups");
+    }
+
+    private void EnsureDropCapacity(int requiredCapacity)
+    {
+      EnsureCapacity(ref drops, requiredCapacity, "drops");
+    }
+
+    private static void EnsureCapacity<T>(ref T[] buffer, int requiredCapacity, string bufferName)
+    {
+      if (requiredCapacity <= buffer.Length)
+        return;
+      GrowArray(ref buffer, requiredCapacity, bufferName);
+    }
+
+    private static void GrowArray<T>(ref T[] buffer, int requiredCapacity, string bufferName)
+    {
+      if (requiredCapacity < 0 || requiredCapacity > MAX_MOVES)
+        throw new InvalidOperationException(
+          $"MoveList {bufferName} require {requiredCapacity} entries, exceeding the guarded limit of {MAX_MOVES}.");
+
+      int newCapacity = buffer.Length;
+      while (newCapacity < requiredCapacity)
+        newCapacity = Math.Min(checked(newCapacity * 2), MAX_MOVES);
+      Array.Resize(ref buffer, newCapacity);
+    }
+
     public bool CanAddMoves(int moveTypeCount = 1)
     {
-      return moveCursor + moveTypeCount <= MAX_MOVES - MAX_MOVES_HARD_STOP_DELTA;
+      return moveTypeCount >= 0 && (long)moveCursor + moveTypeCount <= MAX_MOVES;
     }
-    
-    /// <summary>
-    /// Check if we're approaching capacity and should prioritize important moves
-    /// </summary>
+
     public bool ShouldPrioritizeMoves()
     {
       return moveCursor >= MAX_MOVES - MAX_MOVES_TRY_STOP_DELTA;
     }
-    
-    /// <summary>
-    /// Check if we should skip lower-priority move generation
-    /// </summary>
+
     public bool ShouldSkipLowPriorityMoves()
     {
       return moveCursor >= MAX_MOVES - MAX_MOVES_HARD_STOP_DELTA;
     }
-    
-    /// <summary>
-    /// Get remaining capacity for moves
-    /// </summary>
+
     public int RemainingCapacity()
     {
       return MAX_MOVES - moveCursor;

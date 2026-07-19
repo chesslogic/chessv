@@ -15,6 +15,12 @@ namespace Archipelago.APChessV
     public const int Jack = 700;
     public const int Queen = 900;
     public const int Amazon = 1300;
+    public const int Castler = 500;
+    public const int CastlerMaximum = 2;
+    public const int Consul = 325;
+    public const int KingPromotion = 425;
+    public const int PlayAsWhite = 50;
+    public const int Pocket = 110;
   }
 
   internal readonly struct BoardCoordinate
@@ -310,7 +316,8 @@ namespace Archipelago.APChessV
       int initialSpareMaterial,
       int? nonKingPieceSlotLimit,
       int lockedMajorCount,
-      NonPawnGenerationPlan precomputedNonPawnPlan)
+      NonPawnGenerationPlan precomputedNonPawnPlan,
+      Dictionary<string, int> appliedGraduationCounts)
     {
       PawnSlots = Math.Max(0, pawnSlots);
       this.nonPawnCounts = nonPawnCounts ?? new Dictionary<NonPawnPieceFamily, int>();
@@ -318,6 +325,8 @@ namespace Archipelago.APChessV
       NonKingPieceSlotLimit = nonKingPieceSlotLimit;
       LockedMajorCount = Math.Max(0, lockedMajorCount);
       PrecomputedNonPawnPlan = precomputedNonPawnPlan;
+      AppliedGraduationCounts = appliedGraduationCounts ??
+        new Dictionary<string, int>(StringComparer.Ordinal);
     }
 
     public int PawnSlots { get; private set; }
@@ -335,6 +344,13 @@ namespace Archipelago.APChessV
     /// continues to net gross found-item counts exactly as before.
     /// </summary>
     public NonPawnGenerationPlan PrecomputedNonPawnPlan { get; private set; }
+    public IReadOnlyDictionary<string, int> AppliedGraduationCounts { get; private set; }
+
+    public int AppliedGraduationCount(string actionName)
+    {
+      int count;
+      return AppliedGraduationCounts.TryGetValue(actionName, out count) ? count : 0;
+    }
 
     public int NonPawnCount(NonPawnPieceFamily family)
     {
@@ -369,6 +385,7 @@ namespace Archipelago.APChessV
         0,
         null,
         0,
+        null,
         null);
     }
 
@@ -378,7 +395,8 @@ namespace Archipelago.APChessV
       int initialSpareMaterial,
       int nonKingPieceSlotLimit,
       int lockedMajorCount,
-      NonPawnGenerationPlan precomputedNonPawnPlan)
+      NonPawnGenerationPlan precomputedNonPawnPlan,
+      Dictionary<string, int> appliedGraduationCounts)
     {
       return new PieceGenerationAllocation(
         pawnSlots,
@@ -386,7 +404,8 @@ namespace Archipelago.APChessV
         initialSpareMaterial,
         Math.Max(0, nonKingPieceSlotLimit),
         lockedMajorCount,
-        precomputedNonPawnPlan);
+        precomputedNonPawnPlan,
+        appliedGraduationCounts);
     }
 
     private static bool IsNonKingPiece(PieceType piece)
@@ -442,6 +461,28 @@ namespace Archipelago.APChessV
 
       return weights.Count - 1; // Defensive fallback; unreachable since r < totalWeight.
     }
+
+    public static int ChooseIndex(
+      IReadOnlyList<double> weights,
+      CounterBasedSeedSeries series,
+      long counter)
+    {
+      double totalWeight = 0;
+      for (int i = 0; i < weights.Count; i++)
+        totalWeight += weights[i];
+      if (totalWeight <= 0)
+        return series.Index(counter, weights.Count);
+
+      double draw = series.Unit(counter) * totalWeight;
+      double cumulative = 0;
+      for (int i = 0; i < weights.Count; i++)
+      {
+        cumulative += weights[i];
+        if (draw < cumulative)
+          return i;
+      }
+      return weights.Count - 1;
+    }
   }
 
   /// <summary>
@@ -454,9 +495,13 @@ namespace Archipelago.APChessV
   /// NonPawnUpgradeGeneration.ApplyUpgrades / NonPawnFamilySubstitution / MajorPieceGeneration /
   /// PiecePlacement using their own existing seeds. This planner only ever decides tier counts.
   /// </summary>
+  // TODO(chesslogic): A future monotonic slot-prefix planner could preserve individual earlier
+  // slots. The characterized shared-wave planner intentionally remains for v2; with fixed
+  // Material, adding Chessmen can redistribute and downgrade earlier tiers
+  // (FundamentalSlotGraduationPlannerTests.Plan_GrowingChessmenWithFixedMaterial_*).
   internal static class FundamentalSlotGraduationPlanner
   {
-    private const int CastlerMaterialCost = 500;
+    private const int CastlerMaterialCost = ItemGenerationValues.Castler;
     private const int TierCount = 6;
 
     private static readonly int[] TierMaterialValues =
@@ -506,16 +551,38 @@ namespace Archipelago.APChessV
 
     public static PieceGenerationAllocation Plan(ApmwCore core, ApmwConfig config, int numFiles)
     {
+      return Plan(core, config, numFiles, true);
+    }
+
+    public static PieceGenerationAllocation PlanOwnedRoster(ApmwCore core, ApmwConfig config)
+    {
+      return Plan(core, config, 0, false);
+    }
+
+    private static PieceGenerationAllocation Plan(
+      ApmwCore core,
+      ApmwConfig config,
+      int numFiles,
+      bool applyGeometryCaps)
+    {
       int requestedSlots = Math.Max(0, core.foundChessmen);
-      int placeableSlots = Math.Min(requestedSlots, MaxGeneratedNonKingPieces(numFiles));
-      int nonPawnSlotCapacity = Math.Min(placeableSlots, MaxNonPawnPipelineSlots(numFiles));
+      int placeableSlots = applyGeometryCaps
+        ? Math.Min(requestedSlots, MaxGeneratedNonKingPieces(numFiles))
+        : requestedSlots;
+      int nonPawnSlotCapacity = applyGeometryCaps
+        ? Math.Min(placeableSlots, MaxNonPawnPipelineSlots(numFiles))
+        : requestedSlots;
       int spareMaterial = Math.Max(0, core.foundMaterialBudget);
 
       // Castler-locked majors are pre-seeded directly and permanently excluded from
       // graduation: they must remain eligible to castle, so they can never be substituted
       // away by a later upgrade. Locking is just as much a "spend" as any other graduation,
       // so it's debited from the same unified spareMaterial counter, not carved out specially.
-      int lockedMajorCount = ActiveCastlerCount(core, spareMaterial, nonPawnSlotCapacity, numFiles);
+      int lockedMajorCount = ActiveCastlerCount(
+        core,
+        spareMaterial,
+        nonPawnSlotCapacity,
+        applyGeometryCaps ? MaxCastlingMajorSlots(numFiles) : int.MaxValue);
       spareMaterial -= lockedMajorCount * CastlerMaterialCost;
 
       int[] tierCounts;
@@ -543,7 +610,8 @@ namespace Archipelago.APChessV
         spareMaterial,
         placeableSlots,
         lockedMajorCount,
-        nonPawnPlan);
+        nonPawnPlan,
+        appliedCounts);
     }
 
     /// <summary>
@@ -586,8 +654,8 @@ namespace Archipelago.APChessV
       tierCounts[(int)ChessmanTier.Pawn] = Math.Max(0, placeableSlots - lockedMajorCount);
       tierCounts[(int)ChessmanTier.Major] = lockedMajorCount;
 
-      Random random = new Random(config.fundamentalGraduationSeed);
       Dictionary<string, int> appliedCounts = new Dictionary<string, int>(StringComparer.Ordinal);
+      Dictionary<int, long> tieCounters = new Dictionary<int, long>();
       List<GraduationAction> viable = new List<GraduationAction>();
       List<double> viableWeights = new List<double>();
 
@@ -618,7 +686,15 @@ namespace Archipelago.APChessV
           if (viable.Count == 0)
             continue; // Nothing usable at this level right now -- drop to the next-lower one.
 
-          GraduationAction chosen = viable.Count == 1 ? viable[0] : ChooseWeighted(viable, viableWeights, random);
+          GraduationAction chosen = viable.Count == 1
+            ? viable[0]
+            : ChooseWeighted(
+              viable,
+              viableWeights,
+              ApmwSeedSeries.Semantic(config, "fundamental.wave.tie." + priority),
+              tieCounters.TryGetValue(priority, out long counter) ? counter : 0);
+          if (viable.Count > 1)
+            tieCounters[priority] = tieCounters.TryGetValue(priority, out long current) ? current + 1 : 1;
 
           spareMaterial -= chosen.IncrementalCost;
           tierCounts[(int)chosen.FromTier]--;
@@ -649,9 +725,13 @@ namespace Archipelago.APChessV
       return count;
     }
 
-    private static GraduationAction ChooseWeighted(List<GraduationAction> actions, List<double> weights, Random random)
+    private static GraduationAction ChooseWeighted(
+      List<GraduationAction> actions,
+      List<double> weights,
+      CounterBasedSeedSeries series,
+      long counter)
     {
-      return actions[WeightedTieBreak.ChooseIndex(weights, random)];
+      return actions[WeightedTieBreak.ChooseIndex(weights, series, counter)];
     }
 
     private static List<GraduationAction> BuildActions(ApmwConfig config)
@@ -772,13 +852,13 @@ namespace Archipelago.APChessV
       ApmwCore core,
       int materialBudget,
       int nonPawnSlotCapacity,
-      int numFiles)
+      int castlingSlotCapacity)
     {
       return Math.Min(
-        Math.Max(0, core.EffectiveFoundCastlers),
+        Math.Min(ItemGenerationValues.CastlerMaximum, Math.Max(0, core.EffectiveFoundCastlers)),
         Math.Min(
           Math.Min(nonPawnSlotCapacity, materialBudget / CastlerMaterialCost),
-          MaxCastlingMajorSlots(numFiles)));
+          Math.Max(0, castlingSlotCapacity)));
     }
 
     private static int MaxGeneratedNonKingPieces(int numFiles)
@@ -903,8 +983,8 @@ namespace Archipelago.APChessV
         .Select(group => group.ToList())
         .ToList();
 
-      Random random = new Random(config.fundamentalGraduationSeed);
       Dictionary<string, int> appliedCounts = new Dictionary<string, int>(StringComparer.Ordinal);
+      Dictionary<string, long> sourceSeriesCounters = new Dictionary<string, long>(StringComparer.Ordinal);
       List<NonPawnUpgradeActionMetadata> viable = new List<NonPawnUpgradeActionMetadata>();
       List<double> viableWeights = new List<double>();
 
@@ -943,7 +1023,21 @@ namespace Archipelago.APChessV
 
           NonPawnUpgradeActionMetadata chosen = viable.Count == 1
             ? viable[0]
-            : viable[WeightedTieBreak.ChooseIndex(viableWeights, random)];
+            : ChooseWeightedByUpgradeSourceSeries(
+              viable,
+              viableWeights,
+              config,
+              sourceSeriesCounters);
+          if (viable.Count > 1)
+          {
+            foreach (NonPawnUpgradeActionMetadata candidate in viable)
+            {
+              long counter = sourceSeriesCounters.TryGetValue(candidate.ActionName, out long current)
+                ? current
+                : 0;
+              sourceSeriesCounters[candidate.ActionName] = counter + 1;
+            }
+          }
 
           int chosenTargetFamily = (int)chosen.TargetFamily;
           remainingTargetBudgets[chosenTargetFamily] -= 1;
@@ -984,6 +1078,46 @@ namespace Archipelago.APChessV
       };
 
       return new NonPawnGenerationPlan(directCounts, plannedActions, unusedUpgradeCounts, lockedMajorCount);
+    }
+
+    private static NonPawnUpgradeActionMetadata ChooseWeightedByUpgradeSourceSeries(
+      List<NonPawnUpgradeActionMetadata> actions,
+      List<double> weights,
+      ApmwConfig config,
+      Dictionary<string, long> counters)
+    {
+      bool hasPositiveWeight = weights.Any(weight => weight > 0);
+      int chosenIndex = 0;
+      double chosenScore = double.PositiveInfinity;
+      ulong chosenUniform = ulong.MaxValue;
+      for (int index = 0; index < actions.Count; index++)
+      {
+        string actionName = actions[index].ActionName;
+        long counter = counters.TryGetValue(actionName, out long current) ? current : 0;
+        CounterBasedSeedSeries series = ApmwSeedSeries.UpgradeSource(config, actionName);
+        if (hasPositiveWeight)
+        {
+          if (weights[index] <= 0)
+            continue;
+          double unit = Math.Max(double.Epsilon, series.Unit(counter));
+          double score = -Math.Log(unit) / weights[index];
+          if (score < chosenScore)
+          {
+            chosenScore = score;
+            chosenIndex = index;
+          }
+        }
+        else
+        {
+          ulong uniform = series.Value(counter);
+          if (uniform < chosenUniform)
+          {
+            chosenUniform = uniform;
+            chosenIndex = index;
+          }
+        }
+      }
+      return actions[chosenIndex];
     }
 
     public static List<PieceType> ApplyUpgrades(
@@ -1896,12 +2030,12 @@ namespace Archipelago.APChessV
       if (numKings > 0)
       {
         List<PieceType> kings = core.kings;
-        // Center the king on D file for 8x8 or E file for 10x10
+        // Center the king on D file for 8x8 or E file for 10x8
         int centerFile = (numFiles / 2) - 1;
         layout.LeftBackRank[centerFile] = kings[0];
         if (numKings > 1)
         {
-          // Place second king on E file for 8x8 or F file for 10x10
+          // Place second king on E file for 8x8 or F file for 10x8
           layout.RightBackRank[0] = kings[0];
         }
       }

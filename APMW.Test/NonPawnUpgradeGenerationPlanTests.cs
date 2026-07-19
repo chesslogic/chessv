@@ -176,7 +176,7 @@ namespace ChessV.Test
             slotData[ApmwConstants.SlotKeyFairyChessPawnUpgrades] = (int)FairyPawnUpgrades.Configure;
             slotData[ApmwConstants.SlotKeyPieceUpgradePreferences] = priorities;
             if (proportions != null)
-                slotData[ApmwConstants.SlotKeyPieceUpgradeProportions] = proportions;
+                slotData[ApmwConstants.SlotKeyPieceUpgradeRatio] = proportions;
 
             ApmwConfig config = ApmwConfig.getInstance();
             config.Instantiate(slotData);

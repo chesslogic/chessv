@@ -5,6 +5,7 @@ using Archipelago.MultiClient.Net.Helpers;
 using Archipelago.MultiClient.Net.Packets;
 using ChessV;
 using ChessV.Base;
+using ChessV.Games;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -115,7 +116,7 @@ namespace Archipelago.APChessV
 
     public void StartMatch(Match match)
     {
-      if (!Initialized && match.Game.GameAttribute.GameName == ApmwConstants.GameNameStandard)
+      if (!Initialized && IsApmwGame(match.Game))
         throw new InvalidOperationException("LocationHandler has not been initialized");
       UnsubscribeFromMoveTakenBack();
       this.match = match;
@@ -141,7 +142,7 @@ namespace Archipelago.APChessV
         // TODO(chesslogic): mention "no match to end" in logger
         return;
       }
-      if (!Initialized && match.Game.GameAttribute.GameName == ApmwConstants.GameNameStandard)
+      if (!Initialized && IsApmwGame(match.Game))
         throw new InvalidOperationException("LocationHandler has not been initialized");
       TryValidatePlayingArchipelago();
       UnsubscribeFromMoveTakenBack();
@@ -221,7 +222,7 @@ namespace Archipelago.APChessV
     /// The only way I can figure out how to do that is to manually compare every single square.
     /// Consider that a multi-capture ending on the same file is ambiguous: did the Checkers go right or left?
     public void SetupMove(MoveInfo info) {
-      if (!Initialized && match.Game.GameAttribute.GameName == ApmwConstants.GameNameStandard)
+      if (!Initialized && IsApmwGame(match.Game))
         throw new InvalidOperationException("LocationHandler has not been initialized");
       if (!TryValidatePlayingArchipelago())
         return;
@@ -347,7 +348,7 @@ namespace Archipelago.APChessV
 
     public void HandleMove(MoveInfo info)
     {
-      if (!Initialized && match.Game.GameAttribute.GameName == ApmwConstants.GameNameStandard)
+      if (!Initialized && IsApmwGame(match.Game))
         throw new InvalidOperationException("LocationHandler has not been initialized");
       if (!TryValidatePlayingArchipelago())
         return;
@@ -410,29 +411,28 @@ namespace Archipelago.APChessV
       // check if move is early and is directly forward one step
       if (ApmwCore.getInstance().kings.Contains(piece.PieceType))
       {
-        // TODO(chesslogic): Math.min(match.Game.Board pieces count, 4) 
+        ApmwLocationProfile profile = CurrentLocationProfile();
+        int destinationFile = match.Game.Board.GetFile(info.ToSquare);
+        int destinationRank = match.Game.Board.GetRank(info.ToSquare);
+        int earlyRank = profile.HomeRank(info.Player) + (info.Player == 0 ? 1 : -1);
         if (match.Game.GameTurnNumber <= 10 &&
-          match.Game.Board.GetFile(info.ToSquare) == 4 &&
-          (match.Game.Board.GetRank(info.ToSquare) == 1 || match.Game.Board.GetRank(info.ToSquare) == 6))
+          destinationFile == profile.CenterRightFile &&
+          destinationRank == earlyRank)
         {
           locations.Add(Loc("King to E2/E7 Early"));
         }
         // check if move is to A file
-        if (match.Game.Board.GetFile(info.ToSquare) == 0)
+        if (destinationFile == 0)
         {
           locations.Add(Loc("King to A File"));
         }
         // check if move is to distant rank
-        if ((info.Player == 1 && match.Game.Board.GetRank(info.ToSquare) == 0) ||
-          (info.Player == 0 && match.Game.Board.GetRank(info.ToSquare) == 7))
+        if (destinationRank == profile.HomeRank(info.Player ^ 1))
         {
-          // TODO(chesslogic): info.ToSquare probably isn't based on Board.PlayerSquare (used for PST eval)
-          // TODO(chesslogic): ... but if it is, just check info.GetRank==7, ignore info.Player
           locations.Add(Loc("King to Back Rank"));
         }
         // check if move is to center
-        if ((match.Game.Board.GetFile(info.ToSquare) == 3 || match.Game.Board.GetFile(info.ToSquare) == 4) &&
-          (match.Game.Board.GetRank(info.ToSquare) == 3 || match.Game.Board.GetRank(info.ToSquare) == 4))
+        if (profile.IsCenter(destinationFile, destinationRank))
         {
           locations.Add(Loc("King to Center"));
         }
@@ -516,7 +516,9 @@ namespace Archipelago.APChessV
         int originalRank = match.Game.Board.GetRank(originalSquare);
         string fileNotation = match.Game.Board.GetFileNotation(originalFile);
         fileNotation = fileNotation.ToUpper();
-        bool isPiece = originalRank == 0 || originalRank == 7;
+        ApmwLocationProfile profile = CurrentLocationProfile();
+        bool isPiece = originalRank == profile.HomeRank(0) ||
+          originalRank == profile.HomeRank(1);
         //bool isPiece = !ApmwCore.getInstance().pawns.Contains(info.PieceCaptured.PieceType);
         string locationName;
         if (isPiece)
@@ -529,14 +531,15 @@ namespace Archipelago.APChessV
         int captures = RecordCapture(isPiece);
         // capture any
         var totalCaptures = capturedPawns + capturedPieces;
-        if (totalCaptures > 1) {
-          if (totalCaptures < 15 || (ApmwConfig.getInstance().Goal != Goal.Single && totalCaptures < 19))
-          {
-            locationName = "Capture Any " + totalCaptures;
-            locations.Add(Loc(locationName));
-          }
+        if (totalCaptures > 1 && totalCaptures <= profile.MaximumAnyCaptureCount)
+        {
+          locationName = "Capture Any " + totalCaptures;
+          locations.Add(Loc(locationName));
         }
-        if (captures > 1)
+        int maximumFamilyCaptures = isPiece
+          ? profile.CpuNonKingCount
+          : profile.CpuPawnCount;
+        if (captures > 1 && captures <= maximumFamilyCaptures)
         {
           // capture piece
           if (isPiece)
@@ -560,8 +563,9 @@ namespace Archipelago.APChessV
           }
           locations.Add(Loc(locationName));
           // capture everything
-          if ((ApmwConfig.getInstance().Goal == Goal.Single && capturedPieces >= 7 && capturedPawns >= 8) ||
-            (ApmwCore.getInstance().isGrand && capturedPieces >= 9 && capturedPawns >= 10))
+          if (IsCaptureEverythingStage(profile) &&
+            capturedPieces >= profile.CpuNonKingCount &&
+            capturedPawns >= profile.CpuPawnCount)
           {
             locations.Add(Loc("Capture Everything"));
           }
@@ -738,18 +742,7 @@ namespace Archipelago.APChessV
         currentSquaresToOriginalSquares[info.ToSquare] = info.FromSquare;
       if (info.MoveType.HasFlag(MoveType.Castling))
       {
-        var flipBoard = 7 * (1 - humanPlayer);
-        if (info.ToSquare > info.FromSquare)
-        {
-          RecordPreviousOriginalSquare(info.ToSquare - 8);
-          currentSquaresToOriginalSquares[info.ToSquare - 8] = 56 + flipBoard;
-        }
-        else
-        {
-          RecordPreviousOriginalSquare(info.ToSquare + 8);
-          currentSquaresToOriginalSquares[info.ToSquare + 8] = 0 + flipBoard;
-        }
-        // TODO: figure out where the rook moved from
+        TrackCastlerMove(info);
       }
     }
 
@@ -782,15 +775,12 @@ namespace Archipelago.APChessV
     {
       if (!TryValidatePlayingArchipelago())
         return;
-      LocationCheckHelper.CompleteLocationChecks(LocationCheckHelper.GetLocationIdFromName(ApmwConstants.TrackerName, "Checkmate Minima"));
-      if (ApmwCore.getInstance().isGrand && match.Game.GameAttribute.GameName == ApmwConstants.GameNameGrand)
-      {
-        LocationCheckHelper.CompleteLocationChecks(LocationCheckHelper.GetLocationIdFromName(ApmwConstants.TrackerName, "Checkmate Maxima"));
-        var statusUpdatePacket = new StatusUpdatePacket();
-        statusUpdatePacket.Status = ArchipelagoClientState.ClientGoal;
-        session.Socket.SendPacket(statusUpdatePacket);
-      }
-      else if (ApmwConfig.getInstance().Goal == Goal.Single)
+      ApmwLocationProfile profile = CurrentLocationProfile();
+      long[] checkmates = profile.CheckmateLocationsThroughStage()
+        .Select(name => LocationCheckHelper.GetLocationIdFromName(ApmwConstants.TrackerName, name))
+        .ToArray();
+      LocationCheckHelper.CompleteLocationChecks(checkmates);
+      if (IsGoalStage(profile))
       {
         var statusUpdatePacket = new StatusUpdatePacket();
         statusUpdatePacket.Status = ArchipelagoClientState.ClientGoal;
@@ -830,10 +820,143 @@ namespace Archipelago.APChessV
     {
       // TODO(chesslogic): Player can't "disconnect" without restarting.
       if (Initialized && match != null && match.Game.GameAttribute != null &&
-          match.Game.GameAttribute.GameName != ApmwConstants.GameNameStandard &&
-          match.Game.GameAttribute.GameName != ApmwConstants.GameNameGrand)
+          !IsApmwGame(match.Game))
         throw new InvalidOperationException("Please disconnect from Archipelago when using other ChessV features");
       return Initialized;
+    }
+
+    private ApmwLocationProfile CurrentLocationProfile()
+    {
+      int files = match.Game.NumFiles;
+      int ranks = files > 0 ? match.Game.Board.NumSquares / files : 0;
+      return ApmwLocationProfile.For(files, ranks);
+    }
+
+    private bool IsGoalStage(ApmwLocationProfile profile)
+    {
+      return IsGoalStage(
+        profile,
+        ApmwConfig.getInstance().Goal,
+        ApmwConfig.getInstance().CurrentContract != null);
+    }
+
+    internal static bool IsGoalStage(
+      ApmwLocationProfile profile,
+      Goal goal,
+      bool hasGeometryContract)
+    {
+      if (profile == null)
+        throw new ArgumentNullException(nameof(profile));
+      if (goal == Goal.Single)
+        return profile.StageId == "8x8";
+      if (!hasGeometryContract)
+        return profile.StageId == "10x8";
+      return profile.IsFinalStage;
+    }
+
+    private bool IsCaptureEverythingStage(ApmwLocationProfile profile)
+    {
+      return IsCaptureEverythingStage(
+        profile,
+        ApmwConfig.getInstance().Goal,
+        ApmwConfig.getInstance().CurrentContract != null);
+    }
+
+    internal static bool IsCaptureEverythingStage(
+      ApmwLocationProfile profile,
+      Goal goal,
+      bool hasGeometryContract)
+    {
+      if (profile == null)
+        throw new ArgumentNullException(nameof(profile));
+      if (goal == Goal.Single)
+        return profile.StageId == "8x8";
+      if (!hasGeometryContract)
+        return profile.StageId == "10x8";
+      return profile.Files == 12;
+    }
+
+    private void TrackCastlerMove(MoveInfo info)
+    {
+      if (lastPiecesSeen == null || lastPiecesSeen.Count == 0)
+        return;
+
+      var currentPieces = new Dictionary<int, Piece>();
+      for (int square = 0; square < match.Game.Board.NumSquares; square++)
+      {
+        Piece piece = match.Game.Board[square];
+        if (piece != null)
+          currentPieces[square] = piece;
+      }
+
+      SecondaryMove castlerMove = FindSecondaryMove(
+        lastPiecesSeen,
+        currentPieces,
+        info.FromSquare);
+      if (castlerMove == null ||
+          lastPiecesSeen[castlerMove.FromSquare].Player != info.Player)
+        return;
+
+      RecordPreviousOriginalSquare(castlerMove.ToSquare);
+      currentSquaresToOriginalSquares[castlerMove.ToSquare] =
+        currentSquaresToOriginalSquares.TryGetValue(castlerMove.FromSquare, out int originalSquare)
+          ? originalSquare
+          : castlerMove.FromSquare;
+    }
+
+    internal static SecondaryMove FindSecondaryMove<T>(
+      IReadOnlyDictionary<int, T> before,
+      IReadOnlyDictionary<int, T> after,
+      int primaryFromSquare)
+      where T : class
+    {
+      if (before == null)
+        throw new ArgumentNullException(nameof(before));
+      if (after == null)
+        throw new ArgumentNullException(nameof(after));
+
+      SecondaryMove found = null;
+      foreach (KeyValuePair<int, T> entry in before)
+      {
+        if (entry.Key == primaryFromSquare || entry.Value == null)
+          continue;
+
+        KeyValuePair<int, T>? destination = after
+          .Where(candidate => ReferenceEquals(entry.Value, candidate.Value))
+          .Select(candidate => (KeyValuePair<int, T>?)candidate)
+          .FirstOrDefault();
+        if (!destination.HasValue || destination.Value.Key == entry.Key)
+          continue;
+        if (found != null)
+          return null;
+
+        found = new SecondaryMove(entry.Key, destination.Value.Key);
+      }
+      return found;
+    }
+
+    internal sealed class SecondaryMove
+    {
+      public SecondaryMove(int fromSquare, int toSquare)
+      {
+        FromSquare = fromSquare;
+        ToSquare = toSquare;
+      }
+
+      public int FromSquare { get; }
+      public int ToSquare { get; }
+    }
+
+    private static bool IsApmwGame(Game game)
+    {
+      if (game is ApmwChessGame)
+        return true;
+      string gameName = game?.GameAttribute?.GameName;
+      return gameName == ApmwProfiles.StandardGameName ||
+        gameName == ApmwProfiles.GrandGameName ||
+        gameName == ApmwProfiles.TenByTenGameName ||
+        gameName == ApmwProfiles.TwelveByTenGameName ||
+        gameName == ApmwProfiles.TwelveByTwelveGameName;
     }
   }
 }

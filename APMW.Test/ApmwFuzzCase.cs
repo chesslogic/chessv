@@ -29,7 +29,7 @@ namespace ChessV.Test
         public string TargetStage { get; }
         public string Category { get; }
         public bool IsSuperSized { get; }
-        public string GameName { get { return IsSuperSized ? ApmwConstants.GameNameGrand : ApmwConstants.GameNameStandard; } }
+        public string GameName { get { return IsSuperSized ? ApmwConstants.GameNameSuperSized : ApmwConstants.GameNameStandard; } }
 
         public Goal Goal { get; }
         public PieceTypes EnemyPieceTypes { get; }
@@ -251,7 +251,7 @@ namespace ChessV.Test
                 slotData[ApmwConstants.SlotKeyPieceUpgradePreferences] = pieceUpgradePreferences;
             object pieceUpgradeProportions = BuildPieceUpgradeProportions();
             if (pieceUpgradeProportions != null)
-                slotData[ApmwConstants.SlotKeyPieceUpgradeProportions] = pieceUpgradeProportions;
+                slotData[ApmwConstants.SlotKeyPieceUpgradeRatio] = pieceUpgradeProportions;
             if (ProgressionItemization != ProgressionItemization.Legacy)
                 slotData[ApmwConstants.SlotKeyProgressionItemization] = (int)ProgressionItemization;
 
@@ -279,9 +279,9 @@ namespace ChessV.Test
                 yield return (ApmwConstants.ProgressiveItems.MajorToQueen, MajorToQueenCount);
                 yield return (ApmwConstants.ProgressiveItems.Amazon, AmazonCount);
                 yield return (ApmwConstants.ProgressiveItems.PawnForwardness, PawnForwardnessCount);
-                yield return (ApmwConstants.ProgressiveItems.Consul, ConsulCount);
-                yield return (ApmwConstants.ProgressiveItems.KingPromotion, KingPromotionCount);
             }
+            yield return (ApmwConstants.ProgressiveItems.Consul, ConsulCount);
+            yield return (ApmwConstants.ProgressiveItems.KingPromotion, KingPromotionCount);
             yield return (ApmwConstants.ProgressiveItems.SuperSizeMe, SuperSizeMeCount);
             yield return (ApmwConstants.ProgressiveItems.PlayAsWhite, PlayAsWhiteCount);
             yield return (VictoryItemName, VictoryCount);

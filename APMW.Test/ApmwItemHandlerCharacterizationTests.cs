@@ -64,6 +64,7 @@ namespace ChessV.Test
 
             var core = ApmwCore.getInstance();
             var originalPieceProvider = core.PlayerPieceSetProvider;
+            var originalGeometryProvider = core.GeometryAwarePlayerPieceSetProvider;
             var originalPocketProvider = core.PlayerPocketPiecesProvider;
 
             handler = new ItemHandler(helper);
@@ -87,6 +88,10 @@ namespace ChessV.Test
             Assert.AreEqual(0, core.GeriProvider(), "Play as White selects player 0");
             Assert.AreEqual(5, core.EngineWeakeningProvider(), "AI malus caps at 5");
             Assert.AreNotSame(originalPieceProvider, core.PlayerPieceSetProvider);
+            Assert.AreSame(
+                originalGeometryProvider,
+                core.GeometryAwarePlayerPieceSetProvider,
+                "Legacy configuration must keep using the one-dimensional provider.");
             Assert.AreNotSame(originalPocketProvider, core.PlayerPocketPiecesProvider);
         }
 
@@ -132,8 +137,8 @@ namespace ChessV.Test
             Assert.AreEqual(0, core.foundQueens);
             Assert.AreEqual(0, core.foundAmazons);
             Assert.AreEqual(0, core.foundPawnForwardness);
-            Assert.AreEqual(0, core.foundConsuls);
-            Assert.AreEqual(0, core.foundKingPromotions);
+            Assert.AreEqual(2, core.foundConsuls, "common Consuls remain available in Fundamental mode");
+            Assert.AreEqual(2, core.foundKingPromotions, "common King promotions remain available in Fundamental mode");
             Assert.AreEqual(7, core.foundChessmen);
             Assert.AreEqual(375, core.foundMaterialBudget);
             Assert.AreEqual(2, core.foundCastlers, "castlers cap at configured castling locations");
@@ -584,7 +589,7 @@ namespace ChessV.Test
         }
 
         [TestMethod]
-        public void Generation_QueenToAmazonConsumesQueenCreatedByEarlierUpgrade()
+        public void Generation_CurrentContractIgnoresProgressiveAmazonAtQueenBoundary()
         {
             handler = ConfigureStableGenerationWithPieceUpgradePriorities(
                 new MutableReceivedItemsHelper()
@@ -606,10 +611,9 @@ namespace ChessV.Test
             var amazonPieces = generated.Where(piece => core.amazons.Contains(piece)).ToList();
 
             Assert.AreEqual(0, CountFamily(generated, "major"), "major-to-queen should consume the original major");
-            Assert.AreEqual(0, CountFamily(generated, "queen"), "queen-to-amazon should consume the intermediate queen");
-            Assert.AreEqual(1, amazonPieces.Count, "queen-to-amazon should create one amazon-family target");
-            foreach (var piece in amazonPieces.Distinct())
-                StringAssert.Contains(result.Item2, piece.Notation[core.GeriProvider()]);
+            Assert.AreEqual(1, CountFamily(generated, "queen"), "accepted v2 has no Progressive Amazon target budget");
+            Assert.AreEqual(0, amazonPieces.Count, "current-contract Progressive Amazon is ignored");
+            Assert.AreEqual(0, core.foundAmazons);
         }
 
         [DataTestMethod]
@@ -715,7 +719,7 @@ namespace ChessV.Test
         }
 
         [TestMethod]
-        public void Generation_AmazonFamilyUpgradesDoNotCreateCastlingRookPrivileges()
+        public void Generation_CurrentContractAmazonBoundaryCreatesNoAmazonCastlingPrivileges()
         {
             handler = ConfigureStableGenerationWithPieceUpgradePriorities(
                 new MutableReceivedItemsHelper()
@@ -740,18 +744,9 @@ namespace ChessV.Test
                 .Select(item => item.Key.Value)
                 .ToArray();
 
-            Assert.IsTrue(amazonBackRankFiles.Length > 0, "at least one amazon-family upgrade should be on the castling rank");
-            foreach (var piece in generatedResult.Item1.Values.Where(piece => core.amazons.Contains(piece)))
-            {
-                Assert.IsFalse(core.majors.Contains(piece), piece.Name + " should not be a major-family castling rook");
-                Assert.IsFalse(core.jacks.Contains(piece), piece.Name + " should not be a jack-family castling rook");
-            }
-
-            string castleRooks = (string)game.GetCustomProperty("CastleRooks");
-            foreach (int file in amazonBackRankFiles)
-                Assert.IsFalse(
-                    castleRooks.Contains(char.ToUpper((char)('a' + file))),
-                    "amazon-family upgrade file should not receive custom castling rights: " + file);
+            Assert.AreEqual(0, amazonBackRankFiles.Length);
+            Assert.AreEqual(0, core.foundAmazons);
+            Assert.IsNotNull((string)game.GetCustomProperty("CastleRooks"));
         }
 
         [TestMethod]
@@ -830,6 +825,7 @@ namespace ChessV.Test
             bool populatePieceTypes = true)
         {
             var slotData = ApmwFuzzCase.DefaultStandard().BuildSlotData();
+            slotData["apmw_contract"] = ApmwContractTestFixture.Document();
             slotData[ApmwConstants.SlotKeyFairyChessPawnUpgrades] = (int)FairyPawnUpgrades.Configure;
             slotData[ApmwConstants.SlotKeyPieceUpgradePreferences] = pieceUpgradePriorities;
             ApmwConfig.getInstance().Instantiate(slotData);
@@ -844,6 +840,7 @@ namespace ChessV.Test
             JObject pieceUpgradePriorities = null)
         {
             var slotData = ApmwFuzzCase.DefaultStandard().BuildSlotData();
+            slotData["apmw_contract"] = ApmwContractTestFixture.Document();
             slotData[ApmwConstants.SlotKeyProgressionItemization] = "fundamental";
             slotData[ApmwConstants.SlotKeyMaterialItemValue] = ApmwConfig.DefaultMaterialItemValue;
             if (pieceUpgradePriorities != null)

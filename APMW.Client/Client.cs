@@ -7,8 +7,10 @@ using ChessV.Base;
 using ChessV.Games;
 using ChessV.Games.Pieces.Berolina;
 using ChessV.Games.Pieces.Apmw;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Archipelago.APChessV
@@ -38,6 +40,7 @@ namespace Archipelago.APChessV
       StartedEventHandler seHandler = (match) =>
       {
         this.match = match;
+        MatchStateChanged?.Invoke(this, EventArgs.Empty);
         match.Finished += (Match m) => this.UnloadMatch();
       };
       ApmwCore.getInstance().StartedEventHandlers.Add(seHandler);
@@ -97,6 +100,8 @@ namespace Archipelago.APChessV
 
     public delegate void ClientConnected(ArchipelagoSession session);
     public event ClientConnected OnConnect;
+    public event EventHandler GeometryStateChanged;
+    public event EventHandler MatchStateChanged;
 
     internal LocationHandler LocationHandler { get; private set; }
     internal ItemHandler ItemHandler { get; private set; }
@@ -110,17 +115,25 @@ namespace Archipelago.APChessV
     private ConnectPacket connectPacket;
 
     private Match match;
+    private readonly object geometryStateLock = new object();
+    private readonly ApmwGeometrySelectionModel geometrySelection =
+      new ApmwGeometrySelectionModel();
 
     private (string, int) lastServerUrl;
     private string lastSlotName;
     private static Task connectionTask;
 
-    private bool IsInGame
+    public bool IsMatchActive
     {
       get
       {
         return match != null;
       }
+    }
+
+    public ApmwGeometrySelectionModel GeometrySelection
+    {
+      get { return geometrySelection; }
     }
 
     public void Connect(string hostName, int port, string slotName, string password = null)
@@ -194,9 +207,17 @@ namespace Archipelago.APChessV
           var slotData = successResult.SlotData;
           
           // Check client version compatibility
-          var requiredClientVersion = slotData.GetValueOrDefault("required_chess_client_version", "0.1.0").ToString();
+          object rawRequiredClientVersion = slotData.GetValueOrDefault("required_chess_client_version", "0.1.0");
           var currentClientVersion = ApmwConstants.ClientVersion;
-          
+
+          if (!TryParseRequiredClientVersion(rawRequiredClientVersion, out Version requiredClientVersion, out string versionError))
+          {
+            nonSessionMessages.Add(versionError);
+            nonSessionMessages.Add("Connection refused because the world supplied an invalid required client version.");
+            session.Socket.DisconnectAsync();
+            return;
+          }
+
           if (!IsClientVersionCompatible(requiredClientVersion))
           {
             nonSessionMessages.Add($"Client version mismatch: This client is version {currentClientVersion}, but the world requires version {requiredClientVersion} or higher");
@@ -204,9 +225,40 @@ namespace Archipelago.APChessV
             session.Socket.DisconnectAsync();
             return;
           }
+
+          ApmwContractV2 contract = null;
+          if (slotData.TryGetValue("apmw_contract", out object rawContract))
+          {
+            try
+            {
+              contract = ApmwGeometryResolver.ParseCurrentContract(rawContract);
+            }
+            catch (ApmwContractException exception)
+            {
+              nonSessionMessages.Add("Invalid apmw_contract: " + exception.Message);
+              nonSessionMessages.Add(
+                "Connection refused because the current world contract is malformed or unsupported.");
+              session.Socket.DisconnectAsync();
+              return;
+            }
+
+            Version contractMinimum = new Version(contract.MinimumClientVersion);
+            if (!IsClientVersionCompatible(contractMinimum))
+            {
+              nonSessionMessages.Add(
+                $"APMW contract version mismatch: This client is version {currentClientVersion}, " +
+                $"but apmw_contract requires version {contractMinimum} or higher");
+              nonSessionMessages.Add(
+                "Connection refused until this client implements the complete advertised APMW contract.");
+              session.Socket.DisconnectAsync();
+              return;
+            }
+          }
            
-          ApmwConfig.getInstance().Instantiate(slotData);
+          ApmwConfig.getInstance().Instantiate(slotData, contract);
           ItemHandler = new ItemHandler(session.Items);
+          ItemHandler.ReceivedItemsChanged += ItemHandler_ReceivedItemsChanged;
+          RefreshGeometrySelection(true);
           var isDeathLink = 0 < Convert.ToInt32(slotData.GetValueOrDefault("death_link", 0));
           if (isDeathLink)
           {
@@ -214,19 +266,22 @@ namespace Archipelago.APChessV
             deathLinkService.EnableDeathLink();
             deathLinkService.OnDeathLinkReceived += (DeathLink deathLink) =>
             {
+              Match activeMatch = match;
+              if (activeMatch == null)
+                return;
               lock (LocationHandler.DeathlinkedMatches)
               {
-                if (LocationHandler.DeathlinkedMatches.Contains(match))
+                if (LocationHandler.DeathlinkedMatches.Contains(activeMatch))
                   return;
-                LocationHandler.DeathlinkedMatches.Add(match);
+                LocationHandler.DeathlinkedMatches.Add(activeMatch);
               }
               string reason = string.Join(" due to ", deathLink.Source, deathLink.Cause);
               nonSessionMessages.Add(string.Join(" ", "DeathLink received:", reason));
-              match.Death(reason);
+              activeMatch.Death(reason);
             };
           }
 
-          OnConnect(session);
+          OnConnect?.Invoke(session);
         });
         connectionTask.Start();
       }
@@ -238,11 +293,15 @@ namespace Archipelago.APChessV
       {
         LocationHandler.EndMatch();
       }
+      if (match != null)
+      {
+        match = null;
+        MatchStateChanged?.Invoke(this, EventArgs.Empty);
+      }
     }
 
     public void Dispose()
     {
-      this.OnClientDisconnect(0, "Disconnecting from Archipelago, disposing of evidence", true);
       nonSessionMessages.Add("Disconnecting from Archipelago, disposing of evidence");
       if (Session != null && Session.Socket.Connected)
       {
@@ -251,11 +310,21 @@ namespace Archipelago.APChessV
       this.UnloadMatch();
       if (ItemHandler != null)
       {
+        ItemHandler.ReceivedItemsChanged -= ItemHandler_ReceivedItemsChanged;
         ItemHandler.Unhook();
+        ItemHandler = null;
       }
 
       Session = null;
       lastServerUrl = ("", -1);
+      ApmwConfig.getInstance().ResetConnectionState();
+      lock (geometryStateLock)
+      {
+        geometrySelection.Reset();
+        ApplySelectedGeometryCompatibilityState();
+      }
+      GeometryStateChanged?.Invoke(this, EventArgs.Empty);
+      OnClientDisconnect?.Invoke(0, "Disconnecting from Archipelago, disposing of evidence", true);
     }
 
     // TODO(chesslogic): warn user to reconnect
@@ -274,20 +343,106 @@ namespace Archipelago.APChessV
       // new ArchipelagoEndMessage().Send(NetworkDestination.Clients);
     }
 
-    private bool IsClientVersionCompatible(string requiredVersion)
+    internal static bool TryParseRequiredClientVersion(
+      object rawValue,
+      out Version requiredVersion,
+      out string errorMessage)
     {
-      try
+      requiredVersion = null;
+      string value;
+      if (rawValue is string stringValue)
+        value = stringValue;
+      else if (rawValue is JValue jValue && jValue.Type == JTokenType.String)
+        value = (string)jValue.Value;
+      else
       {
-        var current = new Version(ApmwConstants.ClientVersion);
-        var required = new Version(requiredVersion);
-        return current >= required;
+        errorMessage =
+          "Invalid required_chess_client_version: expected a semantic version string in major.minor.patch form.";
+        return false;
       }
-      catch (Exception)
+
+      string[] parts = value.Split('.');
+      if (parts.Length != 3 || parts.Any(part => part.Length == 0 || part.Any(character => !char.IsDigit(character))) ||
+        !Version.TryParse(value, out requiredVersion))
       {
-        // If version parsing fails, assume compatible to avoid blocking connections
-        nonSessionMessages.Add($"Warning: Could not parse version strings (current: {ApmwConstants.ClientVersion}, required: {requiredVersion}). Assuming compatible. Do not proceed if you do not know what you are doing.");
-        return true;
+        errorMessage =
+          $"Invalid required_chess_client_version '{value}': expected major.minor.patch using decimal digits.";
+        requiredVersion = null;
+        return false;
       }
+
+      errorMessage = null;
+      return true;
+    }
+
+    internal static bool IsClientVersionCompatible(Version requiredVersion)
+    {
+      var current = new Version(ApmwConstants.ClientVersion);
+      return current >= requiredVersion;
+    }
+
+    public bool SelectGeometry(string stageId)
+    {
+      bool changed;
+      lock (geometryStateLock)
+      {
+        if (IsMatchActive || !geometrySelection.IsConnected)
+          return false;
+        string previous = geometrySelection.SelectedOption.StageId;
+        if (!geometrySelection.Select(stageId))
+          return false;
+        ApplySelectedGeometryCompatibilityState();
+        changed = previous != geometrySelection.SelectedOption.StageId;
+      }
+      if (changed)
+        GeometryStateChanged?.Invoke(this, EventArgs.Empty);
+      return true;
+    }
+
+    public ApmwGeometryPreview GetGeometryPreview(ApmwGeometryOption option)
+    {
+      if (option == null)
+        throw new ArgumentNullException(nameof(option));
+      ItemHandler handler = ItemHandler;
+      if (handler == null)
+        return null;
+      return handler.GetGeometryPreview(option.Files, option.Ranks);
+    }
+
+    private void ItemHandler_ReceivedItemsChanged(object sender, EventArgs e)
+    {
+      RefreshGeometrySelection(false);
+    }
+
+    private void RefreshGeometrySelection(bool initialConnection)
+    {
+      ItemHandler handler = ItemHandler;
+      if (handler == null)
+        return;
+
+      ApmwConfig config = ApmwConfig.getInstance();
+      ApmwGeometryUnlockSnapshot unlocks = handler.GeometryUnlocks;
+      IReadOnlyList<ApmwGeometryOption> options = config.CurrentContract == null
+        ? ApmwGeometryResolver.ResolveLegacy(unlocks.LegacySuperSizeUnlocked)
+        : ApmwGeometryResolver.ResolveCurrent(
+          config.CurrentContract,
+          unlocks.BoardFileUnlockCount,
+          unlocks.BoardRankUnlockCount);
+      lock (geometryStateLock)
+      {
+        if (initialConnection)
+          geometrySelection.Connect(options);
+        else
+          geometrySelection.Refresh(options);
+        ApplySelectedGeometryCompatibilityState();
+      }
+      GeometryStateChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void ApplySelectedGeometryCompatibilityState()
+    {
+      ApmwCore.getInstance().isGrand =
+        geometrySelection.IsConnected && geometrySelection.SelectedOption.Files > 8;
     }
   }
 }

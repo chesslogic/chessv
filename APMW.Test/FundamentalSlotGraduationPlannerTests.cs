@@ -298,7 +298,7 @@ namespace ChessV.Test
         [TestMethod]
         public void Plan_ZeroProportionExcludesActionFromTiedDraw()
         {
-            // piece_upgrade_proportion is consulted only to arbitrate ties; a weight of exactly 0
+            // piece_upgrade_ratio is consulted only to arbitrate ties; a weight of exactly 0
             // must deterministically remove that action from every draw (as long as at least one
             // competitor has nonzero weight, so the "fall back to uniform on all-zero" guard never
             // engages) -- this is fully deterministic, unlike the statistical-bias case, so it can
@@ -343,7 +343,7 @@ namespace ChessV.Test
             slotData[ApmwConstants.SlotKeyFairyChessPawnUpgrades] = (int)FairyPawnUpgrades.Configure;
             slotData[ApmwConstants.SlotKeyPieceUpgradePreferences] = priorities;
             if (proportions != null)
-                slotData[ApmwConstants.SlotKeyPieceUpgradeProportions] = proportions;
+                slotData[ApmwConstants.SlotKeyPieceUpgradeRatio] = proportions;
 
             ApmwConfig config = ApmwConfig.getInstance();
             config.Instantiate(slotData);
