@@ -1,0 +1,30 @@
+{
+  "schema": "apmw_projector_lock",
+  "version": 1,
+  "runtime_semantic_version": "0.1.0",
+  "protocol_version": 1,
+  "contract_hash": "f1456e916285bf79dd4be6f4c8c6e5798ed7bb1eebd2f6e1f81075f39e8ffc15",
+  "source_repository": "chesslogic/Archipelago",
+  "source_commit": "0123456789abcdef0123456789abcdef01234567",
+  "release_tag": "apmw-projector-v0.1.0",
+  "assets": {
+    "windows-x86": {
+      "filename": "apmw-projector-windows-x86.zip",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "size": 1,
+      "executable": {
+        "relative_path": "ApmwProjector.exe",
+        "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    },
+    "windows-x64": {
+      "filename": "apmw-projector-windows-x64.zip",
+      "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "size": 1,
+      "executable": {
+        "relative_path": "ApmwProjector.exe",
+        "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+      }
+    }
+  }
+}

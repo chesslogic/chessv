@@ -98,6 +98,18 @@
     <Content Include="application_icon.ico" />
     <Content Include="Resources\icon_apmw.png" />
     <Content Include="Resources\icon_apmw_license.txt" />
+    <Content Include="..\.apmw-projector-cache\windows-x86\**\*"
+             Condition="Exists('..\.apmw-projector-cache\windows-x86')">
+      <Link>apmw-projector\windows-x86\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="..\.apmw-projector-cache\windows-x64\**\*"
+             Condition="Exists('..\.apmw-projector-cache\windows-x64')">
+      <Link>apmw-projector\windows-x64\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">

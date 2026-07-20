@@ -32,8 +32,16 @@ namespace Archipelago.APChessV
   public class ItemHandler
   {
     public ItemHandler(IReceivedItemsHelper receivedItemsHelper)
+      : this(receivedItemsHelper, null)
+    {
+    }
+
+    internal ItemHandler(
+      IReceivedItemsHelper receivedItemsHelper,
+      IApmwProjectionBackend projectionBackend)
     {
       ReceivedItemsHelper = receivedItemsHelper;
+      this.projectionBackend = projectionBackend ?? new CurrentCSharpProjectionBackend();
 
       irHandler = (helper) => this.Hook();
       ReceivedItemsHelper.ItemReceived += irHandler;
@@ -58,6 +66,7 @@ namespace Archipelago.APChessV
     }
 
     private readonly IReceivedItemsHelper ReceivedItemsHelper;
+    private readonly IApmwProjectionBackend projectionBackend;
     private readonly ItemReceivedHandler irHandler;
     private bool isHooked;
     private Func<int, (Dictionary<KeyValuePair<int, int>, PieceType>, string)> originalPlayerPieceSetProvider;
@@ -73,6 +82,7 @@ namespace Archipelago.APChessV
     {
       ItemProgressSnapshot progress = ItemProgressSnapshot.FromReceivedItems(ReceivedItemsHelper);
       ApplyProgressSnapshot(ApmwCore.getInstance(), progress);
+      projectionBackend.Invalidate();
       GeometryUnlocks = progress.GeometryUnlocks;
       ReceivedItemsChanged?.Invoke(this, EventArgs.Empty);
     }
@@ -233,16 +243,12 @@ namespace Archipelago.APChessV
 
     internal GeneratedRoster GenerateOwnedRoster()
     {
-      return OwnedRosterGeneration.Generate();
+      return projectionBackend.GenerateOwnedRoster();
     }
 
     internal ActiveRosterProjection ProjectOwnedRoster(ProjectionGeometry geometry)
     {
-      return GeneratedRosterProjector.Project(
-        GenerateOwnedRoster(),
-        geometry,
-        Math.Max(0, ApmwCore.getInstance().foundPawnForwardness),
-        ApmwConfig.getInstance());
+      return projectionBackend.Project(geometry);
     }
 
     internal (Dictionary<KeyValuePair<int, int>, PieceType>, string)

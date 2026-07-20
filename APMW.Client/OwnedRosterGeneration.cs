@@ -111,7 +111,9 @@ namespace Archipelago.APChessV
       PieceType concretePieceType,
       bool lockedCastler,
       int grantedMaterial,
-      int finalExpectedMaterial)
+      int finalExpectedMaterial,
+      IEnumerable<string> initialUpgradePath = null,
+      IEnumerable<string> initialPromotionEntitlementFamilies = null)
     {
       StableId = stableId;
       SourcePlacementRole = sourcePlacementRole;
@@ -125,6 +127,13 @@ namespace Archipelago.APChessV
       AddPromotionEntitlement(concretePieceType);
       if (concretePieceType != null && finalFamily.HasValue)
         AddPromotionEntitlementFamily(finalFamily.Value.ToString().ToLowerInvariant());
+      if (initialUpgradePath != null)
+        upgradePath.AddRange(initialUpgradePath.Where(action => !string.IsNullOrWhiteSpace(action)));
+      if (initialPromotionEntitlementFamilies != null)
+      {
+        foreach (string family in initialPromotionEntitlementFamilies)
+          AddPromotionEntitlementFamily(family);
+      }
     }
 
     public string StableId { get; }
@@ -353,7 +362,7 @@ namespace Archipelago.APChessV
 
   internal static class OwnedRosterGeneration
   {
-    private sealed class FamilyPieceChooser
+    internal sealed class FamilyPieceChooser
     {
       private readonly Dictionary<string, long> counters = new Dictionary<string, long>(StringComparer.Ordinal);
       private readonly Dictionary<FinalPieceFamily, Dictionary<PieceType, int>> chosen =
@@ -754,7 +763,7 @@ namespace Archipelago.APChessV
       return playAsWhite + pockets;
     }
 
-    private static PieceType ChoosePawn(ApmwConfig config, int ordinal)
+    internal static PieceType ChoosePawn(ApmwConfig config, int ordinal)
     {
       List<PieceType> options = PawnGeneration.SetupPawnOptions()
         .OrderBy(piece => piece.Name, StringComparer.Ordinal)
