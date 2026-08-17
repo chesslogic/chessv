@@ -1693,6 +1693,7 @@ namespace ChessV
       moveLists[1].Reset();
       Ply = 1;
       generateMoves(CurrentSide, Ply, 0);
+      lastMove = default(MoveInfo);
       MoveTakenBack?.Invoke();
       if (userCommand)
       {

@@ -1,14 +1,32 @@
 ﻿using Archipelago.MultiClient.Net.Helpers;
 using ChessV;
 using ChessV.Base;
+using ChessV.Games;
 using Moq;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Archipelago.APChessV
 {
+  [Game("LocationHandler 8x8 Capture Repro", typeof(ChessV.Geometry.Rectangular), 8, 8,
+    Template = true)]
+  internal sealed class LocationHandlerCaptureReproGame : ApmwChessGame
+  {
+    public override void SetGameVariables()
+    {
+      base.SetGameVariables();
+      Castling.Value = "None";
+    }
+
+    public override void SetOtherVariables()
+    {
+      base.SetOtherVariables();
+      FENStart = "k2q4/7K/8/8/8/8/P7/8 b - - - 0 1";
+    }
+  }
 
   [TestClass]
+  [DoNotParallelize]
   public class LocationHandlerUnitTests
   {
     LocationHandler handler;
@@ -65,6 +83,10 @@ namespace Archipelago.APChessV
       //board.Setup(mock => mock.GetFile(1)).Returns(0);
 
       var core = ApmwCore.getInstance();
+      core.StartedEventHandlers.Clear();
+      core.NewMoveSetup.Clear();
+      core.NewMovePlayed.Clear();
+      core.MatchFinished.Clear();
       core.kings = new System.Collections.Generic.List<PieceType>();
       core.pawns = new System.Collections.Generic.HashSet<PieceType>();
       core.minors = new System.Collections.Generic.HashSet<PieceType>();
@@ -123,6 +145,36 @@ namespace Archipelago.APChessV
       handler.HandleMove(info);
 
       locations.Verify(locs => locs.GetLocationIdFromName("ChecksMate", "Capture Piece Queen's Knight"));
+    }
+
+    [TestMethod]
+    public void updateMoveState_promotedPawnCaptureUsesOriginalPawnFile()
+    {
+      MoveInfo advance = GetMoveInfo();
+      advance.FromSquare = 8;
+      advance.ToSquare = 48;
+      advance.PieceCaptured = null;
+      handler.UpdateMoveState(advance);
+
+      MoveInfo promotion = GetMoveInfo();
+      promotion.FromSquare = 48;
+      promotion.ToSquare = 56;
+      promotion.MoveType = MoveType.MoveWithPromotion;
+      promotion.PieceCaptured = null;
+      handler.UpdateMoveState(promotion);
+
+      MoveInfo capture = GetMoveInfo();
+      capture.FromSquare = 57;
+      capture.ToSquare = 56;
+      capture.MoveType = MoveType.StandardCapture;
+      handler.HandleMove(capture);
+
+      locations.Verify(locs => locs.GetLocationIdFromName(
+        "ChecksMate",
+        "Capture Pawn A"), Times.Once());
+      locations.Verify(locs => locs.GetLocationIdFromName(
+        "ChecksMate",
+        "Capture Piece Queen's Rook"), Times.Never());
     }
 
     [TestMethod]
@@ -209,6 +261,59 @@ namespace Archipelago.APChessV
       locations.Verify(locs => locs.GetLocationIdFromName(
         "ChecksMate",
         "Capture Piece King's Outer Attendant"));
+    }
+
+    [TestMethod]
+    public void handleMove_queenMovesFromD8ToG7_kingCaptureUsesOriginalPieceSlot()
+    {
+      Game realGame = CreateEightByEightCaptureReproGame();
+
+      realGame.PlayMoves("d8g5 a2a3 g5g7 h7g7", MoveNotation.XBoard);
+
+      locations.Verify(locs => locs.GetLocationIdFromName(
+        "ChecksMate",
+        "Capture Piece Queen"), Times.Once());
+      locations.Verify(locs => locs.GetLocationIdFromName(
+        "ChecksMate",
+        "Capture Pawn G"), Times.Never());
+    }
+
+    [TestMethod]
+    public void handleMove_replayedQueenMoveAfterTakeback_kingH7CaptureUsesOriginalPieceSlot()
+    {
+      Game realGame = CreateEightByEightCaptureReproGame();
+
+      realGame.PlayMoves("d8g5 a2a3 g5g7", MoveNotation.XBoard);
+      realGame.UndoMove();
+      realGame.PlayMoves("g5g7 h7g7", MoveNotation.XBoard);
+
+      locations.Verify(locs => locs.GetLocationIdFromName(
+        "ChecksMate",
+        "Capture Piece Queen"), Times.Once());
+      locations.Verify(locs => locs.GetLocationIdFromName(
+        "ChecksMate",
+        "Capture Pawn G"), Times.Never());
+    }
+
+    [TestMethod]
+    public void gameUndo_replayedIdenticalMoveEmitsApmwCallbacksExactlyOnce()
+    {
+      Game realGame = CreateEightByEightCaptureReproGame();
+      ApmwCore core = ApmwCore.getInstance();
+      int setupCallbacks = 0;
+      int playedCallbacks = 0;
+      core.NewMoveSetup.Add(_ => setupCallbacks++);
+      core.NewMovePlayed.Add(_ => playedCallbacks++);
+
+      realGame.PlayMoves("d8g5 a2a3 g5g7", MoveNotation.XBoard);
+      int setupCallbacksBeforeReplay = setupCallbacks;
+      int playedCallbacksBeforeReplay = playedCallbacks;
+
+      realGame.UndoMove();
+      realGame.PlayMoves("g5g7", MoveNotation.XBoard);
+
+      Assert.AreEqual(setupCallbacksBeforeReplay + 1, setupCallbacks);
+      Assert.AreEqual(playedCallbacksBeforeReplay + 1, playedCallbacks);
     }
 
     [TestMethod]
@@ -335,6 +440,53 @@ namespace Archipelago.APChessV
     private void TakeBackLastMove()
     {
       handler.MoveTakenBackForTesting();
+    }
+
+    private Game CreateEightByEightCaptureReproGame()
+    {
+      ApmwCore core = ApmwCore.getInstance();
+      core.foundPockets = 0;
+      core.foundPocketRange = 0;
+      core.foundPocketGems = 0;
+      core.foundPawns = 0;
+      core.foundMinors = 0;
+      core.foundMajors = 0;
+      core.foundJacks = 0;
+      core.foundQueens = 0;
+      core.foundAmazons = 0;
+      core.foundConsuls = 0;
+      core.foundKingPromotions = 0;
+      core.foundPawnForwardness = 0;
+      core.foundChessmen = 0;
+      core.foundMaterialBudget = 0;
+      core.foundCastlers = 0;
+      core.isGrand = false;
+      core.GeriProvider = () => 0;
+      core.GeometryAwarePlayerPieceSetProvider = null;
+      core.PlayerPocketPiecesProvider = () => new List<PieceType>();
+      core.PlayerPieceSetProvider = files =>
+      {
+        PieceType king = core.kings[0];
+        PieceType rook = core.majors.Single(piece => piece.Name == "Rook");
+        PieceType pawn = core.pawns.Single(piece => piece.Name == "Pawn");
+        var pieces = new Dictionary<KeyValuePair<int, int>, PieceType>();
+        for (int file = 0; file < files; file++)
+          pieces[new KeyValuePair<int, int>(3, file)] = pawn;
+        pieces[new KeyValuePair<int, int>(4, 0)] = rook;
+        pieces[new KeyValuePair<int, int>(4, files / 2)] = king;
+        pieces[new KeyValuePair<int, int>(4, files - 1)] = rook;
+        return (pieces, "QRNB");
+      };
+
+      var realGame = new LocationHandlerCaptureReproGame();
+      GameAttribute gameAttribute = (GameAttribute)typeof(LocationHandlerCaptureReproGame)
+        .GetCustomAttributes(typeof(GameAttribute), inherit: false)
+        .Single();
+      realGame.Initialize(gameAttribute, null, null);
+
+      match.SetupGet(mock => mock.Game).Returns(realGame);
+      handler.StartMatch(match.Object);
+      return realGame;
     }
 
     private MoveInfo GetMoveInfo()
