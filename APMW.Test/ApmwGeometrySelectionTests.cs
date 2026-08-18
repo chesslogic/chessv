@@ -177,9 +177,15 @@ namespace ChessV.Test
       CollectionAssert.AreEqual(
         new[] { "6x8", "8x8" },
         model.AvailableOptions.Select(option => option.StageId).ToArray());
-      Assert.AreEqual("6x8", model.SelectedOption.StageId);
-      Assert.IsTrue(model.Select("8x8"));
       Assert.AreEqual("8x8", model.SelectedOption.StageId);
+
+      Assert.IsTrue(model.Select("6x8"));
+      model.Refresh(ApmwGeometryResolver.ResolveCurrent(
+        contract,
+        1,
+        0,
+        Goal.OrderedProgressive6x8));
+      Assert.AreEqual("6x8", model.SelectedOption.StageId);
     }
 
     [TestMethod]
@@ -195,7 +201,7 @@ namespace ChessV.Test
       Assert.AreEqual("10x10", model.SelectedOption.StageId);
 
       Assert.IsTrue(model.Select("8x8"));
-      model.Refresh(ApmwGeometryResolver.ResolveCurrent(contract, 2, 2));
+      model.Refresh(first);
       Assert.AreEqual("8x8", model.SelectedOption.StageId);
       Assert.IsFalse(model.Select("8x10"), "invalid Cartesian pairs are never selectable");
 
@@ -208,6 +214,31 @@ namespace ChessV.Test
       CollectionAssert.AreEqual(
         new[] { "8x8" },
         model.AvailableOptions.Select(option => option.StageId).ToArray());
+    }
+
+    [TestMethod]
+    public void Selection_AdvancesToEachNewlyUnlockedGeometryOnRefresh()
+    {
+      ApmwContractV2 contract = ApmwContractV2Parser.Parse(Baseline);
+      var model = new ApmwGeometrySelectionModel();
+
+      model.Connect(ApmwGeometryResolver.ResolveCurrent(contract, 0, 0));
+      Assert.AreEqual("8x8", model.SelectedOption.StageId);
+
+      model.Refresh(ApmwGeometryResolver.ResolveCurrent(contract, 1, 0));
+      CollectionAssert.AreEqual(
+        new[] { "8x8", "10x8" },
+        model.AvailableOptions.Select(option => option.StageId).ToArray());
+      Assert.AreEqual("10x8", model.SelectedOption.StageId);
+
+      model.Refresh(ApmwGeometryResolver.ResolveCurrent(contract, 1, 1));
+      Assert.AreEqual("10x10", model.SelectedOption.StageId);
+
+      model.Refresh(ApmwGeometryResolver.ResolveCurrent(contract, 2, 1));
+      Assert.AreEqual("12x10", model.SelectedOption.StageId);
+
+      model.Refresh(ApmwGeometryResolver.ResolveCurrent(contract, 2, 2));
+      Assert.AreEqual("12x12", model.SelectedOption.StageId);
     }
 
     [TestMethod]

@@ -13,3 +13,4 @@ APMW.Test/UserPlan/
 **/obj/
 
 .apmw-projector-cache/
+/.scratch

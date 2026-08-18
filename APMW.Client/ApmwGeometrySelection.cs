@@ -205,8 +205,10 @@ namespace Archipelago.APChessV
         throw new InvalidOperationException("At least one APMW geometry must be available.");
 
       string selectedStageId = SelectedOption == null ? null : SelectedOption.StageId;
+      bool hasNewOption = options.Any(option =>
+        availableOptions.All(current => current.StageId != option.StageId));
       availableOptions = new ReadOnlyCollection<ApmwGeometryOption>(options.ToList());
-      SelectedOption = selectLargest
+      SelectedOption = selectLargest || hasNewOption
         ? availableOptions[availableOptions.Count - 1]
         : availableOptions.FirstOrDefault(option => option.StageId == selectedStageId) ??
           availableOptions[availableOptions.Count - 1];
