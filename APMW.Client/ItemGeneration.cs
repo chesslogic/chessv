@@ -2334,13 +2334,35 @@ namespace Archipelago.APChessV
   {
     public static List<PieceType> Filter(IEnumerable<PieceType> pieces)
     {
+      if (pieces == null)
+        throw new ArgumentNullException(nameof(pieces));
+
       List<PieceType> originalPieces = pieces.ToList();
       List<int> army = ApmwConfig.getInstance().Army;
       if (army.Count == 0)
         return originalPieces;
+
+      List<HashSet<PieceType>> armyCatalog = ApmwCore.getInstance().armies;
+      if (armyCatalog == null || armyCatalog.Count == 0)
+      {
+        throw new InvalidOperationException(
+          "Army filtering requires an initialized APMW piece catalog.");
+      }
+
       HashSet<PieceType> armiesPieces = new HashSet<PieceType>();
       for (int i = 0; i < army.Count; i++)
-        armiesPieces = armiesPieces.Concat(ApmwCore.getInstance().armies[army[i]]).ToHashSet();
+      {
+        int armyIndex = army[i];
+        if (armyIndex < 0 || armyIndex >= armyCatalog.Count)
+        {
+          throw new InvalidOperationException(
+            $"Configured army index {armyIndex} is outside the available catalog range 0-{armyCatalog.Count - 1}.");
+        }
+        if (armyCatalog[armyIndex] == null)
+          throw new InvalidOperationException($"Configured army index {armyIndex} has no piece set.");
+        armiesPieces.UnionWith(armyCatalog[armyIndex]);
+      }
+
       List<PieceType> newPieces = new List<PieceType>();
       foreach (var piece in originalPieces)
         if (armiesPieces.Contains(piece))

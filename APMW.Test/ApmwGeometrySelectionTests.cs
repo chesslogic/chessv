@@ -2,6 +2,7 @@ using Archipelago.APChessV;
 using Archipelago.MultiClient.Net.Helpers;
 using Archipelago.MultiClient.Net.Models;
 using ChessV.Base;
+using ChessV.Games;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 using System;
@@ -98,6 +99,89 @@ namespace ChessV.Test
         ApmwGeometryResolver.ResolveLegacy(true).Select(option => option.StageId).ToArray());
     }
 
+    [DataTestMethod]
+    [DataRow(0, 0, "6x8")]
+    [DataRow(1, 0, "6x8,8x8")]
+    [DataRow(2, 0, "6x8,8x8,10x8")]
+    [DataRow(2, 1, "6x8,8x8,10x8,10x10")]
+    [DataRow(3, 1, "6x8,8x8,10x8,10x10,12x10")]
+    [DataRow(3, 2, "6x8,8x8,10x8,10x10,12x10,12x12")]
+    [DataRow(99, 99, "6x8,8x8,10x8,10x10,12x10,12x12")]
+    public void OrderedProgressive6x8_PrependsCompactStageThenUsesExistingOrderedSequence(
+      int fileUnlocks,
+      int rankUnlocks,
+      string expectedStages)
+    {
+      ApmwContractV2 contract = ApmwContractV2Parser.Parse(Baseline);
+
+      IReadOnlyList<ApmwGeometryOption> options =
+        ApmwGeometryResolver.ResolveCurrent(
+          contract,
+          fileUnlocks,
+          rankUnlocks,
+          Goal.OrderedProgressive6x8);
+
+      Assert.AreEqual(
+        expectedStages,
+        string.Join(",", options.Select(option => option.StageId)));
+    }
+
+    [TestMethod]
+    public void LegacyOrderedProgressive_StillStartsAtEightByEight()
+    {
+      ApmwContractV2 contract = ApmwContractV2Parser.Parse(Baseline);
+
+      IReadOnlyList<ApmwGeometryOption> options =
+        ApmwGeometryResolver.ResolveCurrent(
+          contract,
+          0,
+          0,
+          Goal.OrderedProgressive);
+
+      CollectionAssert.AreEqual(
+        new[] { "8x8" },
+        options.Select(option => option.StageId).ToArray());
+    }
+
+    [TestMethod]
+    public void CurrentResolver_RejectsUnknownGoalInsteadOfUsingLegacyGeometry()
+    {
+      ApmwContractV2 contract = ApmwContractV2Parser.Parse(Baseline);
+
+      Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        ApmwGeometryResolver.ResolveCurrent(
+          contract,
+          0,
+          0,
+          (Goal)5));
+    }
+
+    [TestMethod]
+    public void OrderedProgressive6x8_SelectionStartsCompactThenExposesEightByEight()
+    {
+      ApmwContractV2 contract = ApmwContractV2Parser.Parse(Baseline);
+      var model = new ApmwGeometrySelectionModel();
+
+      model.Connect(ApmwGeometryResolver.ResolveCurrent(
+        contract,
+        0,
+        0,
+        Goal.OrderedProgressive6x8));
+      Assert.AreEqual("6x8", model.SelectedOption.StageId);
+
+      model.Refresh(ApmwGeometryResolver.ResolveCurrent(
+        contract,
+        1,
+        0,
+        Goal.OrderedProgressive6x8));
+      CollectionAssert.AreEqual(
+        new[] { "6x8", "8x8" },
+        model.AvailableOptions.Select(option => option.StageId).ToArray());
+      Assert.AreEqual("6x8", model.SelectedOption.StageId);
+      Assert.IsTrue(model.Select("8x8"));
+      Assert.AreEqual("8x8", model.SelectedOption.StageId);
+    }
+
     [TestMethod]
     public void Selection_DefaultsLargestRetainsExplicitSmallerChoiceAndResetsDisconnected()
     {
@@ -149,6 +233,22 @@ namespace ChessV.Test
     }
 
     [TestMethod]
+    public void CompactStageMapping_UsesTheRegisteredSixByEightGameName()
+    {
+      ApmwContractV2 contract = ApmwContractV2Parser.Parse(Baseline);
+
+      ApmwGeometryOption option = ApmwGeometryResolver.ResolveCurrent(
+        contract,
+        0,
+        0,
+        Goal.OrderedProgressive6x8).Single();
+
+      Assert.AreEqual("6x8", option.StageId);
+      Assert.AreEqual(ApmwProfiles.SixByEightGameName, option.RegisteredGameName);
+      Assert.AreEqual("6x8", option.DisplayLabel);
+    }
+
+    [TestMethod]
     public void ItemHandler_ClampsGeometryCountsRefreshesAndOwnsOneHelperSubscription()
     {
       var helper = new CountingReceivedItemsHelper()
@@ -170,6 +270,33 @@ namespace ChessV.Test
 
       handler.Unhook();
       Assert.AreEqual(0, helper.SubscriptionCount);
+    }
+
+    [TestMethod]
+    public void ItemHandler_AllowsTheExtraFileUnlockOnlyForGoalFour()
+    {
+      ApmwConfig.getInstance().Instantiate(new Dictionary<string, object>
+      {
+        ["goal"] = 4,
+      });
+      var helper = new CountingReceivedItemsHelper()
+        .Add(ApmwConstants.ProgressiveItems.BoardFiles, 7);
+      var handler = new ItemHandler(helper);
+
+      Assert.AreEqual(3, handler.GeometryUnlocks.BoardFileUnlockCount);
+
+      handler.Unhook();
+
+      ApmwConfig._instance = new ApmwConfig();
+      ApmwConfig.getInstance().Instantiate(new Dictionary<string, object>
+      {
+        ["goal"] = 1,
+      });
+      handler = new ItemHandler(helper);
+
+      Assert.AreEqual(2, handler.GeometryUnlocks.BoardFileUnlockCount);
+
+      handler.Unhook();
     }
 
     private sealed class CountingReceivedItemsHelper : IReceivedItemsHelper

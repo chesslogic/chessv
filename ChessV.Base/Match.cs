@@ -416,7 +416,7 @@ namespace ChessV
           foreach (Movement move in moves)
           {
             string moveDesc = $"{Game.GetSquareNotation(move.FromSquare)} to {Game.GetSquareNotation(move.ToSquare)}";
-            Game.MakeMove(move, true);
+            Game.MakeMove(move, true, MoveExecutionMode.Speculative);
           }
           
           // Debug: Track board state after temporary moves
@@ -436,7 +436,7 @@ namespace ChessV
           {
             try
             {
-              Game.UndoMove();
+              Game.UndoMove(false, MoveExecutionMode.Speculative);
             }
             catch (Exception ex)
             {

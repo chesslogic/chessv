@@ -116,7 +116,7 @@ namespace ChessV.Test
     {
         public const int CiExpandedShardIndex = 0;
         public const int CiExpandedShardCount = 4;
-        public const int CiExpandedCaseBudget = 12;
+        public const int CiExpandedCaseBudget = 13;
 
         private const string ExpandedPeripherySuiteName = "expanded-periphery";
         private const string CiExpandedPeripherySuiteName = "ci-expanded-periphery-pairwise";

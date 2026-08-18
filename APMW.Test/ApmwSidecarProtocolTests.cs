@@ -43,6 +43,8 @@ namespace APMW.Test
         Assert.ThrowsException<ArgumentException>(() =>
           new ApmwSidecarRequest("id", ContractHash, objectInput.RootElement, new[] { "8x8", "8x8" }));
         Assert.ThrowsException<ArgumentException>(() =>
+          new ApmwSidecarRequest("id", ContractHash, objectInput.RootElement, new[] { "7x8" }));
+        Assert.ThrowsException<ArgumentException>(() =>
           new ApmwSidecarRequest("id", "not-a-hash", objectInput.RootElement, new[] { "8x8" }));
       }
     }
@@ -79,6 +81,23 @@ namespace APMW.Test
       CollectionAssert.AreEqual(
         geometries,
         response.Success.Results.Select(result => result.GeometryStage).ToArray());
+    }
+
+    [TestMethod]
+    public void ParseResponse_AcceptsCompactGeometryWhenItWasRequested()
+    {
+      string projection = ProjectionJson("8x8")
+        .Replace("\"geometry_stage\":\"8x8\"", "\"geometry_stage\":\"6x8\"")
+        .Replace("\"files\":8", "\"files\":6");
+      ApmwSidecarResponse response = ApmwSidecarProtocol.ParseResponse(
+        SuccessJson(
+          "[{\"geometry_stage\":\"6x8\",\"projection\":" + projection + "}]"),
+        CreateRequest(new[] { "6x8" }));
+
+      Assert.AreEqual("6x8", response.Success.Results.Single().GeometryStage);
+      Assert.AreEqual(
+        6,
+        response.Success.Results.Single().Projection.GetProperty("files").GetInt32());
     }
 
     [TestMethod]

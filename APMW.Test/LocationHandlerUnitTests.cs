@@ -3,6 +3,7 @@ using ChessV;
 using ChessV.Base;
 using ChessV.Games;
 using Moq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -199,19 +200,64 @@ namespace Archipelago.APChessV
     }
 
     [TestMethod]
+    public void locationProfile_goalFourPrependsSixByEightWithoutChangingLegacySequence()
+    {
+      ApmwLocationProfile compact = ApmwLocationProfile.For(6, 8);
+      ApmwLocationProfile standard = ApmwLocationProfile.For(8, 8);
+
+      Assert.AreEqual(6, compact.CpuPawnCount);
+      Assert.AreEqual(5, compact.CpuNonKingCount);
+      Assert.AreEqual(10, compact.MaximumAnyCaptureCount);
+      CollectionAssert.AreEqual(
+        new[] { "Checkmate 6x8" },
+        compact.CheckmateLocationsThroughStage(Goal.OrderedProgressive6x8).ToArray());
+      CollectionAssert.AreEqual(
+        new[] { "Checkmate Minima" },
+        standard.CheckmateLocationsThroughStage(Goal.OrderedProgressive).ToArray());
+      CollectionAssert.AreEqual(
+        new[] { "Checkmate 6x8", "Checkmate Minima" },
+        standard.CheckmateLocationsThroughStage(Goal.OrderedProgressive6x8).ToArray());
+      CollectionAssert.AreEqual(
+        new[]
+        {
+          "Checkmate 6x8",
+          "Checkmate Minima",
+          "Checkmate Maxima",
+          "Checkmate 10x10",
+          "Checkmate 12x10",
+          "Checkmate 12x12",
+        },
+        ApmwLocationProfile.For(12, 12)
+          .CheckmateLocationsThroughStage(Goal.OrderedProgressive6x8)
+          .ToArray());
+      Assert.ThrowsException<InvalidOperationException>(
+        () => compact.CheckmateLocationsThroughStage(Goal.OrderedProgressive));
+      Assert.ThrowsException<ArgumentOutOfRangeException>(
+        () => standard.CheckmateLocationsThroughStage((Goal)5));
+    }
+
+    [TestMethod]
     public void goalStage_preservesLegacyTenByEightAndUsesCurrentTwelveByTwelve()
     {
       Assert.IsTrue(LocationHandler.IsGoalStage(
         ApmwLocationProfile.For(10, 8),
-        Goal.Progressive,
+        Goal.OrderedProgressive,
         hasGeometryContract: false));
       Assert.IsFalse(LocationHandler.IsGoalStage(
         ApmwLocationProfile.For(10, 8),
-        Goal.Progressive,
+        Goal.OrderedProgressive,
         hasGeometryContract: true));
       Assert.IsTrue(LocationHandler.IsGoalStage(
         ApmwLocationProfile.For(12, 12),
         Goal.Progressive,
+        hasGeometryContract: true));
+      Assert.IsFalse(LocationHandler.IsGoalStage(
+        ApmwLocationProfile.For(10, 8),
+        Goal.OrderedProgressive6x8,
+        hasGeometryContract: false));
+      Assert.IsTrue(LocationHandler.IsGoalStage(
+        ApmwLocationProfile.For(12, 12),
+        Goal.OrderedProgressive6x8,
         hasGeometryContract: true));
       Assert.IsFalse(LocationHandler.IsGoalStage(
         ApmwLocationProfile.For(12, 12),
@@ -229,6 +275,28 @@ namespace Archipelago.APChessV
         ApmwLocationProfile.For(10, 10),
         Goal.Progressive,
         hasGeometryContract: true));
+      Assert.IsFalse(LocationHandler.IsCaptureEverythingStage(
+        ApmwLocationProfile.For(10, 8),
+        Goal.OrderedProgressive6x8,
+        hasGeometryContract: false));
+      Assert.IsTrue(LocationHandler.IsCaptureEverythingStage(
+        ApmwLocationProfile.For(12, 10),
+        Goal.OrderedProgressive6x8,
+        hasGeometryContract: true));
+    }
+
+    [TestMethod]
+    public void captureLookup_mapsCompactBackRankAndRejectsUnsupportedGeometry()
+    {
+      var lookup = new CaptureLookup();
+
+      Assert.AreEqual("Capture Piece Queen's Knight", lookup.fileToLocation(6, "A"));
+      Assert.AreEqual("Capture Piece Queen's Rook", lookup.fileToLocation(6, "C"));
+      Assert.AreEqual("Capture Piece King's Knight", lookup.fileToLocation(6, "F"));
+      Assert.ThrowsException<ArgumentOutOfRangeException>(
+        () => lookup.fileToLocation(7, "A"));
+      Assert.ThrowsException<ArgumentOutOfRangeException>(
+        () => lookup.fileToLocation(6, "G"));
     }
 
     [TestMethod]
@@ -261,6 +329,25 @@ namespace Archipelago.APChessV
       locations.Verify(locs => locs.GetLocationIdFromName(
         "ChecksMate",
         "Capture Piece King's Outer Attendant"));
+    }
+
+    [TestMethod]
+    public void handleMove_usesCompactRookOriginalBackRankMapping()
+    {
+      ConfigureBoard(6, 8);
+      MoveInfo capture = GetMoveInfo();
+      capture.FromSquare = 12;
+      capture.ToSquare = 2;
+      capture.MoveType = MoveType.StandardCapture;
+
+      handler.HandleMove(capture);
+
+      locations.Verify(locs => locs.GetLocationIdFromName(
+        "ChecksMate",
+        "Capture Piece Queen's Rook"));
+      locations.Verify(locs => locs.GetLocationIdFromName(
+        "ChecksMate",
+        "Capture Piece Queen"), Times.Never());
     }
 
     [TestMethod]
@@ -314,6 +401,29 @@ namespace Archipelago.APChessV
 
       Assert.AreEqual(setupCallbacksBeforeReplay + 1, setupCallbacks);
       Assert.AreEqual(playedCallbacksBeforeReplay + 1, playedCallbacks);
+    }
+
+    [TestMethod]
+    public void repeatedSpeculativeProbes_preserveLocationLineageForCommittedCapture()
+    {
+      Game realGame = CreateEightByEightCaptureReproGame();
+      realGame.PlayMoves("d8g5 a2a3", MoveNotation.XBoard);
+
+      for (int probe = 0; probe < 2; probe++)
+      {
+        Movement move = realGame.MoveFromDescription("g5g7", MoveNotation.XBoard);
+        realGame.MakeMove(move, true, MoveExecutionMode.Speculative);
+        realGame.UndoMove(false, MoveExecutionMode.Speculative);
+      }
+
+      realGame.PlayMoves("g5g7 h7g7", MoveNotation.XBoard);
+
+      locations.Verify(locs => locs.GetLocationIdFromName(
+        "ChecksMate",
+        "Capture Piece Queen"), Times.Once());
+      locations.Verify(locs => locs.GetLocationIdFromName(
+        "ChecksMate",
+        "Capture Pawn G"), Times.Never());
     }
 
     [TestMethod]

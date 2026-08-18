@@ -314,13 +314,13 @@ namespace ChessV.GUI
       {
         evaluationTabControl.SelectedIndex = 1;
       }
-      Game.MoveTakenBack += moveTakenBack;
+      Game.MoveReverted += moveReverted;
       timer.Start();
     }
     #endregion
 
-    #region moveTakenBack
-    private void moveTakenBack()
+    #region moveReverted
+    private void moveReverted(MoveExecutionMode executionMode)
     {
       if (!ReviewMode)
       {

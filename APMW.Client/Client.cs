@@ -255,7 +255,17 @@ namespace Archipelago.APChessV
             }
           }
            
-          ApmwConfig.getInstance().Instantiate(slotData, contract);
+          ApmwConfig config = ApmwConfig.getInstance();
+          config.Instantiate(slotData, contract);
+          if (config.Goal == Goal.OrderedProgressive6x8 && contract == null)
+          {
+            nonSessionMessages.Add(
+              "Ordered Progressive (6x8 Start) requires the current APMW geometry contract.");
+            nonSessionMessages.Add(
+              "Connection refused because this world cannot expose the complete 6x8-to-12x12 stage sequence.");
+            session.Socket.DisconnectAsync();
+            return;
+          }
           ItemHandler = new ItemHandler(session.Items);
           ItemHandler.ReceivedItemsChanged += ItemHandler_ReceivedItemsChanged;
           RefreshGeometrySelection(true);
@@ -427,7 +437,8 @@ namespace Archipelago.APChessV
         : ApmwGeometryResolver.ResolveCurrent(
           config.CurrentContract,
           unlocks.BoardFileUnlockCount,
-          unlocks.BoardRankUnlockCount);
+          unlocks.BoardRankUnlockCount,
+          config.Goal);
       lock (geometryStateLock)
       {
         if (initialConnection)

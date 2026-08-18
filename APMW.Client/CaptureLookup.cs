@@ -12,8 +12,18 @@ namespace Archipelago.APChessV
 {
   internal sealed class ApmwLocationProfile
   {
-    private static readonly string[] StageOrder =
+    private static readonly string[] LegacyStageOrder =
     {
+      "8x8",
+      "10x8",
+      "10x10",
+      "12x10",
+      "12x12",
+    };
+
+    private static readonly string[] OrderedProgressive6x8StageOrder =
+    {
+      "6x8",
       "8x8",
       "10x8",
       "10x10",
@@ -24,6 +34,7 @@ namespace Archipelago.APChessV
     private static readonly Dictionary<string, string> CheckmateNames =
       new Dictionary<string, string>(StringComparer.Ordinal)
       {
+        { "6x8", "Checkmate 6x8" },
         { "8x8", "Checkmate Minima" },
         { "10x8", "Checkmate Maxima" },
         { "10x10", "Checkmate 10x10" },
@@ -36,7 +47,7 @@ namespace Archipelago.APChessV
       Files = files;
       Ranks = ranks;
       StageId = files + "x" + ranks;
-      StageIndex = Array.IndexOf(StageOrder, StageId);
+      StageIndex = Array.IndexOf(OrderedProgressive6x8StageOrder, StageId);
       if (StageIndex < 0)
         throw new ArgumentOutOfRangeException(nameof(files), "Unsupported APMW location geometry " + StageId + ".");
     }
@@ -62,8 +73,22 @@ namespace Archipelago.APChessV
 
     public IReadOnlyList<string> CheckmateLocationsThroughStage()
     {
-      return StageOrder
-        .Take(StageIndex + 1)
+      return CheckmateLocationsThroughStage(Goal.OrderedProgressive);
+    }
+
+    public IReadOnlyList<string> CheckmateLocationsThroughStage(Goal goal)
+    {
+      string[] stageOrder = ApmwGoalSemantics.UsesSixByEightOpening(goal)
+        ? OrderedProgressive6x8StageOrder
+        : LegacyStageOrder;
+      int stageIndex = Array.IndexOf(stageOrder, StageId);
+      if (stageIndex < 0)
+      {
+        throw new InvalidOperationException(
+          "APMW location geometry " + StageId + " is not part of goal " + goal + ".");
+      }
+      return stageOrder
+        .Take(stageIndex + 1)
         .Select(stage => CheckmateNames[stage])
         .ToList()
         .AsReadOnly();
@@ -83,6 +108,17 @@ namespace Archipelago.APChessV
 
   public class CaptureLookup
   {
+    public static Dictionary<string, string> SixByEightNames =
+      new Dictionary<string, string>()
+      {
+        { "A", "Queen's Knight" },
+        { "B", "Queen's Bishop" },
+        { "C", "Queen's Rook" },
+        { "D", "Checkmate 6x8" }, // not used
+        { "E", "King's Bishop" },
+        { "F", "King's Knight" },
+      };
+
     public static Dictionary<string, string> MinimaNames =
       new Dictionary<string, string>()
       {
@@ -140,6 +176,9 @@ namespace Archipelago.APChessV
       Dictionary<string, string> names;
       switch (numFiles)
       {
+        case 6:
+          names = SixByEightNames;
+          break;
         case 8:
           names = MinimaNames;
           break;

@@ -428,9 +428,9 @@ namespace ChessV
         {
           drawOnNextMove = false;
           Result boardResult;
-          Game.MakeMove(move, true);
+          Game.MakeMove(move, true, MoveExecutionMode.Speculative);
           boardResult = Game.Result;
-          Game.UndoMove();
+          Game.UndoMove(false, MoveExecutionMode.Speculative);
 
           //	If the engine claimed a draw before this move, the
           //	game must have ended in a draw by now

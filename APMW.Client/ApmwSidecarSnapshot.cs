@@ -107,6 +107,8 @@ namespace Archipelago.APChessV
   {
     internal static readonly IReadOnlyList<string> AllGeometryStages =
       Array.AsReadOnly(new[] { "8x8", "10x8", "10x10", "12x10", "12x12" });
+    internal static readonly IReadOnlyList<string> OrderedProgressive6x8GeometryStages =
+      Array.AsReadOnly(new[] { "6x8", "8x8", "10x8", "10x10", "12x10", "12x12" });
 
     private static readonly string[] SeedNames =
     {
@@ -122,6 +124,25 @@ namespace Archipelago.APChessV
       IEnumerable<KeyValuePair<string, string>> seeds,
       IEnumerable<KeyValuePair<string, int>> itemCounts,
       IEnumerable<ApmwSidecarUpgradePreference> upgradePreferences = null)
+      : this(
+          contract,
+          itemization,
+          ordering,
+          seeds,
+          itemCounts,
+          Goal.Single,
+          upgradePreferences)
+    {
+    }
+
+    public ApmwSidecarInputSnapshot(
+      ApmwContractV2 contract,
+      string itemization,
+      string ordering,
+      IEnumerable<KeyValuePair<string, string>> seeds,
+      IEnumerable<KeyValuePair<string, int>> itemCounts,
+      Goal goal,
+      IEnumerable<ApmwSidecarUpgradePreference> upgradePreferences = null)
     {
       if (contract == null)
         throw new ArgumentNullException(nameof(contract));
@@ -131,10 +152,15 @@ namespace Archipelago.APChessV
         throw new ArgumentException("ordering must be stable or chaos", nameof(ordering));
       if (itemization == "fundamental" && ordering != "stable")
         throw new ArgumentException("fundamental itemization supports stable ordering only", nameof(ordering));
+      ApmwGoalSemantics.EnsureSupported(goal, nameof(goal));
 
       ContractHash = contract.ManifestSha256;
       Itemization = itemization;
       Ordering = ordering;
+      Goal = goal;
+      GeometryStages = ApmwGoalSemantics.UsesSixByEightOpening(goal)
+        ? OrderedProgressive6x8GeometryStages
+        : AllGeometryStages;
       Seeds = NormalizeSeeds(seeds);
       ItemCounts = NormalizeItemCounts(contract, itemization, itemCounts);
       UpgradePreferences = NormalizeUpgradePreferences(contract, upgradePreferences);
@@ -145,6 +171,8 @@ namespace Archipelago.APChessV
     public string ContractHash { get; }
     public string Itemization { get; }
     public string Ordering { get; }
+    public Goal Goal { get; }
+    public IReadOnlyList<string> GeometryStages { get; }
     public IReadOnlyDictionary<string, string> Seeds { get; }
     public IReadOnlyDictionary<string, int> ItemCounts { get; }
     public IReadOnlyList<ApmwSidecarUpgradePreference> UpgradePreferences { get; }
@@ -244,6 +272,8 @@ namespace Archipelago.APChessV
         writer.WriteStartObject();
         writer.WriteString("itemization", Itemization);
         writer.WriteString("ordering", Ordering);
+        if (Goal == Goal.OrderedProgressive6x8)
+          writer.WriteNumber("goal", (int)Goal);
         writer.WritePropertyName("seeds");
         writer.WriteStartObject();
         foreach (string name in SeedNames)
@@ -364,6 +394,7 @@ namespace Archipelago.APChessV
           new KeyValuePair<string, string>("queen_seed", StableSlotSeed(config, "queen_seed")),
         },
         items,
+        config.Goal,
         preferences);
     }
 
@@ -436,7 +467,7 @@ namespace Archipelago.APChessV
         "apmw-" + snapshot.InputSha256,
         ContractHash,
         snapshot.ToJsonElement(),
-        ApmwSidecarInputSnapshot.AllGeometryStages,
+        snapshot.GeometryStages,
         RuntimeSemanticVersion);
     }
   }
@@ -489,8 +520,10 @@ namespace Archipelago.APChessV
       string geometryStage,
       CancellationToken cancellationToken)
     {
-      if (!ApmwSidecarInputSnapshot.AllGeometryStages.Contains(geometryStage, StringComparer.Ordinal))
-        throw new ArgumentException("geometry must be one of the current contract stages", nameof(geometryStage));
+      if (snapshot == null)
+        throw new ArgumentNullException(nameof(snapshot));
+      if (!snapshot.GeometryStages.Contains(geometryStage, StringComparer.Ordinal))
+        throw new ArgumentException("geometry must be one of the snapshot stages", nameof(geometryStage));
       ApmwSidecarSuccessResponse response = await GetAsync(snapshot, cancellationToken).ConfigureAwait(false);
       ApmwSidecarProjectionResult result = response.Results.Single(item => item.GeometryStage == geometryStage);
       return result.Projection.Clone();

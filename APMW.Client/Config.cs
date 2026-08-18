@@ -8,8 +8,33 @@ namespace Archipelago.APChessV
 {
   public enum Goal
   {
-    Single = 0, OrderedProgressive = 1, Progressive = 2, Super = 3
+    Single = 0,
+    OrderedProgressive = 1,
+    Progressive = 2,
+    Super = 3,
+    OrderedProgressive6x8 = 4
   }
+
+  internal static class ApmwGoalSemantics
+  {
+    public static void EnsureSupported(Goal goal, string parameterName)
+    {
+      if (!Enum.IsDefined(typeof(Goal), goal))
+      {
+        throw new ArgumentOutOfRangeException(
+          parameterName,
+          goal,
+          "Unsupported APMW goal.");
+      }
+    }
+
+    public static bool UsesSixByEightOpening(Goal goal)
+    {
+      EnsureSupported(goal, nameof(goal));
+      return goal == Goal.OrderedProgressive6x8;
+    }
+  }
+
   public enum PieceLocations
   {
     Chaos = 0, Stable = 1, Ordered = 2,
@@ -149,7 +174,9 @@ namespace Archipelago.APChessV
     {
       set
       {
-        goal = (Goal)value;
+        Goal parsed = (Goal)value;
+        ApmwGoalSemantics.EnsureSupported(parsed, nameof(value));
+        goal = parsed;
       }
     }
     private PieceLocations locs;

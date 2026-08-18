@@ -36,6 +36,7 @@ namespace Archipelago.APChessV
       new ReadOnlyDictionary<string, string>(
         new Dictionary<string, string>(StringComparer.Ordinal)
         {
+          { "6x8", ApmwProfiles.SixByEightGameName },
           { "8x8", ApmwProfiles.StandardGameName },
           { "10x8", ApmwProfiles.GrandGameName },
           { "10x10", ApmwProfiles.TenByTenGameName },
@@ -63,6 +64,31 @@ namespace Archipelago.APChessV
           .Where(stage => stage.Files <= effectiveFiles && stage.Ranks <= effectiveRanks)
           .Select(stage => ToRegisteredOption(stage.StageId, stage.Files, stage.Ranks))
           .ToList());
+    }
+
+    public static IReadOnlyList<ApmwGeometryOption> ResolveCurrent(
+      ApmwContractV2 contract,
+      int boardFileUnlockCount,
+      int boardRankUnlockCount,
+      Goal goal)
+    {
+      if (contract == null)
+        throw new ArgumentNullException(nameof(contract));
+      if (!ApmwGoalSemantics.UsesSixByEightOpening(goal))
+        return ResolveCurrent(contract, boardFileUnlockCount, boardRankUnlockCount);
+
+      var options = new List<ApmwGeometryOption>
+      {
+        ToRegisteredOption("6x8", 6, 8),
+      };
+      if (boardFileUnlockCount > 0)
+      {
+        options.AddRange(ResolveCurrent(
+          contract,
+          boardFileUnlockCount - 1,
+          boardRankUnlockCount));
+      }
+      return new ReadOnlyCollection<ApmwGeometryOption>(options);
     }
 
     public static IReadOnlyList<ApmwGeometryOption> ResolveLegacy(bool superSizeUnlocked)
@@ -176,7 +202,7 @@ namespace Archipelago.APChessV
       if (options == null)
         throw new ArgumentNullException(nameof(options));
       if (options.Count == 0)
-        throw new InvalidOperationException("At least the base 8x8 APMW geometry must be available.");
+        throw new InvalidOperationException("At least one APMW geometry must be available.");
 
       string selectedStageId = SelectedOption == null ? null : SelectedOption.StageId;
       availableOptions = new ReadOnlyCollection<ApmwGeometryOption>(options.ToList());

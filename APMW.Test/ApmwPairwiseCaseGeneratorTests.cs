@@ -25,12 +25,14 @@ namespace ChessV.Test
                     "pairwise-0001-standard",
                     "pairwise-0002-standard",
                     "pairwise-0003-standard",
-                    "pairwise-0004-super-sized",
+                    "pairwise-0004-standard",
                     "pairwise-0005-super-sized",
                     "pairwise-0006-super-sized",
                     "pairwise-0007-super-sized",
+                    "pairwise-0008-super-sized",
+                    "pairwise-0009-super-sized",
                 },
-                cases.Take(8).Select(fuzzCase => fuzzCase.CaseName).ToArray());
+                cases.Take(10).Select(fuzzCase => fuzzCase.CaseName).ToArray());
             Assert.AreEqual(cases.Count, cases.Select(fuzzCase => fuzzCase.CaseName).Distinct().Count());
 
             Assert.IsTrue(cases.Where(fuzzCase => fuzzCase.IsSuperSized)
@@ -69,7 +71,7 @@ namespace ChessV.Test
             string[] subsetNames =
             {
                 "pairwise-0000-standard",
-                "pairwise-0004-super-sized",
+                "pairwise-0005-super-sized",
                 "pairwise-0012-standard",
                 "interaction-pockets-standard-default-limit-max-fill",
                 "interaction-pawns-super-over-forwardness-any-classical",

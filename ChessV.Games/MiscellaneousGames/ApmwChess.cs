@@ -224,9 +224,12 @@ namespace ChessV.Games
         ReplaceRule(enPassantRule, new MixedEnPassantRule((Rules.EnPassantRule)enPassantRule));
 
       // *** 480 CASTLING NO SCOPE ***
-      AddCastlingRule();
-      AddCustomBackRankCastlingMoves();
-      AddDefaultCastlingMoves();
+      if (ApmwProfile.SupportsCastling)
+      {
+        AddCastlingRule();
+        AddCustomBackRankCastlingMoves();
+        AddDefaultCastlingMoves();
+      }
     }
     #endregion
 
@@ -310,8 +313,15 @@ namespace ChessV.Games
       Castling.RemoveChoice("Flexible");
       PawnDoubleMove = true;
       EnPassant = true;
-      Castling.AddChoice("CwDA", "Standard castling with the extra exception to prevent color-bound pieces from changing square colors");
-      Castling.Value = "CwDA";
+      if (ApmwProfile.SupportsCastling)
+      {
+        Castling.AddChoice("CwDA", "Standard castling with the extra exception to prevent color-bound pieces from changing square colors");
+        Castling.Value = "CwDA";
+      }
+      else
+      {
+        Castling.Value = "None";
+      }
     }
     #endregion
 
@@ -398,13 +408,16 @@ namespace ChessV.Games
       // TODO(chesslogic): incorporate ApmwCore
       string[] humanFormationRows = new string[ApmwProfile.HumanFormationRanks];
       StringBuilder CastleRooks = new StringBuilder();
-      if (humanPlayer == 0)
+      if (ApmwProfile.SupportsCastling)
       {
-        CastleRooks.Append("kq");
-      }
-      else
-      {
-        CastleRooks.Append("KQ");
+        if (humanPlayer == 0)
+        {
+          CastleRooks.Append("kq");
+        }
+        else
+        {
+          CastleRooks.Append("KQ");
+        }
       }
 
       // Set castling pieces
@@ -425,7 +438,8 @@ namespace ChessV.Games
 
             PieceType pieceType = startingPosition[place];
             notation.Append(pieceType.Notation[humanPlayer]);
-            if (rank == ApmwProfile.PlayerBackRank &&
+            if (ApmwProfile.SupportsCastling &&
+                rank == ApmwProfile.PlayerBackRank &&
                 (Majors.Contains(pieceType) || Jacks.Contains(pieceType)))
             {
               var newCastlingRook = (char)('a' + file);
@@ -445,7 +459,9 @@ namespace ChessV.Games
           notation.Append(emptySpaceCount);
         humanFormationRows[rank] = notation.ToString();
       }
-      SetCustomProperty("CastleRooks", CastleRooks.ToString());
+      SetCustomProperty(
+        "CastleRooks",
+        CastleRooks.Length == 0 ? "-" : CastleRooks.ToString());
 
       string[] fenRows = ApmwProfile.ComposeFenRows(
         humanPlayer,
@@ -479,133 +495,9 @@ namespace ChessV.Games
 
     public void earlyPopulatePieceTypes()
     {
-      King = new King("King", "K", 325, 325);
-      MountedKing = new MountedKing("Mounted King", "W", 700, 700, preferredImageName: "Champion");
-      HyperKing = new HyperKing("Hyper King", "Z", 1175, 1175, preferredImageName: "Frog");
-      Pawn = new Pawn("Pawn", "P", 100, 125);
-      Rook = new Rook("Rook", "R", 500, 550);
-      Bishop = new Bishop("Bishop", "B", 325, 350);
-      Knight = new Knight("Knight", "N", 325, 325);
-      Queen = new Queen("Queen", "Q", 950, 1000);
-      // Berolina pawn
-      BerolinaPawn = new BerolinaPawn("Berolina Pawn", "Ŕ", 85, 120, preferredImageName: "Ferz");
-      // Checkers pawn - register with both case variants
-      Checkers = new Checkers("Checkers", "Ç", 40, 95, preferredImageName: "CircleLittle");
-      // Sergeant
-      Sergeant = new Sergeant("Sergeant", "Ŝ", 200, 225, preferredImageName: "General");
-      OdinPawn = new OdinPawn("Odin Pawn", "Ó", 150, 200, preferredImageName: "Wizard");
-      // Cwda
-      //AddPieceType(Queen = new Queen("Queen", "Q", 950, 1000));
-      //AddPieceType(Rook = new Rook("Rook", "R", 500, 550));
-      //AddPieceType(Bishop = new Bishop("Bishop", "B", 325, 350));
-      //AddPieceType(Knight = new Knight("Knight", "N", 325, 325));
-      Archbishop = new Archbishop("Archbishop", "A", 875, 875);
-      WarElephant = new WarElephant("War Elephant", "E", 475, 475);
-      Phoenix = new Phoenix("Phoenix", "X", 315, 315);
-      Cleric = new Cleric("Cleric", "G", 450, 500);
-      Chancellor = new Chancellor("Chancellor", "C", 950, 950);
-      ShortRook = new ShortRook("Short Rook", "S", 400, 425);
-      Tower = new Tower("Tower", "T", 325, 325);
-      Lion = new Lion("Lion", "I", 500, 500);
-      ChargingRook = new ChargingRook("Charging Rook", "H", 495, 530);
-      NarrowKnight = new NarrowKnight("Lancer", "L", 325, 325);
-      ChargingKnight = new ChargingKnight("Charging Knight", "M", 365, 365);
-      Colonel = new Colonel("Colonel", "Y", 950, 950);
-      // Eurasian
-      Cannon = new Cannon("Cannon", "O", 400, 275);
-      Vao = new Vao("Vao", "V", 300, 175);
-      // Misc
-      Herald = new Herald("Herald", "D", 1300, 1300);
-      Amazon = new Amazon("Amazon", "Â", 1300, 1300);
-      Paladin = new Paladin("Paladin", "Ṕ", 1300, 1350);
-      Nightrider = new Nightrider("Nightrider", "J", 550, 550, "Knightsrider");
-      Scout = new Scout("Scout", "U", 300, 300);
-      Queennon = new Queennon("Queennon", "F", 1025, 720);
-      // Petal
-      Petal = new Petal("Petal", "Ă", 475, 575);
-      // Ribbon
-      Ribbon = new Ribbon("Ribbon", "Ŋ", 275, 375);
-      // Oliphant
-      //Oliphant = new Oliphant("Oliphant", "Œ", 500, 500);
-      Gardener = new Gardener("Gardener", "Ř", 250, 250);
-      Miracle = new Miracle("Miracle", "Ħ", 960, 1050);
-
-      // Jacks
-      AgileRook = new AgileRook("Agile Rook", "Ŗ", 700, 700);
-      Mullah = new Mullah("Mullah", "Ŏ", 700, 700);
-      Zealot = new Zealot("Zealot", "Ż", 700, 700);
-      GreatCamel = new GreatCamel("Great Camel", "Č", 700, 700);
-      DragonCannon = new DragonCannon("Dragon Cannon", "Ð", 700, 700);
-      Mameluk = new Mameluk("Mameluk", "Ē", 700, 700);
-      Grazer = new Grazer("Grazer", "Ŧ", 700, 700);
-
-      Kings.Add(King);
-      Kings.Add(MountedKing);
-      Kings.Add(HyperKing);
-      
-      Pawns.Add(Pawn);
-      Pawns.Add(BerolinaPawn);
-      Pawns.Add(Checkers);
-      
-      Sergeants.Add(Sergeant);
-      Sergeants.Add(OdinPawn);
-
-      Minors.Add(Bishop);
-      Minors.Add(Knight);
-      Minors.Add(Phoenix); // awkward
-      Minors.Add(ShortRook); // unusually powerful
-      Minors.Add(Tower);
-      Minors.Add(NarrowKnight);
-      Minors.Add(ChargingKnight);
-      Minors.Add(Vao); // very weak
-      Minors.Add(Cannon); // unusually powerful
-      Minors.Add(Scout); // slightly weak
-      Minors.Add(Gardener);
-      Minors.Add(Ribbon);
-
-      Majors.Add(Rook);
-      Majors.Add(WarElephant);
-      Majors.Add(Cleric);
-      Majors.Add(Lion);
-      Majors.Add(ChargingRook);
-      Majors.Add(Nightrider);
-      Majors.Add(Petal);
-
-      Jacks.Add(AgileRook);
-      Jacks.Add(Mullah);
-      Jacks.Add(Zealot);
-      Jacks.Add(GreatCamel);
-      Jacks.Add(DragonCannon);
-      Jacks.Add(Mameluk);
-      Jacks.Add(Grazer);
-
-      Queens.Add(Queen);
-      Queens.Add(Archbishop);
-      Queens.Add(Chancellor);
-      Queens.Add(Colonel);
-      Queens.Add(Queennon); // hilarious comedy option
-      Queens.Add(Miracle);
-
-      Amazons.Add(Amazon);
-      Amazons.Add(Herald);
-      Amazons.Add(Paladin);
-
-      Colorbounds.Add(Bishop);
-      Colorbounds.Add(WarElephant);
-      Colorbounds.Add(Cleric);
-
-      Armies.AddRange(new HashSet<PieceType>[] {
-        new HashSet<PieceType>() { Bishop, Knight, Rook, Queen, AgileRook },
-        new HashSet<PieceType>() { WarElephant, Phoenix, Cleric, Archbishop, Mullah },
-        new HashSet<PieceType>() { Tower, ShortRook, Lion, Chancellor, Zealot },
-        new HashSet<PieceType>() { ChargingKnight, NarrowKnight, ChargingRook, Colonel, Mameluk },
-        // Eurasian army
-        new HashSet<PieceType>() { Vao, Cannon, Herald, Queennon, DragonCannon },
-        // Camel army
-        new HashSet<PieceType>() { Scout, Nightrider, Miracle, Colonel, Mameluk },
-        // Petal army
-        new HashSet<PieceType>() { Gardener, Ribbon, Petal, Miracle, Grazer }
-      });
+      ApmwPieceCatalog catalog = ApmwPieceCatalog.Create();
+      catalog.BindTo(this);
+      catalog.Publish(ApmwCore.getInstance());
     }
 
     private void AddFairyPawnDoubleMoves()

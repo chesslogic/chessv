@@ -44,7 +44,7 @@ namespace Archipelago.APChessV
   internal sealed class ProjectionGeometry
   {
     private static readonly HashSet<string> ValidStageIds = new HashSet<string>(
-      new[] { "8x8", "10x8", "10x10", "12x10", "12x12" },
+      new[] { "6x8", "8x8", "10x8", "10x10", "12x10", "12x12" },
       StringComparer.Ordinal);
 
     private ProjectionGeometry(int files, int ranks)

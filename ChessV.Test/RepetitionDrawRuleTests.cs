@@ -42,6 +42,30 @@ namespace ChessV.Test
         "Taking back a repeated position should remove that occurrence from repetition history.");
     }
 
+    [TestMethod]
+    public void SpeculativeProbesDoNotChangeRepetitionOrHashState()
+    {
+      Game game = CreateChessGame();
+      game.PlayMoves(KnightCycle);
+      ulong settledHash = game.GetPositionHashCode(1);
+
+      for (int probe = 0; probe < 100; probe++)
+      {
+        Movement move = game.MoveFromDescription("g1f3", MoveNotation.XBoard);
+        game.MakeMove(move, true, MoveExecutionMode.Speculative);
+        game.UndoMove(false, MoveExecutionMode.Speculative);
+      }
+
+      Assert.AreEqual(settledHash, game.GetPositionHashCode(1));
+      Assert.AreEqual(4, game.GameMoveNumber);
+      Assert.AreEqual(ResultType.NoResult, game.Result.Type);
+
+      game.PlayMoves(KnightCycle);
+
+      Assert.AreEqual(ResultType.Draw, game.Result.Type,
+        "Speculative probes must not add or remove committed repetition occurrences.");
+    }
+
     private static Game CreateChessGame()
     {
       Manager.Manager manager = new Manager.Manager();

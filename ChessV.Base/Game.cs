@@ -30,6 +30,12 @@ using System.Text.RegularExpressions;
 
 namespace ChessV
 {
+  public enum MoveExecutionMode
+  {
+    Committed,
+    Speculative
+  }
+
   public partial class Game : ExObject
   {
     // *** CONSTANTS *** //
@@ -234,9 +240,13 @@ namespace ChessV
     public event MoveNotificationHandler MoveBeingPlayed;
     public event MoveNotificationHandler MovePlayed;
 
-    //	Take back move event - fired when a move is taken back 
+    //	Take back move event - fired when a committed move is taken back
     public delegate void TakeBackMoveHandler();
     public event TakeBackMoveHandler MoveTakenBack;
+
+    //	State reversion event - also fired for temporary speculative moves
+    public delegate void MoveRevertedHandler(MoveExecutionMode executionMode);
+    public event MoveRevertedHandler MoveReverted;
 
     //	Thinking callback
     public ThinkingCallback ThinkingCallback { get; set; }
@@ -658,6 +668,7 @@ namespace ChessV
 
       //	Initialize game Result
       Result = new Result(ResultType.NoResult);
+      speculativeMoveSnapshots.Clear();
 
       //	Allocate array of history counters (move ordering history heuristic)
       historyCounters = new UInt32[NumPlayers, NPieceTypes, Board.NumSquaresExtended];
@@ -1133,6 +1144,7 @@ namespace ChessV
         rule.ClearGameState();
       //	Initialize game Result
       Result = new ChessV.Result(ResultType.NoResult);
+      speculativeMoveSnapshots.Clear();
       //	Allocate array of history counters
       historyCounters = new UInt32[NumPlayers, NPieceTypes, Board.NumSquaresExtended];
       //	Allocate array of butterfly counters
@@ -1572,10 +1584,19 @@ namespace ChessV
     //	move; highlightMove specifies whether the move should be highlighted.
     //	NOTE: This function makes an actual move on the board which is 
     //	committed to the game history.  Moves made/unmade in a search 
-    //	do not call this.
-    public void MakeMove(MoveInfo move, bool highlightMove)
+    //	do not call this. Speculative callers must undo with the same mode;
+    // APMW notifications are deferred until the real commit.
+    public void MakeMove(
+      MoveInfo move,
+      bool highlightMove,
+      MoveExecutionMode executionMode = MoveExecutionMode.Committed)
     {
-      if (move != lastMove)
+      Result resultBeforeMove =
+        executionMode == MoveExecutionMode.Speculative ? Result : null;
+      bool notifyApmw =
+        executionMode == MoveExecutionMode.Committed &&
+        move != lastMove;
+      if (notifyApmw)
         ApmwCore.getInstance().NewMoveSetup.ForEach((handler) => handler(move));
       //	make the move
       if (!moveLists[1].MakeMove(move))
@@ -1627,10 +1648,13 @@ namespace ChessV
       //	raise MoveBeingPlayed event first, then MovePlayed event
       MoveBeingPlayed?.Invoke(move);
       MovePlayed(move);
-      if (move != lastMove)
+      if (executionMode == MoveExecutionMode.Committed)
       {
-        ApmwCore.getInstance().NewMovePlayed.ForEach((handler) => handler(move));
-        lastMove = move;
+        if (notifyApmw)
+        {
+          ApmwCore.getInstance().NewMovePlayed.ForEach((handler) => handler(move));
+          lastMove = move;
+        }
       }
 
       if (Result.IsNone)
@@ -1651,7 +1675,8 @@ namespace ChessV
           if (result == MoveEventResponse.GameLost)
             Result = new Result(ResultType.Win, CurrentSide ^ 1);
 
-          ApmwCore.getInstance().MatchFinished.ForEach((handler) => handler(Match));
+          if (executionMode == MoveExecutionMode.Committed)
+            ApmwCore.getInstance().MatchFinished.ForEach((handler) => handler(Match));
         }
       }
       else
@@ -1659,15 +1684,39 @@ namespace ChessV
         //	perform some cleanup
         cleanup();
       }
+
+      if (executionMode == MoveExecutionMode.Speculative)
+      {
+        speculativeMoveSnapshots.Push(
+          new SpeculativeMoveSnapshot(gameHistoryCount, resultBeforeMove));
+      }
     }
 
     /** used to prevent emitting extra moves for the same action, which keeps happening */
     MoveInfo lastMove;
 
+    private sealed class SpeculativeMoveSnapshot
+    {
+      public SpeculativeMoveSnapshot(int gameHistoryCount, Result result)
+      {
+        GameHistoryCount = gameHistoryCount;
+        Result = result;
+      }
+
+      public int GameHistoryCount { get; private set; }
+      public Result Result { get; private set; }
+    }
+
+    private readonly Stack<SpeculativeMoveSnapshot> speculativeMoveSnapshots =
+      new Stack<SpeculativeMoveSnapshot>();
+
     //	Version of PerformMove for when only a Movement is available, 
     //	not a MoveInfo.  This finds the appropriate MoveInfo from the 
     //	root MoveList and passes it to the other overload.
-    public void MakeMove(Movement move, bool highlightMove)
+    public void MakeMove(
+      Movement move,
+      bool highlightMove,
+      MoveExecutionMode executionMode = MoveExecutionMode.Committed)
     {
       MoveInfo[] moves;
       int nMoves = moveLists[1].GetMoves(out moves);
@@ -1675,7 +1724,7 @@ namespace ChessV
       {
         if (moves[x].Hash == move.Hash)
         {
-          MakeMove(moves[x], highlightMove);
+          MakeMove(moves[x], highlightMove, executionMode);
           return;
         }
       }
@@ -1684,21 +1733,52 @@ namespace ChessV
     #endregion
 
     #region UndoMove
-    public void UndoMove(bool userCommand = false)
+    public void UndoMove(
+      bool userCommand = false,
+      MoveExecutionMode executionMode = MoveExecutionMode.Committed)
     {
       if (finalized)
         return;
+
+      SpeculativeMoveSnapshot speculativeSnapshot = null;
+      if (executionMode == MoveExecutionMode.Speculative)
+      {
+        if (speculativeMoveSnapshots.Count == 0 ||
+          speculativeMoveSnapshots.Peek().GameHistoryCount != gameHistoryCount)
+        {
+          throw new InvalidOperationException(
+            "Speculative UndoMove requires a matching speculative MakeMove in LIFO order.");
+        }
+        speculativeSnapshot = speculativeMoveSnapshots.Peek();
+      }
+      else if (speculativeMoveSnapshots.Count > 0 &&
+        speculativeMoveSnapshots.Peek().GameHistoryCount == gameHistoryCount)
+      {
+        throw new InvalidOperationException(
+          "The current move was made speculatively and must be undone speculatively.");
+      }
+
       BoardMoveStack.UnmakeMove();
       gameHistoryCount--;
       moveLists[1].Reset();
       Ply = 1;
       generateMoves(CurrentSide, Ply, 0);
-      lastMove = default(MoveInfo);
-      MoveTakenBack?.Invoke();
+      if (executionMode == MoveExecutionMode.Speculative)
+      {
+        speculativeMoveSnapshots.Pop();
+        Result = speculativeSnapshot.Result;
+      }
+      if (executionMode == MoveExecutionMode.Committed)
+      {
+        lastMove = default(MoveInfo);
+        MoveTakenBack?.Invoke();
+      }
+      MoveReverted?.Invoke(executionMode);
       if (userCommand)
       {
         HighlightSquares.Clear();
-        Result = new Result(ResultType.NoResult);
+        if (executionMode == MoveExecutionMode.Committed)
+          Result = new Result(ResultType.NoResult);
         Player player = Match.GetPlayer(CurrentSide);
         if (player is HumanPlayer)
           ((HumanPlayer)player).State = PlayerState.Thinking;

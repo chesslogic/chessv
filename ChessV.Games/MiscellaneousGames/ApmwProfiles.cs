@@ -69,6 +69,7 @@ namespace ChessV.Games
     public int Ranks { get; private set; }
     public int CardSlotsPerPlayer { get; private set; }
     public int KingFile { get; private set; }
+    public bool SupportsCastling { get; private set; }
     public int QueenSideCornerFile { get { return 0; } }
     public int KingSideCornerFile { get { return Files - 1; } }
     public int HumanFormationRanks { get { return Ranks - 3; } }
@@ -93,7 +94,8 @@ namespace ChessV.Games
       int files,
       int ranks,
       int cardSlotsPerPlayer,
-      IEnumerable<ApmwCpuArmyProfile> cpuArmies)
+      IEnumerable<ApmwCpuArmyProfile> cpuArmies,
+      bool supportsCastling = true)
     {
       StageId = files + "x" + ranks;
       GameName = gameName;
@@ -101,6 +103,7 @@ namespace ChessV.Games
       Ranks = ranks;
       CardSlotsPerPlayer = cardSlotsPerPlayer;
       KingFile = files / 2;
+      SupportsCastling = supportsCastling;
       metadataGeometryParameters = new[] { files, ranks, cardSlotsPerPlayer };
       fenRankPropertyNames = CreateFenRankPropertyNames(ranks);
 
@@ -148,6 +151,12 @@ namespace ChessV.Games
       int castlerSourceFile,
       bool colorboundCastler)
     {
+      if (!SupportsCastling)
+      {
+        throw new InvalidOperationException(
+          "Castling is disabled for the APMW " + StageId + " profile.");
+      }
+
       if (castlerSourceFile < 0 || castlerSourceFile >= Files ||
           castlerSourceFile == KingFile)
       {
@@ -274,6 +283,7 @@ namespace ChessV.Games
 
   public static class ApmwProfiles
   {
+    public const string SixByEightGameName = "Archipelago Multiworld 6x8";
     public const string StandardGameName = "Archipelago Multiworld";
     public const string GrandGameName = "Archipelago Multiworld Super-Sized";
     public const string TenByTenGameName = "Archipelago Multiworld 10x10";
@@ -285,6 +295,7 @@ namespace ChessV.Games
     public const string RemarkableRookies = "Remarkable Rookies (Betza)";
     public const string NuttyKnights = "Nutty Knights (Betza)";
 
+    public static ApmwGeometryProfile SixByEight { get; private set; }
     public static ApmwGeometryProfile Standard { get; private set; }
     public static ApmwGeometryProfile Grand { get; private set; }
     public static ApmwGeometryProfile TenByTen { get; private set; }
@@ -294,6 +305,14 @@ namespace ChessV.Games
 
     static ApmwProfiles()
     {
+      SixByEight = new ApmwGeometryProfile(
+        SixByEightGameName,
+        6,
+        8,
+        3,
+        CreateSixFileArmies(),
+        false);
+
       Standard = new ApmwGeometryProfile(
         StandardGameName,
         8,
@@ -338,6 +357,22 @@ namespace ChessV.Games
           TwelveByTen,
           TwelveByTwelve,
         });
+    }
+
+    private static IEnumerable<ApmwCpuArmyProfile> CreateSixFileArmies()
+    {
+      return new[]
+      {
+        new ApmwCpuArmyProfile(StandardArmy, "nbrkbn", "rnbq", ""),
+        new ApmwCpuArmyProfile(
+          ColourboundClobberers,
+          "xeakex",
+          "gxea",
+          "",
+          true),
+        new ApmwCpuArmyProfile(RemarkableRookies, "tickit", "stic", ""),
+        new ApmwCpuArmyProfile(NuttyKnights, "lmykml", "hlmy", ""),
+      };
     }
 
     private static IEnumerable<ApmwCpuArmyProfile> CreateEightFileArmies()

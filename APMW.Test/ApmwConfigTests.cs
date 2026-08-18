@@ -10,6 +10,39 @@ namespace ChessV.Test
     [TestClass]
     public class ApmwConfigTests
     {
+        [TestMethod]
+        public void Goal_OrdinalsAreAppendOnlyAndValueFourParsesFromSlotData()
+        {
+            Assert.AreEqual(0, (int)Goal.Single);
+            Assert.AreEqual(1, (int)Goal.OrderedProgressive);
+            Assert.AreEqual(2, (int)Goal.Progressive);
+            Assert.AreEqual(3, (int)Goal.Super);
+            Assert.AreEqual(4, (int)Goal.OrderedProgressive6x8);
+
+            var config = new ApmwConfig();
+            config.Instantiate(new Dictionary<string, object>
+            {
+                ["goal"] = 4,
+            });
+
+            Assert.AreEqual(Goal.OrderedProgressive6x8, config.Goal);
+            Assert.AreEqual(4, Convert.ToInt32(config.SlotData["goal"]));
+        }
+
+        [DataTestMethod]
+        [DataRow(-1)]
+        [DataRow(5)]
+        public void Goal_UnsupportedOrdinalIsRejectedInsteadOfFallingBack(int value)
+        {
+            var config = new ApmwConfig();
+
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+                config.Instantiate(new Dictionary<string, object>
+                {
+                    ["goal"] = value,
+                }));
+        }
+
         private sealed class UnexpectedFailureConvertible : IConvertible
         {
             public TypeCode GetTypeCode() { throw new ApplicationException("unexpected conversion failure"); }

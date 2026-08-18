@@ -59,6 +59,7 @@ namespace ChessV.Test
     }
 
     [DataTestMethod]
+    [DataRow(6, 8, 11, 18, 29)]
     [DataRow(8, 8, 15, 24, 39)]
     [DataRow(10, 8, 19, 30, 49)]
     [DataRow(10, 10, 39, 30, 69)]
@@ -83,6 +84,17 @@ namespace ChessV.Test
       Assert.AreEqual(nonPawns, projection.ActiveCountsByRole[SourcePlacementRole.JackSlot]);
       Assert.AreEqual(activePawns, projection.ActiveCountsByRole[SourcePlacementRole.PawnSlot]);
       Assert.AreEqual(maximumNonPrimary, projection.ActivePieces.Count);
+    }
+
+    [TestMethod]
+    public void ProjectionGeometry_RecognizesSixByEightAndRejectsUnsupportedPairs()
+    {
+      ProjectionGeometry compact = ProjectionGeometry.For(6, 8);
+
+      Assert.AreEqual("6x8", compact.StageId);
+      Assert.AreEqual(11, compact.NonPawnCapacity);
+      Assert.ThrowsException<ArgumentOutOfRangeException>(
+        () => ProjectionGeometry.For(6, 10));
     }
 
     [TestMethod]

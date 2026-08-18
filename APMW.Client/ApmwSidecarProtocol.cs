@@ -44,6 +44,15 @@ namespace Archipelago.APChessV
         throw new ArgumentException("at least one geometry is required", nameof(geometries));
       if (geometryArray.Any(geometry => string.IsNullOrEmpty(geometry)))
         throw new ArgumentException("geometries must be nonempty strings", nameof(geometries));
+      if (geometryArray.Any(geometry =>
+          !ApmwSidecarInputSnapshot.OrderedProgressive6x8GeometryStages.Contains(
+            geometry,
+            StringComparer.Ordinal)))
+      {
+        throw new ArgumentException(
+          "geometries must use supported APMW stages",
+          nameof(geometries));
+      }
       if (geometryArray.Distinct(StringComparer.Ordinal).Count() != geometryArray.Length)
         throw new ArgumentException("geometries must be unique", nameof(geometries));
 
@@ -356,6 +365,7 @@ namespace Archipelago.APChessV
       int expectedRanks;
       switch (stage)
       {
+        case "6x8": expectedFiles = 6; expectedRanks = 8; break;
         case "8x8": expectedFiles = 8; expectedRanks = 8; break;
         case "10x8": expectedFiles = 10; expectedRanks = 8; break;
         case "10x10": expectedFiles = 10; expectedRanks = 10; break;

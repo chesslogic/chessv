@@ -87,3 +87,21 @@ Contract v2 requires ChecksMate client 0.4.0 or newer. The client validates the 
 
 APMW saved-game reconstruction remains unsupported. Finish an active match before changing board profile, and reconnect to rebuild unlock state after disconnecting.
 ```
+
+### Experimental Ordered Progressive 6x8 successor
+
+Add this subsection after "Board geometry, reserves, and contract v2":
+
+```
+### Experimental Ordered Progressive (6x8 Start)
+
+The client recognizes the append-only goal value `OrderedProgressive6x8 = 4`. Existing values remain unchanged: `Single = 0`, `OrderedProgressive = 1`, `Progressive = 2`, and `Super = 3`. In particular, legacy Ordered Progressive still begins on 8x8 and keeps its existing behavior.
+
+Goal 4 adds a compact prologue before the current ordered ladder:
+
+`6x8 -> 8x8 -> 10x8 -> 10x10 -> 12x10 -> 12x12`
+
+Its baseline compact position is exactly `nbrkbn/pppppp/6/6/6/6/PPPPPP/NBRKBN`: each side has six pawns, two knights, two bishops, one rook on the queen side, and one king. The 6x8 profile disables castling and retains standard promotion to Queen, Rook, Bishop, or Knight.
+
+This option is experimental and client-side only. The released `checksmate.apworld` does not yet generate goal 4, so do not advertise it as a supported selectable generation option. Generation-side support must append numeric goal 4 without renumbering legacy goals, provide the exact compact starting inventory and placement, publish `Checkmate 6x8` plus the compact capture/reachability rules, award three `Board Files` and two `Board Ranks` unlocks in the stated stage order, and require a compatible current-contract client. Any external projection sidecar must also accept the `goal: 4` snapshot field and the 6x8 geometry request before it can back this goal.
+```

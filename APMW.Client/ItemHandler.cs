@@ -1,6 +1,7 @@
 using Archipelago.MultiClient.Net.Helpers;
 using ChessV;
 using ChessV.Base;
+using ChessV.Games;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,6 +43,10 @@ namespace Archipelago.APChessV
     {
       ReceivedItemsHelper = receivedItemsHelper;
       this.projectionBackend = projectionBackend ?? new CurrentCSharpProjectionBackend();
+
+      // Geometry previews are available before a Game exists. Establish the same
+      // piece-catalog invariant that game initialization establishes later.
+      ApmwPieceCatalog.EnsurePublished();
 
       irHandler = (helper) => this.Hook();
       ReceivedItemsHelper.ItemReceived += irHandler;
@@ -176,9 +181,13 @@ namespace Archipelago.APChessV
           FoundCastlers = 0;
         }
         IsGrand = Any(itemCounts, ApmwConstants.ProgressiveItems.SuperSizeMe);
+        int maximumBoardFileUnlocks =
+          ApmwGoalSemantics.UsesSixByEightOpening(config.Goal)
+            ? ApmwEffectiveMaxima.BoardFiles + 1
+            : ApmwEffectiveMaxima.BoardFiles;
         GeometryUnlocks = new ApmwGeometryUnlockSnapshot(
           Math.Min(
-            ApmwEffectiveMaxima.BoardFiles,
+            maximumBoardFileUnlocks,
             Count(itemCounts, ApmwConstants.ProgressiveItems.BoardFiles)),
           Math.Min(
             ApmwEffectiveMaxima.BoardRanks,

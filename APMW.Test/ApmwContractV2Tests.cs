@@ -184,7 +184,12 @@ namespace APMW.Test
         "projection-v2",
         "baseline.json"));
       if (File.Exists(pythonFixture))
-        CollectionAssert.AreEqual(File.ReadAllBytes(FixturePath), File.ReadAllBytes(pythonFixture));
+      {
+        // Git may materialize the tracked LF fixture as CRLF on Windows.
+        Assert.AreEqual(
+          File.ReadAllText(FixturePath).Replace("\r\n", "\n"),
+          File.ReadAllText(pythonFixture).Replace("\r\n", "\n"));
+      }
     }
 
     [TestMethod]

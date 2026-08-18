@@ -39,7 +39,7 @@ namespace ChessV.Games.Rules
       searchStackHashes = new UInt64[Game.MAX_PLY];
       gameHistoryHashRecorded = new bool[Game.MAX_GAME_LENGTH];
       Game.MoveBeingPlayed += MoveBeingPlayedHandler;
-      Game.MoveTakenBack += MoveTakenBackHandler;
+      Game.MoveReverted += MoveRevertedHandler;
     }
 
     public override void PostInitialize()
@@ -68,7 +68,7 @@ namespace ChessV.Games.Rules
       gameHistoryHashRecorded[Game.GameMoveNumber] = true;
     }
 
-    void MoveTakenBackHandler()
+    void MoveRevertedHandler(MoveExecutionMode executionMode)
     {
       int removedMoveNumber = Game.GameMoveNumber + 1;
       gameHistoryHashes[removedMoveNumber] = 0;

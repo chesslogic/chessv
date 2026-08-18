@@ -5,6 +5,7 @@ using ChessV.Games;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace ChessV.Test
@@ -13,6 +14,73 @@ namespace ChessV.Test
   [DoNotParallelize]
   public class ApmwGeometryAwareProviderIntegrationTests
   {
+    [TestMethod]
+    public void GeometryPreviewBeforeGameCreationInitializesArmyFilteredPieceCatalog()
+    {
+      ApmwFuzzCase.Builder builder = ApmwFuzzCase.DefaultStandard().ToBuilder();
+      builder.ArmyIndexes = new[] { 1, 6 };
+      builder.PawnCount = 4;
+      builder.MinorPieceCount = 1;
+      builder.JackCount = 2;
+
+      using (ApmwFuzzScope scope = ApmwFuzzScope.Configure(builder.Build()))
+      {
+        ApmwCore core = ApmwCore.getInstance();
+        Assert.IsNotNull(core.armies);
+        Assert.AreEqual(7, core.armies.Count);
+        Assert.IsTrue(core.kings.All(piece => piece.Game == null),
+          "Preview catalog pieces must not be bound to a Game.");
+
+        ApmwGeometryPreview preview = scope.Handler.GetGeometryPreview(8, 8);
+        ActiveRosterProjection projection = scope.Handler.ProjectOwnedRoster(
+          ProjectionGeometry.For(8, 8));
+
+        Assert.IsNotNull(preview);
+        Assert.AreEqual("8x8", preview.StageId);
+        Assert.AreEqual(projection.ActivePieces.Count + 1, preview.ActiveCount);
+        Assert.IsNotNull(projection.PrimaryKing);
+        Assert.IsTrue(projection.ActivePieces.All(piece => piece.ConcretePieceType != null));
+      }
+    }
+
+    [TestMethod]
+    public void OrderedProgressive6x8_CurrentProjectionLaunchesCompactRegisteredGame()
+    {
+      ApmwFuzzCase fuzzCase = RichCurrentContractCase(0).With(builder =>
+      {
+        builder.Goal = Goal.OrderedProgressive6x8;
+        builder.IsSuperSized = false;
+        builder.SuperSizeMeCount = 0;
+      });
+
+      using (ApmwFuzzScope scope = ApmwFuzzScope.Configure(fuzzCase))
+      {
+        ApmwGeometryOption compact = ApmwGeometryResolver.ResolveCurrent(
+          LoadContract(),
+          0,
+          0,
+          Goal.OrderedProgressive6x8).Single();
+        ApmwChessGame game = (ApmwChessGame)new ChessV.Manager.Manager()
+          .CreateGame(compact.RegisteredGameName);
+        ActiveRosterProjection projection = scope.Handler.ProjectOwnedRoster(
+          ProjectionGeometry.For(6, 8));
+
+        Assert.AreEqual(ApmwProfiles.SixByEightGameName, compact.RegisteredGameName);
+        Assert.IsInstanceOfType(game, typeof(ApmwSixByEightChess));
+        Assert.AreEqual(Goal.OrderedProgressive6x8, ApmwConfig.getInstance().Goal);
+        Assert.AreEqual(6, game.Board.NumFiles);
+        Assert.AreEqual(8, game.Board.NumRanks);
+        Assert.AreEqual(
+          projection.ActivePieces.Count + 1,
+          Enumerable.Range(0, game.Board.NumSquares)
+            .Count(square => game.Board[square] != null &&
+              game.Board[square].Player == 0));
+        CollectionAssert.AreEqual(
+          ExpectedHumanBoardSignature(projection, 0, 8),
+          ActualHumanBoardSignature(game, 0));
+      }
+    }
+
     [DataTestMethod]
     [DataRow(ApmwProfiles.TenByTenGameName, 10, 10, 0, 70, 11)]
     [DataRow(ApmwProfiles.TenByTenGameName, 10, 10, 1, 70, 11)]
@@ -173,6 +241,15 @@ namespace ChessV.Test
       builder.PawnForwardnessCount = 13;
       builder.PlayAsWhiteCount = humanPlayer == 0 ? 1 : 0;
       return builder.Build();
+    }
+
+    private static ApmwContractV2 LoadContract()
+    {
+      return ApmwContractV2Parser.Parse(File.ReadAllText(Path.Combine(
+        AppContext.BaseDirectory,
+        "Fixtures",
+        "ProjectionV2",
+        "baseline.json")));
     }
 
     private static string[] ExpectedHumanBoardSignature(

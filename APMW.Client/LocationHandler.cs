@@ -776,7 +776,8 @@ namespace Archipelago.APChessV
       if (!TryValidatePlayingArchipelago())
         return;
       ApmwLocationProfile profile = CurrentLocationProfile();
-      long[] checkmates = profile.CheckmateLocationsThroughStage()
+      Goal goal = ApmwConfig.getInstance().Goal;
+      long[] checkmates = profile.CheckmateLocationsThroughStage(goal)
         .Select(name => LocationCheckHelper.GetLocationIdFromName(ApmwConstants.TrackerName, name))
         .ToArray();
       LocationCheckHelper.CompleteLocationChecks(checkmates);
@@ -847,8 +848,11 @@ namespace Archipelago.APChessV
     {
       if (profile == null)
         throw new ArgumentNullException(nameof(profile));
+      ApmwGoalSemantics.EnsureSupported(goal, nameof(goal));
       if (goal == Goal.Single)
         return profile.StageId == "8x8";
+      if (ApmwGoalSemantics.UsesSixByEightOpening(goal))
+        return profile.IsFinalStage;
       if (!hasGeometryContract)
         return profile.StageId == "10x8";
       return profile.IsFinalStage;
@@ -869,8 +873,11 @@ namespace Archipelago.APChessV
     {
       if (profile == null)
         throw new ArgumentNullException(nameof(profile));
+      ApmwGoalSemantics.EnsureSupported(goal, nameof(goal));
       if (goal == Goal.Single)
         return profile.StageId == "8x8";
+      if (ApmwGoalSemantics.UsesSixByEightOpening(goal))
+        return profile.Files == 12;
       if (!hasGeometryContract)
         return profile.StageId == "10x8";
       return profile.Files == 12;
@@ -952,7 +959,8 @@ namespace Archipelago.APChessV
       if (game is ApmwChessGame)
         return true;
       string gameName = game?.GameAttribute?.GameName;
-      return gameName == ApmwProfiles.StandardGameName ||
+      return gameName == ApmwProfiles.SixByEightGameName ||
+        gameName == ApmwProfiles.StandardGameName ||
         gameName == ApmwProfiles.GrandGameName ||
         gameName == ApmwProfiles.TenByTenGameName ||
         gameName == ApmwProfiles.TwelveByTenGameName ||

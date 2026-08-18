@@ -77,6 +77,30 @@ namespace APMW.Test
     }
 
     [TestMethod]
+    public void GoalFourSnapshot_RoundTripsNumericGoalAndPrependsCompactGeometry()
+    {
+      var snapshot = new ApmwSidecarInputSnapshot(
+        Contract(),
+        "legacy",
+        "stable",
+        Seeds(),
+        new[] { new KeyValuePair<string, int>(ApmwConstants.ProgressiveItems.Pawn, 6) },
+        Goal.OrderedProgressive6x8);
+
+      Assert.AreEqual(Goal.OrderedProgressive6x8, snapshot.Goal);
+      Assert.AreEqual(4, snapshot.ToJsonElement().GetProperty("goal").GetInt32());
+      CollectionAssert.AreEqual(
+        new[] { "6x8", "8x8", "10x8", "10x10", "12x10", "12x12" },
+        snapshot.GeometryStages.ToArray());
+      CollectionAssert.AreEqual(
+        snapshot.GeometryStages.ToArray(),
+        Identity().CreateRequest(snapshot).Geometries.ToArray());
+      StringAssert.Contains(
+        ApmwSidecarProtocol.SerializeRequest(Identity().CreateRequest(snapshot)),
+        "\"goal\":4");
+    }
+
+    [TestMethod]
     public void Snapshot_RejectsInvalidSemanticInputs()
     {
       ApmwContractV2 contract = Contract();
@@ -93,6 +117,9 @@ namespace APMW.Test
       Assert.ThrowsException<ArgumentOutOfRangeException>(() => new ApmwSidecarInputSnapshot(
         contract, "legacy", "stable", Seeds(),
         new[] { new KeyValuePair<string, int>(ApmwConstants.ProgressiveItems.Pawn, -1) }));
+      Assert.ThrowsException<ArgumentOutOfRangeException>(() => new ApmwSidecarInputSnapshot(
+        contract, "legacy", "stable", Seeds(), Array.Empty<KeyValuePair<string, int>>(),
+        (Goal)5));
       Assert.ThrowsException<ArgumentException>(() => new ApmwSidecarInputSnapshot(
         contract, "legacy", "stable", Seeds(), Array.Empty<KeyValuePair<string, int>>(),
         new[] { new ApmwSidecarUpgradePreference("not-an-action", 0, 1, 1) }));
