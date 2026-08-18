@@ -2,6 +2,8 @@
   <PropertyGroup>
     <TargetFramework>net7.0-windows7.0</TargetFramework>
     <OutputType>Library</OutputType>
+    <IsTestProject>true</IsTestProject>
+    <IsPackable>false</IsPackable>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AssemblyTitle>APMW.Test</AssemblyTitle>
     <Product>APMW.Test</Product>
@@ -19,5 +21,8 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Moq" Version="4.20.70" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="MSTest.TestAdapter" Version="3.1.1" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.1.1" />
   </ItemGroup>
 </Project>

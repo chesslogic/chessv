@@ -1,7 +1,9 @@
 ﻿using Archipelago.MultiClient.Net.Helpers;
 using ChessV;
 using ChessV.Base;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using System.Collections.Generic;
 
 namespace Archipelago.APChessV
 {
@@ -9,11 +11,10 @@ namespace Archipelago.APChessV
   [TestClass]
   public class LocationHandlerUnitTests
   {
-    LocationHandler handler;
+    TestLocationHandler handler;
     Mock<ILocationCheckHelper> locations;
     Mock<ChessV.Match> match;
-    Mock<Game> game;
-    Mock<Board> board;
+    Mock<ChessV.Games.Chess> game;
     Mock<Player> player;
 
     Mock<Piece> firstPiece;
@@ -36,24 +37,11 @@ namespace Archipelago.APChessV
       player = new Mock<Player>();
       player.SetupGet(mock => mock.IsHuman).Returns(true);
 
-      board = new Mock<Board>();
-      game = new Mock<Game>();
+      game = new Mock<ChessV.Games.Chess>() { CallBase = true };
+      InitializeChessGame(game.Object);
       match = new Mock<ChessV.Match>();
       match.SetupGet(mock => mock.Game).Returns(game.Object);
       match.Setup(mock => mock.GetPlayer(0)).Returns(player.Object);
-      game.SetupGet(mock => mock.Board).Returns(board.Object);
-      board.Setup(mock => mock.GetFile(0)).Returns(0);
-      board.Setup(mock => mock.GetFile(1)).Returns(1);
-      board.Setup(mock => mock.GetFile(2)).Returns(2);
-      board.Setup(mock => mock.GetFile(3)).Returns(3);
-      board.Setup(mock => mock.GetFile(4)).Returns(4);
-      board.Setup(mock => mock.GetFile(5)).Returns(5);
-      board.Setup(mock => mock.GetFileNotation(0)).Returns("a");
-      board.Setup(mock => mock.GetFileNotation(1)).Returns("b");
-      board.Setup(mock => mock.GetFileNotation(2)).Returns("c");
-      board.Setup(mock => mock.GetFileNotation(3)).Returns("d");
-      board.Setup(mock => mock.GetFileNotation(4)).Returns("e");
-      board.Setup(mock => mock.GetFileNotation(5)).Returns("f");
 
       firstPieceType = new Mock<PieceType>();
       firstPiece = new Mock<Piece>();
@@ -64,11 +52,9 @@ namespace Archipelago.APChessV
       secondPiece.SetupGet(mock => mock.PieceType).Returns(secondPieceType.Object);
       secondPieceType.SetupGet(mock => mock.Name).Returns("Pawn");
 
-      //board.Setup(mock => mock.GetFile(1)).Returns(0);
-
-      handler = new LocationHandler(locations.Object);
-
-      ApmwCore._instance.StartedEventHandlers.ForEach((handler) => handler(match.Object));
+      handler = new TestLocationHandler();
+      handler.Initialize(locations.Object, null);
+      handler.StartMatch(match.Object);
     }
 
     [TestMethod]
@@ -79,11 +65,11 @@ namespace Archipelago.APChessV
       MoveInfo info = GetMoveInfo();
       handler.UpdateMoveState(info);
       info = GetMoveInfo();
-      info.FromSquare = 2;
+      info.FromSquare = game.Object.NotationToSquare("c1");
       info.MoveType = MoveType.StandardCapture;
       handler.HandleMove(info);
 
-      locations.Verify(locs => locs.GetLocationIdFromName("ChecksMate", "Capture Piece B"));
+      locations.Verify(locs => locs.GetLocationIdFromName("ChecksMate", "Capture Piece Queen's Knight"));
     }
 
     [TestMethod]
@@ -92,14 +78,14 @@ namespace Archipelago.APChessV
       locations.Setup(locs => locs.GetLocationIdFromName("ChecksMate", It.IsAny<string>()));
 
       MoveInfo info = GetMoveInfo();
-      info.FromSquare = 0;
+      info.FromSquare = game.Object.NotationToSquare("a1");
       handler.UpdateMoveState(info);
       info = GetMoveInfo();
-      info.FromSquare = 2;
+      info.FromSquare = game.Object.NotationToSquare("c1");
       info.MoveType = MoveType.StandardCapture;
       handler.HandleMove(info);
 
-      locations.Verify(locs => locs.GetLocationIdFromName("ChecksMate", "Capture Piece A"));
+      locations.Verify(locs => locs.GetLocationIdFromName("ChecksMate", "Capture Piece Queen's Rook"));
     }
 
     [TestMethod]
@@ -110,16 +96,112 @@ namespace Archipelago.APChessV
       MoveInfo info = GetMoveInfo();
       handler.UpdateMoveState(info);
       info = GetMoveInfo();
-      info.FromSquare = 3;
-      info.ToSquare = 5;
+      info.FromSquare = game.Object.NotationToSquare("d1");
+      info.ToSquare = game.Object.NotationToSquare("f1");
       handler.UpdateMoveState(info);
       info = GetMoveInfo();
-      info.FromSquare = 2;
-      info.ToSquare = 5;
+      info.FromSquare = game.Object.NotationToSquare("c1");
+      info.ToSquare = game.Object.NotationToSquare("f1");
       info.MoveType = MoveType.StandardCapture;
       handler.HandleMove(info);
 
-      locations.Verify(locs => locs.GetLocationIdFromName("ChecksMate", "Capture Piece B"));
+      locations.Verify(locs => locs.GetLocationIdFromName("ChecksMate", "Capture Piece Queen's Knight"));
+    }
+
+    [TestMethod]
+    public void handleMove_countsPawnAndPieceThreatsFromSameAttackerAsFork()
+    {
+      var chess = CreateEmptyChessGame();
+      var attacker = PlacePiece(chess, 0, chess.Knight, "d4");
+      PlacePiece(chess, 1, chess.Pawn, "e6");
+      PlacePiece(chess, 1, chess.Rook, "f5");
+
+      HandleMoveOn(chess, attacker);
+
+      locations.Verify(locs => locs.GetLocationIdFromName("ChecksMate", "Threaten Pawn"), Times.AtLeastOnce);
+      locations.Verify(locs => locs.GetLocationIdFromName("ChecksMate", "Fork, Sacrificial"), Times.AtLeastOnce);
+    }
+
+    [TestMethod]
+    public void handleMove_countsDefendedEqualValueTargetTowardSacrificialFork()
+    {
+      var chess = CreateEmptyChessGame();
+      var attacker = PlacePiece(chess, 0, chess.Knight, "d4");
+      PlacePiece(chess, 1, chess.Bishop, "f5");
+      PlacePiece(chess, 1, chess.Queen, "e6");
+      PlacePiece(chess, 1, chess.Rook, "f8");
+
+      HandleMoveOn(chess, attacker);
+
+      locations.Verify(locs => locs.GetLocationIdFromName("ChecksMate", "Fork, True"), Times.Never);
+      locations.Verify(locs => locs.GetLocationIdFromName("ChecksMate", "Fork, Sacrificial"), Times.AtLeastOnce);
+    }
+
+    [TestMethod]
+    public void handleMove_findsTrueForkWhenDefendedAttackerHasOneMoreValuableAttacker()
+    {
+      var chess = CreateEmptyChessGame();
+      var attacker = PlacePiece(chess, 0, chess.Knight, "d4");
+      PlacePiece(chess, 0, chess.Pawn, "c3");
+      PlacePiece(chess, 1, chess.Rook, "e6");
+      PlacePiece(chess, 1, chess.Rook, "f5");
+      PlacePiece(chess, 1, chess.Queen, "d8");
+
+      HandleMoveOn(chess, attacker);
+
+      locations.Verify(locs => locs.GetLocationIdFromName("ChecksMate", "Fork, Sacrificial"), Times.AtLeastOnce);
+      locations.Verify(locs => locs.GetLocationIdFromName("ChecksMate", "Fork, True"), Times.AtLeastOnce);
+    }
+
+    private ChessV.Games.Chess CreateEmptyChessGame()
+    {
+      var chess = new ChessV.Games.Chess();
+      InitializeChessGame(chess);
+      return chess;
+    }
+
+    private void InitializeChessGame(ChessV.Games.Chess chess)
+    {
+      object[] attributes = typeof(ChessV.Games.Chess).GetCustomAttributes(typeof(GameAttribute), false);
+      var gameAttribute = (GameAttribute)attributes[0];
+      gameAttribute.GameName = "Archipelago Multiworld";
+      chess.Initialize(gameAttribute, null, null);
+      chess.ClearGameState();
+
+      var core = ApmwCore.getInstance();
+      core.kings = new List<PieceType> { chess.King };
+      core.pawns = new HashSet<PieceType> { chess.Pawn };
+      core.minors = new HashSet<PieceType> { chess.Bishop, chess.Knight };
+      core.majors = new HashSet<PieceType> { chess.Rook };
+      core.queens = new HashSet<PieceType> { chess.Queen };
+    }
+
+    private Piece PlacePiece(ChessV.Games.Chess chess, int player, PieceType pieceType, string square)
+    {
+      var piece = new Piece(chess, player, pieceType, chess.NotationToSquare(square));
+      chess.AddPiece(piece);
+      return piece;
+    }
+
+    private void HandleMoveOn(ChessV.Games.Chess chess, Piece attacker)
+    {
+      match.SetupGet(mock => mock.Game).Returns(chess);
+      handler.HandleMove(new MoveInfo
+      {
+        Player = 0,
+        FromSquare = attacker.Square,
+        ToSquare = attacker.Square,
+        MoveType = MoveType.StandardMove,
+        PieceMoved = attacker
+      });
+    }
+
+    private sealed class TestLocationHandler : LocationHandler
+    {
+      public new void UpdateMoveState(MoveInfo info)
+      {
+        base.UpdateMoveState(info);
+      }
     }
 
     private MoveInfo GetMoveInfo()
@@ -127,8 +209,8 @@ namespace Archipelago.APChessV
       MoveInfo info = new MoveInfo();
 
       info.Player = 0;
-      info.FromSquare = 1;
-      info.ToSquare = 3;
+      info.FromSquare = game.Object.NotationToSquare("b1");
+      info.ToSquare = game.Object.NotationToSquare("d1");
       info.MoveType = MoveType.StandardMove;
       info.PieceMoved = secondPiece.Object;
       info.PieceCaptured = firstPiece.Object;

@@ -498,7 +498,7 @@ namespace Archipelago.APChessV
             // A King protected by a Queen is not defended...
             
             int attackerValue = attackers[i].MidgameValue;
-            if (attackers[i] == ApmwCore.getInstance().kings[0]) attackerValue = 100000;
+            if (attackers[i].PieceType == ApmwCore.getInstance().kings[0]) attackerValue = 100000;
             int defenderValue = attackedPiece.PieceType.MidgameValue;
             if (attackedPiece.PieceType == ApmwCore.getInstance().kings[0]) defenderValue = 10000;
 
@@ -513,7 +513,7 @@ namespace Archipelago.APChessV
             else {
               // attacker must have a defender
               List<Piece> piecesDefendingYou = new List<Piece>();
-              if (match.Game.IsSquareAttacked(attackers[i].Square, humanPlayer, out piecesDefendingYou) {
+              if (match.Game.IsSquareAttacked(attackers[i].Square, humanPlayer, out piecesDefendingYou)) {
                 int lowestAttackingYou = piecesAttackingYou.Min(p => p.PieceType == ApmwCore.getInstance().kings[0] ? 10000 : p.MidgameValue);
                 // piece attacking must be worth more
                 if (lowestAttackingYou > attackerValue) {
