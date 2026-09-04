@@ -29,6 +29,7 @@ An execution-ready cross-repository design for the formal geometry set `6x8`, `8
 - [Adopt hybrid material recalibration](issues/09-adopt-hybrid-material-recalibration.md) — catalog deltas seed new values, while authored offsets and calibration remain part of the contract.
 - [Migrate file-based Locations to role identity](issues/10-migrate-locations-to-role-identity.md) — a square's strategic role, not its file letter, should determine Location identity.
 - [Specify the family correspondence matrix](issues/11-specify-family-correspondence.md) — added Bishop/Knight pairs reuse each selected army's established correspondents; the first release uses a universal 250/250 Elephant pair, a universal Amazon, family-specific forward Queens, a primary Mounted King, and an additional ordinary King.
+- [Allocate CPU, neutral, and human formation bands](issues/19-allocate-formation-bands.md) — 8-rank boards use 2/1/5 CPU-neutral-human ranks; 10-rank boards use 3/1/6, with the added human rank mixed and the neutral rank always empty.
 
 ## Not yet specified
 
