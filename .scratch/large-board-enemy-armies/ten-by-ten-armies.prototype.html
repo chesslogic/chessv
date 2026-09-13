@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototype: exact 10x10 armies</title>
+<style>
+  :root { font: 16px system-ui, sans-serif; color: #202936; background: #f3f5f7; }
+  body { max-width: 1180px; margin: 24px auto; padding: 0 18px; }
+  h1 { font-size: 1.6rem; } p { line-height: 1.5; }
+  .notice { background: #fff1d8; border-left: 4px solid #a66600; padding: 12px; }
+  main { display: grid; grid-template-columns: minmax(360px, 580px) 1fr; gap: 24px; }
+  #board { display: grid; grid-template-columns: repeat(10, 1fr); border: 2px solid #5b6874; }
+  .square { aspect-ratio: 1; position: relative; display: grid; place-items: center; font-weight: 650; background: #c6d2d9; }
+  .light { background: #e9eef1; } .human { opacity: .45; } .neutral { background: #f0dbaa; }
+  .square small { position: absolute; left: 3px; top: 2px; font-size: 10px; font-weight: 400; }
+  button, select { font: inherit; background: white; border: 1px solid #84929e; border-radius: 4px; padding: 8px; margin: 4px 4px 4px 0; }
+  button { cursor: pointer; } button[aria-pressed="true"] { background: #265c9c; color: white; }
+  dl { display: grid; grid-template-columns: 155px 1fr; gap: 10px; }
+  dt { font-weight: 650; } dd { margin: 0; }
+  pre { white-space: pre-wrap; line-height: 1.5; background: white; padding: 12px; font-size: 13px; }
+  #walkthrough { background: white; padding: 12px; margin-top: 12px; }
+  @media (max-width: 850px) { main { grid-template-columns: 1fr; } }
+</style>
+<h1>Exact 10x10 army candidates</h1>
+<p class="notice"><strong>Captured decision prototype.</strong> On 2026-09-13 the user approved candidate C
+  for all four families, including the unchanged home ranks. A and B remain unapproved comparison cases.</p>
+<p>The question is whether to keep the current ten-file home army and fill C2-H2 with the three added pairs.
+  The candidates change only their order. Piece labels on this page are not new FEN notation.
+  El means the basic 250-material Elephant, not War Elephant.</p>
+<main>
+  <section>
+    <div id="board" aria-label="10x10 candidate board"></div>
+    <p>The gold rank is empty at setup. Gray ranks reserve the human formation; its pieces are not part of this CPU prototype.
+      Within the three CPU ranks, only A3 and J3 are empty in every candidate.</p>
+  </section>
+  <section>
+    <h2>Current candidate</h2>
+    <label>Family <select id="family"></select></label>
+    <label>Forward order <select id="order"></select></label>
+    <button id="flip">Switch CPU color</button>
+    <dl id="summary"></dl>
+    <h2>Guided comparisons</h2>
+    <div id="tabs"></div>
+    <div id="walkthrough"></div>
+    <h2>Exact occupied squares</h2>
+    <pre id="positions"></pre>
+  </section>
+</main>
+<p>B-role and N-role describe family correspondence, not universal movement.
+  Standard Bishops, War Elephants, and Lions have the adjacent diagonal move needed for mutual home/forward support in these candidates.
+  A forward Charging Knight can defend the home piece diagonally backward; that relationship is not mutual.</p>
+<script>
+const model = (() => {
+  const files = "ABCDEFGHIJ";
+  const pieces = {
+    r: ["Rook", "R", 500], n: ["Knight", "N", 325], a: ["Archbishop", "Ar", 875],
+    b: ["Bishop", "B", 325], q: ["Queen", "Q", 950], k: ["King", "K", 325],
+    c: ["Chancellor", "Ch", 950], g: ["Cleric", "Cl", 450], x: ["Phoenix", "Ph", 315],
+    e: ["War Elephant", "WE", 475], s: ["Short Rook", "SR", 400], t: ["Tower", "T", 325],
+    i: ["Lion", "Li", 500], h: ["Charging Rook", "CR", 495], l: ["Lancer", "La", 325],
+    m: ["Charging Knight", "CN", 365], y: ["Colonel", "Co", 950], p: ["Pawn", "P", 100],
+    elephant: ["Basic Elephant", "El", 250]
+  };
+  const families = [
+    { name: "Standard (FIDE)", home: "rnabqkbcnr", B: "b", N: "n" },
+    { name: "Colourbound Clobberers", home: "gxqeakecxg", B: "e", N: "x" },
+    { name: "Remarkable Rookies", home: "staickiqts", B: "i", N: "t" },
+    { name: "Nutty Knights", home: "hlamykmclh", B: "m", N: "l" }
+  ];
+  const orders = [
+    { name: "A: B N El El N B", roles: ["B", "N", "E", "E", "N", "B"] },
+    { name: "B: B El N N El B", roles: ["B", "E", "N", "N", "E", "B"] },
+    { name: "C: El N B B N El", roles: ["E", "N", "B", "B", "N", "E"] }
+  ];
+  const initial = () => ({ family: 0, order: 2, black: false });
+  const reduce = (state, action) => {
+    if (action.type === "family") return { ...state, family: action.index };
+    if (action.type === "order") return { ...state, order: action.index };
+    if (action.type === "flip") return { ...state, black: !state.black };
+    throw new Error("Unknown action " + action.type);
+  };
+  function derive(state) {
+    const family = families[state.family], rows = [family.home.split(""), Array(10).fill("p"), Array(10).fill(null)];
+    orders[state.order].roles.forEach((role, index) => { rows[1][index + 2] = role === "E" ? "elephant" : family[role]; });
+    for (let file = 1; file <= 8; file++) rows[2][file] = "p";
+    const slots = [];
+    rows.forEach((row, rank) => row.forEach((type, file) => {
+      if (type) slots.push({ relative: files[file] + (rank + 1), square: files[file] + (state.black ? 10 - rank : rank + 1), type });
+    }));
+    const total = slots.reduce((sum, slot) => sum + pieces[slot.type][2], 0);
+    const oldTotal = family.home.split("").reduce((sum, type) => sum + pieces[type][2], 0) + 1000;
+    return { slots, total, delta: total - oldTotal };
+  }
+  return { files, pieces, families, orders, initial, reduce, derive };
+})();
+let state = model.initial(), activeCase = 0, step = 0;
+const cases = [
+  { name: "Pair order", text: "Compare the unapproved alternatives with the approved Standard candidate C.",
+    steps: [["Compare A", { type: "order", index: 0 }], ["Compare B", { type: "order", index: 1 }], ["Return to approved C", { type: "order", index: 2 }]] },
+  { name: "Family identity", text: "Keep approved order C and replace each role by its approved family correspondent.",
+    steps: [["Colourbound", { type: "family", index: 1 }], ["Remarkable", { type: "family", index: 2 }], ["Nutty", { type: "family", index: 3 }]] },
+  { name: "Opposite color", text: "Reflect ranks without reversing files. The occupied-square list shows the exact Black array.",
+    steps: [["Reflect to Black", { type: "flip" }], ["Reflect back to White", { type: "flip" }]] }
+];
+function dispatch(action) { state = model.reduce(state, action); render(); }
+function render() {
+  const result = model.derive(state), board = document.querySelector("#board");
+  board.replaceChildren();
+  for (let rank = 10; rank >= 1; rank--) for (let file = 0; file < 10; file++) {
+    const square = model.files[file] + rank, relativeRank = state.black ? 11 - rank : rank;
+    const slot = result.slots.find(value => value.square === square), cell = document.createElement("div");
+    cell.className = "square" + ((file + rank) % 2 ? " light" : "") + (relativeRank === 4 ? " neutral" : relativeRank > 4 ? " human" : "");
+    const label = document.createElement("small"); label.textContent = square; cell.append(label);
+    if (slot) { cell.append(document.createTextNode(model.pieces[slot.type][1])); cell.title = square + ": " + model.pieces[slot.type][0]; }
+    board.append(cell);
+  }
+  document.querySelector("#family").value = String(state.family);
+  document.querySelector("#order").value = String(state.order);
+  const summary = document.querySelector("#summary"); summary.replaceChildren();
+  const fields = [["CPU color", state.black ? "Black" : "White"], ["Pieces / non-Kings", "28 / 27"],
+    ["Pawns / non-pawns", "12 / 16 (including King)"], ["Midgame total", result.total + " including King; " + (result.total - 325) + " excluding King"],
+    ["Augmentation delta", result.delta + " versus current home army plus ten pawns"],
+    ["Not a threshold", "These totals do not set Location requirements."]];
+  for (const [name, value] of fields) {
+    const dt = document.createElement("dt"), dd = document.createElement("dd"); dt.textContent = name; dd.textContent = value; summary.append(dt, dd);
+  }
+  document.querySelector("#positions").textContent = result.slots.map(slot => slot.square + ": " + model.pieces[slot.type][0]).join("\n");
+  const walkthrough = document.querySelector("#walkthrough"); walkthrough.replaceChildren();
+  const text = document.createElement("p"); text.textContent = cases[activeCase].text; walkthrough.append(text);
+  cases[activeCase].steps.forEach(([label, action], index) => {
+    const button = document.createElement("button"); button.textContent = (index + 1) + ". " + label; button.disabled = index !== step;
+    button.onclick = () => { step++; dispatch(action); }; walkthrough.append(button);
+  });
+  const reset = document.createElement("button"); reset.textContent = "Restart this case";
+  reset.onclick = () => { state = model.initial(); step = 0; render(); }; walkthrough.append(reset);
+}
+model.families.forEach((family, index) => document.querySelector("#family").add(new Option(family.name, index)));
+model.orders.forEach((order, index) => document.querySelector("#order").add(new Option(order.name, index)));
+document.querySelector("#family").onchange = event => dispatch({ type: "family", index: Number(event.target.value) });
+document.querySelector("#order").onchange = event => dispatch({ type: "order", index: Number(event.target.value) });
+document.querySelector("#flip").onclick = () => dispatch({ type: "flip" });
+cases.forEach((item, index) => {
+  const button = document.createElement("button"); button.textContent = item.name;
+  button.onclick = () => { activeCase = index; step = 0; state = model.initial(); render(); };
+  document.querySelector("#tabs").append(button);
+});
+render();
+</script>
+</html>
