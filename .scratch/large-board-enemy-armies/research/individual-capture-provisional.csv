@@ -1,0 +1,106 @@
+geometry,role,display_name,white_origin,black_origin,goal_class,target_mg,reference_bank,reference_role,reference_requirement,reference_target_mg,reference_cpu_mg,target_cpu_mg,reference_clear,target_clear,beta,reference_accessibility,other_growth,scaled_accessibility,accessibility_floor,selected_accessibility,reference_file_coordinate,pawn_curve_value,central_pressure_budget,spatial_premium,main_pawn_baseline,rearguard_premium,queen_intrinsic,checkmate_intrinsic,intrinsic_material,explicit_correction,required_player_chessmen,example_final_d1_r0_no_cap
+6x8,center_rook,Capture Center Rook,C1,C8,non_pawn,500,base8,queen_side_rook,1500,500,4375,2725,4020,2370,1/4,1000,-1650,39500/67,,39500/67,,,,,,,,,73000/67,0,0,1090
+6x8,queen_side_knight,Capture Queen's Knight,A1,A8,non_pawn,325,base8,queen_side_knight,700,325,4375,2725,4020,2370,1/2,375,-1650,29625/134,,29625/134,,,,,,,,,73175/134,0,0,547
+6x8,queen_side_bishop,Capture Queen's Bishop,B1,B8,non_pawn,325,base8,queen_side_bishop,1040,325,4375,2725,4020,2370,1/4,715,-1650,56485/134,,56485/134,,,,,,,,,100035/134,0,0,747
+6x8,king_side_bishop,Capture King's Bishop,E1,E8,non_pawn,325,base8,king_side_bishop,1140,325,4375,2725,4020,2370,1/4,815,-1650,64385/134,,64385/134,,,,,,,,,107935/134,0,0,806
+6x8,king_side_knight,Capture King's Knight,F1,F8,non_pawn,325,base8,king_side_knight,1040,325,4375,2725,4020,2370,1/2,715,-1650,56485/134,,56485/134,,,,,,,,,100035/134,0,0,747
+6x8,center_rook_pawn,Capture Center Rook Pawn,C2,C7,pawn,100,base8,same_side_pawn_curve,,,,2725,4020,2370,,,,,,,0,100,100,0,100,0,,,100,0,0,100
+6x8,queen_side_knight_pawn,Capture Queen's Knight Pawn,A2,A7,pawn,100,base8,same_side_pawn_curve,,,,2725,4020,2370,,,,,,,3,490,100,15405/67,22105/67,0,,,22105/67,0,0,330
+6x8,queen_side_bishop_pawn,Capture Queen's Bishop Pawn,B2,B7,pawn,100,base8,same_side_pawn_curve,,,,2725,4020,2370,,,,,,,3/2,835/3,100,42265/402,82465/402,0,,,82465/402,0,0,206
+6x8,king_pawn,Capture King's Pawn,D2,D7,pawn,100,base8,same_side_pawn_curve,,,,2725,4020,2370,,,,,,,0,100,100,0,100,0,,,100,0,0,100
+6x8,king_side_bishop_pawn,Capture King's Bishop Pawn,E2,E7,pawn,100,base8,same_side_pawn_curve,,,,2725,4020,2370,,,,,,,3/2,176485/493,100,10047615/66062,16653815/66062,0,,,16653815/66062,0,0,253
+6x8,king_side_knight_pawn,Capture King's Knight Pawn,F2,F7,pawn,100,base8,same_side_pawn_curve,,,,2725,4020,2370,,,,,,,3,490,100,15405/67,22105/67,0,,,22105/67,0,0,330
+8x8,queen_side_rook,Capture Queen's Rook,A1,A8,non_pawn,500,base8,queen_side_rook,1500,500,4375,4375,4020,4020,1/4,1000,0,1000,,1000,,,,,,,,,1500,0,0,1500
+8x8,queen_side_knight,Capture Queen's Knight,B1,B8,non_pawn,325,base8,queen_side_knight,700,325,4375,4375,4020,4020,1/2,375,0,375,,375,,,,,,,,,700,0,0,700
+8x8,queen_side_bishop,Capture Queen's Bishop,C1,C8,non_pawn,325,base8,queen_side_bishop,1040,325,4375,4375,4020,4020,1/4,715,0,715,,715,,,,,,,,,1040,0,0,1040
+8x8,queen,Capture Queen,D1,D8,non_pawn,950,base8,queen,1300,950,4375,4375,4020,4020,1/4,350,0,350,,350,,,,,,,,,1300,0,0,1300
+8x8,king_side_bishop,Capture King's Bishop,F1,F8,non_pawn,325,base8,king_side_bishop,1140,325,4375,4375,4020,4020,1/4,815,0,815,,815,,,,,,,,,1140,0,0,1140
+8x8,king_side_knight,Capture King's Knight,G1,G8,non_pawn,325,base8,king_side_knight,1040,325,4375,4375,4020,4020,1/2,715,0,715,,715,,,,,,,,,1040,0,0,1040
+8x8,king_side_rook,Capture King's Rook,H1,H8,non_pawn,500,base8,king_side_rook,1900,500,4375,4375,4020,4020,1/4,1400,0,1400,,1400,,,,,,,,,1900,0,0,1900
+8x8,queen_side_rook_pawn,Capture Queen's Rook Pawn,A2,A7,pawn,100,base8,same_side_pawn_curve,,,,4375,4020,4020,,,,,,,3,490,100,390,490,0,,,490,0,0,490
+8x8,queen_side_knight_pawn,Capture Queen's Knight Pawn,B2,B7,pawn,100,base8,same_side_pawn_curve,,,,4375,4020,4020,,,,,,,2,340,100,240,340,0,,,340,0,0,340
+8x8,queen_side_bishop_pawn,Capture Queen's Bishop Pawn,C2,C7,pawn,100,base8,same_side_pawn_curve,,,,4375,4020,4020,,,,,,,1,220,100,120,220,0,,,220,0,0,220
+8x8,queen_pawn,Capture Queen's Pawn,D2,D7,pawn,100,base8,same_side_pawn_curve,,,,4375,4020,4020,,,,,,,0,100,100,0,100,0,,,100,0,0,100
+8x8,king_pawn,Capture King's Pawn,E2,E7,pawn,100,base8,same_side_pawn_curve,,,,4375,4020,4020,,,,,,,0,100,100,0,100,0,,,100,0,0,100
+8x8,king_side_bishop_pawn,Capture King's Bishop Pawn,F2,F7,pawn,100,base8,same_side_pawn_curve,,,,4375,4020,4020,,,,,,,1,320,100,220,320,0,,,320,0,0,320
+8x8,king_side_knight_pawn,Capture King's Knight Pawn,G2,G7,pawn,100,base8,same_side_pawn_curve,,,,4375,4020,4020,,,,,,,2,390,100,290,390,0,,,390,0,0,390
+8x8,king_side_rook_pawn,Capture King's Rook Pawn,H2,H7,pawn,100,base8,same_side_pawn_curve,,,,4375,4020,4020,,,,,,,3,490,100,390,490,0,,,490,0,0,490
+10x8,queen_side_rook,Capture Queen's Rook,A1,A8,non_pawn,500,grand10,queen_side_rook,2850,500,6400,6400,6050,6050,1/4,2350,0,2350,,2350,,,,,,,,,2850,0,0,2850
+10x8,queen_side_knight,Capture Queen's Knight,B1,B8,non_pawn,325,grand10,queen_side_knight,1200,325,6400,6400,6050,6050,1/2,875,0,875,,875,,,,,,,,,1200,0,0,1200
+10x8,queen_side_bishop,Capture Queen's Bishop,D1,D8,non_pawn,325,grand10,queen_side_bishop,1200,325,6400,6400,6050,6050,1/4,875,0,875,,875,,,,,,,,,1200,0,0,1200
+10x8,queen_side_attendant,Capture Queen's Attendant,C1,C8,non_pawn,875,grand10,queen_side_attendant,3950,875,6400,6400,6050,6050,1/4,3075,0,3075,,3075,,,,,,,,,3950,0,0,3950
+10x8,queen,Capture Queen,E1,E8,non_pawn,950,grand10,queen,4100,950,6400,6400,6050,6050,1/4,3150,0,3150,,3150,,,,,,,,,4100,0,0,4100
+10x8,king_side_attendant,Capture King's Attendant,H1,H8,non_pawn,950,grand10,king_side_attendant,4030,950,6400,6400,6050,6050,1/4,3080,0,3080,,3080,,,,,,,,,4030,0,0,4030
+10x8,king_side_bishop,Capture King's Bishop,G1,G8,non_pawn,325,grand10,king_side_bishop,1400,325,6400,6400,6050,6050,1/4,1075,0,1075,,1075,,,,,,,,,1400,0,0,1400
+10x8,king_side_knight,Capture King's Knight,I1,I8,non_pawn,325,grand10,king_side_knight,1400,325,6400,6400,6050,6050,1/2,1075,0,1075,,1075,,,,,,,,,1400,0,0,1400
+10x8,king_side_rook,Capture King's Rook,J1,J8,non_pawn,500,grand10,king_side_rook,3250,500,6400,6400,6050,6050,1/4,2750,0,2750,,2750,,,,,,,,,3250,0,0,3250
+10x8,queen_side_rook_pawn,Capture Queen's Rook Pawn,A2,A7,pawn,100,grand10,same_side_pawn_curve,,,,6400,6050,6050,,,,,,,4,1010,320,690,1010,0,,,1010,0,0,1010
+10x8,queen_side_knight_pawn,Capture Queen's Knight Pawn,B2,B7,pawn,100,grand10,same_side_pawn_curve,,,,6400,6050,6050,,,,,,,3,810,320,490,810,0,,,810,0,0,810
+10x8,queen_side_bishop_pawn,Capture Queen's Bishop Pawn,D2,D7,pawn,100,grand10,same_side_pawn_curve,,,,6400,6050,6050,,,,,,,1,520,320,200,520,0,,,520,0,0,520
+10x8,queen_side_attendant_pawn,Capture Queen's Attendant Pawn,C2,C7,pawn,100,grand10,same_side_pawn_curve,,,,6400,6050,6050,,,,,,,2,660,320,340,660,0,,,660,0,0,660
+10x8,queen_pawn,Capture Queen's Pawn,E2,E7,pawn,100,grand10,same_side_pawn_curve,,,,6400,6050,6050,,,,,,,0,320,320,0,320,0,,,320,0,0,320
+10x8,king_pawn,Capture King's Pawn,F2,F7,pawn,100,grand10,same_side_pawn_curve,,,,6400,6050,6050,,,,,,,0,320,320,0,320,0,,,320,0,0,320
+10x8,king_side_attendant_pawn,Capture King's Attendant Pawn,H2,H7,pawn,100,grand10,same_side_pawn_curve,,,,6400,6050,6050,,,,,,,2,860,320,540,860,0,,,860,0,0,860
+10x8,king_side_bishop_pawn,Capture King's Bishop Pawn,G2,G7,pawn,100,grand10,same_side_pawn_curve,,,,6400,6050,6050,,,,,,,1,620,320,300,620,0,,,620,0,0,620
+10x8,king_side_knight_pawn,Capture King's Knight Pawn,I2,I7,pawn,100,grand10,same_side_pawn_curve,,,,6400,6050,6050,,,,,,,3,810,320,490,810,0,,,810,0,0,810
+10x8,king_side_rook_pawn,Capture King's Rook Pawn,J2,J7,pawn,100,grand10,same_side_pawn_curve,,,,6400,6050,6050,,,,,,,4,890,320,570,890,0,,,890,0,0,890
+10x10,queen_side_rook,Capture Queen's Rook,A1,A10,non_pawn,500,grand10,queen_side_rook,2850,500,6400,8400,6050,8050,1/4,2350,2000,378350/121,2850,378350/121,,,,,,,,,438850/121,0,0,3627
+10x10,queen_side_knight,Capture Queen's Knight,B1,B10,non_pawn,325,grand10,queen_side_knight,1200,325,6400,8400,6050,8050,1/2,875,2000,140875/121,1875,1875,,,,,,,,,2200,0,0,2200
+10x10,queen_side_bishop,Capture Queen's Bishop,D1,D10,non_pawn,325,grand10,queen_side_bishop,1200,325,6400,8400,6050,8050,1/4,875,2000,140875/121,1375,1375,,,,,,,,,1700,0,0,1700
+10x10,queen_side_attendant,Capture Queen's Attendant,C1,C10,non_pawn,875,grand10,queen_side_attendant,3950,875,6400,8400,6050,8050,1/4,3075,2000,495075/121,3575,495075/121,,,,,,,,,600950/121,0,0,4967
+10x10,queen,Capture Queen,E1,E10,non_pawn,950,grand10,queen,4100,950,6400,8400,6050,8050,1/4,3150,2000,507150/121,3650,507150/121,,,,,,,,,622100/121,0,0,5142
+10x10,king_side_attendant,Capture King's Attendant,H1,H10,non_pawn,950,grand10,king_side_attendant,4030,950,6400,8400,6050,8050,1/4,3080,2000,45080/11,3580,45080/11,,,,,,,,,55530/11,0,0,5049
+10x10,king_side_bishop,Capture King's Bishop,G1,G10,non_pawn,325,grand10,king_side_bishop,1400,325,6400,8400,6050,8050,1/4,1075,2000,173075/121,1575,1575,,,,,,,,,1900,0,0,1900
+10x10,king_side_knight,Capture King's Knight,I1,I10,non_pawn,325,grand10,king_side_knight,1400,325,6400,8400,6050,8050,1/2,1075,2000,173075/121,2075,2075,,,,,,,,,2400,0,0,2400
+10x10,king_side_rook,Capture King's Rook,J1,J10,non_pawn,500,grand10,king_side_rook,3250,500,6400,8400,6050,8050,1/4,2750,2000,40250/11,3250,40250/11,,,,,,,,,45750/11,0,0,4160
+10x10,queen_side_forward_bishop,Capture Queen's Forward Bishop,E2,E9,non_pawn,325,grand10,queen_side_bishop,1200,325,6400,8400,6050,8050,1/4,875,2000,140875/121,1375,1375,,,,,,,,,1700,0,0,1700
+10x10,king_side_forward_bishop,Capture King's Forward Bishop,F2,F9,non_pawn,325,grand10,king_side_bishop,1400,325,6400,8400,6050,8050,1/4,1075,2000,173075/121,1575,1575,,,,,,,,,1900,0,0,1900
+10x10,queen_side_forward_knight,Capture Queen's Forward Knight,D2,D9,non_pawn,325,grand10,queen_side_knight,1200,325,6400,8400,6050,8050,1/2,875,2000,140875/121,1875,1875,,,,,,,,,2200,0,0,2200
+10x10,king_side_forward_knight,Capture King's Forward Knight,G2,G9,non_pawn,325,grand10,king_side_knight,1400,325,6400,8400,6050,8050,1/2,1075,2000,173075/121,2075,2075,,,,,,,,,2400,0,0,2400
+10x10,queen_side_elephant,Capture Queen's Elephant,C2,C9,non_pawn,250,grand10,queen_side_knight,1200,325,6400,8400,6050,8050,1/2,875,2075,140875/121,3825/2,3825/2,,,,,,,,,4325/2,0,0,2163
+10x10,king_side_elephant,Capture King's Elephant,H2,H9,non_pawn,250,grand10,king_side_knight,1400,325,6400,8400,6050,8050,1/2,1075,2075,173075/121,4225/2,4225/2,,,,,,,,,4725/2,0,0,2363
+10x10,queen_side_rook_pawn,Capture Queen's Rook Pawn,A2,A9,pawn,100,grand10,same_side_pawn_curve,,,,8400,6050,8050,,,,,,,4,1010,43520/81,111090/121,14264210/9801,0,,,14264210/9801,0,0,1456
+10x10,queen_side_knight_pawn,Capture Queen's Knight Pawn,B3,B8,pawn,100,grand10,same_side_pawn_curve,,,,8400,6050,8050,,,,,,,3,810,43520/81,78890/121,11656010/9801,0,,,11656010/9801,0,0,1190
+10x10,queen_side_bishop_pawn,Capture Queen's Bishop Pawn,D3,D8,pawn,100,grand10,same_side_pawn_curve,,,,8400,6050,8050,,,,,,,1,520,43520/81,32200/121,7874120/9801,0,,,7874120/9801,0,0,804
+10x10,queen_side_attendant_pawn,Capture Queen's Attendant Pawn,C3,C8,pawn,100,grand10,same_side_pawn_curve,,,,8400,6050,8050,,,,,,,2,660,43520/81,54740/121,9699860/9801,0,,,9699860/9801,0,0,990
+10x10,queen_pawn,Capture Queen's Pawn,E3,E8,pawn,100,grand10,same_side_pawn_curve,,,,8400,6050,8050,,,,,,,0,320,43520/81,0,43520/81,0,,,43520/81,0,0,538
+10x10,king_pawn,Capture King's Pawn,F3,F8,pawn,100,grand10,same_side_pawn_curve,,,,8400,6050,8050,,,,,,,0,320,43520/81,0,43520/81,0,,,43520/81,0,0,538
+10x10,king_side_attendant_pawn,Capture King's Attendant Pawn,H3,H8,pawn,100,grand10,same_side_pawn_curve,,,,8400,6050,8050,,,,,,,2,860,43520/81,86940/121,12308060/9801,0,,,12308060/9801,0,0,1256
+10x10,king_side_bishop_pawn,Capture King's Bishop Pawn,G3,G8,pawn,100,grand10,same_side_pawn_curve,,,,8400,6050,8050,,,,,,,1,620,43520/81,48300/121,9178220/9801,0,,,9178220/9801,0,0,937
+10x10,king_side_knight_pawn,Capture King's Knight Pawn,I3,I8,pawn,100,grand10,same_side_pawn_curve,,,,8400,6050,8050,,,,,,,3,810,43520/81,78890/121,11656010/9801,0,,,11656010/9801,0,0,1190
+10x10,king_side_rook_pawn,Capture King's Rook Pawn,J2,J9,pawn,100,grand10,same_side_pawn_curve,,,,8400,6050,8050,,,,,,,4,890,43520/81,91770/121,12699290/9801,0,,,12699290/9801,0,0,1296
+10x10,queen_side_rearguard_pawn,Capture Queen's Rearguard Pawn,B2,B9,pawn,100,grand10,same_side_pawn_curve,,,,8400,6050,8050,,,,,,,3,810,43520/81,78890/121,11656010/9801,5337955/19602,,,28649975/19602,0,0,1462
+10x10,king_side_rearguard_pawn,Capture King's Rearguard Pawn,I2,I9,pawn,100,grand10,same_side_pawn_curve,,,,8400,6050,8050,,,,,,,3,810,43520/81,78890/121,11656010/9801,5337955/19602,,,28649975/19602,0,0,1462
+12x10,queen_side_rook,Capture Queen's Rook,A1,A10,non_pawn,500,grand10,queen_side_rook,2850,500,6400,11600,6050,11250,1/4,2350,5200,528750/121,3650,528750/121,,,,,,,,,589250/121,0,0,4870
+12x10,queen_side_knight,Capture Queen's Knight,D1,D10,non_pawn,325,grand10,queen_side_knight,1200,325,6400,11600,6050,11250,1/2,875,5200,196875/121,3475,3475,,,,,,,,,3800,0,0,3800
+12x10,queen_side_bishop,Capture Queen's Bishop,E1,E10,non_pawn,325,grand10,queen_side_bishop,1200,325,6400,11600,6050,11250,1/4,875,5200,196875/121,2175,2175,,,,,,,,,2500,0,0,2500
+12x10,queen_side_attendant,Capture Queen's Attendant,C1,C10,non_pawn,875,grand10,queen_side_attendant,3950,875,6400,11600,6050,11250,1/4,3075,5200,691875/121,4375,691875/121,,,,,,,,,797750/121,0,0,6593
+12x10,queen,Capture Queen,F2,F9,non_pawn,950,grand10,queen,4100,950,6400,11600,6050,11250,1/4,3150,5200,708750/121,4450,708750/121,,,,,,,,,823700/121,0,0,6808
+12x10,king_side_attendant,Capture King's Attendant,J1,J10,non_pawn,950,grand10,king_side_attendant,4030,950,6400,11600,6050,11250,1/4,3080,5200,63000/11,4380,63000/11,,,,,,,,,73450/11,0,0,6678
+12x10,king_side_bishop,Capture King's Bishop,H1,H10,non_pawn,325,grand10,king_side_bishop,1400,325,6400,11600,6050,11250,1/4,1075,5200,241875/121,2375,2375,,,,,,,,,2700,0,0,2700
+12x10,king_side_knight,Capture King's Knight,I1,I10,non_pawn,325,grand10,king_side_knight,1400,325,6400,11600,6050,11250,1/2,1075,5200,241875/121,3675,3675,,,,,,,,,4000,0,0,4000
+12x10,king_side_rook,Capture King's Rook,L1,L10,non_pawn,500,grand10,king_side_rook,3250,500,6400,11600,6050,11250,1/4,2750,5200,56250/11,4050,56250/11,,,,,,,,,61750/11,0,0,5614
+12x10,queen_side_forward_bishop,Capture Queen's Forward Bishop,D2,D9,non_pawn,325,grand10,queen_side_bishop,1200,325,6400,11600,6050,11250,1/4,875,5200,196875/121,2175,2175,,,,,,,,,2500,0,0,2500
+12x10,king_side_forward_bishop,Capture King's Forward Bishop,I2,I9,non_pawn,325,grand10,king_side_bishop,1400,325,6400,11600,6050,11250,1/4,1075,5200,241875/121,2375,2375,,,,,,,,,2700,0,0,2700
+12x10,queen_side_forward_knight,Capture Queen's Forward Knight,E2,E9,non_pawn,325,grand10,queen_side_knight,1200,325,6400,11600,6050,11250,1/2,875,5200,196875/121,3475,3475,,,,,,,,,3800,0,0,3800
+12x10,king_side_forward_knight,Capture King's Forward Knight,H2,H9,non_pawn,325,grand10,king_side_knight,1400,325,6400,11600,6050,11250,1/2,1075,5200,241875/121,3675,3675,,,,,,,,,4000,0,0,4000
+12x10,queen_side_elephant,Capture Queen's Elephant,C2,C9,non_pawn,250,grand10,queen_side_knight,1200,325,6400,11600,6050,11250,1/2,875,5275,196875/121,7025/2,7025/2,,,,,,,,,7525/2,0,0,3763
+12x10,king_side_elephant,Capture King's Elephant,J2,J9,non_pawn,250,grand10,king_side_knight,1400,325,6400,11600,6050,11250,1/2,1075,5275,241875/121,7425/2,7425/2,,,,,,,,,7925/2,0,0,3963
+12x10,queen_side_lion,Capture Queen's Lion,B1,B10,non_pawn,500,grand10,queen_side_knight,1200,325,6400,11600,6050,11250,1/2,875,5025,196875/121,6775/2,6775/2,,,,,,,,,7775/2,0,0,3888
+12x10,king_side_lion,Capture King's Lion,K1,K10,non_pawn,500,grand10,king_side_knight,1400,325,6400,11600,6050,11250,1/2,1075,5025,241875/121,7175/2,7175/2,,,,,,,,,8175/2,0,0,4088
+12x10,amazon,Capture Amazon,F1,F10,non_pawn,1300,grand10,queen,4100,950,6400,11600,6050,11250,1/4,3150,4850,708750/121,8725/2,708750/121,,,,,,,,,866050/121,0,0,7158
+12x10,queen_side_rook_pawn,Capture Queen's Rook Pawn,A2,A9,pawn,100,grand10,same_side_pawn_curve,,,,11600,6050,11250,,,,,,,4,1010,71680/81,155250/121,21248530/9801,0,,,21248530/9801,0,0,2168
+12x10,queen_side_knight_pawn,Capture Queen's Knight Pawn,D3,D8,pawn,100,grand10,same_side_pawn_curve,,,,11600,6050,11250,,,,,,,8/5,7464964/12325,71680/81,31688676/59653,6842709796/4831893,0,,,6842709796/4831893,0,0,1417
+12x10,queen_side_bishop_pawn,Capture Queen's Bishop Pawn,E3,E8,pawn,100,grand10,same_side_pawn_curve,,,,11600,6050,11250,,,,,,,4/5,206328/425,71680/81,632952/2057,198714872/166617,0,,,198714872/166617,0,0,1193
+12x10,queen_side_attendant_pawn,Capture Queen's Attendant Pawn,C3,C8,pawn,100,grand10,same_side_pawn_curve,,,,11600,6050,11250,,,,,,,12/5,727956/1015,71680/81,18142020/24563,3230179460/1989603,0,,,3230179460/1989603,0,0,1624
+12x10,queen_pawn,Capture Queen's Pawn,F3,F8,pawn,100,grand10,same_side_pawn_curve,,,,11600,6050,11250,,,,,,,0,320,71680/81,0,71680/81,0,,,71680/81,0,0,885
+12x10,king_pawn,Capture King's Pawn,G3,G8,pawn,100,grand10,same_side_pawn_curve,,,,11600,6050,11250,,,,,,,0,320,71680/81,0,71680/81,0,,,71680/81,0,0,885
+12x10,king_side_attendant_pawn,Capture King's Attendant Pawn,J3,J8,pawn,100,grand10,same_side_pawn_curve,,,,11600,6050,11250,,,,,,,12/5,4212/5,71680/81,117540/121,18194020/9801,0,,,18194020/9801,0,0,1857
+12x10,king_side_bishop_pawn,Capture King's Bishop Pawn,H3,H8,pawn,100,grand10,same_side_pawn_curve,,,,11600,6050,11250,,,,,,,4/5,42392/75,71680/81,456,108616/81,0,,,108616/81,0,0,1341
+12x10,king_side_knight_pawn,Capture King's Knight Pawn,I3,I8,pawn,100,grand10,same_side_pawn_curve,,,,11600,6050,11250,,,,,,,8/5,20028/25,71680/81,108252/121,17441692/9801,0,,,17441692/9801,0,0,1780
+12x10,king_side_rook_pawn,Capture King's Rook Pawn,L2,L9,pawn,100,grand10,same_side_pawn_curve,,,,11600,6050,11250,,,,,,,4,890,71680/81,128250/121,19061530/9801,0,,,19061530/9801,0,0,1945
+12x10,queen_side_lion_pawn,Capture Queen's Lion Pawn,B3,B8,pawn,100,grand10,same_side_pawn_curve,,,,11600,6050,11250,,,,,,,16/5,29594/35,71680/81,827730/847,127759090/68607,0,,,127759090/68607,0,0,1863
+12x10,king_side_lion_pawn,Capture King's Lion Pawn,K3,K8,pawn,100,grand10,same_side_pawn_curve,,,,11600,6050,11250,,,,,,,16/5,20342/25,71680/81,918,146038/81,0,,,146038/81,0,0,1803
+12x10,queen_side_rearguard_pawn,Capture Queen's Rearguard Pawn,B2,B9,pawn,100,grand10,same_side_pawn_curve,,,,11600,6050,11250,,,,,,,16/5,29594/35,71680/81,827730/847,127759090/68607,60449195/137214,,,315967375/137214,0,0,2303
+12x10,king_side_rearguard_pawn,Capture King's Rearguard Pawn,K2,K9,pawn,100,grand10,same_side_pawn_curve,,,,11600,6050,11250,,,,,,,16/5,20342/25,71680/81,918,146038/81,68969/162,,,361045/162,0,0,2229
+12x10,regicide,Regicide,G1|G2,G10|G9,regicide,,,,,,,,,,,,,,,,,,,,,,823700/121,11220,1224140/121,0,0,10117

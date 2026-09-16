@@ -12,7 +12,8 @@ Which spatial constraints are settled even though the exact supported 10x10 and 
 For the white-side 10x10 concept:
 
 - A1's rook has a pawn on A2.
-- B1's knight is defended by B2 and B3.
+- B1's knight is screened by the pawns on B2 and B3. This is not direct attack
+  defense, and the screen does not require another piece to defend B1.
 - A pawn wedge continues inward through C3, D3, E3, and F3, mirrored from the other edge.
 - The spaces created forward of the home rank hold family-corresponding Tower/Knight/Bishop-role pieces.
 
@@ -34,3 +35,10 @@ The user's file correction supersedes the earlier “around G1/G2” wording for
 
 - Current user formation decisions and refinements supplied for this map.
 - `ChessV.Games\MiscellaneousGames\ApmwProfiles.cs` currently computes the twelve-file king file as file G; the current standard profile has the Queen on file F.
+
+## Comments
+
+### 2026-09-13: Pawn-screen clarification
+
+The user corrected the earlier defense wording: "They aren't defended. Uh, yes,
+let's say they are screened." The pinned squares remain unchanged.

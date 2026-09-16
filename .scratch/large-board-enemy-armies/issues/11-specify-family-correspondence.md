@@ -64,9 +64,13 @@ Tower, Elephant, Lion, additional King, or other augmented piece does not acquir
 castling rights from its piece type. Preserve the existing player rule separately:
 a player back-rank Major or Jack may be a castler.
 
-Amazon is never a promotion option for either side. The basic Elephant may be
-added as a promotion option; existing non-royal family promotion fragments remain
-valid. Mounted and ordinary Kings remain outside ordinary pawn promotion.
+Amazon is never a promotion option for either side.
+Q33 resolved the previously optional basic Elephant promotion: it is not a
+first-release promotion target.
+The [CPU promotion ADR](../../../docs/adr/0017-separate-cpu-promotion-permissions.md)
+specifies the family/geometry lists and removes the former legacy12
+Nightrider extension.
+Mounted and ordinary Kings remain outside ordinary pawn promotion.
 
 Any piece registration added to APMW must use notation and an icon not already
 assigned in the game. The possible future family-specific 250-material set is
