@@ -48,6 +48,6 @@ the approved board-specific rule alternatives.
 
 ## Source
 
-[Material calibration contract](../../.scratch/large-board-enemy-armies/issues/16-define-material-calibration-contract.md#decisions-in-progress).
+[Material calibration contract](../../.scratch/large-board-enemy-armies/issues/16-define-material-calibration-contract.md#decision-record).
 The user selected the recovered chessmen heuristic and separate calibration
 profiles in the 2026-09-14 source-history interview.

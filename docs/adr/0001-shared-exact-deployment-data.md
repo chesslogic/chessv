@@ -26,6 +26,6 @@ or version identifiers. It does not approve an array that remains unresolved.
 
 ## Source
 
-[Define the versioned cross-repository contract](../../.scratch/large-board-enemy-armies/issues/17-define-versioned-cross-repo-contract.md#decisions-in-progress).
+[Define the versioned cross-repository contract](../../.scratch/large-board-enemy-armies/issues/17-define-versioned-cross-repo-contract.md#decision-record).
 The user selected shared exact deployment data during the 2026-09-13
 grill-with-docs round.

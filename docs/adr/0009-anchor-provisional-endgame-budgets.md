@@ -45,7 +45,7 @@ for individual captures. Later adjustments require explicit authored entries.
 
 ## Source and excluded alternative
 
-[Material calibration contract](../../.scratch/large-board-enemy-armies/issues/16-define-material-calibration-contract.md#decisions-in-progress).
+[Material calibration contract](../../.scratch/large-board-enemy-armies/issues/16-define-material-calibration-contract.md#decision-record).
 The user selected these anchors and provisional values in the 2026-09-14
 interview.
 

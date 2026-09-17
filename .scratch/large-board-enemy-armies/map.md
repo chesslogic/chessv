@@ -1,6 +1,6 @@
 # Geometry-driven large-board enemy armies
 
-Status: Design resolved at Q35. Ready for a later spec/ticket handoff.
+Status: Q35 design resolved. Additional settings coverage is open before full handoff.
 
 ## Destination
 
@@ -11,6 +11,11 @@ An execution-ready cross-repository design for the formal geometry set `6x8`, `8
 - This is a planning map, not production implementation.
 - [Decision-resolution question network](qn_resolution-rounds.md) tracks the
   current breadth, partial answers, and next decision frontier.
+- The [2026-09-16 follow-up audit](qn_resolution-rounds.md#pass-4-follow-up-breadth-audit-2026-09-16)
+  covers architecture, Fundamental itemization portability, Options, and
+  historical behavior. The original 20 decisions remain resolved.
+  A complete settings support and retirement record remains necessary for
+  the broader 0.4.0 handoff.
 - Formal support is exactly `[6,8,10]x8` plus `[10,12]x10`: `6x8`, `8x8`, `10x8`, `10x10`, and `12x10`.
 - Existing 12x12 source and fixtures are historical evidence, not a shipped
   compatibility obligation. The 2026-09-13 decision rejects 12x12 and removes it

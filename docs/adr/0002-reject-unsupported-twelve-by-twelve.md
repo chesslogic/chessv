@@ -24,6 +24,6 @@ requiring an unreachable 12x12 stage.
 
 ## Source
 
-[Define the versioned cross-repository contract](../../.scratch/large-board-enemy-armies/issues/17-define-versioned-cross-repo-contract.md#decisions-in-progress).
+[Define the versioned cross-repository contract](../../.scratch/large-board-enemy-armies/issues/17-define-versioned-cross-repo-contract.md#decision-record).
 The user rejected the proposed 12x12 legacy path during the 2026-09-13
 grill-with-docs round.

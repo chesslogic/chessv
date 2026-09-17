@@ -25,6 +25,6 @@ rounding, monotonicity rules, or stage caps.
 
 ## Source
 
-[Define the material calibration contract](../../.scratch/large-board-enemy-armies/issues/16-define-material-calibration-contract.md#decisions-in-progress).
+[Define the material calibration contract](../../.scratch/large-board-enemy-armies/issues/16-define-material-calibration-contract.md#decision-record).
 The user selected the Standard-family reference and midgame values during the
 2026-09-13 grill-with-docs rounds.

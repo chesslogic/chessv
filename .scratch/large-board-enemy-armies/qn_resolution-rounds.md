@@ -1,6 +1,6 @@
 # Large-board decision-resolution question network
 
-Status: Design closure confirmed at Q35. No open decision frontier
+Status: Follow-up audit complete. Additional settings decisions remain open
 Authority: Navigation only. The linked tickets and ADRs own the decisions.
 
 ## Purpose and boundary
@@ -184,15 +184,212 @@ Nightriders remain excluded from the proposed new 12x10 pair.
 Twelve-file games on other heights can supply inspiration without becoming
 supported target geometries.
 
+## Pass 4: Follow-up breadth audit, 2026-09-16
+
+The user requested another audit before the later handoff.
+The subjects are architecture, algorithms, data structures, item-flag
+portability, Options, and historical behavior.
+Q35 remains the authority for the bounded army and calibration design.
+This pass does not reopen its choices or authorize production work.
+
+| Branch | Question | Why it matters and cases | Resolver | Edges | Status |
+| --- | --- | --- | --- | --- | --- |
+| Q11 | Which architectural interfaces or algorithm contracts still need specification? | Stable identity, committed events, reconstruction, determinism, and independent implementation ownership | Later engineering specification | Most behavior is settled. Bare-FEN ingress feeds Q14 | Investigated: bounded engineering work |
+| Q12 | Is Fundamental itemization portable end to end? | Canonical mode values, authoritative world data, backend parity, reconnect, and world switches | User clarified the referent. Engineering owns the remaining integration | Settings normalization and the local Castlers override feed Q13 | Meaning and representation settled; integration incomplete |
+| Q13 | Is there one supported Options matrix across generation, slot data, client, and GUI? | Defaults, supported combinations, invalid values, and world versus local authority | One proposed settings decision record, with user choices separated from engineering work | Constrains Q14 and the release contract | No complete end-to-end matrix yet |
+| Q14 | Which historical behaviors are retained, removed, or rejected in 0.4.0? | Old worlds and 12x12 versus retained Legacy itemization, public deprecated controls, and bare-FEN editing | Existing ADRs for settled removals. User for additional retirement | Depends on Q13 and the Q11 ingress case | Partial: selected removals are clear; additional choices remain |
+
+These cases are investigation prompts, not new acceptance requirements.
+The reports must distinguish missing policy from ordinary implementation
+choices and already specified behavior.
+Concrete containers do not need an ADR merely because code uses them.
+No report can treat the major-version boundary as permission to remove
+Legacy itemization.
+
+### Q11: Architecture and algorithm coverage
+
+The accepted packet already specifies ordering, hashes, exact arithmetic,
+algorithm versions, and the logic-envelope cutoff.
+It does not need an interview about each collection type or a new
+architecture framework.
+The later engineering specification needs three clear interfaces:
+
+| Interface | Required property | Current evidence |
+| --- | --- | --- |
+| Validated contract and setup context | One immutable context supplies geometry, settings, projection adaptation, and composition. Callers do not reconstruct bands or combine different settings snapshots | `ApmwProfiles.cs:74-77,209-241`, `ActiveRosterProjection.cs:44-98`, `ApmwSidecarPresentationAdapter.cs:19-25,79-124,178-188` |
+| Match identity and reversible state | Fixed unit IDs remain distinct from live occupancy. Promotion, capture, load, and undo retain lineage | `LocationHandler.cs:91-113,178-198,733-758`, `Piece.cs:116-133` |
+| Committed move effects | A complete successful move supplies its captures and relocations before external reports. Rejected moves discard pending effects | `Game.cs:1590-1607,1850-1875`, `BoardMoveStack.cs:47-53`, `LocationHandler.cs:225-379` |
+
+`Piece` uses reference equality but a hash from mutable position, type, and
+move count.
+Stable IDs or an explicit reference comparer are therefore relevant
+implementation details.
+They are not new gameplay policy.
+
+The genuine support question concerns edited bare FEN in an attached match.
+`LoadFENForm.cs:68-75` replaces the position without the starting-role ledger.
+Different histories of identical Lions can produce the same FEN.
+The accepted identity policy prohibits guessing their capture roles.
+
+The recommendation is to permit check-earning continuation only from a
+known setup or lineage-preserving restoration.
+The user still needs to select the editor's disposition: disabled there, or
+available only in a non-awarding analysis context.
+This does not authorize changes to ordinary-game FEN support.
+
+### Q12: Fundamental itemization portability
+
+The user clarified that the field selects Fundamental itemization:
+`progression_itemization`.
+This is a mode selector, not an Archipelago item-classification bit or an
+unseen-item marker.
+
+| Step | Current representation or target authority |
+| --- | --- |
+| ChecksMate option | `legacy=0`, `fundamental=1` |
+| Existing slot field | `progression_itemization` contains `"legacy"` or `"fundamental"` |
+| C# configuration and GUI | The resolved mode selects grants and mode-specific controls |
+| Python projector input | `itemization` contains the same canonical string |
+| Accepted v4 authority | `apmw_world_binding.itemization` supplies the supported mode. Conflicting mirrors fail |
+
+The string representation is portable without a new AP flag or matching
+language-specific enum ordinals.
+Sources: sibling `options.py:129-135`, `items.py:22-31`,
+`__init__.py:211-214`, and client `Config.cs:67-71,323-325`,
+`ApmwSidecarSnapshot.cs:333-353`.
+
+End-to-end behavior is not complete in current code.
+`Config.cs:450-484` silently substitutes Legacy for malformed or unknown
+mode input.
+The producer-v3/client-v2 mismatch is already recorded implementation work.
+Neither condition is proof that another itemization policy needs selection.
+
+The recommended v4 mapping derives the runtime mode from the World binding.
+A retained `progression_itemization` field acts only as a canonical assertion.
+Its omission cannot override a valid Fundamental binding.
+Explicit invalid or conflicting values fail instead of selecting Legacy.
+
+The adjacent Castlers control needs backend parity.
+The C# allocation uses `EffectiveFoundCastlers`.
+The sidecar input uses raw `foundCastlers` without the local override, so
+the checkbox does not change that input or its cache identity.
+Sources: `ApmwCore.cs:39-46`, `ItemGeneration.cs:852-861`,
+`ApmwSidecarSnapshot.cs:349-353,499-505`.
+Preservation must not falsify received inventory or generator logic.
+
+### Q13: Remaining settings questions
+
+These branches separate product choices from ordinary engineering work.
+Recommendations are not decisions.
+
+| Branch | Missing specification | Consequence and representative case | Resolver and recommendation |
+| --- | --- | --- | --- |
+| Q13-a | Semantic ordering versus type/location presentation | The default uses stable types and chaotic locations. Fundamental projector semantics still select Stable | Engineering can preserve that distinction. User selection is necessary before removing chaotic presentation |
+| Q13-b | Deprecated pawn presets and advertised guarantees | Pool/Max remain public values. Nonzero `fair_board_guarantee` has no examined end-to-end consumer | User selects retained presets, rejection, or separately specified behavior. No silent no-op |
+| Q13-c | Limit scope and exhaustion | Per-type limits can relax. Pocket allocation can exceed the parsed limit. The total Queen limit constrains a Legacy item, not Fundamental graduation | User confirms soft preference, generated-pool limit, or hard deployment limit. Preserve current behavior until then |
+| Q13-d | Authority, timing, and persistence of local controls | CPU family, Ignore Castlers, AI reduction, and DeathLink have different consumers and lifetimes | User settles meaningful timing changes. Engineering captures one setup context and defines reconnect/world-switch behavior |
+| Q13-e | Required fields, defaults, and assertions | Omitted pawn and location fields have different producer/client defaults. Explicitly disabled upgrades can become default upgrades | Engineering specifies normalization once, with distinct absent, empty, disabled, invalid, and conflicting inputs |
+
+The semantic combinations remain Legacy/Stable, Legacy/Chaos, and
+Fundamental/Stable.
+That statement alone does not prohibit chaotic concrete placement under
+stable Fundamental semantics.
+Sources: sibling `options.py:107-134`, client
+`ApmwSidecarSnapshot.cs:333-338`, and
+`ApmwSidecarSnapshotTests.cs:155-169`.
+
+Pool and Max are reproducible preference presets in sibling
+`options.py:523-554`.
+Their deprecation text is not a removal decision.
+`fair_board_guarantee` is declared at `options.py:562-581`, but the examined
+client/game code has no reader for that key.
+
+The disabled-action case is concrete.
+An all-`-1` priority map becomes an empty preference sequence in
+`logic_projection.py:423-458`.
+`apmw_projection\planning.py:34-54` then substitutes default actions.
+The support contract must preserve the difference between absent preferences
+and an explicitly disabled action set.
+
+Limit evidence is in client `OwnedRosterGeneration.cs:371-404`,
+`ItemGeneration.cs:2333-2376`, and `Config.cs:920-934`.
+Default and input-normalization evidence is in `Config.cs:317-384,450-626`.
+The local-control table must cover both client and GUI consumers.
+Duplicate DeathLink receiver ownership alone does not prove that server-side
+tag disabling fails.
+Its opt-out and reconnect behavior need one explicit lifecycle contract.
+
+### Proposed cohesive Options record
+
+One new owning record can define the 0.4.0 settings support and retirement
+matrix.
+Issue 17 continues to own the shared wire contract.
+The proposed record does not replace it or create another compatibility
+mechanism.
+
+Each setting needs its canonical key, owner, lifetime, supported modes,
+default, normalization rule, generator effect, wire field, GUI surface,
+invalid-input behavior, retirement status, and acceptance cases.
+The same normalized world settings must feed costs, slot data, and client
+setup.
+
+| Coverage group | Controls that the record must classify |
+| --- | --- |
+| Board progression | Minimum/maximum geometry, fixed transitions, endpoint victory, and old `goal` inputs |
+| Itemization and presentation | Fundamental/Legacy, type ordering, placement ordering, human collections, and presets |
+| Pawn and upgrade behavior | Pawn modes, Pool/Max/Configure, priorities, ratios, guarantees, and all-disabled actions |
+| Limits and inventory | Per-type limits, Queen-item limits, pockets, human Kings, Early Material, and excess external inventory |
+| Costs and capability | Difficulty, derived modifiers, tactics, obtainable counts, and frozen cost inputs |
+| Local controls | CPU family, Castlers override, AI reduction, DeathLink, preview/match timing, and saved state |
+
+The existing producer permits starts at 6x8, 8x8, or 10x8.
+With the five endpoints, that gives 12 valid contiguous start/end pairs and
+three reversed pairs to reject.
+Starting at 10x10 or 12x10 is not implied by support for those endpoints.
+Source: sibling `options.py:11-50`.
+The client must derive endpoint behavior from the World binding, not the old
+goal switch in `LocationHandler.cs:844-883`.
+
+### Q14: Retirement boundary
+
+| Disposition | Behavior |
+| --- | --- |
+| Already selected for removal or rejection | Old-world execution paths, missing-contract fallback, 12x12, old layout guesses, obsolete width-based Location counts, and shared CPU/human promotion leakage |
+| Explicitly retained | Legacy itemization under the new contract, the four CPU families, human entitlements, selected projection semantics, and original world costs |
+| Requires further selection or reachability evidence | Public Pool/Max controls, nonzero guarantees, soft-limit fallbacks, local gameplay controls, obsolete outer-envelope keys, and attached bare-FEN editing |
+| Outside this retirement scope | Ordinary-game rules and saves, generic appearance/engine preferences, tracker UI, and the Regions refactor |
+
+The recommended implementation ledger lists each retired input or path,
+its authority, replacement or rejection message, and affected consumers.
+A historical symbol name does not authorize deleting a helper still used
+by supported Legacy itemization.
+
+### Follow-up disposition
+
+The three audits are complete.
+The clarified Fundamental selector does not need another meaning decision.
+Architecture needs bounded engineering interfaces, not a general redesign.
+Settings and retirement need the additional owning record before treating
+the broader 0.4.0 release plan as complete.
+Q35 remains valid for the original 20 decisions.
+No new retirement choice or production implementation is approved here.
+
+The next user-owned discussion concerns Q13-b, Q13-c, Q13-d, and the
+bare-FEN disposition in Q14.
+Q13-a can preserve current presentation behavior unless the user wants a
+change.
+Q12 integration and Q13-e normalization remain engineering-owned work.
+
 ## Source update map
 
 | Source | Currentness |
 | --- | --- |
 | Owning map, issues, glossary, and seventeen ADRs | Working-tree documents include the current user answers |
-| C# source and movement definitions | Observed code baseline `888710f99cf007b982ea1f6a8a64c1e8058be196`; no production edits |
+| Earlier interview source baseline | `888710f99cf007b982ea1f6a8a64c1e8058be196`. The follow-up audit uses the newer baseline recorded below |
 | Approved 10x10 prototype | Local branch `prototype-ten-by-ten-715de4c1`, immutable commit `285d59741917bde4f9ed143ca85e61fe7d451c05` |
 | Approved 12x10 Lion prototype | Local branch `prototype-large-board-armies-715de4c1`, immutable commit `777e2c778ed7d26feae525da9415d62af3d5c469` |
 | Original session planning packet | Historical snapshot, superseded where the later interview records a decision |
 | Twelve-file inspiration report | Current local source survey and fit assessment; source examples do not choose the new piece |
 | Generator graph source | One Menu Region at sibling `worlds\checksmate\__init__.py:281-295`. Single-parent and unique-name constraints at `BaseClasses.py:1295-1299,1481-1514` |
 | Decision-to-execution route | Generic Wayfinder compatibility passed. The repository adapter remains absent, so automatic projection/implementation routes remain disabled |
+| Follow-up audit baseline | Clean working tree at `cc83ca9`, after Q35 documentation commit `739eda8`. The new real-board fork characterization is current evidence |

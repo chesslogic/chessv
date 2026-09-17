@@ -38,6 +38,6 @@ geometry-derived castling coordinates and the remaining integration fixtures.
 
 ## Source
 
-[Set royal, check, stalemate, castling, and evaluation semantics](../../.scratch/large-board-enemy-armies/issues/14-set-royal-and-castling-semantics.md#decisions-in-progress).
+[Set royal, check, stalemate, castling, and evaluation semantics](../../.scratch/large-board-enemy-armies/issues/14-set-royal-and-castling-semantics.md#decision-record).
 The user specified the extinction-to-checkmate transition and rejected castling
 inheritance during the 2026-09-13 grill-with-docs rounds.

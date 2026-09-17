@@ -31,5 +31,5 @@ release publication, or conversion of existing worlds and progress.
 
 ## Source
 
-[Versioned cross-repository contract](../../.scratch/large-board-enemy-armies/issues/17-define-versioned-cross-repo-contract.md#decisions-in-progress).
+[Versioned cross-repository contract](../../.scratch/large-board-enemy-armies/issues/17-define-versioned-cross-repo-contract.md#decision-record).
 The user selected new-contract-only support in the 2026-09-14 interview.
