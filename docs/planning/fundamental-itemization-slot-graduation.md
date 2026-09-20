@@ -1,5 +1,10 @@
 # Fundamental Itemization: Slot Graduation Planner — Design & Tracking
 
+> **Historical design, superseded for new worlds on 2026-09-20.**
+> [ADR0018](../adr/0018-enabled-material-families.md) replaces this allocation and action-policy contract.
+> It permits stateless roster rebalancing, changes Castler grants, and retires Legacy itemization for new worlds.
+> The status, open questions, and implementation evidence below describe the earlier design, not the new policy's implementation status.
+
 > **Status:** Living tracking document. Persisted from agent session state on **2026-07-05** so
 > this design history, evidence, and the list of open decisions survive independently of any
 > single chat/session — if session state is ever lost, start here to recover full context.

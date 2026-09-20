@@ -1,7 +1,7 @@
 # ChessV domain language
 
-These terms describe the Archipelago objectives and the CPU army's starting
-formation.
+These terms describe Archipelago objectives, player material policy, and the
+CPU army's starting formation.
 
 ## Language
 
@@ -69,3 +69,37 @@ _Avoid_: Board square, board geometry (as synonyms)
 **Entrance (Archipelago)**:
 A directed connection between Regions with its own access rule.
 _Avoid_: A second parent for the same Location
+
+**Material family**:
+A nominal group of player piece types, such as Pawn, Minor, Major, Jack,
+Queen, or Amazon, independent of each concrete type's exact evaluation.
+_Avoid_: Exact piece value (as a synonym for material family)
+
+**Enabled material palette**:
+The set of material families permitted in the generated player roster.
+It is distinct from pocket contents, CPU armies, and promotion permissions.
+_Avoid_: Upgrade-edge list, promotion allowlist
+
+**Cumulative material count**:
+The number of roster units at or above a material-family threshold.
+The same unit can contribute to several cumulative counts.
+_Avoid_: Exclusive family count, count of distinct pieces in a bag
+
+**Final family count**:
+The number of generated roster units in one material family.
+_Avoid_: Cumulative material count, guaranteed family quota
+
+**Distribution preset**:
+A named preference for player unit supply and higher-family allocation.
+It is a bias, not a guaranteed final composition.
+_Avoid_: Target roster, fixed piece counts
+
+**Concrete-type variety**:
+The diversity of concrete piece types within a material family, distinct
+from the number of units allocated to that family.
+_Avoid_: Family quantity limit, minimum piece count
+
+**Castler protection**:
+Castling support reserved in the generated player roster, distinct from
+received Castler grants and actual legal castling moves.
+_Avoid_: Castler ownership, guaranteed legal castling move
