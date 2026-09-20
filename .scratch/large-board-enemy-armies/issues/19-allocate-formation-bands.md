@@ -195,3 +195,16 @@ selectable formation.
 | Reserve ordering and missing-material accounting remain unchanged. | Evidence | Current projection source and contract | Repricing or dropping overflow slots |
 | Exact release identifiers belong to the versioned-contract ticket. | Scope boundary | Existing map dependency | Naming cross-repository versions in this ticket |
 | 12x12 is unsupported. | Author decision | Map destination and prior decision | Deriving a 12x12 formation from these formulas |
+
+## Comments
+
+### 2026-09-18: Q47 retains Minor placement parity
+
+The user retained the existing rank rules after clarifying that ten-rank
+boards have an additional mixed human rank.
+Minors do not receive a new exception to the shared non-pawn placement
+limits.
+The one-back, one-or-two-mixed, three-pawn-only arrangement remains unchanged.
+The later Legacy guarantee uses actual deployable contribution and pocket
+contents, not these maximum capacities as an available-unit count.
+[Ticket 24](24-specify-settings-support-and-retirement.md) owns that rule.

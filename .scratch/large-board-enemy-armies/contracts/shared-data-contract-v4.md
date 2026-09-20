@@ -635,6 +635,26 @@ Chaos changes presentation, not aggregate semantic metrics.
 Excess Pawn Forwardness remains unspent.
 No CPU catalog value changes these human accounting rules.
 
+Q44 adds a bounded Legacy capability after the Q35 design:
+[ADR 0022](../../../docs/adr/0022-retain-legacy-pawn-material-conversion.md)
+selects pawn-material conversion rather than unconditional pawn-slot
+preservation.
+Ticket 24 still owns its exact reservation and conversion rule.
+The accepted capability is not yet encoded by this section's existing
+algorithm identities or a new projector input.
+The final rule must supply the necessary semantic revision, input contract,
+and compatible logic metrics before that path is ready for handoff.
+This does not change the listed human values or select Fundamental
+conversion behavior.
+Q48 makes the prepared board the context for the Legacy reservation target.
+The implementation cannot use the world endpoint as that target on every
+earlier board.
+Q49 sets that target to the prepared CPU formation's unit count minus its
+primary royal: 11, 15, 19, 27, and 33 in stage order.
+This is the explicitly selected human count relationship.
+It does not borrow CPU material values or promotion entitlements.
+The conversion equation and count-protection boundary remain open.
+
 ### 6.3. Exact roster metrics and generator logic metrics
 
 The required `metrics` object has exactly these keys and values:
@@ -819,6 +839,15 @@ Its profiles cover the eligible stages for each published Location.
 The World binding's snapshot hash must equal the actual snapshot hash.
 The client retains this binding with the authenticated slot context.
 Another world's snapshot cannot replace it merely because both use contract 4.0.
+
+Q42 adds a reconnect rule without changing these artifact fields.
+The replay key uses AP generation name and authenticated team/slot.
+Replay also requires the original game and validated World binding,
+contract, and snapshot hashes.
+These protocol identity values remain outside the artifact hash graph.
+No new generated-world identifier is selected.
+[ADR 0021](../../../docs/adr/0021-replay-earned-locations-after-reconnect.md)
+records the collision limit and journal lifetime.
 
 ## 8. Hash dependency graph and canonicalization
 

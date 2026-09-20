@@ -31,6 +31,11 @@ Play-test calibration remains a separate later activity.
   including their attached-match, reflection, and fault-injection boundaries.
 - Exact golden setup arrays for every formal geometry, side, and Enemy Army family, including the augmented 10x10 and 12x10 arrays.
 - FEN/setup, pawn/non-king/royal count, promotion, and fallback assertions.
+- Internal FEN/setup assertions do not establish user-facing FEN resume
+  support. [ADR 0018](../../../docs/adr/0018-reject-fen-based-apmw-resume.md)
+  rejects that operation. [Ticket 21](21-define-apmw-interaction-support.md)
+  owns the separate player-command boundary without weakening rollback
+  correctness.
 - Check, royal-capture, stalemate, castling-right, and engine-evaluation characterization.
 - CPU royal membership after a human capture, in both color assignments and
   with human King-upgrade counts 0, 1, and 2.
@@ -38,6 +43,20 @@ Play-test calibration remains a separate later activity.
 - Separate successful undo, failed speculative move, failed committed move,
   and repeated-load fixtures. Each restores board state, royal phase, actor
   identity, castling rights, capture counters, and pending reporting state.
+- Q37 includes reliable player-facing Undo in 0.4.0.
+  [Ticket 21](21-define-apmw-interaction-support.md#required-undo-and-history-acceptance)
+  adds engine-notification, repeated-capture, branch-change, multi-capture,
+  and view-only-history boundaries.
+  Accepted Archipelago checks remain complete after local Undo.
+- Q38/Q39 permit controller changes but permanently disable progress
+  reporting for that match.
+  Q45 permits earlier library submissions to finish, but blocks new
+  submissions and journal replay after takeover.
+  [Ticket 21](21-define-apmw-interaction-support.md#required-takeover-acceptance)
+  covers every Location and final-goal path, queued reports, restored
+  controllers, Undo, and a fresh match on the same AP connection.
+  The [connection/reporting contract](../contracts/apmw-connection-reporting.md)
+  adds atomic admission, helper-resync, retained-journal, and retirement fixtures.
 - Explicit observer boundaries for failed committed moves. A setup
   notification must not survive as a successful capture or Regicide report.
 - Legal castling with both CPU Kings and with only the original primary.
