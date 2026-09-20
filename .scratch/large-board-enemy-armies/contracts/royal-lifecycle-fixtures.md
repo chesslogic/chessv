@@ -39,6 +39,26 @@ The current undo handler restores counters and lineage, not server checks.
 Source: `APMW.Client\LocationHandler.cs:178-198`.
 Failed attempts must produce no successful check in the first place.
 
+These undo/load fixtures specify internal state correctness, not support for
+player-facing backtracking or arbitrary position import.
+[ADR 0018](../../../docs/adr/0018-reject-fen-based-apmw-resume.md)
+rejects FEN-based APMW resume.
+[Ticket 21](../issues/21-define-apmw-interaction-support.md)
+records player-command availability.
+Q37 and [ADR 0019](../../../docs/adr/0019-support-reliable-apmw-undo-in-zero-four.md)
+include reliable player-facing Undo in 0.4.0.
+Its additional acceptance cases exercise the real engine notification path
+and repeated or alternate continuations.
+Disabling such a command does not waive speculative or failed-move rollback.
+The supported restoration fixtures require their stated origin ledger;
+a bare FEN or an executable `FENStart` field does not supply it.
+After a controller change, Q39 permanently disables that match's progress
+reporting.
+That one-way state is separate from the reversible move ledger.
+Undo must not restore reporting eligibility.
+The terminal reporting fixtures below assume a reporting-eligible match;
+the non-reporting counterparts are in ticket 21.
+
 ## Check obligation by surviving count
 
 The base position is Standard 12x10 with White to move:
@@ -220,6 +240,9 @@ royal identities, castling rights, game result, capture lineage, capture
 counters, and pending reporting state.
 The raw setup observer can run for the rejected committed attempt.
 It must not leave a pending successful capture or suppress a later real move.
+The ledger must align with committed moves, including non-capturing moves.
+One multi-capture commits or reverses as one complete batch.
+View-only traversal must not produce committed progress or reports.
 
 ## Castling fixture construction
 

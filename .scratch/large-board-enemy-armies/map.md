@@ -16,6 +16,46 @@ An execution-ready cross-repository design for the formal geometry set `6x8`, `8
   historical behavior. The original 20 decisions remain resolved.
   A complete settings support and retirement record remains necessary for
   the broader 0.4.0 handoff.
+- [APMW interaction support](issues/21-define-apmw-interaction-support.md)
+  records the rejected FEN-resume path and reliable Undo in 0.4.0.
+  Computer takeover is permitted, with permanently disabled progress
+  reporting for that match.
+  Q45 permits earlier library submissions to finish, but no new submission
+  or journal replay after takeover.
+- [APMW reporting-status badge](issues/22-specify-apmw-reporting-status.md)
+  distinguishes permanent match reporting loss from an unavailable server
+  connection. Reconnection resends the match's earned Location set.
+  Journals remain in process memory after window closure; no disk format or
+  restart recovery is planned.
+  Q43 gives the separate final-goal marker the same lifetime and replay gates.
+- [Connection lifecycle](issues/23-specify-connection-lifecycle.md) owns safe
+  repeated attempts, cleanup, and room-bound journal reattachment.
+  Source and primary-library research are complete.
+  Q42 selects normal AP generation-name/team/slot identity with
+  frozen-contract checks and no new identifier.
+  Q45 selects a library-admission cutoff without a dependency extension.
+  The [bounded engineering contract](contracts/apmw-connection-reporting.md)
+  completes the stock adapter, helper containment, and retirement design.
+  Tickets 22 and 23 are resolved. Runtime proof remains implementation work.
+- [Settings support and retirement](issues/24-specify-settings-support-and-retirement.md)
+  owns the remaining public settings choices and the complete support
+  matrix. It does not reopen retained Legacy itemization.
+- [Recovered guarantee intent](research/fair-board-guarantee-prompt-intent.md)
+  identifies a distinct best-effort Pawn composition purpose for
+  `standard_and_pawns`, explicitly discussed with Fundamental.
+  Q56's one-mode simplification is unselected; Off does not remove Chessmen grants.
+- The [guarantee enhancement breadth pass](qn_resolution-rounds.md#pass-6-guarantee-enhancement-and-instrumentation-2026-09-19)
+  separates composition precedence, quotas, pockets, shortages, lifecycle,
+  explanations, and cross-repository agreement.
+  Local diagnostics and a setup preview are proposals, not implemented behavior.
+  The user's viability objection now precedes composition priority.
+  Q58 selects best-effort preferences with shared fallback and generation validation.
+  Q59 selects total-unit and non-Pawn minimums, with no Pawn floor or implied ceiling.
+  Numeric target pairs and the exact viability rule remain open.
+  Completed `locked_items` research distinguishes guaranteed pool resources
+  from runtime allocation. Its distribution trace confirms ordinary weighted
+  draws that satisfy reserved minima, not a seed-first process.
+  No intermediate baseline phase or generator-algorithm port is selected.
 - Formal support is exactly `[6,8,10]x8` plus `[10,12]x10`: `6x8`, `8x8`, `10x8`, `10x10`, and `12x10`.
 - Existing 12x12 source and fixtures are historical evidence, not a shipped
   compatibility obligation. The 2026-09-13 decision rejects 12x12 and removes it
@@ -52,9 +92,23 @@ An execution-ready cross-repository design for the formal geometry set `6x8`, `8
 - [Material calibration contract](issues/16-define-material-calibration-contract.md) - released references, exact formulas, initial tables, and correction records are resolved.
 - [Versioned cross-repository contract](issues/17-define-versioned-cross-repo-contract.md) - exact schemas, world costs, strict pins, and offline publication order are resolved.
 - [Handoff acceptance contract](issues/18-define-handoff-acceptance-contract.md) - owner roles, behavioral evidence, and packaged integration requirements are resolved.
+- [APMW interaction support](issues/21-define-apmw-interaction-support.md) - reject FEN resume, support reliable Undo in 0.4.0, and permit controller changes with permanent match-local progress disconnection.
+- [Replay identity](issues/23-specify-connection-lifecycle.md#q42-selected-replay-identity) - Q42 retains normal AP identity and frozen-contract checks. No new generation identifier or collision-proof identity guarantee is selected.
+- [Final-goal replay](issues/22-specify-apmw-reporting-status.md#q43-final-goal-retention) - Q43 retains the earned goal marker with the process-memory Location journal, including after window closure.
+- [Connection/reporting contract](contracts/apmw-connection-reporting.md) - stock 6.6.0, atomic library admission, fresh helper state, positive retirement evidence, and bounded bare-host routes. No transport fork or guaranteed hard abort.
+- [Legacy pawn-material conversion](issues/24-specify-settings-support-and-retirement.md#q44-selected-capability) - Q44 retains the capability for 0.4.0. Q49 sets prepared-board targets to 11/15/19/27/33. Its conversion rule and Fundamental applicability remain open.
+- [Guarantee count basis](issues/24-specify-settings-support-and-retirement.md#q46-count-basis) - Q46 counts actual deployment plus pocket contents, not received items or board reserves. Q47 retains the existing rank rules; Q48 uses the board being prepared.
+- [Legacy funding](issues/24-specify-settings-support-and-retirement.md#q51-retain-other-legacy-surplus-funding) - Q51 retains other eligible Legacy surplus alongside Pawn-item credit. Explicit transfers must prevent reserve double spending.
+- [Legacy approximation](issues/24-specify-settings-support-and-retirement.md#q53-keep-the-historical-approximation-rules) - Q52 floors net surplus at zero. Q53 retains historical allowance and overspending rules, not the proposed 100-centipawn cap.
+- [Superseded placement material](issues/24-specify-settings-support-and-retirement.md#q55-preserve-material-through-supersession) - Q55 preserves all involved Legacy credit. The example's funding base stays 785 while the resulting Major's expected value stays 485.
 
 ## Accepted ADRs
 
+- [Retain Legacy pawn-material conversion](../../docs/adr/0022-retain-legacy-pawn-material-conversion.md) - retain fewer, stronger units from Pawn material when the reservation permits conversion. The rule and contract revision still need specification.
+- [Reject FEN-based APMW resume](../../docs/adr/0018-reject-fen-based-apmw-resume.md) - a starting FEN in SGF is a recording idea, not resume authority. Internal rollback remains required.
+- [Support reliable APMW Undo in 0.4.0](../../docs/adr/0019-support-reliable-apmw-undo-in-zero-four.md) - extend the reversible move ledger instead of disabling backtracking. Local rollback does not retract accepted checks.
+- [Stop progress after controller changes](../../docs/adr/0020-stop-apmw-progress-after-controller-changes.md) - allow takeover, but permanently stop new Location and final-goal submissions. Earlier library submissions can finish. Keep the AP session connected.
+- [Replay earned Locations after reconnect](../../docs/adr/0021-replay-earned-locations-after-reconnect.md) - preserve the match and resend its earned-ID set to the same world/slot. Server deduplication permits repeated reports.
 - [CPU royal survival phases](../../docs/adr/0003-cpu-royal-survival-phases.md) — extinction with multiple Kings, checkmate behavior with the last King, CPU victory on stalemate, and no castling inheritance.
 - [Shared exact deployment data](../../docs/adr/0001-shared-exact-deployment-data.md) — ChessV publishes army data; ChecksMate owns AP Location mappings and authored difficulty, with pinned compatible versions.
 - [Reject unsupported 12x12 games](../../docs/adr/0002-reject-unsupported-twelve-by-twelve.md) — no selector option or legacy support path.

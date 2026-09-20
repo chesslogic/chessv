@@ -61,6 +61,56 @@ The frozen Location cost definitions for one generated world, shared by the
 generator and client.
 _Avoid_: The latest price table, client-local calibration
 
+**Pawn reservation**:
+The minimum number of units that the Legacy pawn allocation must retain
+before its remaining material can fund upgrades.
+_Avoid_: Material grant, total active-army count (as synonyms)
+
+**Composition minimums**:
+Paired targets for total units and non-Pawn units, with no separate Pawn minimum
+and no upper limit implied by either target.
+_Avoid_: Fixed Pawn/non-Pawn split, Pawn quota, army-size ceiling
+
+**Pawn-material conversion**:
+Use of Legacy Pawn material and eligible Legacy surplus for fewer, stronger
+units instead of one unit per Pawn item, subject to the pawn reservation.
+_Avoid_: A new material grant, Fundamental slot consumption (as synonyms)
+
+**Pocket contribution**:
+The number of actual pieces in the prepared setup's pockets.
+Each piece counts once, including Pawns and Pawn variants.
+An empty pocket contributes zero.
+_Avoid_: Received Pocket-item count, pocket upgrade level (as synonyms)
+
+**Non-reporting match**:
+An APMW match that continues local play but cannot submit new Location
+checks or final Archipelago goal completion.
+Controller changes make this state permanent for that match.
+Earlier submissions can still complete.
+_Avoid_: Disconnected AP session, DeathLink event, lost match (as synonyms)
+
+**Earned-Location set**:
+The Location IDs achieved by one eligible match, retained for replay after
+reconnection to its world and slot.
+Undo changes current capture counts, not this record of accomplishments.
+The set can outlive its game window in process memory, but has no durable
+journal file.
+_Avoid_: Current capture count, server acknowledgment list (as synonyms)
+
+**Earned-goal marker**:
+A record that an eligible match achieved the final Archipelago goal,
+retained for the same replay as its earned Locations.
+It is separate from the Location IDs and from server acceptance.
+_Avoid_: Synthetic Location, saved chess position, server receipt (as synonyms)
+
+**World/slot identity**:
+The Archipelago generation name and authenticated team and slot that
+identify the source of a match's earned progress.
+The original world contract also constrains replay.
+This identity does not distinguish server instances or generations with
+identical identity and contract values.
+_Avoid_: Server address, port, client UUID, unique room instance (as synonyms)
+
 **Region (Archipelago)**:
 A reachability node that can contain Locations and connect to other Regions
 through Entrances.
