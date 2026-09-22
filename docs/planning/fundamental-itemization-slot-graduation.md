@@ -5,6 +5,9 @@
 > It permits stateless roster rebalancing, changes Castler grants, and retires Legacy itemization for new worlds.
 > The status, open questions, and implementation evidence below describe the earlier design, not the new policy's implementation status.
 
+> **Current contract as of 2026-09-21:** [ADR0019](../adr/0019-seeded-hierarchical-allocation.md) supersedes ADR0018.
+> It specifies seeded hierarchical allocation with concrete prices. Neither earlier document is the current implementation handoff.
+
 > **Status:** Living tracking document. Persisted from agent session state on **2026-07-05** so
 > this design history, evidence, and the list of open decisions survive independently of any
 > single chat/session — if session state is ever lost, start here to recover full context.

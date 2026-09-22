@@ -103,3 +103,18 @@ _Avoid_: Family quantity limit, minimum piece count
 Castling support reserved in the generated player roster, distinct from
 received Castler grants and actual legal castling moves.
 _Avoid_: Castler ownership, guaranteed legal castling move
+
+**Core roster**:
+The player's grant-backed nonroyal units, distinct from separately granted
+royals, pockets, and surplus Pawns.
+_Avoid_: Active roster, all player pieces (as synonyms)
+
+**Ordinary allocation remainder**:
+Unspent material from the pooled Chessmen, Castler, and Material grants,
+distinct from value attached to reserve pieces or outside-roster common credit.
+_Avoid_: Total unallocated credit, reserve-piece value
+
+**Surplus Pawn**:
+An additional player Pawn paid from the ordinary allocation remainder,
+not a received Chessman or Castler unit.
+_Avoid_: Free Pawn, extra Chessman grant

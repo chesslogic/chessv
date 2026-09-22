@@ -1,5 +1,10 @@
 # Material policy: evidence and alternatives
 
+> **Historical evidence for superseded ADR0018.**
+> [ADR0019](../adr/0019-seeded-hierarchical-allocation.md) is the current implementation contract.
+> The original rationale, normalized prices, W measurements, and phase fixtures below remain historical.
+> They do not validate the successor's concrete-price hierarchical allocator.
+
 This appendix supports [ADR0018](../adr/0018-enabled-material-families.md). It is not a second normative contract.
 The ADR contains the required behavior and exact fixtures without a dependency on local research files.
 Source evidence is pinned. The accepted decisions take precedence over old source behavior.

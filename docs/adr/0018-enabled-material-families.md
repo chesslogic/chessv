@@ -1,7 +1,10 @@
 # Enable material families with cumulative Fundamental allocation
 
-Status: accepted
+Status: superseded by [ADR0019](0019-seeded-hierarchical-allocation.md)
 Date: 2026-09-20
+
+Superseded on 2026-09-21. The historical body and fixtures below remain unchanged.
+ADR0019 contains the current self-contained implementation contract.
 
 New Archipelago worlds use Fundamental itemization with a small named distribution policy.
 AP unit supply and runtime material allocation are separate stages.
