@@ -34,20 +34,22 @@
       "state": "ready_for_design_gate_after_authorization",
       "depends_on": [],
       "spec_heading": "3. Interface gate S0",
-      "evidence": ["assessments/handler.md", "assessments/library.md"],
+      "evidence": ["assessments/handler.md", "assessments/library.md", "contracts.md"],
       "writes": {},
       "creates": {
         "chessv": [
           "ChessV.Base\\CommittedMoveObservation.cs",
           "ChessV.Games\\MiscellaneousGames\\ApmwStartingArmyIdentity.cs",
-          "ChessV.Games\\MiscellaneousGames\\ApmwTacticalClassCatalog.cs",
+          "ChessV.Games\\MiscellaneousGames\\ApmwArmyData.cs",
+          "ChessV.Games\\MiscellaneousGames\\ApmwCanonicalJson.cs",
+          "APMW.Client\\ApmwWorldContext.cs",
           "APMW.Client\\EarnedMatchEvents.cs",
           "APMW.Client\\ApmwReportingModels.cs",
           "APMW.Test\\Fixtures\\ContractV4\\p8.json",
           "APMW.Test\\Fixtures\\ContractV4\\p12.json"
         ]
       },
-      "acceptance": ["F07", "cross-assembly consumer compile examples", "complete seam declarations"]
+      "acceptance": ["F07", "cross-assembly consumer compile examples", "complete seam declarations", "shared-data 10.4 canonicalization fixtures in C#"]
     },
     {
       "id": "B1",
@@ -68,7 +70,7 @@
       },
       "creates": {
         "chessv": [
-          "ChessV.Games\\MiscellaneousGames\\ApmwArmyData.cs",
+          "ChessV.Games\\MiscellaneousGames\\ApmwArmyReader.cs",
           "ChessV.Games\\MiscellaneousGames\\ApmwSetupComposer.cs",
           "ChessV.Games\\Data\\chessv-armies-v1.json",
           "ChessV.Test\\ApmwArmyDataTests.cs"
@@ -96,7 +98,7 @@
       "creates": {
         "chessv": ["APMW.Test\\ApmwCommittedLifecycleTests.cs"]
       },
-      "acceptance": ["F04", "F05", "ordinary-game transaction regression"]
+      "acceptance": ["F04", "F05", "one terminal-result notification per committed result", "ordinary-game transaction regression"]
     },
     {
       "id": "R1",
@@ -148,7 +150,6 @@
       },
       "creates": {
         "chessv": [
-          "APMW.Client\\ApmwWorldContext.cs",
           "APMW.Client\\ApmwLocationProfileV2.cs",
           "APMW.Client\\ApmwWorldBindingParser.cs",
           "APMW.Client\\ApmwLocationCostSnapshot.cs",
