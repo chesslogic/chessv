@@ -970,6 +970,77 @@ They must not reroll allocation or substitute live pocket contents from a differ
 No external data collection or implementation is authorized.
 The repository adapter remains absent, so this work stays in the generic planning route.
 
+### D22 closure round, 2026-09-28
+
+The user accepted all six recommendations in one answer.
+This session continues the ticket record because no other session holds a recorded claim.
+
+#### Q61: Guarantee values
+
+`fair_board_guarantee` keeps three values.
+`none` applies no reservation and no conversion; Legacy keeps one Pawn per effective Pawn item.
+`standard_count` applies the total-unit minimum only.
+`standard_and_pawns` applies the total-unit and non-Pawn minimums.
+In Fundamental, slots are fixed and Material cannot create units, so only the non-Pawn minimum has an effect.
+It gives Pawn-to-Minor-or-better actions priority until that minimum is met.
+The old documentation ("found pawns also count") is replaced, not preserved.
+
+#### Q62: Target pairs (closes Q60)
+
+| Prepared board | Total-unit minimum | Non-Pawn minimum |
+| --- | ---: | ---: |
+| 6x8 | 11 | 5 |
+| 8x8 | 15 | 7 |
+| 10x8 | 19 | 9 |
+| 10x10 | 27 | 15 |
+| 12x10 | 33 | 19 |
+
+The 12x10 second CPU King counts as a non-Pawn, as it already counts as a unit in Q49.
+
+#### Q63: Legacy reservation equation
+
+Let T be the total-unit minimum, D the deployable non-Pawn units planned from non-Pawn items, and P the pocket contribution.
+The Pawn allocation protects R = max(0, T - D - P) units at 100 material each.
+All other eligible Pawn credit and positive Legacy surplus fund conversion.
+R never exceeds the available Pawn items; a shortfall stays visible and is not invented.
+
+#### Q64: Family membership
+
+Each actual chessman counts once, under its current family.
+A pocket non-Pawn counts toward both minimums.
+Pawns and Pawn variants, including Sergeants and Berolinas, count toward the total-unit minimum only.
+
+#### Q65: Viability
+
+Viability reuses the existing logic reachability check with frozen, post-cap effective requirements.
+The shared allocation policy feeds its metrics.
+No second pre-cap strength check is added; projection caps keep their ADR 0008 meaning.
+
+#### Q66: Stopping rule
+
+After the minimums are met, allocation keeps spending usable material through permitted actions.
+It stops when no permitted action is affordable.
+Leftover material stays visible in diagnostics.
+
+#### Q67 frontier: Pocket occupancy authority
+
+Q63 and Q64 require the generator and client to agree on the actual pocket contents.
+They currently disagree:
+
+- The generator counts `occupied_pockets = min(3, ceil(items / limit))` (`item_utils.py:33-36`), which assumes pockets fill one at a time.
+- The generator emits a stable `pocket_order` array (`__init__.py:482-491`), but ChessV does not read it.
+- ChessV splits items with `generatePocketValues` (`Config.cs:913-956`), which its own tests call unstable across item counts. In the test seed, two items give two Pawns there but one occupied pocket in the generator.
+- A pocket holding k items holds a tier-k piece: Pawn, Minor, Major, or Queen (`ItemGeneration.cs:2200-2226`).
+
+#### Q68 frontier: Pocket material credit
+
+Current logic credits pockets with zero material (`test_raw_pocket_material_does_not_gate_v2_legacy_rules`) and one chessman per occupied pocket.
+The contract table still lists 110 per Pocket item.
+Tier values at 100/300/485/900 make twelve items worth up to 2700.
+The user proposed credit as the least of actual pocket material, half the board material, and 300 per chessman.
+This affects logic metrics, and through Q65, viability.
+It does not affect Q63 conversion funding, which uses unit counts.
+
 ### Required matrix fields
 
 Each setting needs its canonical key, owner, lifetime, modes, default,

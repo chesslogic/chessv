@@ -41,6 +41,17 @@ failure disproves them. The integration owner records the replacement and update
 all consumers before parallel work resumes.
 Product decisions require their original decision owner.
 
+### Execution decisions, 2026-09-28
+
+| Decision | Selection | Consequence |
+| --- | --- | --- |
+| Phase boundary | Close all open design work, including D22 and the settings matrix, before implementation | One orchestrated implementation pass covers every package, including A22 |
+| D22 route | Grill D22 in this design session, using the ticket 24 record and producer findings as inputs | Ticket 24 decisions are recorded there. This spec absorbs the resulting contract |
+| S0 acceptance | The user approves the initial S0 pull request once | Later declaration changes go through this design owner. Behavior-changing changes return to the user |
+| Contract home | Existing projects: `ChessV.Base` and `ChessV.Games`, then `APMW.Client` | No new contracts project |
+| Integration target | One pull request per package, directly into ChessV `develop` and ChecksMate `checks_mate` | No 0.4.0 integration branch. The dependency order in section 5 controls merge order |
+| Capture role vocabulary | The capture role is the one domain identity. `unit_id` is an implementation field | `CONTEXT.md` records the term |
+
 ## 2. Target architecture and state ownership
 
 ```text
@@ -83,6 +94,8 @@ No semantic goal identity comes from a display name, current square, or current 
 S0 is a small implementation tranche before consumer fanout.
 It materializes declarations, complete fixture inputs, and compile-level consumer
 examples. It does not implement gameplay or networking.
+The [shared contract inventory](contracts.md) lists every wire contract, seam,
+and primitive, with writers, readers, and visibility.
 
 ### 3.1. Setup identity
 
@@ -117,6 +130,7 @@ E1 supplies these lifecycle outcomes:
 | Speculative make/unmake | No APMW commit or earned progress |
 | Committed Undo | Exact commit ID, strict top-of-stack pairing |
 | Internal accepted position replacement | New epoch and identity-aware reset through the accepted fixture/load path |
+| Committed terminal result | Exactly one notification for every result source, including CPU extinction |
 
 En passant, castling, promotion replacement, and Checkers multi-capture require
 complete deltas. `MoveInfo` alone is not sufficient.
@@ -180,9 +194,15 @@ Each owner also owns the listed focused tests.
 **Owner:** Integration architect. **Prerequisites:** None after execution approval.
 
 Own NEW `CommittedMoveObservation.cs`, `ApmwStartingArmyIdentity.cs`,
-`ApmwTacticalClassCatalog.cs`, `EarnedMatchEvents.cs`, and
-`ApmwReportingModels.cs` in the assemblies specified in the manifest.
-Define only the minimal interfaces in section 3.
+`ApmwArmyData.cs`, `ApmwCanonicalJson.cs`, `ApmwWorldContext.cs`,
+`EarnedMatchEvents.cs`, and `ApmwReportingModels.cs` in the assemblies
+specified in the manifest.
+Define only the minimal interfaces in section 3 and the
+[contract inventory](contracts.md#4-in-process-seams).
+`ApmwCanonicalJson.cs` is the one public C# strict-JSON and semantic-hash
+primitive in `ChessV.Games`. It passes the shared-data §10.4 fixtures.
+Tactical target classes come from `L.target_classes` through the world context,
+not from a Games-side catalog.
 Materialize the P8/P12 schema fixtures from shared-data section 10.2.
 Attach a compile example for every cross-assembly consumer.
 
@@ -193,8 +213,10 @@ visibility. No behavior-changing decision disappears into a DTO.
 
 **Owner:** Board/data specialist. **Prerequisites:** S0.
 
-Own `ApmwProfiles.cs`, `ApmwPieceCatalog.cs`, NEW Army reader/data and pure setup
-composer, and the focused geometry/setup tests.
+Own `ApmwProfiles.cs`, `ApmwPieceCatalog.cs`, NEW `ApmwArmyReader.cs`,
+the Army data file, the pure setup composer, and the focused geometry/setup tests.
+The reader fills the S0 Army records and uses the S0 canonical JSON primitive.
+It also supplies the one Army `type_id`-to-`PieceType` registry.
 Author all 20 exact formations and role mappings from the accepted arrays.
 Keep AP numeric IDs out of Army data.
 Resolve selector fallback to Standard, but reject malformed artifact families.
@@ -218,13 +240,19 @@ The `Match.cs` change is conditional on the needed pre-controller-change hook.
 Do not move network or goal policy into these files.
 
 Publish complete commit/abort/undo facts.
+Publish every committed terminal result exactly once, including results from
+`TestForWinLossDraw`. The current `MatchFinished` call covers only the
+no-legal-moves branch (`Game.cs:1669-1680`).
+Replace `lastMove` value-equality suppression with commit identity.
+Scope notifications to the game instance.
 Do not expose the old `NewMoveSetup` callback as successful progress.
 Preserve search make/unmake and result restoration.
 Expose one ordered controller-change notification before the new controller
 can produce progress. N1 performs suppression through that notification.
 
 **Exit:** F04/F05 prove no phantom history, no speculative reports, exact Undo
-pairing, and takeover ordering. Search algorithms remain unchanged.
+pairing, one terminal-result notification for extinction and no-move results,
+and takeover ordering. Search algorithms remain unchanged.
 
 ### R1 - CPU survival, castling, and promotion rules
 
@@ -258,6 +286,9 @@ Existing coefficients, ordinary games, and human rule behavior remain unchanged.
 
 Own `ApmwContractV2.cs` migration, `Config.cs`, `ApmwGeometrySelection.cs`,
 NEW snapshot/world/profile readers, and contract/selection tests.
+The readers fill the S0 world-context types, including the target-class lookup
+from `L.target_classes`. `ApmwContractV2.cs` delegates hashing to the S0 primitive.
+Reject a match when `C.army` differs from the installed Army hash.
 An internal type rename can occur within this package, with explicit consumer
 updates through the agreed seam. A v2-named implementation must not imply old-world acceptance.
 The new Location-profile reader uses `ApmwLocationProfileV2`, distinct from the
@@ -283,6 +314,7 @@ and capture/fork/progress tests.
 Replace file/rank inference with stable starting identity.
 Apply a complete capture batch once, then report every crossed published threshold.
 Use current type only for tactical classification.
+Classify through the Army type registry and the world-context target-class lookup.
 
 Keep reversible captured-unit membership, counts, and current identity binding.
 Count Kings according to the initial multi-King setup.
@@ -300,6 +332,7 @@ No handler path reads replacement-session configuration.
 
 Own `Client.cs`, NEW `ApmwConnectionOwner.cs`, and connection/reporting tests.
 Use stock MultiClient.Net 6.6.0.
+The owner implements `IApmwEarnedEventSink`. `Record` is its only recording path.
 Separate route lifetime, match lifetime, and reporting eligibility.
 Retain eligible earned Locations and the goal marker after disconnect/window closure.
 Do not retain board/window references.

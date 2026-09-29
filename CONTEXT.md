@@ -12,8 +12,11 @@ _Avoid_: Board square (when referring to an Archipelago objective)
 **Capture role**:
 A piece's identity in its starting formation for individual capture
 classification, independent of later movement or promotion.
+Each starting piece holds exactly one capture role, and the role stays with
+that piece through movement, promotion, and Undo.
 Standard/FIDE roles provide stable names across army families.
-_Avoid_: File identity, current piece kind (as substitutes for capture role)
+_Avoid_: File identity, current piece kind (as substitutes for capture role);
+starting unit (as a separate concept)
 
 **Tactical target class**:
 A group of current piece kinds used for threat and fork goals, independent
@@ -70,6 +73,16 @@ _Avoid_: Material grant, total active-army count (as synonyms)
 Paired targets for total units and non-Pawn units, with no separate Pawn minimum
 and no upper limit implied by either target.
 _Avoid_: Fixed Pawn/non-Pawn split, Pawn quota, army-size ceiling
+
+**Pawn family**:
+Pawns and Pawn variants, such as Sergeants and Berolinas.
+They count toward the total-unit minimum but not the non-Pawn minimum.
+_Avoid_: Weak piece, pawn item (as synonyms)
+
+**Fair Board Guarantee**:
+The world setting that selects which composition minimums apply:
+none, the total-unit minimum only, or both minimums.
+_Avoid_: Material grant, Pawn-upgrade mode (as synonyms)
 
 **Pawn-material conversion**:
 Use of Legacy Pawn material and eligible Legacy surplus for fewer, stronger
