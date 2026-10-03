@@ -1,0 +1,360 @@
+{
+  "schema": "artifact-only-lifecycle-fixtures",
+  "version": 3,
+  "review_corrections": ["ENGINE E1 Base-owned preparation bridge", "ENGINE E2 same captured card account", "ENGINE E3 live toolbar authority"],
+  "authority": "Accepted Standard 12x10 array and role catalog from tickets 13/15; royal-lifecycle-fixtures.md",
+  "scope": "Independent design inputs. Not a production Army, World, or normalized K12 payload.",
+  "common": {
+    "game_id": "fixture-game-A",
+    "match_id": "fixture-match-A",
+    "reset_epoch": 1,
+    "cpu_side": 0,
+    "human_side": 1,
+    "stage": "12x10",
+    "endpoint": "12x10",
+    "family": "standard",
+    "pockets": [],
+    "en_passant": null,
+    "unlisted_squares": "empty",
+    "attached_match": true,
+    "reporting": "Eligible",
+    "counts": { "pawns": 14, "non_king_non_pawns": 18, "kings": 2, "total": 34 },
+    "reflection": "Keep file. Map 1-based rank r to 11-r. Swap sides and K/Q to k/q.",
+    "profile_binding": "Use EP owner's complete synthetic P12 A/L/C/S/W fixture. No arbitrary production pin."
+  },
+  "starting_units": [
+    ["queen_side_rook", "rook", "A1", "non-king-non-pawn"],
+    ["queen_side_lion", "lion", "B1", "non-king-non-pawn"],
+    ["queen_side_attendant", "archbishop", "C1", "non-king-non-pawn"],
+    ["queen_side_knight", "knight", "D1", "non-king-non-pawn"],
+    ["queen_side_bishop", "bishop", "E1", "non-king-non-pawn"],
+    ["amazon", "amazon", "F1", "non-king-non-pawn"],
+    ["primary_king", "mounted-king", "G1", "king"],
+    ["king_side_bishop", "bishop", "H1", "non-king-non-pawn"],
+    ["king_side_knight", "knight", "I1", "non-king-non-pawn"],
+    ["king_side_attendant", "chancellor", "J1", "non-king-non-pawn"],
+    ["king_side_lion", "lion", "K1", "non-king-non-pawn"],
+    ["king_side_rook", "rook", "L1", "non-king-non-pawn"],
+    ["queen_side_rook_pawn", "pawn", "A2", "pawn"],
+    ["queen_side_rearguard_pawn", "pawn", "B2", "pawn"],
+    ["queen_side_elephant", "elephant", "C2", "non-king-non-pawn"],
+    ["queen_side_forward_bishop", "bishop", "D2", "non-king-non-pawn"],
+    ["queen_side_forward_knight", "knight", "E2", "non-king-non-pawn"],
+    ["queen", "queen", "F2", "non-king-non-pawn"],
+    ["additional_king", "king", "G2", "king"],
+    ["king_side_forward_knight", "knight", "H2", "non-king-non-pawn"],
+    ["king_side_forward_bishop", "bishop", "I2", "non-king-non-pawn"],
+    ["king_side_elephant", "elephant", "J2", "non-king-non-pawn"],
+    ["king_side_rearguard_pawn", "pawn", "K2", "pawn"],
+    ["king_side_rook_pawn", "pawn", "L2", "pawn"],
+    ["queen_side_lion_pawn", "pawn", "B3", "pawn"],
+    ["queen_side_attendant_pawn", "pawn", "C3", "pawn"],
+    ["queen_side_knight_pawn", "pawn", "D3", "pawn"],
+    ["queen_side_bishop_pawn", "pawn", "E3", "pawn"],
+    ["queen_pawn", "pawn", "F3", "pawn"],
+    ["king_pawn", "pawn", "G3", "pawn"],
+    ["king_side_bishop_pawn", "pawn", "H3", "pawn"],
+    ["king_side_knight_pawn", "pawn", "I3", "pawn"],
+    ["king_side_attendant_pawn", "pawn", "J3", "pawn"],
+    ["king_side_lion_pawn", "pawn", "K3", "pawn"]
+  ],
+  "origin": {
+    "captured_unit_ids": [
+      "queen_side_lion", "queen_side_attendant", "queen_side_knight", "queen_side_bishop",
+      "amazon", "king_side_bishop", "king_side_knight", "king_side_attendant",
+      "king_side_lion", "king_side_rook", "queen_side_elephant",
+      "queen_side_forward_bishop", "queen_side_forward_knight", "queen",
+      "king_side_forward_knight", "king_side_forward_bishop", "king_side_elephant",
+      "queen_side_rook_pawn", "queen_side_rearguard_pawn", "king_side_rearguard_pawn",
+      "king_side_rook_pawn", "queen_side_lion_pawn", "queen_side_attendant_pawn",
+      "queen_side_knight_pawn", "queen_side_bishop_pawn", "queen_pawn", "king_pawn",
+      "king_side_bishop_pawn", "king_side_knight_pawn", "king_side_attendant_pawn", "king_side_lion_pawn"
+    ],
+    "counts": { "pawns": 14, "pieces": 17, "any": 31 },
+    "seed_ledger": "One fixture-only origin entry per listed unit, ordered as this array, source ID fixture-origin:<unit_id>. Not a played legal history claim.",
+    "next_attempt_id": 32,
+    "next_commit_id": 32,
+    "regicide_earned": false,
+    "capture_everything": false,
+    "royals": ["primary_king", "additional_king"],
+    "pending": []
+  },
+  "F04": {
+    "position": [
+      ["cpu", "primary_king", "mounted-king", "G1", 0],
+      ["cpu", "additional_king", "king", "G2", 0],
+      ["cpu", "queen_side_rook", "rook", "A1", 0],
+      ["human", "human-king", "king", "L10", 0],
+      ["human", "human-rook", "rook", "G8", 3]
+    ],
+    "side_to_move": 1,
+    "turn_number": 20,
+    "half_move_clock": 4,
+    "castling": ["Q"],
+    "operations": [
+      ["enumerate", "G8-G2", "rejection disabled"],
+      ["enable_late_rejection", "after earlier stateful hooks"],
+      ["committed_attempt", "G8-G2"],
+      ["assert", "exact CP/R1/H1 pre-state; zero commit/earned; AttemptId advances once"],
+      ["disable_rejection", "same exact candidate"],
+      ["commit", "G8-G2"],
+      ["assert", "one complete capture; counts14/18/32; oneKing; primary checked; Regicide once"],
+      ["undo", "exact top CommitId"],
+      ["assert", "counts14/17/31 and pre-state; journal accomplishment retained"],
+      ["commit_alternate", "G8-H8"],
+      ["assert", "one zero-capture ledger entry, no repeated capture"]
+    ],
+    "faults": [
+      "before first pickup", "after successful pickup", "entered drop after type/move-count mutation",
+      "first stateful rule after mutation", "later rule after earlier handlers", "evaluation after mutation",
+      "completion after side/counter mutation", "MoveMade after completion",
+      "native history append", "second MoveMade pass", "post-move root generation"
+    ],
+    "fault_modes": ["DebugFlags.ThrowOnInvariantViolation=false", "DebugFlags.ThrowOnInvariantViolation=true"],
+    "independent_oracle": "Capture explicit input state and every CP field in design section6 before fault. Do not derive expected state by unmaking the attempted move.",
+    "speculative": "Make/unmake matching LIFO mode: no K4 Commit, no earned event, exact reversible state.",
+    "no_match": "Mutate generated descriptor to a nongenerated destination: no primitive or full unmake.",
+    "failure_then_repetition": "The same later real move must commit once, regardless of failed MoveInfo value equality.",
+    "K4_sequences": { "no_match": ["Abort"], "resolved_failure": ["Setup", "Abort"], "resolved_success": ["Setup", "Prepare", "InstallReversible", "Accept", "Commit", "optional Terminal"] },
+    "preparation_bridge": [
+      { "case": "missing-binding", "fault": "prepare-missing-binding", "accepted": false, "native_entries": 0, "h1_entries": 0, "install_calls": 0, "earned": 0, "abort": true },
+      { "case": "prepare-exception", "fault": "prepare-exception", "accepted": false, "native_entries": 0, "h1_entries": 0, "install_calls": 0, "earned": 0, "abort": true },
+      { "case": "single-success", "fault": "none", "accepted": true, "native_entries": 1, "h1_entries": 1, "install_calls": 1, "earned": 1, "abort": false },
+      { "case": "partial-install-failure", "fault": "install-after-mutation", "accepted": false, "native_entries": 0, "h1_entries": 0, "install_calls": 1, "earned": 0, "abort": true },
+      { "case": "wrong-install-receipt", "fault": "wrong-receipt", "accepted": false, "native_entries": 0, "h1_entries": 0, "install_calls": 1, "earned": 0, "abort": true },
+      { "case": "throwing-postaccept-ui-observer", "fault": "ui-observer", "accepted": true, "native_entries": 1, "h1_entries": 1, "install_calls": 1, "earned": 1, "abort": false },
+      { "case": "throwing-h1-delivery-before-sink", "fault": "h1-delivery", "accepted": true, "native_entries": 1, "h1_entries": 1, "install_calls": 1, "earned": 0, "abort": false, "after_delivery_retry": { "native_entries": 1, "h1_entries": 1, "install_calls": 1, "earned": 1 } }
+    ],
+    "live_toolbar": {
+      "operations": ["commit capture", "toolbar Undo", "toolbar replay same MoveInfo", "toolbar Undo", "alternate noncapture"],
+      "expected_h1_depth": [1, 0, 1, 0, 1],
+      "expected_counters": [[14, 18, 32], [14, 17, 31], [14, 18, 32], [14, 17, 31], [14, 17, 31]],
+      "expected_new_earned_admissions": [1, 0, 0, 0, 0],
+      "commit_keys": ["commit32", null, "commit33", null, "commit34"],
+      "classification": "live committed gameplay, not readonly"
+    },
+    "genuinely_view_only": { "provided_as_internal_scope": true, "native_entries_changed": 0, "h1_entries_changed": 0, "publications": 0, "new_viewer_required": false }
+  },
+  "F06": {
+    "extinction": {
+      "position": [
+        ["cpu", "primary_king", "mounted-king", "E6", 4],
+        ["cpu", "additional_king", "king", "G4", 2],
+        ["cpu", "queen_side_rook", "rook", "A1", 0],
+        ["human", "human-checkers", "checkers", "D7", 0],
+        ["human", "human-king", "king", "L10", 0]
+      ],
+      "side_to_move": 1,
+      "turn_number": 20,
+      "castling": [],
+      "path": ["D7", "F5", "H3"],
+      "captures": ["E6", "G4"],
+      "expected": {
+        "cpu_kings": 0, "result_type": "Win", "winner": "human",
+        "reason": "cpu-extinction", "counts": [14, 19, 33],
+        "regicide_new_awards": 1, "human_stage_victory": true,
+        "capture_everything": false, "published_any_max": 32,
+        "invented_any33": false, "undo_batch_size": 1
+      }
+    },
+    "primary_capture": {
+      "position": [
+        ["cpu", "primary_king", "mounted-king", "G1", 0],
+        ["cpu", "additional_king", "king", "G2", 0],
+        ["cpu", "queen_side_rook", "rook", "A1", 0],
+        ["human", "human-king", "king", "L10", 0],
+        ["human", "human-rook", "rook", "H1", 3]
+      ],
+      "side_to_move": 1,
+      "castling": ["Q"],
+      "sequence": ["H1-G1", "G2-G1", "Undo G2-G1", "Undo H1-G1"],
+      "expected_rights": [[], [], [], ["Q"]]
+    },
+    "check_obligation": {
+      "position": [
+        ["cpu", "primary_king", "mounted-king", "G1", 0],
+        ["cpu", "additional_king", "king", "G2", 0],
+        ["cpu", "queen_side_rook", "rook", "A1", 0],
+        ["human", "human-king", "king", "L10", 0],
+        ["human", "human-rook", "rook", "G8", 3]
+      ],
+      "side_to_move": 0,
+      "candidate": "A1-A2",
+      "variants": [
+        { "removed": [], "legal": true },
+        { "removed": ["primary_king"], "legal": false },
+        { "removed": ["additional_king"], "legal": false }
+      ]
+    },
+    "last_king": [
+      { "cpu": ["king", "A1"], "human": [["king", "C3"], ["queen", "B2"]], "no_moves": true, "winner": "human" },
+      { "cpu": ["king", "A1"], "human": [["king", "C3"], ["queen", "C2"]], "no_moves": true, "winner": "cpu" },
+      { "cpu": ["mounted-king", "A1"], "human": [["king", "C3"], ["queen", "B2"]], "no_moves": true, "winner": "human" },
+      { "cpu": ["mounted-king", "A1"], "human": [["king", "C3"], ["queen", "C2"]], "no_moves": true, "winner": "cpu" }
+    ],
+    "reset_sequence": ["F04 pre-capture origin(2)", "F04 post-capture origin(1)", "F04 pre-capture origin(2)", "F06 extinction origin(0)", "F04 pre-capture origin(2)"],
+    "reset_expected_epochs": [2, 3, 4, 5, 6],
+    "reset_preserves": ["MatchId", "NotReporting if already suppressed", "earned Location IDs", "earned goal marker", "frozen K6/K9"],
+    "reset_invalidates": "Every R field in design section6, with no stale Piece object.",
+    "cold_order": ["capture", "metadata", "types", "rules-init", "post-init", "board-pieces", "cpu-bindings", "rules-position-loaded", "complete-bindings", "root-generation", "StartMatch", "setup-controllers", "Started"],
+    "coordinates": { "board_g1": 60, "board_g10": 69, "standard_g1": 60, "standard_g10": 69, "xboard_g0": 60, "xboard_g9": 69 },
+    "checkers_stop": [
+      { "geometry": "12x10", "side": 0, "mover": "D5", "enemies": ["E6", "G8"], "expected_landings_if_opponent_relative_rank1_is_retained": ["F7", "H9"] },
+      { "geometry": "12x10", "side": 1, "mover": "D6", "enemies": ["E5", "G3"], "expected_landings_if_opponent_relative_rank1_is_retained": ["F4", "H2"] },
+      { "geometry": "8x8", "side": 0, "mover": "D3", "enemies": ["E4", "G6"], "expected_landings": ["F5", "H7"] }
+    ]
+  },
+  "TR": {
+    "accepted_results": [
+      { "source": "rule-extinction", "type": "Win", "winner": "human", "stage": "12x10", "victory": true, "goal": true },
+      { "source": "rule-checkmate", "type": "Win", "winner": "human", "stage": "8x8", "victory": true, "goal": false },
+      { "source": "no-moves-stalemate", "type": "Win", "winner": "cpu", "stage": "12x10", "victory": false, "goal": false },
+      { "source": "no-moves-multiple-kings", "type": "Win", "winner": "cpu", "stage": "12x10", "victory": false, "goal": false },
+      { "source": "accepted-controller-win-claim", "type": "Win", "winner": "human", "stage": "12x10", "victory": true, "goal": true },
+      { "source": "accepted-adjudication", "type": "Adjudication", "winner": "human", "stage": "12x10", "victory": false, "goal": false },
+      { "source": "received-death", "type": "Resignation", "winner": "cpu", "stage": "12x10", "victory": false, "goal": false },
+      { "source": "draw", "type": "Draw", "winner": null, "stage": "12x10", "victory": false, "goal": false },
+      { "source": "timeout", "type": "Timeout", "winner": "human", "stage": "12x10", "victory": false, "goal": false },
+      { "source": "agreement", "type": "Agreement", "winner": "human", "stage": "12x10", "victory": false, "goal": false },
+      { "source": "disconnection", "type": "Disconnection", "winner": "human", "stage": "12x10", "victory": false, "goal": false },
+      { "source": "window-close", "type": "NoResult", "winner": null, "stage": "12x10", "victory": false, "goal": false }
+    ],
+    "order": ["native-stage", "H1-prepare", "H1-install-once", "accepted-commit", "H1-observe-no-ledger-write", "terminal-fact", "H1-terminal-earned", "UI-MovePlayed", "pre-controller-change-suppression", "controller-assignment"],
+    "dedup_cases": ["repeat same source", "Finished repeats existing source", "restore existing result source", "Undo then new real terminal source", "speculative result then matching committed source", "two external claims with same result but distinct accepted operations"],
+    "admission_orders": [
+      { "order": ["prepare", "suppress", "admit"], "new_admissions": 0 },
+      { "order": ["admit", "suppress", "finish-admitted"], "new_admissions": 1 },
+      { "order": ["admit-location", "suppress", "admit-goal"], "location": 1, "goal": 0 }
+    ],
+    "fixed_identity_after_takeover": ["cpu_side=0", "primary_king", "queen_side_rook"],
+    "restore_controller_reporting": "NotReporting",
+    "transport_cleanup": "No result, no DeathLink, no ledger reset.",
+    "postaccept_failure": "Explicit keyed publication failure. Retain accepted native/H1 prefix, no Abort, no ledger reinstall. Retry only pending earned delivery."
+  },
+  "captured_card_account": {
+    "scope": "Independent nonempty-pocket account fixture, not an allocator or new gem-price rule.",
+    "schema_binding": {
+      "owner_session": "1b1212ee-7609-4a3b-84e1-046c3e0b019f",
+      "amendment_path": "C:\\Users\\aaedi\\.copilot\\session-state\\1b1212ee-7609-4a3b-84e1-046c3e0b019f\\files\\allocation-c-amendment.json",
+      "amendment_sha256": "1bd6a30f2206292b0ae06411967fd5370d5ccc8abb3864c6a3814048145e1c17",
+      "C_node": "input_inventory.retained_uncapped_counts[\"Progressive Pocket Gems\"]",
+      "request_path": "$.input.capture.inventory[\"Progressive Pocket Gems\"]",
+      "item_name": "Progressive Pocket Gems",
+      "item_id": 4901023,
+      "count_type": "nonnegative-int32",
+      "mode": "legacy",
+      "authority_status": "engineering-proposal-not-a-complete-frozen-C",
+      "scope": "Complete mode-specific inventory and generation fragments, not complete projection requests or a production C pin."
+    },
+    "geometry": "8x8",
+    "cpu_side": 0,
+    "human_side": 1,
+    "position": [["cpu", "king", "A1"], ["human", "king", "H8"]],
+    "pockets": [
+      { "side": 1, "slot": 0, "piece": "rook", "midgame_value": 500 },
+      { "side": 1, "slot": 1, "piece": "rook", "midgame_value": 500 }
+    ],
+    "capture_A": {
+      "input": { "capture": { "setup_generation": "1", "inventory": {
+        "Play as White": 0, "Progressive AI Intelligence Malus": 0,
+        "Progressive Pocket": 4, "Progressive Pocket Range": 6, "Progressive Pocket Gems": 4,
+        "Progressive King Promotion": 0, "Progressive Consul": 0,
+        "Progressive Pawn": 0, "Progressive Pawn Forwardness": 0,
+        "Progressive Minor Piece": 0, "Progressive Major Piece": 0,
+        "Progressive Major To Queen": 0, "Progressive Jack": 0,
+        "Board Files": 0, "Board Ranks": 0
+      } } },
+      "turn": 1, "spent": 0, "gained": 0
+    },
+    "live_inventory_B_before_attach": {
+      "input": { "capture": { "setup_generation": "2", "inventory": {
+        "Play as White": 0, "Progressive AI Intelligence Malus": 0,
+        "Progressive Pocket": 4, "Progressive Pocket Range": 6, "Progressive Pocket Gems": 9,
+        "Progressive King Promotion": 0, "Progressive Consul": 0,
+        "Progressive Pawn": 0, "Progressive Pawn Forwardness": 0,
+        "Progressive Minor Piece": 0, "Progressive Major Piece": 0,
+        "Progressive Major To Queen": 0, "Progressive Jack": 0,
+        "Board Files": 0, "Board Ranks": 0
+      } } }
+    },
+    "fundamental_zero_receipt_capture": {
+      "input": { "capture": { "setup_generation": "3", "inventory": {
+        "Play as White": 0, "Progressive AI Intelligence Malus": 0,
+        "Progressive Pocket": 4, "Progressive Pocket Range": 6, "Progressive Pocket Gems": 0,
+        "Progressive King Promotion": 0, "Progressive Consul": 0,
+        "Chessmen": 0, "Material": 0, "Castler": 0, "Board Files": 0, "Board Ranks": 0
+      } } }
+    },
+    "internal_origins": {
+      "cold": { "captured_base": 4, "side": 1, "turn": 1, "spent": 0, "gained": 0, "pocket_slots": [0, 1], "board": { "cpu_king": "A1", "human_king": "H8" } },
+      "post_reply": { "captured_base": 4, "side": 1, "turn": 2, "spent": 5, "gained": 0, "pocket_slots": [1], "board": { "cpu_king": "A2", "human_king": "H8", "rook0": "D6" } }
+    },
+    "expected": {
+      "cold_gems": 5, "attached_gems": 5, "root_gems": 5,
+      "first_drop_price": 5, "after_first_drop": { "turn": 2, "spent": 5, "gained": 0, "gems": 1 },
+      "after_cpu_reply_gems": 1, "second_card_affordable": false,
+      "after_undo_reply_and_drop": { "turn": 1, "spent": 0, "gained": 0, "gems": 5, "nonempty_pockets": 2 },
+      "reset_to_post_reply": { "turn": 2, "spent": 5, "gained": 0, "gems": 1, "nonempty_pockets": 1 },
+      "reset_to_cold_origin_gems": 5, "received_inventory_after_reset": 9,
+      "separately_prepared_B_gems": 10,
+      "ordinary_live_B_gems": 10
+    },
+    "sequence": ["capture A", "cold roots with two Rooks", "receive B", "attach Player accounts to A", "regenerate roots", "drop slot0 Rook to D6", "CPU A1-A2", "refuse slot1 Rook", "live Undo reply", "live Undo drop", "internal reset to post-reply origin", "internal reset to cold origin", "separate Game captures B"],
+    "arithmetic": "-1 + side + turn - spent + gained + max(captured_base,0)",
+    "invariants": ["root trial make/unmake leaves spending unchanged", "controller replacement shares side account", "reset restores spending/gain, not received inventory", "ordinary branch retains existing live reads", "Progressive Pocket remains4 while distinct gem receipts change4to9", "Complete captured inventory requires the exact Gems key in both modes", "No pocket_gems alias, new cap, material credit or progression-state substitution"],
+    "physical_pocket_scope": "Two Rooks are constructed for the native card-account bench. They are not an allocator-output or Progressive Pocket4 entitlement claim."
+  },
+  "resource_amendment": {
+    "execution_authorized": false,
+    "resource": "ChessV.Games\\MiscellaneousGames\\ApmwChess.cs",
+    "serial_writers": ["E1", "B1", "U1"],
+    "add_dependency_edges": [["E1", "B1"]],
+    "required_existing_handoff_edges": [["B1", "U1"], ["E1", "U1"], ["H1", "U1"], ["N1", "U1"]],
+    "rule": "E1 consumes S0 declarations, not B1 implementation. Proposed DAG must remain acyclic."
+  },
+  "F17": {
+    "captures": [
+      { "generation": "1", "input_hash": "A", "stage": "12x10", "contract": "C", "world": "W", "policy": "P" },
+      { "generation": "2", "input_hash": "B", "stage": "12x10", "contract": "C", "world": "W", "policy": "P" },
+      { "generation": "3", "input_hash": "A", "stage": "12x10", "contract": "C", "world": "W", "policy": "P" }
+    ],
+    "responses": [
+      { "generation": "1", "input_hash": "A", "stage": "12x10", "contract": "C", "world": "W", "policy": "P", "accept_under_current3": false },
+      { "generation": "3", "input_hash": "A", "stage": "12x10", "contract": "C", "world": "W", "policy": "P", "accept_under_current3": true }
+    ],
+    "each_independent_mismatch": ["generation", "input_hash", "stage", "contract", "world", "policy"],
+    "each_capture_affecting_change": ["inventory", "policy", "semantic_seeds", "presentation_seeds", "graduation_seed", "stage_id", "cpu_family", "ignore_castlers_received", "pockets", "pocket_tie_order", "contract_sha256", "world_binding_sha256"],
+    "retained_inventory_change": "$.input.capture.inventory[\"Progressive Pocket Gems\"] changes the next capture; the active Game retains its original count. This is not an allocation-material or pocket-level credit.",
+    "nonallocation_change": "AI reduction: same allocation input, next StartMatch only.",
+    "numeric_and_pocket_oracle": "AL/PM owner supplies complete normalized captures and actual-family bounds. This file tests lifecycle identity, not EP schema or allocator acceptance."
+  },
+  "F19": {
+    "world_A": { "death_link": true, "family": "rookies", "ignore_castlers_received": true, "ai_reduction": 2 },
+    "same_world_reconnect": { "family": "rookies", "ignore_castlers_received": true, "ai_reduction": 2, "death_link_choice": true, "service_owners": 1 },
+    "unauthorized_world": { "death_link_choice": false, "death_link_control_enabled": false },
+    "ai": [
+      { "collected": 1, "local": 2, "effective": 3 },
+      { "collected": 4, "local": 2, "effective": 5 },
+      { "collected": 5, "local": 5, "effective": 5 }
+    ],
+    "weakening": "Preserve existing formula unless its owner demonstrates a selected-contract requirement. No new formula follows from the NodeLimit difference.",
+    "death_callbacks": [
+      { "captured_route": 1, "current_route": 2, "captured_match": "A", "current_match": "A", "enabled": true, "kill": false },
+      { "captured_route": 2, "current_route": 2, "captured_match": "A", "current_match": "B", "enabled": true, "kill": false },
+      { "captured_route": 2, "current_route": 2, "captured_match": "B", "current_match": "B", "enabled": false, "kill": false },
+      { "captured_route": 2, "current_route": 2, "captured_match": "B", "current_match": "B", "enabled": true, "kill": true }
+    ],
+    "recent_events": [
+      ["success", "fixture1.invalid", 38281, "slot1"],
+      ["success", "fixture2.invalid", 38282, "slot2"],
+      ["success", "fixture3.invalid", 38283, "slot3"],
+      ["failure", "failed.invalid", 39000, "failed"],
+      ["success", "fixture4.invalid", 38284, "slot4"],
+      ["success", "fixture5.invalid", 38285, "slot5"],
+      ["success", "fixture6.invalid", 38286, "slot6"]
+    ],
+    "recent_expected_members": ["fixture2.invalid", "fixture3.invalid", "fixture4.invalid", "fixture5.invalid", "fixture6.invalid"],
+    "restart_expected": "Same five host/port/slot-only entries. No password, world settings, automatic connection, or journal restore.",
+    "recent_order_dedup_default_authority": "EP/NM owner selected contract; this child does not invent an alternative."
+  }
+}

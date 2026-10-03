@@ -50,6 +50,78 @@ Posted callbacks repeat the ownership check when they execute.
 Delegate removal alone does not cancel a callback already captured elsewhere.
 Old callbacks cannot publish state, dispose a replacement, or affect another match.
 
+N1 is also the single DeathLink service owner.
+U1 reads that owner's local state instead of constructing another service.
+Every connection/reconnect enables the choice when the world authorizes DeathLink.
+An unauthorized world forces off and disables the control.
+Posted UI/DeathLink callbacks repeat the generation check when they execute.
+
+They also match the captured MatchId and current enabled choice.
+Received Death does not echo an outgoing DeathLink.
+Closure, takeover and transport cleanup synthesize neither DeathLink nor a human victory.
+Same-world CPU family, Ignore Castlers and local AI timing remain ticket 24 authority.
+
+Q82's recent details are a separate U1 disk record, not world settings or reporting identity.
+
+### Recent-details storage candidate
+
+Ticket24 Q82 owns the selected five successful host/port/slot entries and field-fill-only behavior.
+The following storage design is an engineering candidate under U1, not a new product selection.
+`Convenience.cs` owns the record and sole saver.
+N1 supplies one admitted-success notification after authentication and complete contract validation.
+
+The proposed file is `apmw-recent-connections.v1.json` beside the existing relative `apmw.txt` compatibility input.
+Its exact root contains `version:1` and `connections`.
+Each connection contains only normalized `host`, integer `port`, and exact ordinal `slot`.
+N1's admitted endpoint supplies normalization, not a second URL parser.
+
+The ordered array contains zero through five distinct endpoint/slot triples.
+A successful triple moves to the first position.
+The saver retains the four newest distinct predecessors.
+Failed/revoked requests and field selection do not change the array.
+
+N1 emits admitted successes to one FIFO saver in publication order.
+Cooperating ChessV processes share a named Windows mutex derived from the canonical full storage path.
+Each save acquires that mutex and rereads the latest file before the MRU update.
+The proposed asynchronous acquisition limit is two seconds.
+
+Timeout/abandonment fails visibly without an unlocked retry.
+The saver writes a same-directory temporary file, flushes and closes it, then atomically replaces the destination.
+For first creation, it moves the closed temporary file without overwrite under the same mutex.
+A failed read/write/replace produces a visible local-settings error without claiming persistence.
+The current authenticated connection and reporting journal remain independent of this convenience error.
+
+A missing JSON file permits the existing text-format compatibility read.
+Two lines supply port/slot and the source-preserved `DEFAULT_HOST` value `archipelago.gg`.
+A third line supplies the recorded host.
+The same N1 endpoint normalizer validates that single historical tuple.
+
+No additional successful entries are invented.
+An absent/empty legacy file supplies no entries.
+The next successful save persists the resulting MRU array without removing the legacy file.
+Malformed nonempty legacy data fails visibly rather than silently changing defaults.
+
+Malformed/duplicate/unknown-field files fail visibly rather than silently supplying an empty successful read.
+The old text file remains an unchanged compatibility input.
+This candidate creates no password, world-setting, world-ID, or reporting-identity field.
+
+Selection fills the three fields without connecting.
+Fixture declarations cover host-only differences, sixth-success eviction, repeated triples, restart, revoked success, failed replacement, and malformed files.
+Cooperating processes cannot overwrite an unobserved update through this saver.
+The exact platform locking/replacement failure evidence remains U1's later implementation acceptance.
+
+| Declared input | Expected result |
+| --- | --- |
+| Successes A/B/C/D/E, then F | F/E/D/C/B; A retired from this five-entry array |
+| Successes A/B/C, then B | B/C/A, with one B |
+| Equal port/slot with different admitted hosts | Two distinct entries |
+| Selecting B, failed login, or revocation before publication | Unchanged persisted array and no automatic connection |
+| Restart with a valid record | Same order and exact field values |
+| JSON absent and legacy absent/empty | Empty list, without creating a file on read |
+| JSON absent and valid two-/three-line legacy entry | One normalized historical tuple; no automatic connection or legacy deletion |
+| Malformed root, duplicate key, or unknown field | Visible read error, not empty-success fallback |
+| Held mutex or injected flush/replace error | Visible persistence error; no connection/journal rollback |
+
 ## Atomic library admission
 
 The final admission predicate requires:
@@ -288,6 +360,27 @@ The endpoint is `wss://fixture.invalid:38281`; the port-only alternative uses 38
 | Open successfully but never receive RoomInfo | No login or WS fallback. Retire the opened route |
 | Hold login's synchronous send or the actual close task | Name the outstanding operation and remain `Stopping` |
 | Deliver old item, close, DeathLink, UI, and reporting callbacks after replacement | No wrong-owner effects, match termination, or ledger loss |
+| Hold Death for Match A, begin Match B, then execute the callback | No termination of B, even on the same current route |
+| Authorize DeathLink, reconnect, then disable locally before a held callback runs | One service owner initializes enabled on reconnect. Disabled choice prevents that callback from killing |
+
+### Closure-r2 lifecycle source integration
+
+The [terminal/controller matrix](../../adr-implementation-design/engineering-closure.md#43-terminal-controller-and-continuation-matrix)
+
+separates earned predicates from native terminal notifications.
+Game Commit/H1 application precedes Terminal/H1 earned evaluation and external UI observers.
+An automatic human-restoration observer suppresses under N1's admission gate before replacement assignment.
+Locations and goal remain separate admissions.
+
+Already admitted work can finish, but later held envelopes cannot bypass suppression.
+Engine rollback/reset never rewinds eligibility or the earned journal.
+
+WindowClosed ends the binding and releases board/window references.
+It is not a synthetic resignation, terminal Win or outgoing DeathLink.
+Transport retirement preserves the active match and H1 state.
+Only H1 produces earned batches through K8's one Record sink.
+
+No GUI or lifecycle adapter calls completion helpers directly.
 
 ## Source and remaining proof
 
@@ -305,4 +398,26 @@ Implementation acceptance must prove the actual package/runtime behavior,
 opening-observer order, atomic admission, helper containment, retirement
 classification, and these fixtures.
 No further product choice blocks this bounded design.
-The broader settings plan remains open, and no execution handoff is published.
+Ticket 24's closure round selects the listed settings behavior.
+Its matrix and the engineering closure register retain representation/proof gates.
+No execution handoff is published.
+
+### Installed-library stock decode boundary
+
+The earlier cited commit remains provenance for that historical connection inspection.
+Installed NuGet6.6.0 separately identifies commit `75d4c5e6a52bb0c8bb1d4bc368652613509c7acb`.
+Its private socket parser calls the fixed packet converter before public PacketReceived.
+The converter's `JObject.Load` replaces duplicate keys before callback observers.
+The actual installed net6.0 converter reproduced that replacement in an in-memory duplicate-field probe.
+That probe is not a full client ingress rejection test.
+The public interface exposes no raw event, and the factory constructs a fixed stock graph.
+
+RI records this boundary, not a blocking dependency conflict.
+No planned generated slot payload needs duplicates.
+ChessV fully validates decoded slot schema, semantic hashes, bindings and effective policy before publication or setup.
+It makes no claim to detect duplicate wire keys already replaced upstream.
+Our raw artifact and controlled fixture parsers retain duplicate rejection before conversion.
+No transport fork, raw hook, reflection, network change or second raw connection is authorized.
+The [closure register](../../adr-implementation-design/engineering-closure.md#6-stock-decode-boundary-and-scoped-validation)
+records the exact user quote/date and separate coordinator interpretation.
+This evidence does not alter selected journal, admission or DeathLink policy.

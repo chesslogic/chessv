@@ -4,6 +4,14 @@ Type: grilling
 Status: claimed
 Blocked by: 17
 
+Current frontier, 2026-10-01: Policy consolidation and engineering proof.
+The D22 closure round settles the listed modes, targets, reservation, recovery,
+limits, local controls, and recent connection details.
+Earlier open summaries describe their historical frontier.
+They do not reopen those selections.
+This ticket remains claimed until the matrix, shared contract, and implementation design agree.
+The production hold and all-design-before-implementation boundary remain in force.
+
 ## Question
 
 Which public settings does 0.4.0 support, and what does each setting mean
@@ -30,6 +38,9 @@ The sibling repository remains read-only evidence.
 | Nonzero fair-board guarantees have no examined end-to-end consumer | Evidence | Sibling `options.py:562-581` and the follow-up audit | Claiming the guarantees work because serialization succeeds |
 | The guarantee extraction predates Fundamental's producer implementation, not its client conception | Evidence | Q56 prompt recovery and ChecksMate commits `6fbf68628aa71f51b1803a49536ca63b89f8d02f` and `17df6adc6d89af7b88bf2bcd3002c4e66defd535` | Inferring that the guarantee had no Fundamental purpose from producer dates |
 | Current type and pocket limits can relax to preserve received pieces | Evidence | `OwnedRosterGeneration.cs:371-404`, `ItemGeneration.cs:2333-2376`, and `Config.cs:920-934` in `APMW.Client` | Calling every limit a hard deployment cap |
+| Priority 0 is ordinarily inactive but recoverable; -1 is a hard ban | Author decision | Closure-r2 user selection, 2026-10-01 | Treating zero as a hard ban or recovery as permission to enable -1 |
+| Fundamental quality spends incremental Material and refunds only released extra funding | Author decision | Closure-r2 user selection, 2026-10-01 | Free stronger variants, refund of base100 or additional Chessmen slots |
+| Fundamental raw-empty/Off preserves four unit-weight priority-1 gates with paid quality disabled | Source-preservation instruction | Coordinator instruction during closure-r2, not an additional user selection | Automatic paid quality, all-disabled fallback or a new raw-presence protocol |
 
 ## Decision surface
 
@@ -37,13 +48,14 @@ The sibling repository remains read-only evidence.
 | --- | --- | --- |
 | Formal geometry, itemization, costs, and CPU families | Settled | Preserve the existing accepted contracts |
 | Semantic ordering versus concrete type/location presentation | Engineering specification | Preserve the existing distinction unless the user selects a change |
-| Legacy pawn-material conversion | Retention settled at Q44; count basis at Q46; exact rule open | Define the reservation target, detailed membership, geometry, conversion, and control meanings |
+| Legacy pawn-material conversion | Policy settled through the D22 closure round | Preserve funding, prepared reservation, historical approximation, and exact accounting proof |
 | Human Minor setup ranks | Retained at Q47 | Preserve one mixed human rank on eight-rank boards and two on ten-rank boards; no extra Minor-only rank |
-| Fundamental guarantee interpretation | Open | Do not copy Legacy conversion into the separate slot/Material model |
-| Pool and Max pawn presets | Open | Retain named presets or retire their public inputs |
-| Per-type limits and pocket surplus | Open | Define generated-pool limits, soft preferences, or hard deployment limits |
-| Local AI reduction | Open | Select retained behavior or a deliberate change |
-| Local-control timing and persistence | Open | Define preview, new-match, live-match, reconnect, and world-switch effects |
+| Fundamental guarantee interpretation | Settled at Q61/Q71-Q73 | Keep fixed runtime slots and generator-owned recovery |
+| Fundamental paid Pawn quality and action zero | Settled during closure-r2 | Spend above funded100, refund only released extra funding, keep slots and hard bans |
+| Pool and Max pawn presets | Retired at Q76 | Reject textual and numeric values, including old option files |
+| Per-type limits and pocket surplus | Settled at Q67/Q77/Q78 | Ordinary limits precede recovery overflow. Received overflow is not discarded |
+| Local AI reduction | Settled at Q79 | Add the local level to collected malus, cap five, next match only |
+| Local-control timing and persistence | Settled at Q80-Q82 | Preserve same-world controls, connection-time DeathLink initialization, and separate recent details |
 | Absent, empty, disabled, invalid, and conflicting fields | Engineering specification | Normalize each meaning once without success-shaped defaults |
 | Fundamental representation and Castler parity | Engineering specification | Use the World binding and preserve effective allocation across backends |
 | Ordinary-game settings, tracker UI, and Regions refactor | Out of scope | No broad preferences reset or unrelated redesign |
@@ -915,6 +927,30 @@ These targets do not impose ceilings or grant missing units.
 The exact best-effort allocation under a shortage remains open.
 No target pair is accepted merely because it derives from an existing array.
 
+#### Q60 answer: Adopt the prepared-board target pairs
+
+The user adopted the proposed pairs.
+The prepared CPU army, excluding its primary royal, supplies both minimums.
+The total-unit minimum counts every other starting unit.
+The non-Pawn minimum counts every other starting non-Pawn unit.
+
+| Prepared board | Total-unit minimum | Non-Pawn minimum |
+| --- | ---: | ---: |
+| 6x8 | 11 | 5 |
+| 8x8 | 15 | 7 |
+| 10x8 | 19 | 9 |
+| 10x10 | 27 | 15 |
+| 12x10 | 33 | 19 |
+
+On 12x10, the additional King contributes to both minimums.
+The primary royal contributes to neither minimum.
+These values are minimums, not ceilings.
+They do not grant missing units or change the prepared CPU army.
+
+Membership for deployed human royals and pocket units remains a separate
+decision. Q58 still permits declared best-effort fallback when a minimum is
+not feasible.
+
 #### E6: Bounded terminal-inventory comparison
 
 This is a synthetic family-allocation fixture, not a generated world or runtime result.
@@ -1007,8 +1043,21 @@ R never exceeds the available Pawn items; a shortfall stays visible and is not i
 #### Q64: Family membership
 
 Each actual chessman counts once, under its current family.
-A pocket non-Pawn counts toward both minimums.
-Pawns and Pawn variants, including Sergeants and Berolinas, count toward the total-unit minimum only.
+The primary King contributes to neither minimum and does not provide pocket support.
+Every other deployed unit contributes to the total-unit minimum.
+Deployed non-Pawns, including additional royals, also contribute to the non-Pawn minimum.
+
+Pocket contribution uses one global two-to-one support pool.
+If B eligible non-primary chessmen are deployed on the board, at most
+floor(B / 2) actual pocket pieces contribute.
+When support is insufficient for every occupied pocket, non-Pawn pocket pieces
+contribute before Pawn-family pocket pieces; order within each class follows
+the canonical prepared-setup pocket order.
+A contributing pocket non-Pawn counts toward both minimums.
+A contributing Pawn or Pawn variant, including a Sergeant or Berolina, counts
+toward the total-unit minimum only.
+Unsupported pocket pieces remain present in the prepared setup but contribute
+to neither minimum.
 
 #### Q65: Viability
 
@@ -1022,7 +1071,7 @@ After the minimums are met, allocation keeps spending usable material through pe
 It stops when no permitted action is affordable.
 Leftover material stays visible in diagnostics.
 
-#### Q67 frontier: Pocket occupancy authority
+#### Q67 and Q78: Pocket distribution authority
 
 Q63 and Q64 require the generator and client to agree on the actual pocket contents.
 They currently disagree:
@@ -1032,6 +1081,92 @@ They currently disagree:
 - ChessV splits items with `generatePocketValues` (`Config.cs:913-956`), which its own tests call unstable across item counts. In the test seed, two items give two Pawns there but one occupied pocket in the generator.
 - A pocket holding k items holds a tier-k piece: Pawn, Minor, Major, or Queen (`ItemGeneration.cs:2200-2226`).
 
+The generator emits a suggested pocket distribution for generation and
+accessibility analysis.
+ChessV may replace that suggestion when it distributes the received Pocket
+items into the prepared setup.
+ChessV's captured final ordered pocket families control runtime composition
+credit, pocket-material credit, and the displayed setup.
+The final record identifies Pawn, Minor, Major, or Queen family, not the
+concrete chessman, such as Phoenix or Rook.
+Its order is the canonical tie-break order within each Q64 pocket family.
+
+Pocket items forced into the generated pool remain valid received inventory.
+An excess over the ordinary configured capacity does not by itself reject the
+world.
+ChessV permits overflow beyond the configured ordinary limit, up to level four
+in each existing pocket.
+The tiers remain Pawn, Minor, Major, and Queen.
+ChessV ignores items that would require level five or higher.
+With three pockets, at most twelve received Pocket items affect the setup.
+Ignored items remain in the received inventory but contribute no pocket unit
+or material credit.
+They do not cause generation failure.
+ChessV does not create additional slots or move the excess to dormant inventory.
+For each effective Pocket item, ChessV increments the currently lowest-level pocket.
+Ties follow the generator's suggested slot order.
+The same rule applies beyond the ordinary limit until every pocket reaches level four.
+
+Jack and Amazon pocket tiers remain future ideas.
+Selectable pocket-tier indexes, including omission of the Pawn tier, remain
+future ideas.
+Neither proposal is part of this decision.
+
+#### Future extension: Configurable pocket-tier values
+
+Each pocket-tier index can have a configurable value or piece family in a future contract.
+Here, an index means the upgrade level within a pocket, not one of the three pocket slots.
+The future settings can change the level-to-family mapping or omit a level,
+such as the Pawn tier.
+Jack and Amazon are candidate families for that extension.
+
+This idea does not change the current Pawn, Minor, Major, and Queen mapping.
+It does not permit levels five or higher in the current contract.
+Defaults, allowed mappings, disabled-level behavior, costs, and wire fields
+require a separate design decision before implementation.
+
+#### Q83: Conservative pocket credit and resilience fixtures
+
+The generator's accessibility estimate must remain conservative relative to
+ChessV's final pocket distribution.
+Its estimate cannot depend on credit that the permitted runtime distribution
+does not provide.
+Regression fixtures must cover differences between the suggested and final
+distributions, the two-to-one support threshold, and ignored surplus items.
+
+The regression corpus must include forced recovery cases and known historical
+counterexamples.
+The retained [Pool reservation trace](../research/fair-board-guarantee-client-lineage.md#pool-selection-needs-a-complete-reservation-guard)
+provides one source-backed case.
+It produces six protected units instead of seven because ordinary candidates
+can spend the reserved completion budget.
+This is a controlled source trace, not an executed generation failure.
+Retirement of Pool does not remove the need for this reservation fixture.
+
+Broader fixtures must cover scarce Material, scarce Chessmen, expensive upgrade
+preferences, disabled actions, staged type-limit overflow, and recovery termination.
+They must validate material conservation and the existing core accessibility result.
+New investigations must distinguish reproduced failures from static counterexamples.
+
+Generator clarity improvements follow the regression corpus.
+They must preserve the selected behavior and use those fixtures to detect regressions.
+This record does not authorize production changes.
+
+#### Closure obligations
+
+Accepted ADR status does not establish an implementation-ready contract.
+Ticket 24 remains claimed until the decision records, settings matrix, shared
+contract, and implementation design agree.
+The closure work must distinguish superseded open questions from remaining
+engineering obligations.
+
+The shared contract must include the selected reservation, pocket-credit,
+recovery, and effective-policy rules.
+The engineering work must establish recovery termination and material conservation.
+Fixtures must cover conservative generator credit relative to the final client
+distribution and the existing core accessibility validator.
+The final review must preserve the current production-implementation hold.
+
 #### Q68 frontier: Pocket material credit
 
 Current logic credits pockets with zero material (`test_raw_pocket_material_does_not_gate_v2_legacy_rules`) and one chessman per occupied pocket.
@@ -1040,6 +1175,182 @@ Tier values at 100/300/485/900 make twelve items worth up to 2700.
 The user proposed credit as the least of actual pocket material, half the board material, and 300 per chessman.
 This affects logic metrics, and through Q65, viability.
 It does not affect Q63 conversion funding, which uses unit counts.
+
+Only Q64-supported pocket pieces receive pocket-material credit.
+Let S be their semantic family material, B the exact active non-primary
+on-board material after allocation, and C their count.
+Pocket-material credit is `min(S, floor(B / 2), 300 * C)`.
+The primary King and all pocket material are excluded from B.
+This credit contributes only to the conservative reachability and viability
+material metric.
+It is not spendable conversion funding, exact active material, or pocket
+inventory.
+
+#### Q69: Composition recovery and accessibility
+
+The composition allocator searches or backtracks among permitted allocations
+to satisfy the requested minimums and produce a configuration that passes the
+existing core accessibility logic.
+It does not weaken hard bans or invent inventory.
+If no such allocation exists for a generation attempt, the existing generation
+retry or failure path applies.
+The APMW layer does not accept an inaccessible result or replace the core
+accessibility validator.
+
+Regression fixtures must force initially unsuitable Pawn/non-Pawn allocations
+into this recovery path and prove that generation recovers to a configuration
+accepted by the core validator.
+
+#### Q70: Ordered preference relaxation
+
+Composition recovery may break the player's preferred family selection when
+necessary; a selection such as Pawn plus Major is not an absolute family ban.
+The recovery order is:
+
+1. relax Pawn-count maxima and similar quantity targets;
+2. relax ratios, weights, and enabled-action priority order;
+3. relax preferred family eligibility.
+
+The preferred army concept is therefore the last preference to give way.
+Explicitly disabled actions, actual inventory, entitlements, physical
+deployment capacity, and immutable contract limits remain hard.
+Each relaxation and its reason must be visible in diagnostics.
+
+#### Q71: Integrated composition obligations
+
+Composition minimums use integrated outstanding obligations rather than a
+seed-first baseline or post-generation replacement.
+Ordinary weighted generation continues while reserving enough material and
+slots to keep the outstanding total-unit and non-Pawn obligations reachable.
+An ordinary matching draw satisfies an obligation instead of adding a duplicate.
+If obligations remain near completion, Q69 recovery and Q70 ordered relaxation
+fulfill them.
+
+This adopts the useful `locked_items` pattern without mechanically copying all
+historical affordability, weighting, or terminal-append behavior.
+
+#### Q72: Fundamental reservation and downgrade recovery
+
+In Fundamental mode, fixed Chessmen slots reserve enough capacity for the
+outstanding non-Pawn obligation.
+The allocator plans those slots together with the world's obtainable Material,
+because final Pawn membership can become non-Pawn membership through upgrades.
+It may need to backtrack a Material allocation to create another Chessman, or
+backtrack a Chessman allocation to preserve enough upgrade material.
+
+When a high-value plan leaves too few units or non-Pawns, recovery downgrades or
+splits realized pieces until the obligations and core accessibility check can
+both pass.
+At each step, the world seed selects uniformly among realized pieces for which
+a permitted downgrade or split makes measurable progress without violating a
+hard limit.
+Recovery applies the smallest progressive transformation, then recomputes the
+outstanding obligations and accessibility.
+This can cascade from Queen to Jack, Major to Minor, lower pieces to Pawns, or
+through other permitted adjacent families.
+
+The user's configured distribution still governs ordinary generation.
+Using that distribution to weight recovery candidates is an unselected
+enhancement; the selected recovery sampling is seeded and uniform.
+
+#### Q73: Generator-owned effective allocation policy
+
+The generator executes the seeded obligation and recovery algorithm.
+It emits the effective instructions for allocating received Chessmen, Material,
+Pocket items, and enabled armies.
+Those instructions include the normalized upgrade order and other effective
+settings needed by ChessV.
+They do not describe a hypothetical completed roster.
+
+Slot data contains the effective allocation policy, not allocation reasoning,
+rejected draws, recovery traces, hypothetical family counts, concrete ChessV
+piece names, or board coordinates.
+Generation keeps its reasoning local and uses the existing core accessibility
+validator before accepting the world.
+ChessV applies the effective policy to the player's actual received inventory
+and retains deterministic family-to-piece selection and placement.
+For pockets, the generator may include a suggested distribution, but ChessV's
+captured final distribution is authoritative at runtime.
+
+If generation relaxes preferences under Q70, slot data contains the recovered
+effective upgrade order and settings.
+It does not contain the superseded requested values.
+The original request and the reasons for recovery remain generator-local
+diagnostic information.
+
+#### Q75: Optional future policy identity
+
+The current decision does not require a new policy field.
+A future contract may add an allocation-policy identifier when settings fields
+alone no longer identify the semantics.
+For that optional field, absence selects the default legacy behavior.
+An explicit unknown value is rejected; it must not silently fall back.
+
+#### Q76: Retire Pool and Max
+
+Contract v4 does not expose the deprecated Pool or Max pawn-upgrade modes.
+Their old option values are rejected everywhere, including old option files.
+They are not accepted as generation aliases and never appear in slot data.
+Supported explicit upgrade settings replace them.
+
+#### Q77: Staged per-type limits
+
+Ordinary generation enforces each configured piece-type limit.
+If that pass cannot meet composition, difficulty, or accessibility requirements
+with other available types, recovery may exceed the limit as a last-resort
+overflow.
+The initial series therefore respects the configured distribution before
+overflow begins.
+
+Overflow pieces are legitimate received inventory.
+ChessV deploys or reserves them normally and never reapplies the generation
+limit as a runtime discard, deactivation, or replacement rule.
+
+#### Q79: Local AI reduction
+
+Retain the local Reduce AI Intelligence control.
+Its selected level adds to the collected Progressive AI Intelligence Malus
+count, and the effective total remains capped at five.
+It changes the engine limit for the next match only.
+It does not change world logic, generation, item counts, costs, previews, or an
+active match.
+
+The local selection persists across previews and matches in the same world.
+It resets to default when the client switches worlds.
+
+#### Q80: Local setup-control timing
+
+CPU family and Ignore Castlers changes affect the preview and the next match.
+They never mutate an active match.
+They persist across matches and reconnects to the same world.
+They reset to their defaults when the client switches worlds.
+
+DeathLink remains separate.
+The world must authorize DeathLink before the local control can enable sending
+or receiving it.
+
+#### Q81: Initialize DeathLink from the world setting
+
+On connection, including reconnect, initialize the local DeathLink choice to
+enabled when the world enables DeathLink.
+When the world disables DeathLink, force the local choice off and disable the
+control.
+Do not reset an authorized world's DeathLink choice to disabled by default.
+This replaces the unaccepted reset-to-disabled proposal.
+
+#### Q82: Recent connection details
+
+Remember the five most recent successful connections locally across application
+restarts.
+Each entry stores only host, port, and slot name.
+Do not store passwords or world settings.
+Selecting an entry fills the connection form without connecting automatically.
+
+This is separate from Q79-Q80's same-world local-control lifecycle.
+Those decisions do not by themselves require disk persistence or saved
+connection profiles.
+Selecting connection details must not restore an old world's slot data or
+override the connected world's DeathLink setting.
 
 ### Required matrix fields
 
@@ -1070,13 +1381,250 @@ Open outcomes stay open until the corresponding policy is selected.
 
 | Case | Fixed input and operation | Required or open outcome |
 | --- | --- | --- |
-| Guarantee disposition | Valid new-contract world in each supported itemization mode. Substitute only `fair_board_guarantee` with absent, 0, 1, and 2 | Q44 must select exact support or rejection for every input |
-| Deprecated pawn inputs | Fixed seeds and inventory. Substitute Off, Pool, Max, and Configure separately in each supported mode | Retain specified outputs or explicitly reject retired inputs |
+| Guarantee disposition | Valid new-contract world in both modes. Substitute absent, 0, 1, and 2 | Q61 selects none/total/both. Absence uses the declared normalized default, never an old-world path |
+| Deprecated pawn inputs | Fixed seeds and inventory. Substitute Off, Pool, Max, and Configure separately in both modes | Reject Pool/Max. Preserve Off/Configure under the normalized action contract |
 | All-disabled upgrades | Fundamental, one Chessman, two Material, no Castler, pockets, or King upgrades. All 12 action priorities are `-1` | Do not substitute default actions. Preserve the selected disabled semantics |
-| Major-limit exhaustion | Legacy, FIDE human pool, stable presentation, Major type limit 1, no Queen upgrades, two Major items through start inventory | Select hard enforcement or the existing soft fallback |
-| Pocket surplus | Per-pocket limit 1, three pockets, four received Pocket items | Select exact surplus handling rather than silently changing a world-owned limit |
+| Major-limit exhaustion | Legacy, FIDE pool, stable presentation, Major type limit 1, no Queen upgrades, two Major items through start inventory | Q77 enforces ordinary generation limits before last-resort overflow. Runtime retains received inventory |
+| Pocket surplus | Per-pocket limit 1, three pockets, four received Pocket items | Levels are 2/1/1 in the suggested tie-break order. The forced fourth item does not fail generation |
+| Pocket ceiling | Three pockets with twelve, thirteen, and more received Pocket items | Levels stop at 4/4/4. Additional items remain received but add no unit or material credit |
+| Pocket-credit parity | Generator suggestion differs from the permitted final client distribution | Generator accessibility credit does not exceed the runtime credit it can rely on |
+| Reservation regression | Historical Pool trace: seven protected units, ordinary candidates spend the completion budget | Every candidate preserves feasible completion. This fixture does not restore the retired Pool setting |
+| Recovery resilience | Scarce Material or Chessmen, expensive preferences, disabled actions, and exhausted ordinary type limits | Recovery terminates, preserves hard boundaries and material, and uses core accessibility validation |
 | Local setting timing | Capture setup context A and its projection response. Change one local setting to B before adaptation | Use all of A or regenerate all of B; no mixed context |
 | World switching | Connect world A, choose local controls, then connect B with different world settings | Preserve B's authority and apply the selected local reset/persistence rules |
+
+## Current per-key settings matrix
+
+This matrix reconciles accepted behavior with source defaults.
+It does not turn current source behavior into a new product decision.
+Source defaults identify the preservation baseline unless an accepted decision supersedes them.
+
+The common-owner proposal supplies all 74 normalized rows without an unselected product-default branch.
+Independent literal-schema/fixture review remains separate from general allocator and lifecycle proof.
+
+Source baselines are ChessV `ace9362535652a70c022ef959198055bd4a932fb`
+and ChecksMate `0772bac724ff483043b56979f0ef078b9c2d264a`.
+The producer inventory is `options.py:706-736`.
+Default declarations are in `options.py:11-704`.
+Current serialization is `CMWorld.fill_slot_data`, `__init__.py:175-230`.
+Current client defaults are in `ApmwConfig.Instantiate`, `Config.cs:299-380`.
+They disagree in some places.
+The generator's normalized result must replace client-side fallback choices.
+
+### Matrix conventions and gates
+
+`W` means immutable generated-world lifetime.
+`G` means generator-only input, retained locally for diagnostics where relevant.
+`L/F` means Legacy and Fundamental.
+`P` means the effective-policy schema gate EP.
+`N` means the per-field normalization/default gate NM.
+`F15-F19` refer to the [fixture register](../../adr-implementation-design/spec.md#6-acceptance-fixture-register).
+A `P` cell requires literal fields and matching consumers before S0 readiness.
+It does not select a new mandatory policy-ID field.
+
+| Canonical key | Owner / lifetime / modes | Default and normalization | Generator effect / wire / client consumer | Retirement and acceptance |
+| --- | --- | --- | --- | --- |
+| `min_board_size` | G1/G2 / W / L/F | Default8x8. Strict supported Stage, start<=end | W progression_start/stages. G1/G2/C1/U1 | Retained. F01/F07/F18 |
+| `max_board_size` | G1/G2 / W / L/F | Default12x10. No12x12 alias | W progression_end/stages. S profiles and G1/G2/C1 | Retained. No 12x12 alias. F07/F10 |
+| `goal` | C1/G2 / historical input | No v4 default | Reject historical input/mirror. W replaces old goal enum | No old-world acceptance. F07 |
+| `progression_itemization` | A22 / W / L/F | Legacy0/Fundamental1, default0 | Policy.itemization equals W. Config/projector/ItemGeneration | Retained. F07/F15 |
+| `piece_types` | P1/A22 / W / L/F | Stable1 default,Chaos0. Book2 rejects public v4 | Policy.ordering. Fundamental/Chaos rejects | Retained. Stable/Chaos semantics fixture F15 |
+| `piece_locations` | P1/A22 / W / L/F | Chaos0 default,Stable1. Ordered2 rejects | Policy.piece_locations, captured presentation seeds | Retained known values. Absent raw values normalize before freeze. Conflicting mirrors reject. F17 |
+| `difficulty` | G2 / W / L/F | Daily1 default. GM0/Bullet2/Relaxed3 known | G2 exact S scaling. Client retains S, no repricing | Retained. F08/F18 |
+| `enable_tactics` | G1/G2 / W / L/F | Turns1 default. All0/None2 known | W.tactics_mode and published sets | Retained. F10/F12 |
+| `early_material` | A22 / G / L/F | Off0 default. Pawn/Minor/Major/Jack/Piece/Any known | G-only lock behavior, Fundamental Chessmen mapping | Retained baseline. F16/F18 |
+| `max_engine_penalties` | A22 / G / L/F | 5 default,0..5 | G pool. Actual collected count+local AI capped5 | Retained. F19 |
+| `max_pocket` | A22 / G, effective P / L/F | 12 default,0..12 | Policy.limits. G preference, not runtime receipt cap | Retained. F15/F16 |
+| `max_kings` | A22 / G / L/F | 1 default,1..3 | G primary plus Consul pool. Actual entitlements in capture | Retained. F03/F15 |
+| `fairy_kings` | A22 / G / L/F | 0 default,0..2 | G King-promotion pool. Does not control CPU rules | Retained. F03/F15 |
+| `fairy_chess_pieces` | A22 / W / L/F | FIDE0 default,Betza1,Full2,Configure3 | Expand preset once to Policy.enabled_armies | Retained. F15/F17 |
+| `fairy_chess_pieces_configure` | A22 / W / L/F | Default seven named armies. Empty/absent Configure -> explicit FIDE source fallback | Resolve known names to pinned human indexes. Recovery preference | Retained. F15/F16 |
+| `fairy_chess_army` | A22 / W / L/F | Chaos0 default,Stable1 | Policy.fairy_chess_army. Limited2 rejects | Retained. F17 |
+| `army` | A22/C1 / W / L/F | Required resolved assertion if retained | Exact integer array equals Policy.enabled_armies. No empty fallback | Retained function. F15/F17 |
+| `fairy_chess_pawns` | A22 / W / L/F | Producer inherited0 wins over client Mixed1 fallback | Policy.fairy_chess_pawns. Reserved4 rejects | Retained supported choices, reject Reserved. F15/F17 |
+| `fairy_chess_pawn_upgrades` | A22/C1 / W / L/F | Off0 default,Configure3 under v4 | Policy selector. Retired/ambiguous values reject | Pool 1 and Max 2 reject everywhere. SuperMax is not a v4 alias. F15 |
+| `piece_upgrade_preferences` | A22 / W / L/F | Absent/empty source default. Nonempty Configure list order | Normalize complete map/order. No client re-resolution | Retained. F15/F16 |
+| `piece_upgrade_priority` | A22 / W / L/F | Absent/empty source list/default. Nonempty map missing1, -1 hard ban | Full map. User-selected0 soft inactive, recoverable after quantity | Retained. F15/F16 |
+| `piece_upgrade_ratio` | A22 / W / L/F | Consumed option paths use individual twelve defaults/partial merge. Fundamental empty fallback uses four unit weights | Reduced exact weights. Negative/null rejects; no6/3/2/1 fallback change | Retained. F15/F16 |
+| `piece_upgrade_proportion` | C1/A22 / historical input | No v4 default | Reject obsolete key. No independent alias | Historical only. No legacy-world fallback. F07/F15 |
+| `fair_board_guarantee` | A22 / W / L/F | None0 default,total1,both2 | Policy enum, prepared targets/R. Both modes | Retained three modes. F15/F16 |
+| `minor_piece_limit_by_type` | A22 / W / L/F | 0 default,0..15 | Policy.limits. Ordinary first, overflow last, no runtime discard | Retained staged limit. F16 |
+| `major_piece_limit_by_type` | A22 / W / L/F | 0 default,0..11 | Same | Retained. F16 |
+| `queen_piece_limit_by_type` | A22 / W / L/F | 0 default,0..9 | Same | Retained. F16 |
+| `queen_piece_limit` | A22 / G / L/F | 0 default,0..9 | G ordinary quantity preference. Forced owned inventory wins | Retained baseline, not new runtime loss. F16 |
+| `pocket_limit_by_pocket` | A22 / W / L/F | 4 default,0..4 | 0 suppresses ordinary generation, not actual received items | Retained ordinary limit. Forced items never discarded. F15/F16 |
+| `locked_items` | A22 / G / L/F | Empty default. Known items/nonnegative counts | G outstanding obligations consume matching draw once | Retained. F16/F18 |
+| `start_inventory_from_pool` | A22/G2 / G / L/F | Empty default. Core validation | G2 final recipient counts after actual pool transfer | Retained core semantics. F18 |
+| `start_inventory` | A22/G2 / G / L/F | Empty default. Core maximum10000 per inherited entry | Final obtainable counts. Actual capture preserves receipts | Retained core semantics. F16/F18 |
+| `accessibility` | G2 / G / L/F | Full0 default,Minimal2, retained core aliases | Real core validation. No client or replacement validator | Retained core validator. F18 |
+| `progression_balancing` | G2 / G / L/F | 50 default,0..99 | Core owns it. Cannot mutate frozen policy/rules/S | Retained core semantics. F18 |
+| `local_items` | A22/G2 / G / L/F | Empty default, core item/group validation | Core placement restriction, no client field | Retained. F18 |
+| `non_local_items` | A22/G2 / G / L/F | Empty default, core validation | Same, no new entitlement | Retained. F18 |
+| `start_hints` | G2 / G / L/F | Empty default | Core hints only | Retained, no new APMW behavior |
+| `start_location_hints` | G2 / G / L/F | Empty default | Core hints/profile validation only | Retained, no new APMW behavior |
+| `exclude_locations` | A22/G2 / G / L/F | Empty default | Core exclusion, retained Early Material override | Retained. F18 |
+| `priority_locations` | A22/G2 / G / L/F | Empty default | Core placement preference, no cost mutation | Retained. F18 |
+| `item_links` | A22/G2 / G / L/F | Empty default, exact inherited AP schema | G2 normalized recipient counts before freeze | Retained core semantics. F18 |
+| `plando_items` | A22/G2 / G / L/F | Empty default, exact inherited AP schema | G2 actual obtainable counts after core transfer | Retained core semantics. F16/F18 |
+| `asymmetric_trades` | A22 / W-effective, G input / L/F | Disabled0 default,Jacks1 | Policy. Effective action/family eligibility | Retained. F15/F16 |
+| `death_link` | N1 / W plus connection-local choice / L/F | Inherited disabled default | World slot bool/int normalization for N1, no allocation field | Retained. F05/F19 |
+| `required_chess_client_version` | G2/C1 / W / L/F | Required, no fallback | Exact C minimum0.4.0 initially | Retained mandatory assertion. F07 |
+| `apmw_contract` | C1/P1/I2 / semantic release / L/F | Required JSON object | Exact C4.0 and pins. Old/string/missing reject | Old/string/missing rejects. F07 |
+| `apmw_world_binding` | G2/C1/N1 / W / L/F | Required JSON object | Exact W plus policy SHA amendment. No UUID | Retained. F07/F11/F17 |
+| `apmw_location_costs` | G2/C1 / W / L/F | Required original S object | C/A/L/W bindings. No local recomputation | Retained. F08/F18 |
+| `apmw_contract_version` | G2/C1 / W mirror / L/F | Optional compatibility assertion | Equal C or reject | Conflicts reject. F07 |
+| `material_item_value` | G2/C1 / semantic mirror / L/F | Optional assertion400 | Equal C. No separate price input | Conflicts reject. F07 |
+| `castling_location_count` | G2/C1 / semantic mirror / L/F | Optional assertion2 | Equal C. No6x8 capability grant | Conflicts reject. F07/F12 |
+| `geometry_unlock_items` | G1/C1 / semantic mirror / L/F | Optional assertion | Equal C unlock mapping | Conflicts reject. F07 |
+| `geometry_start` | G1/G2/C1 / W mirror / L/F | Optional assertion | Equal W.progression_start | Retained function. F07/F18 |
+| `geometry_end` | G1/G2/C1 / W mirror / L/F | Optional assertion | Equal W.progression_end | Retained function. F07/F18 |
+| `geometry_baseline` | G1/G2/C1 / W mirror / L/F | Optional files/ranks assertion | Equal C geometry for W start | Retained function. F07/F17 |
+| `geometry_start_unlocks` | G1/G2/C1 / W mirror / L/F | Optional role-count assertion | Exact C/W start counts | Retained function. F07/F18 |
+| `geometry_generated_unlocks` | G1/G2/C1 / W mirror / L/F | Optional role-count assertion | Exact configured contiguous transitions | Retained function. F07/F18 |
+| `geometry_end_unlocks` | G1/G2/C1 / W mirror / L/F | Optional role-count assertion | Exact C/W endpoint counts | Retained function. F07/F18 |
+| `geometry_unlock_distribution` | C1/G2 / historical mirror / L/F | No v4 default | Reject obsolete key. No old-goal reconstruction | Historical only. F07/F18 |
+| `logic_obtainable_counts` | A22/G2 / W / L/F | Required finalized map under G2 frozen state | Actual final counts, not C maxima. Rules/S/restoration | Retained function. F18 |
+| `total_queens` | A22/G2 / W-derived / L/F | Optional derived assertion | Exact finalized Queen-upgrade count. Never a second grant | Retained only as an exact assertion. Conflicts reject. F15/F18 |
+| `pocket_order` | A22 / W / L/F | Required12 entries, four each | Policy full order. Captured first-occurrence scan rule | Retained function, no invented fixed order. F15/F17 |
+| `pocket_seed` | A22/P1 / W / L/F | Generated31-bit, required after freeze | Policy.seeds and capture | Retained function. F15/F17 |
+| `pawn_seed` | A22/P1 / W / L/F | Same | Same | Retained function. F15/F17 |
+| `minor_seed` | A22/P1 / W / L/F | Same | Same | Retained function. F15/F17 |
+| `major_seed` | A22/P1 / W / L/F | Same | Same | Retained function. F15/F17 |
+| `queen_seed` | A22/P1 / W / L/F | Same | Same | Retained function. F15/F17 |
+| Presentation/graduation seed properties | A22/P1 / captured setup / L/F | No new slot fields. Existing LocSeed and graduation values | Actual capture values, independent semantic/presentation keys | Engineering representation gate. F17 |
+| `enemy_army` (local selector) | U1 / same-world local / L/F | Absent/unknown selector ->Standard source fallback | Same-world L, preview/next match, no S recalibration | Retained, same-world reconnect persists, world-switch resets. F03/F19 |
+| `IgnoreCastlersReceived` (local property) | U1 / same-world local / Fundamental surface | False source default. Fundamental-only surface | Capture actual inventory unchanged, effective castlers0 | Retained. No invented slot key. F17/F19 |
+| Reduce AI Intelligence (local control) | U1 / same-world local / L/F | Default means additional reduction0. Levels1..5 | At StartMatch min(5,collected+local). Same-world memory only | Retained. Same-world persistence, world-switch default. F19 |
+| Local DeathLink choice | N1 / connection generation / L/F | On/enabled if world authorizes, else off/disabled each connect | N1 one service and generation-safe callbacks | Retained. F19 |
+| Recent host/port/slot entries | U1 / local disk, application restarts / all | Five most recent successful triples, absent file ->empty list | U1/Convenience storage, not world settings | Selected Q82. No passwords, slot data or world settings. F19 |
+
+| `apmw_effective_policy` | P1->A22 / W-bound generated authority / L/F | Required JSON object | Full Policy. Generator effective result is authority | Required exact v4 object and policy hash. All-disabled, soft-zero, mismatch and stale fixtures. F07/F15/F17 |
+
+The twelve canonical actions remain:
+`new-pawn`, `more-pawn`, `better-pawn`, `pool-pawn-upgrade`,
+`pawn-to-minor`, `pawn-to-major`, `minor-to-major`, `major-to-jack`,
+`minor-to-jack`, `major-to-queen`, `jack-to-queen`, and `queen-to-amazon`.
+Retiring the Pool preset does not retire the `pool-pawn-upgrade` action.
+Source ratio defaults in that order are `7,1,3,1,6,2,3,2,2,1,1,1`.
+
+Those source values do not replace Fundamental's preserved four unit-weight raw-empty/Off gates.
+The effective policy publishes the complete map, resolved order, weights, disabled set, and seeds.
+A normalized all-disabled set cannot select default actions.
+
+### Normalization precedence and action outcomes
+
+These are common-owner engineering definitions of the selected/source-preserved behavior.
+They do not authorize production changes or close general AL/PM/LC.
+Raw generator preferences differ from complete normalized world instructions.
+
+```text
+nonempty piece_upgrade_priority:
+  all twelve actions, missing priorities 1
+else nonempty Configure preference list:
+  listed actions in order, unlisted actions hard-disabled
+else Legacy Off/Configure-empty:
+  new-pawn, more-pawn, better-pawn, major-to-queen
+else Fundamental Off/Configure-empty:
+  pawn-to-minor, pawn-to-major, minor-to-major, major-to-queen
+  priority 1 and weight 1 for these four; eight other actions hard-disabled
+```
+
+Raw absent/empty maps and lists select the source defaults.
+Normalized maps require all twelve records.
+Normalized empty maps reject.
+Twelve explicit priority -1 records preserve all twelve bans and an empty order.
+
+No AP raw-presence extension is necessary.
+Baseline received entitlements remain independent of discretionary actions.
+Off does not mean a global ban on source-default actions.
+Legacy guarantee-none separately forbids conversion.
+
+A nonempty priority map outranks a simultaneous preference list.
+Generator diagnostics retain the superseded list.
+A slot mirror of that list must equal the effective order or reject.
+Duplicate/unknown action names, null values, invalid priorities, ratios, and enums reject.
+
+Positive priority groups run in descending order with canonical ties and exact relative weights.
+Priority-zero actions stay represented but inactive until weights/order recovery.
+Priority -1 stays hard-disabled in every phase.
+
+Missing raw ratios use their individual source defaults on paths that consume that map.
+Exact decimal ratios become reduced fractions before freeze.
+Negative, nonfinite, excessive-precision, or out-of-bound fractions reject.
+Zero weight is not a hard ban.
+
+Ordinary positive-weight groups exclude zero-weight members.
+An all-zero viable group uses the preserved uniform source behavior.
+Fundamental raw-empty defaults retain four executed unit weights.
+Unused requested ratios cannot become effective mirrors.
+
+Pool1/Max2, their names, SuperMax, old-client Configure4, and unversioned ambiguous3 reject.
+Configure3 is valid only under admitted v4 encoding.
+Raw Configure-empty army preferences become explicit FIDE `[0]`.
+This preserves the producer fallback.
+Normalized army arrays remain nonempty, known, ascending, and unique.
+
+Q70 still permits preferred-family relaxation.
+This normalization does not introduce a hard family ban.
+
+| Action | Source ratio | Legacy admission | Fundamental admission |
+| --- | ---: | --- | --- |
+| `new-pawn` | 7 | Discretionary emission requires conversion credit and free capacity. Baseline Pawn entitlement is separate | Only an existing unfilled owned slot. No extra Chessman |
+| `more-pawn` | 1 | Permitted additional Pawn-family emission with full protected-completion guard | Only an existing unfilled owned slot. No extra Chessman |
+| `better-pawn` | 3 | Source refund, new concrete debit, bounded same-family historical pass | Unlocked Pawn paid100->150/200 or150->200, exact extra and concrete tier, forward completion guard |
+| `pool-pawn-upgrade` | 1 | Every permitted ordinary/stronger draw has the same completion guard | Same paid-tier rule, no slot/grant or automatic default enablement |
+| `pawn-to-minor` | 6 | Owned Pawn-funded realization plus eligible conversion credit | Delta300-current funded value, atomically replacing quality extra |
+| `pawn-to-major` | 2 | Same to Major, without a fabricated Major item | Delta485-current funded value |
+| `minor-to-major` | 3 | Recorded Minor+Major merge or eligible conversion funding, preserving source keys | Unlocked Minor delta185 |
+| `major-to-jack` | 2 | Recorded Major+Jack merge or eligible conversion funding | Ordinary Major delta215. Locked Castler delta200, Jack ceiling |
+| `minor-to-jack` | 2 | Recorded Minor+Jack merge or eligible conversion funding | Unlocked Minor delta400 |
+| `major-to-queen` | 1 | Existing source plus unique415 Queen-upgrade token, or eligible funded transformation | Unlocked Major delta415 |
+| `jack-to-queen` | 1 | Same unique Queen-upgrade token domain, no independent Queen grant | Unlocked Jack delta200 |
+| `queen-to-amazon` | 1 | Eligible conversion funding, no invented Amazon item | Unlocked Queen delta400 |
+
+Every action also obeys source role, family, captured catalogs, hard bans, ownership, entitlements, and physical capacity.
+Same-family actions require the finite operation proof, not an increasing family rank.
+The [shared literal schema and ledger](../contracts/shared-data-contract-v4.md#65-literal-effective-policy-capture-and-projection-records)
+define normalized fields and funded-state admission.
+
+### Closure-r2 funded-quality amendment
+
+The user selected priority-zero recovery and paid Fundamental Pawn quality on 2026-10-01.
+Priority `0` is inactive ordinarily and recoverable during weights/order relaxation.
+Priority `-1` stays hard-disabled.
+`better-pawn` and `pool-pawn-upgrade` spend only the increment above the currently funded Pawn value.
+
+Starting at funded100, Pawn150 costs 50 extra and later Pawn200 costs another 50.
+Downgrade returns only released extra Material funding.
+The change preserves one slot per owned Chessman.
+
+The coordinator's source-preservation instruction retains the current raw-empty/Off Fundamental defaults.
+Those defaults have four priority-1/unit-weight gates and disabled paid quality.
+This instruction is not a new user distribution selection.
+Base entitlement remains separate.
+
+Normalized all-twelve-`-1` cannot become those defaults.
+No raw-presence extension is required.
+
+The common owner's candidate ledger equations and generator's small-domain model are engineering evidence, not further user choices.
+The complete normalization/literal proposal awaits final independent review.
+General quality-domain AL/PM/LC proof remains open.
+The [ADR amendment](../../../docs/adr/0022-retain-legacy-pawn-material-conversion.md#closure-r2-funded-fundamental-quality-and-action-priorities)
+records the selected scope.
+
+The [closure register](../../adr-implementation-design/engineering-closure.md#closure-r2-quality-authority-and-pending-proof)
+
+records derived accounting, the non-Pawn counterexample and remaining proof.
+
+Inherited defaults are from `Options.py:906,1026,1343-1425,1460-1565,1608-1610,1737-1747`.
+Current geometry mirrors are from `CMWorld._geometry_slot_fields:604-623`.
+Generated semantic seeds are from `_SEMANTIC_SEED_NAMES:46-52` and `_ensure_semantic_seeds:468-480`.
+
+Final independent review must accept the literal records and conflicting-mirror outcomes before consolidated EP/NM acceptance.
+Unknown or obsolete values cannot silently select success-shaped defaults.
+
+The [engineering closure register](../../adr-implementation-design/engineering-closure.md)
+names the owners, gates, and required evidence for every remaining representation gap.
 
 ## Sources
 

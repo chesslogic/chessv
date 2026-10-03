@@ -57,8 +57,11 @@ capture semantics or projection values.
 
 ## Root fields
 
-Every listed field is required. Version 1.0 rejects unknown root fields and
-duplicate JSON keys.
+Every listed field is required. Version 1.0 rejects unknown root fields.
+Our raw snapshot/fixture parsers reject duplicate JSON keys before conversion.
+Stock decoded snapshot objects retain every exact field/type/hash/binding check.
+They do not carry a claim of raw-wire duplicate detection already lost upstream.
+Shared contract section 3 defines these input scopes.
 
 | Field | Type and meaning |
 | --- | --- |
@@ -193,11 +196,16 @@ available.
 
 ## Generation and reconstruction lifecycle
 
-The generator first completes the item's obtainable-count context and
-semantic seeds.
-It then derives stage caps and freezes the snapshot before its final rule
-evaluation.
-The rule closures and slot-data serializer use that same immutable object.
+The generator completes recovery, effective policy, semantic seeds and final obtainable counts as one draft context.
+It then derives conservative metrics/caps and freezes policy, rules and S before dependent fill/final acceptance.
+Rule closures and the pure slot-data serializer consume that same immutable state.
+
+Closure-r2 extends the allocation domain with paid Fundamental Pawn quality.
+Expected Pawn family material remains 100, separate from concrete/funded values and incremental Material spending.
+PM must include those branches in conservative metrics for every permitted result and inventory prefix.
+The small amended model does not prove the general bound or native cross-language agreement.
+
+Recovery must preserve attainable quantity obligations before quality consumes their completion funding.
 
 Current source establishes the obtainable-count dependency at
 `C:\GitHub\rft50-checksmate\worlds\checksmate\__init__.py:267-279,364-371`.
@@ -206,13 +214,67 @@ Caps use those counts at
 The implementation must respect that dependency instead of freezing costs
 from the temporary contract maxima.
 
+At ChecksMate `0772bac724ff483043b56979f0ef078b9c2d264a`,
+`Main.py:148-181` transfers start-from-pool items and applies item links after initial counts.
+The finalized context must account for these changes.
+`Main.py:183-193` precedes fill.
+Later post-fill/finalize hooks cannot reduce accessibility.
+`AutoWorld.py:435-450` also prohibits sphere changes in pre_output.
+
+LC's source-backed candidate uses a bounded pre-early-plando barrier, not a serializer-time repair.
+The G2 candidate reserves `Main.py`, `worlds\AutoWorld.py` and `Fill.py`.
+Its normalized-inventory barrier follows start/link processing and precedes early plando reachability/fill.
+Planning includes retained exogenous receipts.
+
+An existing pre_fill hook alone is insufficient.
+No post-fill repricing or sphere mutation applies.
+The initial generator packet supports barrier placement.
+The retained-choice design and combined review must accept this scope before implementation.
+
+AutoWorld's only proposed callback is `prepare_generation_context(NormalizedInventoryCandidate)`.
+Its default is a no-op.
+It cannot submit, create or remove AP items.
+Stable rule delegates refuse resource queries before a candidate exists.
+
+The collector counts unique recipient item objects from pools, locks, starts and stable pre-fill accessors.
+It does not double-count group transport and locked recipient representations.
+Parsed plando requests are not final retained receipts.
+A finite candidate predicts possible retained exogenous receipts before its first dependent query.
+
+After core plando, its actual receipt vector must match exactly.
+Fill/balancing/finalization retain that fingerprint.
+A mismatch fails without repricing.
+Another candidate needs a fresh isolated draft, not shallow rollback of a filled MultiWorld.
+
+The corrected R2 contract retains literal target/clamp/sample/object/disposition/provenance and every ordinary RNG boundary.
+Its signatures include retained object identities, not only counts.
+The driver replays the same accepted pre-submission plan in fresh isolated processes.
+It cannot reroll ordinary choices to force an assumed signature.
+
+General candidate coverage, process safety, observer equivalence and earliest-query/no-op proof remain open LC obligations.
+An additional driver entrypoint needs explicit accepted path ownership.
+The [remaining proof checklist](../../adr-implementation-design/engineering-closure.md#33-remaining-proof-checklist-and-stopping-criteria)
+defines consumers, decisive observations, and refusal conditions.
+
+The real `MultiWorld.fulfills_accessibility` validates the filled world and its configured accessibility.
+An all-inventory projection is not that validation.
+`Main.py:219-221` currently returns for skip_output before the output-path core invocation.
+The final acceptance route must also cover skip_output.
+
+The existing stage_pre_output dispatch permits a proposed ChecksMate override before output/skip_output/spoiler_only.
+That ChecksMate override is not currently implemented.
+It calls real `fulfills_accessibility()` without a supplied all-inventory state.
+Existing FillError details propagate, and false fails even if beatability succeeds.
+
+An unsuccessful world follows the existing failure path without lowering frozen thresholds or replacing the core validator.
+
 During generation, a change to a cost input invalidates the draft snapshot
 and its dependent rules.
 The completed world does not permit a post-freeze update.
 Publication must fail if its rules and serialized snapshot differ.
 
 A tracker reconstruction reads the original snapshot from the slot data.
-It does not derive a replacement from newer calibration code.
+It restores the original effective policy and S, without recovery or replacement prices from newer code.
 Missing or incompatible snapshot data produces an explicit error under the
 new-contract-only boundary.
 

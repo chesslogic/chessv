@@ -90,10 +90,17 @@ units instead of one unit per Pawn item, subject to the pawn reservation.
 _Avoid_: A new material grant, Fundamental slot consumption (as synonyms)
 
 **Pocket contribution**:
-The number of actual pieces in the prepared setup's pockets.
-Each piece counts once, including Pawns and Pawn variants.
+The number of supported actual pocket families in ChessV's captured final
+prepared setup.
+One pocket piece can contribute for every two eligible non-primary chessmen
+deployed on the board.
+Non-Pawn pocket pieces contribute before Pawn-family pocket pieces.
+Each supported piece counts once, including Pawns and Pawn variants.
 An empty pocket contributes zero.
-_Avoid_: Received Pocket-item count, pocket upgrade level (as synonyms)
+The prepared record identifies Pawn, Minor, Major, or Queen family, not a
+concrete chessman such as Phoenix or Rook.
+_Avoid_: Received Pocket-item count, pocket upgrade level, named pocket piece
+(as synonyms)
 
 **Non-reporting match**:
 An APMW match that continues local play but cannot submit new Location
