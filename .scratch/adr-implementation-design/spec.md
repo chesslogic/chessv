@@ -16,10 +16,9 @@ Implementation must support exactly `6x8`, `8x8`, `10x8`, `10x10`, and `12x10`.
 It preserves four CPU families and both human itemization modes.
 It rejects old world contracts even when their requested geometry remains supported.
 
-ADR 0022 is only partly specified.
-The dependency graph exposes its unresolved path.
-No worker can substitute an invented reservation rule or silently omit the
-accepted conversion capability from a claimed complete release.
+Ticket 24's D22 closure round settles the listed ADR 0022 product policy.
+The [engineering closure register](engineering-closure.md) separates that policy from open proofs.
+No worker can invent a default, omit an accepted capability, or treat reconciliation as execution approval.
 
 ### Claim ledger
 
@@ -34,7 +33,8 @@ accepted conversion capability from a claimed complete release.
 | Rules and slot data use the same frozen world-cost object | Author decision | ADR 0016 and snapshot contract | Recalculation in `fill_slot_data` or client-local prices |
 | Core search algorithms remain unchanged | Evidence-based design | Search probe proves existing rule/make-unmake/hash seams | Speculative search rewrite |
 | Named new files and DTO declarations can change only through S0 coordination | Temporary engineering assumption | Exclusive ownership and cross-assembly consumers | Silent local interface forks |
-| ADR 0022 lacks a complete allocator and portable contract | Open question | ADR 0022, ticket 24 | A finalized algorithm inferred from accepted status |
+| ADR 0022 policy is selected but engineering proof is incomplete | Engineering gate | Ticket 24 closure round and engineering-closure.md | Re-grilling selected modes/targets or declaring a finalized algorithm from accepted status |
+| Stock slot normalization precedes ChessV validation | Documented input boundary, not a blocker | User-directed scope correction and installed converter evidence, RI | Claiming raw-wire detection, weakening exact decoded-object checks, or requiring a new transport feature |
 
 Temporary engineering assumptions can change when a concrete compile or fixture
 failure disproves them. The integration owner records the replacement and updates
@@ -46,7 +46,7 @@ Product decisions require their original decision owner.
 | Decision | Selection | Consequence |
 | --- | --- | --- |
 | Phase boundary | Close all open design work, including D22 and the settings matrix, before implementation | One orchestrated implementation pass covers every package, including A22 |
-| D22 route | Grill D22 in this design session, using the ticket 24 record and producer findings as inputs | Ticket 24 decisions are recorded there. This spec absorbs the resulting contract |
+| D22 route | Consolidate the selected ticket 24 policy, then close named engineering gates | No broad new product interview. A narrow incompatibility returns to the coordinator |
 | S0 acceptance | The user approves the initial S0 pull request once | Later declaration changes go through this design owner. Behavior-changing changes return to the user |
 | Contract home | Existing projects: `ChessV.Base` and `ChessV.Games`, then `APMW.Client` | No new contracts project |
 | Integration target | One pull request per package, directly into ChessV `develop` and ChecksMate `checks_mate` | No 0.4.0 integration branch. The dependency order in section 5 controls merge order |
@@ -83,7 +83,9 @@ Transport loss changes connection state, not the board or match ledger.
 | Current captures and history | H1 | One ledger entry per successful committed move, including zero captures |
 | Earned Location set and final-goal marker | N1 | Monotonic eligible accomplishments, process memory, independent of Undo/window lifetime |
 | Reporting eligibility | N1 | Permanent suppression per match, separate from connection availability |
-| Generator costs | G2 | Freeze after finalized obtainable counts, before final access evaluation |
+| Effective allocation policy | A22 producer, C1 strict reader | One normalized recovered instruction set, no requested-policy overwrite |
+| Prepared setup | U1 captures S0 K12, A22 realizes | Immutable inventory/settings/pockets/IgnoreCastlers and generation token. No mixed or stale adaptation |
+| Generator costs | G2 | Freeze with effective policy and finalized obtainable counts before dependent fill/final core acceptance |
 
 No transport record retains a game window or board after closure.
 No search rule reads the current AP connection.
@@ -91,11 +93,15 @@ No semantic goal identity comes from a display name, current square, or current 
 
 ## 3. Interface gate S0
 
-S0 is a small implementation tranche before consumer fanout.
+After design closure and explicit authorization, S0 is a small implementation tranche before consumer fanout.
 It materializes declarations, complete fixture inputs, and compile-level consumer
 examples. It does not implement gameplay or networking.
 The [shared contract inventory](contracts.md) lists every wire contract, seam,
 and primitive, with writers, readers, and visibility.
+
+S0 readiness first requires supported EP/NM/AL/PM/LC/TX/TR/CS closure.
+Reconciliation does not supply that proof or authorize declarations.
+The user then approves the initial S0 PR before consumer implementation.
 
 ### 3.1. Setup identity
 
@@ -109,10 +115,26 @@ unit records, primary unit ID, and initial Piece-to-unit associations.
 The unit record contains `unit_id`, `role_id`, and `starting_class`.
 The backing collections must be immutable, not writable lists behind read-only types.
 
+Cold start supplies formation metadata before type/rule initialization.
+It establishes initial Piece bindings before root legal-move generation.
+Internal reset changes the epoch and clears every dependent identity/rule/progress/projection cache.
+CS must declare the precise `Initialize/postInitialize/LoadFEN/StartMatch` ordering.
+
+The first protected Game placement hook binds CPU Pieces before PositionLoaded.
+The second validates every board/pocket Piece after all PositionLoaded calls and before root trials.
+Captured pocket/account values must work while Match is null.
+
 The initial map is not the current position map.
 E1 observations identify replacement/movement transitions.
 H1 transfers the stable unit identity to the new piece and reverses that transfer
 on Undo. Missing CPU identity is an explicit error, never a square/type fallback.
+
+K11 declares effective policy in Games, without an APMW.Client dependency.
+K12 declares immutable prepared-setup inputs and ordered pocket families in Games.
+C1 validates policy bindings. U1 captures actual inventory, settings, seeds and local Ignore Castlers once.
+A22 and the sidecar adapters consume that capture.
+A stale generation refuses or regenerates the whole setup.
+It never adapts response A with current settings B.
 
 ### 3.2. Committed observations
 
@@ -138,6 +160,27 @@ complete deltas. `MoveInfo` alone is not sufficient.
 This design does not add user-facing save/resume support or promise arbitrary
 FEN rollback beyond the accepted internal lifecycle fixtures.
 
+TX distinguishes no-match rejection, fully applied late rejection and partial exceptions.
+E1 restores the exact attempt at the committed transaction boundary once.
+A minimal MoveList seam is conditional.
+Global rollback for every MoveList false result is not the design.
+Search/generation already unmake normal false results and must not double-unmake.
+TR supplies the full terminal/controller source and dedup/order matrix.
+Terminal facts do not broaden existing reward predicates.
+
+The closure-r2 engine candidate adds absolute typed checkpoints because indexed unmake leaves measured scratch arrays changed.
+S0 declares public opaque participant/checkpoint interfaces in the same Base K4 file.
+The independently supported corrected K4 bridge supplies Base-owned registration/Prepare/InstallReversible/DiscardAfterAbort.
+One validated reversible installation precedes acceptance.
+ObserveAccepted delivers only.
+
+E1 owns the committed-only receipt and absolute restore.
+Enabled stateful rules/evaluations have explicit sole owners.
+Only opted-in attached APMW composition requires strict participant registration.
+Ordinary variants keep their existing paths.
+
+Expanded ownership is a reviewed design prerequisite, not implementation authorization.
+
 ### 3.3. Progress-to-library interface
 
 One shared declaration lives in proposed `APMW.Client\EarnedMatchEvents.cs`:
@@ -155,16 +198,23 @@ The terminal source covers a valid match-finished path without fabricating a mov
 The sink records accomplishments, not server receipts.
 There is no second `IApmwReporter` interface.
 
-The progress module exposes `Apply`, `Undo`, and identity-aware `Reset`.
-`Apply` produces an immutable earned batch without I/O.
+The progress module exposes the K4 participant factory and scoped Undo/identity-aware Reset.
+Preparation computes the detached pure entry.
+InstallReversible changes the owned ledger exactly once before acceptance.
+ObserveAccepted delivers resulting intent without another ledger append.
+
+No generic subscriber or caller can perform a second installation.
 Unpublished thresholds do not reach the sink.
+
 Unexpected commit pairing and unknown identities produce explicit failures.
 
 ### 3.4. World validation and reporting snapshot
 
 C1 parses the exact A/L/C/S/W schemas from the accepted contracts.
 It returns immutable typed data or an artifact-specific error.
-Duplicate keys fail before lossy JSON conversion.
+Our raw artifact and fixture parsers reject duplicates before conversion.
+Stock decoded slots retain full exact schema, semantic hash, binding and effective-policy validation.
+RI documents that input boundary, not raw-wire duplicate detection or an S0 blocker.
 It does not evaluate calibration formulas.
 
 N1 combines that data with authenticated AP identity.
@@ -191,12 +241,14 @@ Each owner also owns the listed focused tests.
 
 ### S0 - Shared declarations and fixture contracts
 
-**Owner:** Integration architect. **Prerequisites:** None after execution approval.
+**Owner:** Integration architect. **Prerequisites:** D22 engineering closure and explicit S0 execution authorization.
 
 Own NEW `CommittedMoveObservation.cs`, `ApmwStartingArmyIdentity.cs`,
 `ApmwArmyData.cs`, `ApmwCanonicalJson.cs`, `ApmwWorldContext.cs`,
 `EarnedMatchEvents.cs`, and `ApmwReportingModels.cs` in the assemblies
 specified in the manifest.
+Also own NEW `ApmwAllocationPolicy.cs` and `ApmwPreparedSetup.cs` in Games.
+K11/K12 must have literal fields, immutable backing data, bindings and cross-assembly compile examples.
 Define only the minimal interfaces in section 3 and the
 [contract inventory](contracts.md#4-in-process-seams).
 `ApmwCanonicalJson.cs` is the one public C# strict-JSON and semantic-hash
@@ -211,7 +263,7 @@ visibility. No behavior-changing decision disappears into a DTO.
 
 ### B1 - Army data, geometry, and board composition
 
-**Owner:** Board/data specialist. **Prerequisites:** S0.
+**Owner:** Board/data specialist. **Prerequisites:** S0, E1.
 
 Own `ApmwProfiles.cs`, `ApmwPieceCatalog.cs`, NEW `ApmwArmyReader.cs`,
 the Army data file, the pure setup composer, and the focused geometry/setup tests.
@@ -227,16 +279,24 @@ Register the basic Elephant as 250/250 and Minor, distinct from War Elephant.
 Expose CPU start/promotion types independently of human pools.
 Provide explicit castling metadata with original actor IDs.
 
-**Exit:** F01/F02/F03 pass at the pure data/composer seam.
-U1 remains the sole `ApmwChess.cs` integration owner.
+Consume E1's stable placement hooks and participant opt-in through serial transfer of `ApmwChess.cs`.
+Bind Army metadata and initial CPU Pieces without waiting for StartMatch.
+Transfer that file to U1 after B1 acceptance.
+
+**Exit:** F01/F02/F03 pass at the pure data/composer seam and cold-start binding hooks.
+
+The only ApmwChess writer order is E1 -> B1 -> U1.
 Army publication tooling must run without a restored projector.
 
 ### E1 - Authoritative move and controller lifecycle
 
 **Owner:** Engine transaction specialist. **Prerequisites:** S0.
 
-Own `ChessV.Base\Game.cs`, `ApmwCore.cs`, `Match.cs`, and notification tests.
-The `Match.cs` change is conditional on the needed pre-controller-change hook.
+Own the exact Base and pure-checkpoint Games files in the engine resource inventory.
+MoveList changes are limited to a committed-only receipt/exception branch and root revision.
+Existing bool APIs, search ordering and caller-owned speculative rollback remain unchanged.
+Match stages accepted-prefix logs, adjudicator state and controller effects.
+
 Do not move network or goal policy into these files.
 
 Publish complete commit/abort/undo facts.
@@ -246,6 +306,22 @@ no-legal-moves branch (`Game.cs:1669-1680`).
 Replace `lastMove` value-equality suppression with commit identity.
 Scope notifications to the game instance.
 Do not expose the old `NewMoveSetup` callback as successful progress.
+Restore complete state after failed late committed attempts.
+Do not use parameterless search-selected Unmake as an exact MoveInfo rollback.
+Keep partial exception rollback distinct from normal late legality rejection.
+Materialize TR's terminal claims, adjudication, Death, closure and history matrix.
+Preserve the accepted stage-victory predicates instead of awarding victory for every terminal source.
+
+Capture complete typed pre-state before Setup.
+Restore absolute state once after late rejection, partial exception or staged-history/root failure.
+Retain the original exception and entered stage.
+H1 prepares a pure atomic entry before acceptance.
+
+Publish Commit to H1, then Terminal, then external compatibility/UI events.
+Quarantine failed restoration with original/restore diagnostics.
+Opted-in Game speculative and genuine internal/view-only scopes suppress external events and restore residual trial state.
+The accepted live GameForm toolbar continues through committed Undo/replay.
+
 Preserve search make/unmake and result restoration.
 Expose one ordered controller-change notification before the new controller
 can produce progress. N1 performs suppression through that notification.
@@ -254,14 +330,52 @@ can produce progress. N1 performs suppression through that notification.
 pairing, one terminal-result notification for extinction and no-move results,
 and takeover ordering. Search algorithms remain unchanged.
 
+### Closure-r2 engine resource inventory
+
+This inventory extends the old E1/R1 reservations as an engineering candidate.
+Every listed change needs combined review and later execution authorization.
+Pure checkpoint ownership grants no rule, coefficient or gameplay change.
+The manifest carries each exact path and ordered handoff.
+
+| Exact resource | Future sole writer/order | Permitted candidate scope |
+| --- | --- | --- |
+| Base `CommittedMoveObservation.cs` | S0 | Public K4/K5/checkpoint/progress types, preparation context, exact install/history receipts, typed failures and captured side-account declarations |
+| Base `Game.cs`, `MoveList.cs`, `Board.cs`, `BoardMoveStack.cs` | E1 | Committed receipt, exact typed checkpoints, placement hooks and publication staging |
+| Base `MoveCompletionDefaultRule.cs`, `GameAdjudicator.cs`, `Player.cs`, `Match.cs` | E1 | Completion/adjudicator/accepted-prefix state. Player.Gems/NewGame/AttachGame share the captured side account; spending/gain remains reversible |
+| Games `Move50Rule.cs`, `RepetitionDrawRule.cs`, `EnPassantRule.cs`, `Apmw\MixedEnPassantRule.cs` | E1 | Absolute counter/hash/EP state and owned internal subscribers, no new rule policy |
+| Games `Cards\CardDropRule.cs` | E1 | Same captured account for cold/attached generation, affordability/spend/unmake; actual generation side. R1 reviews unchanged range/reflection |
+| Games `Abstract\GenericChess.cs` | E1 | Typed PawnStructureInfo content snapshot, no evaluation policy |
+| Games `Evaluations\ColorbindingEvaluation.cs`, `OutpostEvaluation.cs`, `RookTypeEvaluation.cs` | E1 | Enabled scratch/immutable registration state, no coefficient change |
+| Games `MiscellaneousGames\ApmwChess.cs` | E1 -> B1 -> U1 | E1 opt-in/participant/hook calls, B1 Army bindings, U1 final attached composition |
+| Games `CastlingRule.cs`, `CheckmateRule.cs`, `Apmw\ApmwStalemateRule.cs`, `Apmw\ApmwFirstTurnRule.cs` | R1 | Rights/actor/royal authority and typed state under accepted policy |
+| Games `Extinction\ExtinctionRule.cs`, `Extinction\CovenantRule.cs`, `BareKingRule.cs` | R1 | Immutable or explicit stateless participant classification if retained, no competing CPU authority |
+| Games `BasicPromotionRule.cs`, `PromoteByReplacementRule.cs` | R1 | Immutable target/conditional-delegate participant and selected promotion policy |
+| Games `Pieces\Apmw\Checkers.cs` | R1 | Existing rank-stop audit and delta fixtures, no Army coordinate change |
+| Client `LocationHandler.cs` and H1 progress files | H1 | Public Base-interface factory, Client-internal participant/prepared values, one reversible installation and one delivery-only ObserveAccepted |
+
+`PieceType.cs`, `HashKeys.cs`, `Rule.cs`, `Evaluation.cs` and `Search.cs` remain outside the candidate write set.
+Game reserves existing per-game material-key indexes through NumSquaresExtended before root trials.
+The geometry/type registry freezes before reservation.
+Attempts allocate no new keys and assert stable counters.
+
+No shared-key truncation, RNG rewrite or reflection hook applies.
+Disabled APMW Development/PawnStructure/LowMaterial evaluations receive no write reservation.
+A newly enabled participant requires a named owner and complete state inventory before opt-in.
+This includes BerolinaEnPassant.
+
 ### R1 - CPU survival, castling, and promotion rules
 
 **Owner:** Search/rules specialist. **Prerequisites:** S0.
 
-Own APMW rule adapters and tightly coupled changes to `CastlingRule.cs`,
-`CheckmateRule.cs`, and `BasicPromotionRule.cs` only where needed.
+Own APMW rule adapters and the explicit royal/promotion/stateless participants in the engine resource inventory.
+Supply typed absolute snapshots or explicit immutable/stateless tokens.
+Review Checkers/CardDrop rank hypotheses without changing Army coordinates or existing Range/gem costs.
 Do not edit `Game.cs`, `Search.cs`, or `ApmwChess.cs`.
+
 A missing core seam returns to E1 instead of producing a concurrent patch.
+
+Audit Checkers' literal eight-rank pawn stop under R1.
+Use separate Board/XBoard notation fixtures without changing Army coordinates.
 
 One coordinator replaces the current competing CPU check/extinction/stalemate
 authority. It fixes the CPU player at setup.
@@ -304,6 +418,8 @@ Do not price Locations locally.
 **Exit:** F07/F08 parser pairs pass, including old 8x8-world rejection and
 new-contract Legacy acceptance.
 Concrete production hash selection remains I2 work.
+After C1 acceptance, transfer `Config.cs` and its named allocation tests to A22.
+C1 remains the strict-parser design authority through interface requests, not concurrent edits.
 
 ### H1 - Reversible match progress and handler migration
 
@@ -311,7 +427,20 @@ Concrete production hash selection remains I2 work.
 
 Own `LocationHandler.cs`, `CaptureLookup.cs`, NEW `ApmwMatchProgress.cs`,
 and capture/fork/progress tests.
+
+Prepare a pure ledger entry before engine acceptance.
+Keep current binding, counters, zero-capture entries and pending state reversible through a typed checkpoint.
+Expose CreateCommittedProgressParticipant through LocationHandler after validated K2/K6/K9 attachment.
+Implement the public Base protocol with Client-internal types.
+
+Install the sole entry before acceptance and return its exact attempt/commit/native-history receipt.
+Abort restores participant/native state and discards detached prepared values.
+ObserveAccepted releases pending intent without another append or generic Commit subscriber.
+Retain source-keyed unsent accepted intent for delivery-only retry, not move replay.
+
+Never include N1's irreversible journal in engine restore.
 Replace file/rank inference with stable starting identity.
+
 Apply a complete capture batch once, then report every crossed published threshold.
 Use current type only for tactical classification.
 Classify through the Army type registry and the world-context target-class lookup.
@@ -348,6 +477,9 @@ callbacks, and positive retirement evidence.
 Bare-host WSS-to-WS fallback follows the bounded connection contract.
 A timeout alone leaves uncertain work `Stopping`.
 No automatic reconnect, private-worker purge, or durable journal is added.
+N1 alone owns DeathLink service creation, delegates and connection-time initialization.
+Posted UI/DeathLink work repeats its generation check when it executes.
+U1 controls read that owner rather than create a second service.
 
 **Exit:** F05/F11 pass with deterministic barriers and actual pinned-library
 acceptance evidence. Earlier admitted packets can finish after suppression.
@@ -389,9 +521,62 @@ Keep exact roster metrics distinct from generator logic metrics.
 Outputs remain development fixtures until D22/A22 close the semantic set.
 This package cannot publish the final production C or claim allocator compliance.
 
-### G2 - Calibration, immutable world costs, and complete access paths
+### G2D - Calibration draft and stable generator interfaces
 
 **Owner:** Generator/rules specialist. **Prerequisites:** G1, P1.
+
+Own calibration/cost modules, data and draft tests from the manifest.
+Declare a stable threshold/lifecycle interface for A22.
+
+Declare `build_candidate_requirements(DraftRequirements, CandidateMetricCaps) -> CandidateRequirements`.
+Draft inputs include A/L/C, calibration binding, stage/profile set, exact costs/scaling/adjustment and complete path predicates.
+The result is immutable post-cap S, integer caps, pure complete-path evaluator and content identity.
+Derive rational intrinsic costs and draft post-cap requirements from supplied fixture inputs.
+
+No all-inventory roster test replaces final filled-world core acceptance.
+This package does not freeze final obtainable counts or claim final allocation/metric acceptance.
+Transfer the named calibration files serially to G2 after draft acceptance.
+
+**Exit:** Arithmetic and interface fixtures are stable for A22.
+No final world S, C pin or G2 acceptance is claimed.
+
+### G2 - Calibration, immutable world costs, and complete access paths
+
+**Owner:** Generator/rules specialist. **Prerequisites:** G2D, A22.
+
+Closure-r2 proposes a narrow G2 core-file reservation for `Main.py`, `worlds\AutoWorld.py` and `Fill.py`.
+The initial generator packet supports barrier placement.
+Retained-choice design and combined review must accept the exact seam before execution.
+The barrier follows start-from-pool/item-link normalization and precedes early plando reachability/fill.
+
+Planning includes retained exogenous receipts, not only maximum planned inventory.
+Recovery and final inputs precede immutable policy/S/rule freeze.
+The existing stage_pre_output route must reject failed real core accessibility.
+This includes skip_output.
+An existing pre_fill hook alone does not prove the barrier.
+
+No post-fill repricing, sphere mutation or approximate replacement validator applies.
+Declare only `prepare_generation_context(NormalizedInventoryCandidate)` as the new optional AutoWorld callback.
+A separate static participation marker defaults false, not a user setting.
+Its ordinary-world default is a no-op.
+
+It cannot create, submit or remove items.
+G2 owns `test\general\test_generation_context.py` for no-op identity/RNG/order regression.
+Fill.py changes are conditional on finite variable-plando receipt planning.
+Compare retained recipient receipts to the frozen candidate after plando/fill/balancing/finalization.
+
+Retain literal target/clamp/sample/object/disposition/provenance and all ordinary RNG boundaries.
+Candidate signatures include actual retained objects, not just receipt vectors.
+General safe process reconstruction, finite coverage and occurrence-observer equivalence remain open.
+An isolated driver entrypoint requires an accepted exact path before its manifest ownership changes.
+
+Pre-barrier participant queries require explicit refusal or an earlier accepted seam.
+No post-submission pool replan, post-fill repricing, or shallow MultiWorld rollback is permitted.
+The existing [proof checklist](engineering-closure.md#33-remaining-proof-checklist-and-stopping-criteria) names consumers and stopping evidence.
+Useful bounded certificates do not close full AL/PM/LC or D22.
+
+Stage_pre_output uses the actual core on output, skip_output and spoiler_only.
+False is failure even when the goal remains beatable.
 
 Own `CM:rules.py`, `__init__.py`, NEW calibration/cost/world-binding modules,
 calibration source artifacts, and targeted rule/lifecycle tests.
@@ -401,7 +586,12 @@ Use the accepted reference bank and exact curve definition in ticket 16.
 
 Compile one complete access alternative per eligible stage.
 Keep special predicates inside each alternative.
-Freeze the snapshot after obtainable counts settle.
+Freeze effective policy, obtainable counts, metrics, caps, rules and S as one state.
+Account for upstream start-from-pool and item linking after initial create_items counts.
+Complete recovery before dependent fill freezes.
+Use the real core accessibility result for final acceptance, including skip_output.
+Post-fill/finalize cannot reduce accessibility. pre_output cannot change spheres.
+A failure follows the existing generation error path without lowering frozen costs.
 `fill_slot_data` serializes the same frozen object.
 Tracker reconstruction consumes original costs and cannot reprice them.
 Update terminal item-pool budget consumers coherently without redesigning pool policy.
@@ -412,11 +602,18 @@ Do not tune provisional costs based on convenience.
 
 ### U1 - Game and UI composition
 
-**Owner:** ChessV integration specialist. **Prerequisites:** B1, E1, R1, C1, H1, N1, P1.
+**Owner:** ChessV integration specialist. **Prerequisites:** B1, E1, R1, C1, H1, N1, P1, A22.
 
 Own `ApmwChess.cs`, APMW geometry game registrations, `GameForm.cs`,
 `ApmwForm.cs` and related designer changes, necessary load-entry adapters,
 and affected project files.
+Also own `APMW.Client\Convenience.cs` for Q82's five successful connection details.
+The list stores host/port/slot only and selection fills fields without auto-connect.
+The [storage candidate](../large-board-enemy-armies/contracts/apmw-connection-reporting.md#recent-details-storage-candidate)
+defines the exact disk record, admission source, MRU update and visible failure behavior.
+Use N1's single DeathLink owner.
+Apply Q79-Q81 timing/persistence without mutating active matches or frozen costs.
+Integrate K11/K12 with preview, live ItemGeneration and sidecar adaptation.
 Wire the agreed modules once.
 Use the APMW base type rather than exact old subclass checks.
 
@@ -447,6 +644,14 @@ Ordinary-game loading remains unchanged.
 U1 registers source/resource additions after independent packages land.
 SDK default inclusion is retained where sufficient.
 
+U1 receives ApmwChess only after E1 -> B1.
+Attach the selected participants, immutable capture, H1 preparation and N1 sink once.
+Cold-start/reset tests consume complete internal records, not bare FEN.
+The accepted live GameForm Undo/replay toolbar remains ledger-aware committed continuation.
+
+Only genuine internal/view-only operations use no-publication snapshot scopes.
+Local AI timing/capture follows Q79 without an invented Weakening formula.
+
 ### I1 - Publication and package tooling
 
 **Owner:** Release integration specialist. **Prerequisites:** C1, G1, P1.
@@ -457,33 +662,56 @@ Implement metadata schema 2, all three data descriptors, and minimum-client agre
 Preserve provenance, archive integrity, extraction safety, and exclusive restore checks.
 
 **Exit:** F07/F13 synthetic tooling cases pass.
-Tooling can be ready before policy closure.
+Tooling acceptance can precede final A22 implementation within the authorized pass.
 No placeholder production lock or fabricated release identity is allowed.
 
-### D22 - Complete the remaining allocation decision
+### D22 - Consolidate policy and close engineering design
 
 **Owner:** Existing settings decision owner. **Prerequisites:** None.
-**State:** Blocked on explicit decisions, not implementation.
+**State:** Selected policy, open engineering closure.
 
-Resolve reservation, composition targets/membership, viable fallback, transfer
-accounting, algorithm order, and portable inputs/identifiers in ticket 24.
-Preserve every accepted ADR 0022 claim.
-The 15-total/7-non-Pawn example is illustrative, not a selected target table.
-Off does not revoke Fundamental owned Chessmen entitlements.
+Consolidate the closure round without reselecting its gameplay policy.
+Targets are 11/5, 15/7, 19/9, 27/15, 33/19 on the prepared board.
+Complete EP/NM/AL/PM/LC/TX/TR/CS in the closure register.
+No mandatory new allocation-policy ID or world UUID is required.
+A concrete incompatibility returns to the coordinator with evidence.
 
-**Exit:** A versioned contract amendment and full allocator fixtures exist.
-No coding worker can mark this gate complete by choosing plausible defaults.
+**Exit:** Literal schema, full independent fixture inputs and supported engineering proofs agree across the owners.
+No implementation starts before this design gate and explicit authorization.
 
 ### A22 - Implement the approved allocator amendment
 
-**Owner:** Cross-language allocation specialist. **Prerequisites:** D22, P1.
-**State:** Blocked.
+**Owner:** Cross-language allocation specialist. **Prerequisites:** D22, S0, C1, G1, P1, G2D.
+**State:** Waiting for engineering closure and execution authorization.
 
-After the decision closes, own Legacy allocation code and its parity fixtures.
-The manifest records serial transfer of P1's semantic consumer files.
+Own Legacy funding/conversion, Fundamental recovery, generator pool planning and effective policy.
+Also own live `ItemGeneration.cs`, normalized `Config.cs`, pockets and conservative metrics.
+Own generator `options.py`, `item_pool.py`, `collection.py`, `item_utils.py` and planning modules.
+The manifest records serial C1/P1 transfers, including sidecar snapshot/adaptation.
+Use integrated outstanding obligations and ordered relaxation.
+Hard-disabled actions, inventory, entitlements and capacity remain invariant.
+Generator replanning does not grant extra runtime Chessmen from Material.
+Implement the finite progress/exhaustion and exclusive ledger specified by AL.
+
+Use forward affordable completion admission that cannot retract the proposed ordinary purchase.
+Paid Pawn100->150->200 spends extra50/50 and refunds only released extra.
+Atomic interfamily changes replace the current extra category, never debit both categories.
+Captured selector/action eligibility still governs every target and recovery intermediate.
+
+Preserve the raw-empty/Off four-gate default and explicit normalized twelve-action hard-disabled policy.
+Publish effective instructions, not requested settings, traces or a hypothetical roster.
+
+Consume G2D's stable requirement interface. G2 final acceptance then consumes A22 outputs.
 Preserve grant provenance and prevent reserve double spending.
 Apply prepared-board targets 11/15/19/27/33 and actual pocket membership as selected.
 Retain the historical approximation rules, not an invented 100-point ceiling.
+Compute pocket support and credit from captured actual families, not receipt counts.
+Prove PM against actual inventory prefixes and every permitted final pocket distribution.
+
+The paid-quality domain needs its own certificate.
+The old interfamily-only corpus is insufficient.
+Return proof-limit through the existing failure envelope/nonzero exit, not success or exhausted.
+Canonical state excludes diagnostic/PRF/trial history and includes both historical one-use replacement marks.
 
 **Exit:** The amended algorithm, logic metrics, input schema, and C agree.
 The fully specified fixtures, including 785/485/500/285 accounting, pass.
@@ -491,7 +719,7 @@ No exact algorithm or new identifier is assigned by this assessment.
 
 ### T1 - Attached-match integration evidence
 
-**Owner:** Integration test specialist. **Prerequisites:** U1, G2, I1.
+**Owner:** Integration test specialist. **Prerequisites:** U1, G2, I1, A22.
 
 Own cross-domain integration tests, including `ApmwGameCharacterizationTests.cs`.
 Use attached matches, both colors, independent board fixtures, and isolated
@@ -524,13 +752,16 @@ The recommended sequence is:
 
 | Wave | Candidate work |
 | --- | --- |
-| 0 | S0 and the independent D22 decision process |
-| 1 | B1, E1, R1 |
-| 2 | C1 and G1 |
-| 3 | H1, N1, P1 |
-| 4 | G2, U1, I1 once each package's prerequisites pass |
-| 5 | T1 and A22 after its decision gate |
-| 6 | I2 after all semantic and release gates |
+| Design only | Consolidate D22 and close every pre-S0 engineering gate. No declaration implementation |
+| 0 | S0 after explicit authorization, then initial S0 PR user approval |
+| 1 | E1, R1 |
+| 2 | B1 after E1's composition-hook transfer |
+| 3 | C1 and G1 |
+| 4 | H1, N1, P1 |
+| 5 | G2D and I1 after their stable prerequisites |
+| 6 | A22 after G2D, including serial C1/P1 transfers |
+| 7 | Final G2 and U1 acceptance after A22, then T1 |
+| 8 | I2 after all semantic and release gates |
 
 These waves are a display aid. The manifest's exact dependency edges govern.
 A worker can begin earlier with accepted fixture adapters only when its
@@ -538,16 +769,21 @@ declared inputs are stable. That does not mark an unfinished prerequisite comple
 
 | Shared file or concern | Exclusive write owner |
 | --- | --- |
-| `Game.cs`, `Match.cs`, active `ApmwCore.cs` | E1 |
+| `Game.cs`, conditional `MoveList.cs`, `Match.cs`, active `ApmwCore.cs` | E1 |
 | CPU rule implementations and castling/promotion rule adapter | R1 |
 | `ApmwProfiles.cs`, catalog, pure composer | B1 |
-| `ApmwChess.cs`, game registration, shared project files | U1 |
+| `ApmwChess.cs` | E1 -> B1 -> U1, explicit ordered serial transfers |
+| Game registration and shared project files | U1 |
 | `LocationHandler.cs`, `CaptureLookup.cs` | H1 |
 | `Client.cs`, connection owner | N1 |
-| `Config.cs`, client v4 parser, geometry entry | C1 |
-| C# and Python projection internals | P1, then named serial transfers to A22 |
+| `Config.cs` | C1, then explicit serial transfer to A22 |
+| Client v4 parser, geometry entry | C1 |
+| C# and Python projection internals, snapshots/adapters | P1, then named serial transfers to A22 |
+| Live ItemGeneration, generator options/pool/collection/item_utils/planning | A22 |
+| `Convenience.cs` and recent-details UI | U1 |
 | Python `locations.py`, progression, item maxima | G1 |
-| Python `rules.py`, world lifecycle | G2 |
+| Calibration/cost draft modules | G2D, then explicit serial transfer to G2 |
+| Python `rules.py`, world lifecycle | G2, consuming A22 final policy/metrics |
 | Release/restore tooling | I1 |
 | Desktop release CI and final production lock | I2 |
 
@@ -570,19 +806,41 @@ All contract paths are under `.scratch\large-board-enemy-armies\contracts`.
 | F04 | One successful commit/Undo, no speculative progress, failed late rejection leaves no history/report, branch continuation restores counts | Royal fixtures rollback matrix, interaction ticket 21 |
 | F05 | Admission first permits completion. Suppression first makes zero sends. Controller restoration and Undo never restore eligibility | Connection contract atomic admission and deterministic fixtures |
 | F06 | Additional/primary King capture, 2-to-1 transitions, 2-to-0 Checkers batch, repeated load 2-to-1-to-2, no castling inheritance | Full `royal-lifecycle-fixtures.md` legal-board constructions |
-| F07 | Exact A/L/C/S/W bindings, duplicate-key rejection, old 8x8-world rejection, protocol 1 vs runtime/semantic pins, positive and negative package pairs | Shared-data sections 10.1/10.2/10.4 |
+| F07 | Exact A/L/C/S/W and effective-policy validation; duplicates reject in our raw parsers; stock decoded objects receive full schema/hash/binding checks without a wire-detection claim; old-world rejection, protocol 1 vs runtime/semantic pins and positive/negative package pairs | Shared-data sections 3/10.1/10.2/10.4; RI input boundary |
 | F08 | `361045/162 * 27/20 + 240` gives ceiling 3249, cap 3000 gives 3000. Synthetic +100 intrinsic gives 3384 | Full `world-cost-snapshot-v1.md` required-fixture table |
 | F09 | Six Rookies Lions retain separate roles. Promoted Pawn retains its role/class. Initial multi-King eligibility never changes after capture | Ticket 15 and ADRs 0006/0007 |
 | F10 | Earlier-board Any 15 can complete on 8x8. Capture Everything remains endpoint-only. No Any 33/34 or Pieces 20 Location is invented | Ticket 15, shared-data section 5, royal two-King extinction fixture |
 | F11 | Same generation/team/slot/game and W/C/S permit journal replay, including after window closure. Port is not identity. Mismatch retains intent | Full connection contract deterministic fixture sequence |
 | F12 | One complete geometry path must supply all resources and special predicates. Bypass cannot remove tactic/castler conditions | Snapshot availability section and shared-data section 10.2 |
 | F13 | Real x86 and x64 archives restore and execute under identical A/L/C. Minimum-client and byte/semantic integrity checks remain strict | Shared-data sections 9/10.5 |
-| F14 | Legacy input grants 785, Major expected value 485, concrete Rook 500 leaves 285 before netting. No double-counted reserve credit | ADR 0022 Q51-Q55, plus future D22 complete allocator fixtures |
+| F14 | Source credit 785, expected Major 485, concrete Rook debit 500 leaves 285 before signed netting. Exclusive transfers/reserves and visible historical overdraw | ADR 0022 Q51-Q55, closure register AL |
+| F15 | None/total/both in both modes. Complete action/default/empty/all-disabled schema. Targets and R. Four receipts at limit one -> 2/1/1. Twelve -> 4/4/4. Thirteen+ remain received without credit | Ticket 24 matrix and Q61-Q68/Q73/Q75-Q78; closure EP/NM/PM |
+| F16 | Forced unsuitable allocation recovers with ordered relaxation and seeded uniform smallest progress. Scarcity, hard-disabled actions, last-resort type overflow, seven protected units, finite exhaustion and conservation | Ticket 24 Q69-Q73/Q77/Q83; closure AL/PM |
+| F17 | One immutable inventory/settings/seeds/IgnoreCastlers/pocket capture. Settings A->B refuses stale response or regenerates B. Actual-family support and all three pocket-material bounds exclude primary/pockets from B | Ticket 24 Q64/Q67/Q68/Q73/Q80; closure EP/CS/PM |
+| F18 | Final obtainable counts include start transfer/links. Recovery precedes freeze. Rules/S/slot use same state. Real filled-world core acceptance includes skip_output and tracker restoration | Snapshot lifecycle; ticket 24 Q65/Q69; closure LC |
+| F19 | Same-world local controls and world-switch defaults. AI adds/caps five next match only. One DeathLink owner initializes each reconnect. Five successful host/port/slot-only entries survive restart, no auto-connect | Ticket 24 Q79-Q82; closure NM/TR |
 
 F14 alone does not specify an allocator.
-The illustrative composition example does not become an additional fixture
-target table without a decision.
+The target pairs are selected, not illustrative.
+F04 also requires complete-state equality after late committed rejection and partial exception cases.
+F06 requires cold-start/reset cache evidence and separate Board/XBoard coordinate fixtures.
+F07 distinguishes duplicate rejection in our raw parsers from strict stock decoded-object validation.
+It does not require upstream wire-duplicate detection or a new library feature.
+
+The proposed [engine design fixture](fixtures/engine-lifecycle-v3.json) contains revision3 literal lifecycle inputs.
+The proposed [allocation design fixture](fixtures/allocation-contract-v4.json) contains 21 manifest-bound synthetic cases and independent expectation records.
+They are two data owners in this effort, not runtime policy identities or copied model/probe source.
+Full A/L/C/S/W fixture composition and native parser/handover acceptance remain separate.
+
+The engine fixture root is version3 and the allocation wrapper root is version1.
+Both contain design JSON, not production Army/W/K12 artifacts or executed native fixtures.
+Symbolic lifecycle hashes/test identities are not production schema examples or pins.
+F04/F06/TR inputs and F17/F19 lifecycle models have a separate evidence mapping in the royal fixtures.
+Common/generator fixture revisions and native acceptance remain pending.
+
+F15-F19 are not passing production tests.
 F06's direct extinction case leaves a CPU Rook, so victory must not imply
+
 Capture Everything.
 
 ## 7. Validation and completion rules
@@ -616,5 +874,6 @@ change outside its write set, or a contradictory authoritative fixture.
 It records the narrow blocker and returns it to the named owner.
 It does not remove the fixture or weaken validation to proceed.
 
-Full 0.4.0 readiness remains blocked by D22 and broader settings closure.
-The settled modules remain assignable through the declared dependency gates.
+Pre-S0 readiness remains blocked by the named engineering gates.
+Reconciliation can complete without claiming readiness.
+All implementation remains behind design closure, explicit authorization and initial S0 PR approval.

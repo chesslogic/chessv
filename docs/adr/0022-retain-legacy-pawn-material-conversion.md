@@ -2,6 +2,56 @@
 
 Status: accepted
 Date: 2026-09-18
+Reconciliation date: 2026-10-01
+
+## Current decision and supersession
+
+Ticket 24's **D22 closure round** settles the policy summarized here.
+Ticket question numbers and ADR question numbers differ.
+The named decision and its document anchor identify the authority.
+Early open statements in this ADR describe the decision history, not the current frontier.
+
+| Current matter | Ticket 24 authority | ADR authority |
+| --- | --- | --- |
+| Modes, reservation, post-cap viability, spending stop | Q61, Q63, Q65, Q66 | Current rules in this section |
+| Prepared target pairs and family membership | Q62, Q64 | Q60, Q61 |
+| Final pocket families, overflow, and material credit | Q67/Q78, Q68 frontier | Q62/Q72, Q63 |
+| Integrated recovery and effective instructions | Q69-Q73 | Q64-Q68 |
+| Optional future identity, retirement, staged limits | Q75-Q77 | Q69-Q71 |
+| Local controls, DeathLink, recent connections | Q79-Q82 | Q73-Q76 |
+| Conservative bounds and resilience | Q83 | Engineering closure obligations |
+| Soft-zero versus hard-disabled actions | Closure-r2 user decision | Funded-quality section |
+| Paid Fundamental Pawn quality and released-funding refunds | Closure-r2 user decision | Funded-quality section |
+
+`fair_board_guarantee` retains `none`, `standard_count`, and `standard_and_pawns`.
+`none` applies no Legacy reservation or conversion.
+Legacy then creates one Pawn per effective Pawn item.
+`standard_count` applies the total-unit minimum.
+`standard_and_pawns` applies both the total-unit and non-Pawn minimums.
+Fundamental preserves fixed Chessmen slots.
+Material never creates additional runtime slots.
+Its non-Pawn obligation can prioritize permitted Pawn-to-Minor-or-better actions.
+
+The closure-r2 funded-quality decision also applies to existing Fundamental slots.
+It does not turn Material into additional Chessmen.
+
+For Legacy, let T be the prepared total target.
+D counts actually deployable units from non-Pawn items.
+P counts supported actual pocket families under Q61.
+The reservation is `R = min(availablePawnItems, max(0, T - D - P))`.
+Each reserved unit protects 100 material.
+The allocation shows a shortage instead of inventing inventory.
+
+Viability uses existing core reachability with frozen, post-cap requirements.
+No second pre-cap strength gate applies.
+Allocation continues spending usable material until no permitted action is affordable.
+The retained historical approximation rules still apply.
+The transfer ledger must distinguish ordinary affordability from their explicit allowance and overdraw.
+
+Policy selection does not prove the allocator, conservative metric, or wire contract.
+The [engineering closure register](../../.scratch/adr-implementation-design/engineering-closure.md)
+owns those open proofs and their implementation owners.
+No production implementation or S0 declaration is authorized by this reconciliation.
 
 Q44 selects pawn-material conversion for Legacy in 0.4.0.
 The user chose: "Retain pawn-material conversion for Legacy; specify its
@@ -15,7 +65,10 @@ Current semantic planning instead creates one pawn per effective Pawn item.
 The later implementation must add the selected behavior rather than
 declare the existing one-unit-per-item path equivalent.
 
-## Scope and unresolved rule
+## Historical scope and unresolved rule
+
+This section records the Q44 frontier.
+The current decision section and later named decisions supersede its open policy questions.
 
 The decision selects a capability, not the old SuperMax enum or its 15/19
 constants.
@@ -31,7 +84,7 @@ Only Q49's explicit target relationship uses CPU army counts.
 CPU catalog values do not define the human material budget.
 
 This is a bounded addition to human progression after the Q35 design.
-Its rule, wire representation, algorithm identity, and effect on generator
+Its rule, wire representation, semantic identification, and effect on generator
 logic need an explicit contract update before implementation.
 It does not authorize a general human-itemization redesign or production
 changes.
@@ -226,10 +279,296 @@ The exact numeric target pairs, membership, and interaction with other preferenc
 Fundamental still preserves its owned Chessmen slots.
 Legacy still follows its selected funding and approximation rules.
 
+## Q60: Prepared-board composition targets
+
+The user adopted total-unit and non-Pawn minimums derived from the prepared
+CPU army, excluding its primary royal.
+
+| Prepared board | Total-unit minimum | Non-Pawn minimum |
+| --- | ---: | ---: |
+| 6x8 | 11 | 5 |
+| 8x8 | 15 | 7 |
+| 10x8 | 19 | 9 |
+| 10x10 | 27 | 15 |
+| 12x10 | 33 | 19 |
+
+On 12x10, the additional King contributes to both minimums.
+The primary royal contributes to neither minimum.
+The targets are minimums, not ceilings.
+They do not grant missing units or change the CPU formation.
+
+## Q61: Human-unit and pocket membership
+
+The primary King contributes to neither composition minimum and does not
+provide pocket support.
+Every other deployed human unit contributes to the total-unit minimum.
+Deployed non-Pawns, including additional royals, also contribute to the
+non-Pawn minimum.
+
+Pocket contribution uses one global two-to-one support pool.
+If B eligible non-primary chessmen are deployed on the board, at most
+floor(B / 2) actual pocket pieces contribute.
+When support is insufficient for every occupied pocket, non-Pawn pocket pieces
+contribute before Pawn-family pocket pieces; order within each class follows
+the canonical prepared-setup pocket order.
+A contributing pocket non-Pawn counts toward both minimums.
+A contributing Pawn or Pawn variant counts toward the total-unit minimum only.
+Unsupported pocket pieces remain present but contribute to neither minimum.
+
+## Q62 and Q72: Pocket distribution authority
+
+The generator emits a suggested pocket distribution for generation and
+accessibility analysis.
+ChessV may replace that suggestion when it distributes the received Pocket
+items into the prepared setup.
+ChessV's captured final ordered pocket families control runtime composition
+credit, pocket-material credit, and the displayed setup.
+The final record identifies Pawn, Minor, Major, or Queen family, not the
+concrete chessman, such as Phoenix or Rook.
+
+Pocket items forced into the generated pool remain valid received inventory.
+An excess over the ordinary configured capacity does not by itself reject the
+world.
+ChessV permits overflow beyond the configured ordinary limit, up to level four
+in each existing pocket.
+The tiers remain Pawn, Minor, Major, and Queen.
+ChessV ignores items that would require level five or higher.
+With three pockets, at most twelve received Pocket items affect the setup.
+Ignored items remain in the received inventory but contribute no pocket unit
+or material credit.
+They do not cause generation failure.
+ChessV does not create additional slots or move the excess to dormant inventory.
+For each effective Pocket item, ChessV increments the currently lowest-level pocket.
+Ties follow the generator's suggested slot order.
+The same rule applies beyond the ordinary limit until every pocket reaches level four.
+
+Jack and Amazon pocket tiers and selectable tier indexes remain future ideas.
+They are not part of the selected contract.
+
+A future contract can make the value or piece family at each pocket-tier index configurable.
+An index means the upgrade level within a pocket, not a pocket slot.
+The future mapping can omit the Pawn tier or include Jack and Amazon tiers.
+This idea does not change the current four-tier mapping or authorize implementation.
+Its defaults, allowed mappings, costs, and wire fields require a separate design decision.
+
+The generator's accessibility estimate must remain conservative relative to
+ChessV's final pocket distribution.
+Regression fixtures must cover distribution differences, support thresholds,
+and ignored surplus items.
+
+## Q63: Pocket-material credit basis
+
+Only supported pocket pieces receive pocket-material credit.
+Let S be their semantic family material, B the exact active non-primary
+on-board material after allocation, and C their count.
+Pocket-material credit is `min(S, floor(B / 2), 300 * C)`.
+The primary King and all pocket material are excluded from B.
+This credit contributes only to the conservative reachability and viability
+material metric.
+It is not spendable conversion funding, exact active material, or pocket
+inventory.
+
+## Q64: Composition recovery and accessibility
+
+The composition allocator searches or backtracks among permitted allocations
+to satisfy the requested minimums and produce a configuration that passes the
+existing core accessibility logic.
+It does not weaken hard bans or invent inventory.
+If no such allocation exists for a generation attempt, the existing generation
+retry or failure path applies.
+The APMW layer does not accept an inaccessible result or replace the core
+accessibility validator.
+
+Regression fixtures must force initially unsuitable Pawn/non-Pawn allocations
+into this recovery path and prove that generation recovers to a configuration
+accepted by the core validator.
+
+## Q65: Ordered preference relaxation
+
+Composition recovery may break the player's preferred family selection when
+necessary; a selection such as Pawn plus Major is not an absolute family ban.
+The recovery order is:
+
+1. relax Pawn-count maxima and similar quantity targets;
+2. relax ratios, weights, and enabled-action priority order;
+3. relax preferred family eligibility.
+
+The preferred army concept is therefore the last preference to give way.
+Explicitly disabled actions, actual inventory, entitlements, physical
+deployment capacity, and immutable contract limits remain hard.
+Each relaxation and its reason must be visible in diagnostics.
+
+## Q66: Integrated composition obligations
+
+Composition minimums use integrated outstanding obligations rather than a
+seed-first baseline or post-generation replacement.
+Ordinary weighted generation continues while reserving enough material and
+slots to keep the outstanding total-unit and non-Pawn obligations reachable.
+An ordinary matching draw satisfies an obligation instead of adding a duplicate.
+If obligations remain near completion, composition recovery and ordered
+relaxation fulfill them.
+
+This adopts the useful `locked_items` pattern without mechanically copying all
+historical affordability, weighting, or terminal-append behavior.
+
+## Q67: Fundamental reservation and downgrade recovery
+
+In Fundamental mode, fixed Chessmen slots reserve enough capacity for the
+outstanding non-Pawn obligation.
+The allocator plans those slots together with the world's obtainable Material,
+because final Pawn membership can become non-Pawn membership through upgrades.
+It may need to backtrack a Material allocation to create another Chessman, or
+backtrack a Chessman allocation to preserve enough upgrade material.
+
+When a high-value plan leaves too few units or non-Pawns, recovery downgrades or
+splits realized pieces until the obligations and core accessibility check can
+both pass.
+At each step, the world seed selects uniformly among realized pieces for which
+a permitted downgrade or split makes measurable progress without violating a
+hard limit.
+Recovery applies the smallest progressive transformation, then recomputes the
+outstanding obligations and accessibility.
+This can cascade through permitted adjacent families from higher-value pieces
+to lower-value pieces and, when necessary, to Pawns.
+
+The user's configured distribution still governs ordinary generation.
+Using that distribution to weight recovery candidates is an unselected
+enhancement; the selected recovery sampling is seeded and uniform.
+
+## Q68: Generator-owned effective allocation policy
+
+The generator executes the seeded obligation and recovery algorithm.
+It emits the effective instructions for allocating received Chessmen, Material,
+Pocket items, and enabled armies.
+Those instructions include the normalized upgrade order and other effective
+settings needed by ChessV.
+They do not describe a hypothetical completed roster.
+
+Slot data contains the effective allocation policy, not allocation reasoning,
+rejected draws, recovery traces, hypothetical family counts, concrete ChessV
+piece names, or board coordinates.
+Generation keeps its reasoning local and uses the existing core accessibility
+validator before accepting the world.
+ChessV applies the effective policy to the player's actual received inventory
+and retains deterministic family-to-piece selection and placement.
+For pockets, the generator may include a suggested distribution, but ChessV's
+captured final distribution is authoritative at runtime.
+
+If generation relaxes preferences under the ordered recovery policy, slot data
+contains the recovered effective upgrade order and settings.
+It does not contain the superseded requested values.
+The original request and the reasons for recovery remain generator-local
+diagnostic information.
+
+## Q69: Optional future policy identity
+
+The current decision does not require a new policy field.
+A future contract may add an allocation-policy identifier when settings fields
+alone no longer identify the semantics.
+For that optional field, absence selects the default legacy behavior.
+An explicit unknown value is rejected; it must not silently fall back.
+
+## Q70: Retire Pool and Max
+
+Contract v4 does not expose the deprecated Pool or Max pawn-upgrade modes.
+Their old option values are rejected everywhere, including old option files.
+They are not accepted as generation aliases and never appear in slot data.
+Supported explicit upgrade settings replace them.
+
+## Q71: Staged per-type limits
+
+Ordinary generation enforces each configured piece-type limit.
+If that pass cannot meet composition, difficulty, or accessibility requirements
+with other available types, recovery may exceed the limit as a last-resort
+overflow.
+The initial series therefore respects the configured distribution before
+overflow begins.
+
+Overflow pieces are legitimate received inventory.
+ChessV deploys or reserves them normally and never reapplies the generation
+limit as a runtime discard, deactivation, or replacement rule.
+
+## Q73: Local AI reduction
+
+Retain the local Reduce AI Intelligence control.
+Its selected level adds to the collected Progressive AI Intelligence Malus
+count, and the effective total remains capped at five.
+It changes the engine limit for the next match only.
+It does not change world logic, generation, item counts, costs, previews, or an
+active match.
+
+The local selection persists across previews and matches in the same world.
+It resets to default when the client switches worlds.
+
+## Q74: Local setup-control timing
+
+CPU family and Ignore Castlers changes affect the preview and the next match.
+They never mutate an active match.
+They persist across matches and reconnects to the same world.
+They reset to their defaults when the client switches worlds.
+
+DeathLink remains separate.
+The world must authorize DeathLink before the local control can enable sending
+or receiving it.
+
+## Q75: Initialize DeathLink from the world setting
+
+On connection, including reconnect, initialize the local DeathLink choice to
+enabled when the world enables DeathLink.
+When the world disables DeathLink, force the local choice off and disable the
+control.
+Do not reset an authorized world's DeathLink choice to disabled by default.
+This replaces the unaccepted reset-to-disabled proposal.
+
+Same-world local-control persistence does not by itself require saving settings
+to disk.
+Q82 in ticket 24 selects recent connection details separately.
+
+## Q76: Recent connection details
+
+The client remembers five recent successful connections across application restarts.
+Each entry contains only host, port, and slot name.
+It stores no password or world settings.
+Selecting an entry fills the form without connecting.
+This disk record does not persist same-world controls, slot data, or earned journals.
+Its implementation owner is U1, including `APMW.Client\Convenience.cs`.
+
+## Closure-r2: Funded Fundamental quality and action priorities
+
+The user selected this bounded amendment during closure-r2 on 2026-10-01.
+It supersedes earlier unresolved Fundamental applicability for these two quality actions.
+Priority `0` is inactive in ordinary allocation.
+Weights/order relaxation can activate that action.
+
+Priority `-1` remains a hard ban through every recovery phase.
+
+Fundamental `better-pawn` and `pool-pawn-upgrade` spend Material for stronger Pawn variants.
+The initial funded Pawn value is 100.
+Pawn150 costs 50 extra.
+A later Pawn200 costs another 50.
+
+Downgrade returns only the released extra Material funding.
+The same owned Chessman remains one slot through these changes.
+Neither stronger quality nor a refund creates another slot.
+
+This selection does not enable paid quality automatically.
+The coordinator separately instructed preservation of the current raw-empty/Off default.
+That source default has four priority-1/unit-weight gates and disabled paid quality.
+Base entitlement remains separate from extra Material funding.
+
+Normalized twelve-action all-`-1` is hard-disabled policy, not the raw-empty default.
+No AP raw-presence extension follows from this distinction.
+
+The [engineering closure register](../../.scratch/adr-implementation-design/engineering-closure.md#closure-r2-quality-authority-and-pending-proof)
+
+separates these user selections from candidate derived ledger equations.
+The common/generator owners must reconcile literal fields, defaults, transition accounting and the conservative metric.
+This amendment does not prove their algorithms or close S0 readiness.
+
 ## Sources
 
 [Ticket 24](../../.scratch/large-board-enemy-armies/issues/24-specify-settings-support-and-retirement.md)
-owns the remaining settings decisions.
+owns settings authority and the reconciliation matrix.
 The [client lineage](../../.scratch/large-board-enemy-armies/research/fair-board-guarantee-client-lineage.md)
 records the historical conversion.
 The [mode synthesis](../../.scratch/large-board-enemy-armies/research/fair-board-guarantee-mode-synthesis.md)

@@ -8,7 +8,9 @@
   "repositories": {
     "chessv": {
       "path": "C:\\GitHub\\chessv",
-      "baseline": "78b604e43f684c8032d1af23955485d1e196954f"
+      "baseline": "ace9362535652a70c022ef959198055bd4a932fb",
+      "historical_probe_baseline": "78b604e43f684c8032d1af23955485d1e196954f",
+      "authority_working_tree": "Preserve existing uncommitted CONTEXT.md, ADR0022 and ticket24 inputs."
     },
     "checksmate": {
       "path": "C:\\GitHub\\rft50-checksmate",
@@ -24,15 +26,20 @@
     "Keep S0 declarations stable; coordinate amendments through their owner.",
     "Treat synthetic fixture pins as test-only, never production compatibility.",
     "Return changed paths, exact fixture evidence, interface deviations, artifacts and unresolved blockers.",
-    "Keep D22 and broader settings closure as explicit release gates."
+    "Close all design gates before S0 implementation; reconciliation is not execution approval.",
+    "Require initial S0 PR user approval before consumer implementation.",
+    "Keep EP/NM/AL/PM/LC/TX/TR/CS as pre-S0 gates; PK and real pins remain later release gates.",
+    "RI documents input scope, not an S0 blocker: raw parsers reject duplicates; stock decoded slots retain full exact schema/hash/binding/effective-policy validation.",
+    "Keep final G2/U1/T1 acceptance dependent on A22; G2D is only a stable draft/interface prerequisite."
   ],
   "packages": [
     {
       "id": "S0",
       "title": "Shared declarations and fixture contracts",
       "domain": "integration",
-      "state": "ready_for_design_gate_after_authorization",
-      "depends_on": [],
+      "state": "blocked_engineering_closure_and_authorization",
+      "depends_on": ["D22"],
+      "external_gates": ["explicit S0 implementation authorization", "EP", "NM", "AL", "PM", "LC", "TX", "TR", "CS"],
       "spec_heading": "3. Interface gate S0",
       "evidence": ["assessments/handler.md", "assessments/library.md", "contracts.md"],
       "writes": {},
@@ -42,6 +49,8 @@
           "ChessV.Games\\MiscellaneousGames\\ApmwStartingArmyIdentity.cs",
           "ChessV.Games\\MiscellaneousGames\\ApmwArmyData.cs",
           "ChessV.Games\\MiscellaneousGames\\ApmwCanonicalJson.cs",
+          "ChessV.Games\\MiscellaneousGames\\ApmwAllocationPolicy.cs",
+          "ChessV.Games\\MiscellaneousGames\\ApmwPreparedSetup.cs",
           "APMW.Client\\ApmwWorldContext.cs",
           "APMW.Client\\EarnedMatchEvents.cs",
           "APMW.Client\\ApmwReportingModels.cs",
@@ -49,20 +58,21 @@
           "APMW.Test\\Fixtures\\ContractV4\\p12.json"
         ]
       },
-      "acceptance": ["F07", "cross-assembly consumer compile examples", "complete seam declarations", "shared-data 10.4 canonicalization fixtures in C#"]
+      "acceptance": ["F07", "F14", "F15", "F16", "F17", "F18", "F19", "complete K1-K12 declarations and fixture inputs", "public opaque typed checkpoint/progress participant and AttemptKey", "Base-owned registration/Prepare/InstallReversible/DiscardAfterAbort, exact typed context/history/install receipts and failures", "captured Game-owned per-side gem account declarations", "cross-assembly consumer compile examples", "shared-data 10.4 canonicalization fixtures in C#", "TX/TR/CS complete fixture declarations", "initial S0 PR user approval"]
     },
     {
       "id": "B1",
       "title": "Army data geometry and pure composition",
       "domain": "board",
       "state": "waiting_dependencies",
-      "depends_on": ["S0"],
+      "depends_on": ["S0", "E1"],
       "spec_heading": "B1 - Army data, geometry, and board composition",
       "evidence": ["assessments/board.md"],
       "writes": {
         "chessv": [
           "ChessV.Games\\MiscellaneousGames\\ApmwProfiles.cs",
           "ChessV.Games\\MiscellaneousGames\\ApmwPieceCatalog.cs",
+          "ChessV.Games\\MiscellaneousGames\\ApmwChess.cs",
           "ChessV.Test\\ApmwGeometryProfileTests.cs",
           "ChessV.Test\\ApmwSetupTests.cs",
           "ChessV.Test\\ApmwSixByEightProfileTests.cs"
@@ -76,7 +86,8 @@
           "ChessV.Test\\ApmwArmyDataTests.cs"
         ]
       },
-      "acceptance": ["F01", "F02", "F03"]
+      "acceptance": ["F01", "F02", "F03", "formation metadata before rules; CPU binding before PositionLoaded; complete binding before roots"],
+      "handoff": "Receive ApmwChess.cs from E1 for Army bindings, then transfer it to U1. No concurrent composition writer."
     },
     {
       "id": "E1",
@@ -89,8 +100,24 @@
       "writes": {
         "chessv": [
           "ChessV.Base\\Game.cs",
+          "ChessV.Base\\MoveList.cs",
           "ChessV.Base\\ApmwCore.cs",
           "ChessV.Base\\Match.cs",
+          "ChessV.Base\\Board.cs",
+          "ChessV.Base\\BoardMoveStack.cs",
+          "ChessV.Base\\MoveCompletionDefaultRule.cs",
+          "ChessV.Base\\GameAdjudicator.cs",
+          "ChessV.Base\\Player.cs",
+          "ChessV.Games\\Rules\\Move50Rule.cs",
+          "ChessV.Games\\Rules\\RepetitionDrawRule.cs",
+          "ChessV.Games\\Rules\\EnPassantRule.cs",
+          "ChessV.Games\\Rules\\Apmw\\MixedEnPassantRule.cs",
+          "ChessV.Games\\Rules\\Cards\\CardDropRule.cs",
+          "ChessV.Games\\Abstract\\GenericChess.cs",
+          "ChessV.Games\\Evaluations\\ColorbindingEvaluation.cs",
+          "ChessV.Games\\Evaluations\\OutpostEvaluation.cs",
+          "ChessV.Games\\Evaluations\\RookTypeEvaluation.cs",
+          "ChessV.Games\\MiscellaneousGames\\ApmwChess.cs",
           "APMW.Test\\GameMoveNotificationTests.cs",
           "ChessV.Test\\ApmwEventsUnitTests.cs"
         ]
@@ -98,7 +125,9 @@
       "creates": {
         "chessv": ["APMW.Test\\ApmwCommittedLifecycleTests.cs"]
       },
-      "acceptance": ["F04", "F05", "one terminal-result notification per committed result", "ordinary-game transaction regression"]
+      "acceptance": ["F04", "F05", "typed complete checkpoint component evidence", "exact entered-primitive and staged-history/root-failure restore", "one preaccept H1 install with exact receipt; keyed accepted delivery-only failure/retry", "TR accepted-prefix/source/dedup/order matrix", "two cold-start placement hooks", "same captured side account in roots/Player.Gems/NewGame/AttachGame/CardDrop spend/unmake/reset", "ordinary-game transaction regression", "full attached APMW evidence remains T1"],
+      "conditional_changes": "Independently design-supported checkpoint candidate, not execution approval. MoveList committed-only receipt preserves original exceptions and has one Game restore owner. Pure Games checkpoint changes preserve rule/evaluation behavior. Only opted-in attached APMW registers strictly; ordinary variants unchanged. Game reserves existing bounded material-key indexes; no PieceType/HashKeys/RNG/Search rewrite.",
+      "handoff": "E1 transfers ApmwChess.cs to B1 after stable opt-in/participant/placement-hook work; B1 later transfers it to U1."
     },
     {
       "id": "R1",
@@ -113,7 +142,13 @@
           "ChessV.Games\\Rules\\Apmw\\ApmwStalemateRule.cs",
           "ChessV.Games\\Rules\\CastlingRule.cs",
           "ChessV.Games\\Rules\\CheckmateRule.cs",
-          "ChessV.Games\\Rules\\BasicPromotionRule.cs"
+          "ChessV.Games\\Rules\\BasicPromotionRule.cs",
+          "ChessV.Games\\Rules\\PromoteByReplacementRule.cs",
+          "ChessV.Games\\Rules\\BareKingRule.cs",
+          "ChessV.Games\\Rules\\Apmw\\ApmwFirstTurnRule.cs",
+          "ChessV.Games\\Rules\\Extinction\\ExtinctionRule.cs",
+          "ChessV.Games\\Rules\\Extinction\\CovenantRule.cs",
+          "ChessV.Games\\Pieces\\Apmw\\Checkers.cs"
         ]
       },
       "creates": {
@@ -125,8 +160,8 @@
           "APMW.Test\\ApmwPromotionIsolationTests.cs"
         ]
       },
-      "acceptance": ["F03", "F06", "ordinary-game rule regression"],
-      "conditional_changes": "Change shared rule files only when required by the adapter or a tightly coupled fixture. Existing CovenantRule and core Search.cs remain inspect-only."
+      "acceptance": ["F03", "F06", "explicit typed or immutable/stateless participant coverage", "Checkers and CardDrop geometry hypotheses reviewed without Range/gem-policy change", "ordinary-game rule regression"],
+      "conditional_changes": "Draft checkpoint candidate. R1 is the sole writer of listed royal/promotion/state-classification resources. CovenantRule receives only explicit stateless classification if retained, no competing CPU authority. Preserve Army coordinates. Search.cs remains inspect-only."
     },
     {
       "id": "C1",
@@ -156,7 +191,8 @@
           "APMW.Test\\ApmwWorldContractTests.cs"
         ]
       },
-      "acceptance": ["F07", "F08"]
+      "acceptance": ["F07", "F08", "effective policy strict EP/NM schema", "scoped raw-parser rejection and complete stock decoded-slot validation"],
+      "handoff": "Transfer Config.cs and ApmwConfigTests.cs to A22 after strict migration acceptance. Further parser changes return to C1."
     },
     {
       "id": "H1",
@@ -183,7 +219,7 @@
           "APMW.Test\\ApmwStartingIdentityIntegrationTests.cs"
         ]
       },
-      "acceptance": ["F04", "F09", "F10"]
+      "acceptance": ["F04", "F09", "F10", "public LocationHandler factory returning Base-owned participant; internal Client adapter", "pure Prepare then one reversible preaccept install with exact receipt", "ObserveAccepted releases intent without second ledger write; keyed delivery-only retry", "typed current-binding/counter/ledger checkpoint; N1 journal excluded"]
     },
     {
       "id": "N1",
@@ -204,7 +240,7 @@
           "APMW.Test\\ApmwConnectionLifecycleTests.cs"
         ]
       },
-      "acceptance": ["F05", "F11", "stock 6.6.0 library admission and retirement evidence"]
+      "acceptance": ["F05", "F11", "F19", "stock 6.6.0 library admission and retirement evidence", "one DeathLink owner and generation-checked posted callbacks"]
     },
     {
       "id": "G1",
@@ -295,19 +331,48 @@
       "domain": "integration",
       "specialization": "Python generator rules and exact arithmetic",
       "state": "waiting_dependencies",
-      "depends_on": ["G1", "P1"],
+      "depends_on": ["G2D", "A22"],
       "spec_heading": "G2 - Calibration, immutable world costs, and complete access paths",
       "evidence": ["assessments/integration.md"],
       "writes": {
         "checksmate": [
+          "Main.py",
+          "worlds\\AutoWorld.py",
+          "Fill.py",
           "worlds\\checksmate\\rules.py",
           "worlds\\checksmate\\__init__.py",
+          "worlds\\checksmate\\calibration.py",
+          "worlds\\checksmate\\location_costs.py",
+          "worlds\\checksmate\\world_binding.py",
+          "worlds\\checksmate\\data\\calibration\\references-v1.json",
+          "worlds\\checksmate\\data\\calibration\\corrections-v1.json",
+          "worlds\\checksmate\\data\\calibration\\derived-v1.json",
+          "worlds\\checksmate\\data\\calibration\\apmw-calibration-manifest-v1.json",
+          "worlds\\checksmate\\test\\test_calibration.py",
+          "worlds\\checksmate\\test\\test_location_costs.py",
+          "worlds\\checksmate\\test\\test_world_binding.py",
           "worlds\\checksmate\\test\\test_rules_thresholds.py",
           "worlds\\checksmate\\test\\test_location_logic.py",
           "worlds\\checksmate\\test\\test_lifecycle_capacity.py",
           "worlds\\checksmate\\test\\test_world_generation.py"
         ]
       },
+      "creates": {
+        "checksmate": ["test\\general\\test_generation_context.py"]
+      },
+      "acceptance": ["F08", "F10", "F12", "F18", "final A22 policy/metrics", "post-start/link retained-inventory planning before early plando reachability", "final counts and recovery before freeze", "real strict core accessibility through stage_pre_output including skip_output", "pure serializer and immutable reconstruction"],
+      "conditional_changes": "Source-backed LC placement proposal; retained-choice/RNG/provenance/trial-driver design and combined review remain open. G2 alone owns Main.py/worlds\\AutoWorld.py for the optional no-op-default prepare_generation_context barrier. Fill.py is conditional on exact finite variable-exogenous-plando receipt planning. No item submission/removal in the hook, pre_fill shortcut, post-fill repricing or sphere mutation. The existing stage_pre_output dispatch permits a proposed ChecksMate strict-core override on output/skip_output/spoiler_only; it is not implemented."
+    },
+    {
+      "id": "G2D",
+      "title": "Calibration draft and stable generator interfaces",
+      "domain": "integration",
+      "specialization": "Python exact calibration and lifecycle interface",
+      "state": "waiting_dependencies",
+      "depends_on": ["G1", "P1"],
+      "spec_heading": "G2D - Calibration draft and stable generator interfaces",
+      "evidence": ["assessment.md", "engineering-closure.md"],
+      "writes": {},
       "creates": {
         "checksmate": [
           "worlds\\checksmate\\calibration.py",
@@ -322,7 +387,8 @@
           "worlds\\checksmate\\test\\test_world_binding.py"
         ]
       },
-      "acceptance": ["F08", "F10", "F12", "freeze after obtainable counts and immutable reconstruction"]
+      "acceptance": ["F08 arithmetic draft", "stable post-cap requirement and draft/freeze interface for A22"],
+      "release_limit": "No final obtainable counts, S freeze, allocator acceptance or production C. Transfer created paths serially to G2."
     },
     {
       "id": "U1",
@@ -330,7 +396,7 @@
       "domain": "integration",
       "specialization": "ChessV desktop integration",
       "state": "waiting_dependencies",
-      "depends_on": ["B1", "E1", "R1", "C1", "H1", "N1", "P1"],
+      "depends_on": ["B1", "E1", "R1", "C1", "H1", "N1", "P1", "A22"],
       "spec_heading": "U1 - Game and UI composition",
       "evidence": ["assessments/board.md", "assessments/handler.md", "assessments/library.md"],
       "writes": {
@@ -343,6 +409,7 @@
           "ChessV.GUI\\Forms\\GameForm.Designer.cs",
           "ChessV.GUI\\Forms\\ApmwForm.cs",
           "ChessV.GUI\\Forms\\ApmwForm.Designer.cs",
+          "APMW.Client\\Convenience.cs",
           "ChessV.GUI\\Forms\\MainForm.cs",
           "ChessV.GUI\\Forms\\LoadFENForm.cs",
           "ChessV.Manager\\Manager.cs",
@@ -356,9 +423,9 @@
         ]
       },
       "creates": {
-        "chessv": ["APMW.Test\\ApmwInteractionIntegrationTests.cs"]
+        "chessv": ["APMW.Test\\ApmwInteractionIntegrationTests.cs", "APMW.Test\\ApmwLocalSettingsTests.cs", "APMW.Test\\ApmwRecentConnectionsTests.cs"]
       },
-      "acceptance": ["F03", "F04", "F05", "F06", "F07", "F09", "F10", "F11", "GUI build"],
+      "acceptance": ["F03", "F04", "F05", "F06", "F07", "F09", "F10", "F11", "F17", "F19", "final A22 policy/metrics", "CS cold-start and identity-aware reset", "preserved live ledger-aware GameForm Undo/replay; separate genuine view-only scope", "captured PocketGems before roots and attached Player/CardDrop", "Q79 timing without an invented Weakening formula", "GUI build"],
       "conditional_changes": "Designer/project/Manager changes require the actual integration path. SDK source inclusion does not require redundant explicit entries."
     },
     {
@@ -395,37 +462,59 @@
     },
     {
       "id": "D22",
-      "title": "Resolve remaining allocation decisions",
+      "title": "Consolidate selected policy and close engineering design",
       "domain": "decision",
-      "state": "blocked_policy",
+      "state": "open_engineering_closure",
       "depends_on": [],
-      "spec_heading": "D22 - Complete the remaining allocation decision",
+      "spec_heading": "D22 - Consolidate policy and close engineering design",
       "evidence": ["assessments/handler.md"],
       "decision_owner": ".scratch\\large-board-enemy-armies\\issues\\24-specify-settings-support-and-retirement.md",
       "writes": {},
       "creates": {},
-      "acceptance": ["explicit reservation/composition/fallback/ledger decisions", "portable semantic contract amendment", "full allocator fixtures"]
+      "acceptance": ["selected policy consolidation", "EP", "NM", "AL", "PM", "LC", "TX", "TR", "CS", "literal amendment and complete fixture inputs", "all-design-first hold"],
+      "write_set_limit": "Engineering closure only. No new product defaults, mandatory policy ID, world UUID or production declaration."
     },
     {
       "id": "A22",
       "title": "Approved cross-language allocator amendment",
-      "domain": "handler",
-      "specialization": "Cross-language allocation",
-      "state": "blocked_policy",
-      "depends_on": ["D22", "P1"],
+      "domain": "integration",
+      "specialization": "Legacy ledger, funded Fundamental Pawn quality/recovery, effective policy and conservative metrics",
+      "state": "waiting_engineering_closure_and_dependencies",
+      "depends_on": ["D22", "S0", "C1", "G1", "P1", "G2D"],
       "spec_heading": "A22 - Implement the approved allocator amendment",
       "evidence": ["assessments/handler.md", "assessments/integration.md"],
       "writes": {
         "chessv": [
           "APMW.Client\\OwnedRosterGeneration.cs",
           "APMW.Client\\ItemHandler.cs",
+          "APMW.Client\\ItemGeneration.cs",
+          "APMW.Client\\Config.cs",
+          "APMW.Client\\ActiveRosterProjection.cs",
           "APMW.Client\\ProjectionV2SemanticEngine.cs",
+          "APMW.Client\\ApmwSidecarSnapshot.cs",
+          "APMW.Client\\ApmwSidecarPresentationAdapter.cs",
+          "APMW.Client\\ApmwGeometryPreview.cs",
           "APMW.Client\\ApmwSidecarProtocol.cs",
           "APMW.Test\\OwnedRosterGenerationTests.cs",
-          "APMW.Test\\ApmwPawnDistributionTests.cs"
+          "APMW.Test\\ApmwPawnDistributionTests.cs",
+          "APMW.Test\\ApmwConfigTests.cs",
+          "APMW.Test\\ActiveRosterProjectionTests.cs",
+          "APMW.Test\\ApmwSidecarSnapshotTests.cs",
+          "APMW.Test\\ApmwSidecarPresentationAdapterTests.cs",
+          "APMW.Test\\ApmwSidecarProtocolTests.cs"
         ],
         "checksmate": [
           "worlds\\checksmate\\apmw_projection\\legacy.py",
+          "worlds\\checksmate\\apmw_projection\\fundamental.py",
+          "worlds\\checksmate\\apmw_projection\\planning.py",
+          "worlds\\checksmate\\apmw_projection\\contract.py",
+          "worlds\\checksmate\\options.py",
+          "worlds\\checksmate\\item_pool.py",
+          "worlds\\checksmate\\collection.py",
+          "worlds\\checksmate\\item_utils.py",
+          "worlds\\checksmate\\test\\test_generation_options.py",
+          "worlds\\checksmate\\test\\test_collection_state.py",
+          "worlds\\checksmate\\test\\test_logic_projection.py",
           "worlds\\checksmate\\apmw_projection\\models.py",
           "worlds\\checksmate\\apmw_projection\\semantic.py",
           "worlds\\checksmate\\apmw_projection\\protocol.py",
@@ -436,15 +525,15 @@
         "chessv": ["APMW.Client\\LegacyPawnAllocation.cs", "APMW.Test\\LegacyPawnAllocationTests.cs"],
         "checksmate": ["worlds\\checksmate\\apmw_projection\\legacy_allocation.py", "worlds\\checksmate\\test\\test_legacy_allocation.py"]
       },
-      "acceptance": ["F14", "all future D22 fixtures", "amended input and algorithm parity"],
-      "write_set_limit": "This is an affected-file reservation, not authority to choose missing policy. Final amendment can require coordinated S0/C1 schema work."
+      "acceptance": ["F14", "F15", "F16", "F17", "finite AL recovery and exclusive ledger including paid Pawn quality/refunds", "raw-empty/Off four unit gates versus twelve hard-disabled actions", "priority-zero weights/order recovery and hard-ban preservation", "PM conservative bounds over the revised quality domain, actual prefixes and every permitted pocket result", "effective policy input/output parity", "live ItemGeneration and captured setup parity"],
+      "write_set_limit": "No runtime Chessmen from Material, runtime inventory discard, strict 100-point allowance cap, new mandatory policy ID or requested-policy overwrite. G2 owns final freeze/core integration; C1 owns further parser changes."
     },
     {
       "id": "T1",
       "title": "Attached-match cross-domain evidence",
       "domain": "integration",
       "state": "waiting_dependencies",
-      "depends_on": ["U1", "G2", "I1"],
+      "depends_on": ["U1", "G2", "I1", "A22"],
       "spec_heading": "T1 - Attached-match integration evidence",
       "evidence": ["assessments/search.md", "assessments/handler.md", "assessments/integration.md"],
       "writes": {
@@ -453,14 +542,14 @@
       "creates": {
         "chessv": ["APMW.Test\\ApmwContractIntegrationTests.cs", "APMW.Test\\ApmwReportingGameIntegrationTests.cs"]
       },
-      "acceptance": ["F01", "F03", "F04", "F05", "F06", "F07", "F08", "F09", "F10", "F11", "F12"]
+      "acceptance": ["F01", "F03", "F04", "F05", "F06", "F07", "F08", "F09", "F10", "F11", "F12", "F14", "F15", "F16", "F17", "F18", "F19", "final A22 policy/metric integration"]
     },
     {
       "id": "I2",
       "title": "Final semantic pin and real package consumption",
       "domain": "integration",
       "specialization": "Cross-repository release",
-      "state": "blocked_policy_and_release",
+      "state": "blocked_engineering_and_release",
       "depends_on": ["T1", "A22", "G2", "I1"],
       "external_gates": ["broader ticket 24 settings closure", "explicit publication authorization", "actual x86 and x64 build environments"],
       "spec_heading": "I2 - Final pin, packaged interoperability, and release gate",
@@ -485,26 +574,80 @@
   ],
   "serial_handoffs": [
     {
+      "from": "E1",
+      "to": "B1",
+      "reason": "Stable APMW opt-in, participant registration and placement hooks precede Army metadata/Piece bindings.",
+      "paths": {
+        "chessv": ["ChessV.Games\\MiscellaneousGames\\ApmwChess.cs"]
+      }
+    },
+    {
+      "from": "B1",
+      "to": "U1",
+      "reason": "Army binding acceptance precedes final attached game/UI composition; U1 preserves E1 checkpoint registration and hooks.",
+      "paths": {
+        "chessv": ["ChessV.Games\\MiscellaneousGames\\ApmwChess.cs"]
+      }
+    },
+    {
       "from": "P1",
       "to": "A22",
       "reason": "Geometry migration completes before the approved allocation amendment changes the same consumers.",
       "paths": {
         "chessv": [
+          "APMW.Client\\ActiveRosterProjection.cs",
           "APMW.Client\\ProjectionV2SemanticEngine.cs",
-          "APMW.Client\\ApmwSidecarProtocol.cs"
+          "APMW.Client\\ApmwSidecarProtocol.cs",
+          "APMW.Client\\ApmwSidecarSnapshot.cs",
+          "APMW.Client\\ApmwSidecarPresentationAdapter.cs",
+          "APMW.Client\\ApmwGeometryPreview.cs",
+          "APMW.Test\\ActiveRosterProjectionTests.cs",
+          "APMW.Test\\ApmwSidecarProtocolTests.cs",
+          "APMW.Test\\ApmwSidecarSnapshotTests.cs",
+          "APMW.Test\\ApmwSidecarPresentationAdapterTests.cs"
         ],
         "checksmate": [
+          "worlds\\checksmate\\apmw_projection\\contract.py",
           "worlds\\checksmate\\apmw_projection\\models.py",
           "worlds\\checksmate\\apmw_projection\\semantic.py",
           "worlds\\checksmate\\apmw_projection\\protocol.py",
-          "worlds\\checksmate\\logic_projection.py"
+          "worlds\\checksmate\\logic_projection.py",
+          "worlds\\checksmate\\test\\test_logic_projection.py"
+        ]
+      }
+    },
+    {
+      "from": "C1",
+      "to": "A22",
+      "reason": "Strict migration completes before effective/live allocation consumption; further parser changes go through C1.",
+      "paths": {
+        "chessv": ["APMW.Client\\Config.cs", "APMW.Test\\ApmwConfigTests.cs"]
+      }
+    },
+    {
+      "from": "G2D",
+      "to": "G2",
+      "reason": "Stable calibration/interface draft precedes final policy/metric/freeze/core integration after A22.",
+      "paths": {
+        "checksmate": [
+          "worlds\\checksmate\\calibration.py",
+          "worlds\\checksmate\\location_costs.py",
+          "worlds\\checksmate\\world_binding.py",
+          "worlds\\checksmate\\data\\calibration\\references-v1.json",
+          "worlds\\checksmate\\data\\calibration\\corrections-v1.json",
+          "worlds\\checksmate\\data\\calibration\\derived-v1.json",
+          "worlds\\checksmate\\data\\calibration\\apmw-calibration-manifest-v1.json",
+          "worlds\\checksmate\\test\\test_calibration.py",
+          "worlds\\checksmate\\test\\test_location_costs.py",
+          "worlds\\checksmate\\test\\test_world_binding.py"
         ]
       }
     }
   ],
   "completion": {
-    "settled_scope": "S0 through T1 package criteria pass under dependency gates.",
-    "full_release": "D22/A22, broader settings closure and I2 also pass.",
-    "not_claimed": ["runtime implementation", "executed gameplay tests", "real package interoperability", "balance calibration"]
+    "design": "Reconciliation can complete with named engineering gates open; that is not S0 readiness.",
+    "settled_scope": "Design gates close, execution authorized, initial S0 PR approved, then all packages through T1 pass with final A22 outputs.",
+    "full_release": "Final semantic and settings agreement, PK/I2 and explicit publication authorization also pass.",
+    "not_claimed": ["S0 readiness", "execution authorization", "materialized declarations or fixtures", "runtime implementation", "executed gameplay tests", "real package interoperability", "balance calibration"]
   }
 }

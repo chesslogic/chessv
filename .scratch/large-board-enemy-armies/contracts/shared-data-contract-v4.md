@@ -5,6 +5,12 @@ Date: 2026-09-15
 Owning record: `.scratch\large-board-enemy-armies\issues\17-define-versioned-cross-repo-contract.md`
 Scope: Data schemas, compatibility, offline distribution, and wire fixtures for 0.4.0
 
+Reconciliation: 2026-10-01, ticket 24's D22 closure round.
+Settled sections remain authoritative.
+Sections 6.2-6.4 distinguish superseded algorithm/metric claims from selected policy and open engineering proof.
+The v4 semantic set is not ready until the literal effective-policy amendment and proof gates close.
+No placeholder algorithm value or hash can enter a production artifact.
+
 This document specifies settled decisions. It is not an execution handoff.
 It does not authorize production changes, publication, an adapter, or conversion of existing worlds.
 The parent owns the royal lifecycle fixtures and integration of this draft.
@@ -94,8 +100,19 @@ The four formats require separate, strict parsers.
 
 Every listed field is required.
 Every object has exactly its listed fields, unless an explicit tagged variant applies.
-Duplicate properties fail before conversion to a dictionary.
-JSON comments, trailing commas, floating-point numbers, and boolean substitutes for integers fail.
+Raw Army, Location, contract, calibration, snapshot, package files and controlled fixture JSON enter our raw parsers.
+Those parsers reject duplicate properties at every depth before dictionary conversion.
+They also reject comments and trailing commas.
+Every validated object rejects floating-point numbers and boolean substitutes for integers.
+
+Stock decoded slot objects enter after MultiClient.Net normalization.
+ChessV applies complete exact schema, semantic hash, binding and effective-policy validation to those resulting objects.
+It rejects missing, unknown, conflicting or invalid fields before setup.
+It does not claim raw-wire duplicate or lexical detection already lost upstream.
+This documented stock boundary requires no dependency fork, raw hook, reflection or network change.
+It is not an S0 blocker.
+The [closure register](../../adr-implementation-design/engineering-closure.md#6-stock-decode-boundary-and-scoped-validation)
+records the exact user concern and separate coordinator interpretation.
 
 | Type | Definition |
 | --- | --- |
@@ -491,6 +508,8 @@ The source of preserved subtrees is the frozen producer v3 file, not the live v2
 | `cpu_profiles` | Exactly `layout_version`, `location_profile_version`, and `army_ids`, matching sections 4 and 5 |
 | `expected_material` | Exact integer map in section 6.2 |
 | `effective_item_maxima` | Exact object with `common`, `legacy`, and `fundamental` integer maps in section 6.2 |
+| `input_inventory` | Exact common, mode and geometry item-name lists, with retained uncapped counts, defined in section 6.5 |
+| `allocation` | Literal policy, capture, funding, action, guarantee, pocket and cost-domain descriptor defined in sections 6.4-6.6 |
 | `itemization_modes`, `ordering_modes`, `mode_combinations` | Preserved subtrees from the producer v3 file, lines 10-52 |
 | `source_roles`, `upgrade_dag`, `castler` | Preserved subtrees from that file, lines 215-355 |
 | `semantic_series_ids`, `presentation_series_ids`, `overflow_policy` | Preserved subtrees from that file, lines 356-399 |
@@ -578,7 +597,7 @@ CPU counts must equal every bound Army formation for that stage.
 
 ### 6.2. Preserved projection semantics and maxima
 
-The six required `algorithms` keys have these values:
+The earlier Q35 algorithm map had these values:
 
 ```json
 {
@@ -591,10 +610,28 @@ The six required `algorithms` keys have these values:
 }
 ```
 
-The new capacity and projection IDs account for the new bands and explicit army composition.
-The retained overflow and ordering algorithms do not change.
-The resource-logic ID pins the existing conservative metric algorithm described in section 6.3.
-Changing another algorithm requires another explicit semantic revision.
+The six keys remain the starting interface inventory, not proof of final v4 values.
+Capacity, ordering and PRF preserve their selected meaning unless a fixture disproves it.
+Projection, transfer/overflow and resource-logic meanings must reflect the ticket 24 amendment.
+
+The common-owner proposal amends projection, overflow, and resource-logic values as follows:
+
+```json
+{
+  "capacity": "expanded-formation-v3",
+  "projection": "coupled-source-allocation-v4",
+  "overflow": "exclusive-source-reserve-v4",
+  "ordering": "independent-semantic-series-v1",
+  "series_prf": "sha256-counter-v1",
+  "resource_logic": "certified-runtime-envelope-v4"
+}
+```
+
+The candidate values select the amended meaning, not proof of general AL/PM acceptance.
+Independent common/combined review still precedes complete C production and freeze.
+The old `world-logic-envelope-v1` cannot silently acquire new conversion/pocket semantics.
+
+This does not select a mandatory allocation-policy ID or another protocol version.
 
 The exact human `expected_material` map remains:
 
@@ -624,7 +661,8 @@ The Forwardness item count of 13 is not a board-slot capacity of 13.
 The existing role priority remains primary royal, additional royal, locked castler, Jack, Major, Minor, then Pawn.
 Within each role, activation uses final expected material descending, granted material descending, then source ordinal ascending.
 Reserve entry order reverses those priorities as specified by the preserved overflow subtree.
-Each reserve slot contributes its normalized granted material to missing material exactly once.
+Each reserve slot contributes its exclusively owned source credit to missing material exactly once.
+AL must specify the transfer/refund representation without erasing superseded source credit.
 `reserve_count` equals owned non-primary count minus active non-primary count.
 
 Locked castlers still reclassify existing chessmen.
@@ -639,13 +677,14 @@ Q44 adds a bounded Legacy capability after the Q35 design:
 [ADR 0022](../../../docs/adr/0022-retain-legacy-pawn-material-conversion.md)
 selects pawn-material conversion rather than unconditional pawn-slot
 preservation.
-Ticket 24 still owns its exact reservation and conversion rule.
-The accepted capability is not yet encoded by this section's existing
-algorithm identities or a new projector input.
-The final rule must supply the necessary semantic revision, input contract,
-and compatible logic metrics before that path is ready for handoff.
-This does not change the listed human values or select Fundamental
-conversion behavior.
+Ticket 24's closure round selects the modes, reservation, recovery and effective instructions.
+Section 6.4 records them.
+
+Sections 6.5-6.6 supply the proposed literal normalized records and source-preserving accounting.
+General practical allocation and metric proof remain open.
+The listed human expected values remain unchanged.
+
+Fundamental preserves fixed runtime slots and its separate Material funding.
 Q48 makes the prepared board the context for the Legacy reservation target.
 The implementation cannot use the world endpoint as that target on every
 earlier board.
@@ -653,11 +692,12 @@ Q49 sets that target to the prepared CPU formation's unit count minus its
 primary royal: 11, 15, 19, 27, and 33 in stage order.
 This is the explicitly selected human count relationship.
 It does not borrow CPU material values or promotion entitlements.
-The conversion equation and count-protection boundary remain open.
+The selected reservation protects `min(availablePawnItems,max(0,T-D-P))` units at 100 each.
+The bounded deployment/pocket/reservation evaluation and transfer ledger remain AL engineering gates.
 
 ### 6.3. Exact roster metrics and generator logic metrics
 
-The required `metrics` object has exactly these keys and values:
+The earlier Q35 `metrics` descriptor had these keys and values:
 
 ```json
 {
@@ -675,7 +715,9 @@ The required `metrics` object has exactly these keys and values:
 
 E: Exact active material sums the final expected values of active slots.
 Missing material instead sums granted values of reserve slots.
-Their ledgers preserve total grant conservation.
+These current ledgers preserve normalized-grant conservation.
+They do not prove original source-credit conservation when normalization collapses 785 to 485.
+AL requires the amended source ledger to preserve that original funding.
 Source: `APMW.Client\ProjectionV2SemanticEngine.cs:890-907,938-945`.
 
 E: Generator `LogicMetrics` contains integer `material`, `chessmen`, and `castlers`.
@@ -685,19 +727,569 @@ Legacy and larger Fundamental spaces retain the active-slot floor.
 The current cell limit is 10000.
 Source: ChecksMate `worlds\checksmate\logic_projection.py:30-61,295-357`.
 
-The existing count normalization, obtainable-count bounds, King-promotion contribution, and castler calculation remain unchanged.
-The rule-facing chessmen metric retains the occupied-pocket contribution.
-Stage caps retain the existing maximum methods over finalized obtainable counts.
-Sources: ChecksMate `worlds\checksmate\logic_projection.py:99-229,257-293`.
-The new band capacities replace their old geometry inputs.
-This specification does not replace the conservative envelope with exact active material.
+These current-source floors and occupied-pocket assumptions are not final v4 acceptance rules.
+Conversion and supersession can reduce units while retaining source grants.
+Unconditional pocket receipt credit ignores actual support and final families.
+The current exact material also includes primary upgrades, which the half-board pocket bound excludes.
+PM must declare conservative monotone metrics over actual inventory prefixes and every permitted runtime result.
+Final stage caps consume those metrics and finalized obtainable counts, not temporary contract maxima.
+The old 10000-cell boundary is source evidence, not a proof for unenumerated v4 states.
+Sources remain ChecksMate `logic_projection.py:99-229,257-357` and `placement.py:95-124`.
+The generator does not substitute exact active roster material for a proved conservative metric.
+
+Closure-r2 supplies a supported lower-envelope candidate, not general PM acceptance.
+For fixed effective policy and final upper inventory, each metric minimizes over the complete upper prefix/geometry suffix.
+The domain includes every permitted runtime realization, pocket record and concrete debit branch.
+Each minimum is conservative because the current prefix is included.
+
+It is monotone because increased inventory/geometry only shrinks that set.
+Componentwise bounds do not describe a synthetic roster.
+Complete stage alternatives retain one geometry and its full predicates.
+
+Paid Pawn quality keeps semantic E100 while changing funded value and concrete B.
+Its branches enter allocation before any fixed-allocation concrete-cost floor.
+Small exact domains and larger conservative cohort certificates have distinct coverage.
+No unexplored region can use the old grant-to-unit floor.
+
+Certificates name policy/catalog binding, stages, quantities and the entire covered upper suffix.
+The [lower-envelope design](../../adr-implementation-design/engineering-closure.md#closure-r2-lower-envelope-candidate)
+records equations, bounded evidence and open role/castler/Consul/selector/Legacy/large-domain branches.
 
 In section 7's access expression, `player_material` and `player_chessmen` mean the rule-facing logic metrics.
 The cost snapshot supplies thresholds, not a newly implemented client availability evaluator.
-The projector can retain its existing exact-roster response shape.
+
+Section 6.5 supplies the proposed normalized projection and captured-setup records.
+An unchanged old response shape is not assumed to represent the accepted ledger and pockets.
+
 A later complete availability evaluator must obey the pinned logic metrics, not compare incompatible quantities.
 Changing metric units, envelope behavior, or human values changes C.
 A numeric revision of intrinsic goal costs alone does not.
+
+### 6.4. Accepted allocation and effective-policy amendment
+
+Ticket 24's named closure decisions supersede earlier open summaries.
+The question numbers differ from ADR 0022.
+The [ticket matrix](../issues/24-specify-settings-support-and-retirement.md#current-per-key-settings-matrix)
+owns canonical setting/default/normalization coverage.
+The [engineering closure register](../../adr-implementation-design/engineering-closure.md)
+owns EP/NM/AL/PM/LC evidence, not new product choices.
+
+| Matter | Selected v4 meaning |
+| --- | --- |
+| Modes | `none`: no Legacy reservation/conversion, one Pawn per effective Pawn item. `standard_count`: total minimum. `standard_and_pawns`: total and non-Pawn minimums |
+| Prepared target pairs | In stage order: 11/5, 15/7, 19/9, 27/15, 33/19. Minimums, not ceilings or grants |
+| Legacy reservation | `R = min(availablePawnItems,max(0,T-D-P))`. Protect 100 per unit. D counts actual deployed direct non-Pawn entitlement units, never surplus-funded Pawn conversion. P is supported actual pocket contribution. Show shortage |
+| Fundamental | Owned Chessmen fix runtime slots. Material cannot create extra slots. Generator pool replanning differs from runtime slot creation |
+| Fundamental Pawn quality | `better-pawn`/`pool-pawn-upgrade` spend the increment above funded100. Pawn150 costs50, later200 another50. Downgrade refunds only released extra Material, no base entitlement or slot |
+| Action priority zero | Inactive during ordinary allocation, recoverable during weights/order relaxation. Priority -1 is a hard ban |
+| Unit membership | Current deployed families excluding primary. Additional royals count as non-Pawns |
+| Pocket support | One global `floor(nonprimaryBoardCount/2)` support pool. Non-Pawn pockets first, canonical final order within each class |
+| Pocket allocation | Pawn/Minor/Major/Queen levels. Increment lowest level, suggested-slot-order ties. Ordinary limit overflow allowed to four each/twelve effective receipts |
+| Excess receipts | Remain received, but level-five-and-higher receipts add no setup or credit. No additional slots or dormant inventory |
+| Pocket material | Supported families only: `min(S,floor(B/2),300*C)`. B is exact active non-primary BOARD material, excluding primary and pockets. Logic credit, not funding |
+| Legacy funding | Preserve eligible source credits through supersession. Net signed surplus then zero-floor. Exclusive transfer/reserve ownership and historical approximation remain visible |
+| Spending and viability | Spend usable material until no permitted action is affordable. Use existing core reachability and frozen post-cap requirements, without a second pre-cap strength gate |
+| Recovery | Integrated outstanding obligations. Relax quantity, then weights/order, then preferred families. Hard bans, inventory, entitlements and capacity remain invariant |
+| Downgrade/split | Seeded uniform selection among permitted realized pieces with measurable progress. Smallest progressive transform, finite exhaustion required |
+| Type limits | Ordinary generation first. Last-resort generation overflow never becomes runtime discard |
+| Effective instructions | Generator publishes recovered settings/order for actual-inventory allocation. No requested-setting overwrite, traces, hypothetical roster, concrete names or coordinates |
+| Policy identity | No new mandatory policy-ID field. Optional future identity needs its own contract, with unknown explicit values rejected |
+| Preset retirement | Pool/Max textual and numeric inputs reject, including old option files. They are not aliases |
+
+Section 6.5 defines literal effective fields, exact types, bindings, and complete capture semantics.
+The ticket 24 matrix defines raw/default normalization.
+It must specify C semantic identity, W binding, projection request/response matching and cache invalidation.
+
+Those bindings do not introduce a second world identity.
+K11/K12 in the [inventory](../../adr-implementation-design/contracts.md#k11-effective-allocation-policy)
+carry the effective policy and immutable prepared setup across assemblies.
+
+AL must publish a finite ledger and recovery specification.
+The source 785 / expected 485 / concrete 500 / remainder 285 fixture is mandatory.
+An expected final value is not an additional received grant.
+PM must prove conservative metrics for all permitted final pockets and actual inventory prefixes.
+It cannot prove them only at the maximum obtainable inventory or suggested distribution.
+LC must integrate recovery/final counts before freeze and use real core acceptance, including skip_output.
+
+Closure-r2's selected quality economics do not change `expected_material.pawn = 100`.
+Concrete/funded Pawn values and paid Material debits are distinct from expected family material.
+The coordinator's source-preservation instruction retains Fundamental raw-empty/Off four priority-1/unit-weight gates with paid quality disabled.
+It is not an additional user selection or automatic quality enablement.
+
+Normalized twelve-action all-`-1` must not fall back to those defaults.
+No raw-presence extension is required.
+Final common DTO/normalization acceptance remains pending.
+
+The amended quality domain must enter AL's finite progress/ledger proof and PM's lower envelope.
+Small-domain comparison counts do not prove the general domain.
+The [quality authority and counterexample](../../adr-implementation-design/engineering-closure.md#closure-r2-quality-authority-and-pending-proof)
+retain that distinction and the three-Chessmen/one-Material non-Pawn loss case.
+The [G2 core-file proposal](../../adr-implementation-design/spec.md#g2---calibration-immutable-world-costs-and-complete-access-paths)
+reserves the pre-plando barrier and strict no-output acceptance to one future writer.
+
+It is a design candidate, not permission to change the generator.
+
+The sections that follow define the proposed literal records.
+They do not claim production declarations, a frozen C, or general allocator proof.
+
+### 6.5. Literal effective policy, capture and projection records
+
+Status: Common-owner design proposal. Final gem-alignment and combined independent review remain pending.
+The [closure register](../../adr-implementation-design/engineering-closure.md) keeps EP/NM support separate from general AL/PM/LC proof.
+
+Every listed record requires every field and rejects unknown fields.
+Tagged variants have different exact field sets, not null placeholders.
+Set arrays reject duplicate members.
+`pocket_order` explicitly permits repeated entries.
+
+Section 3 separates controlled raw JSON from stock-decoded slot objects.
+Neither complete decoded validation nor these records claim upstream raw-wire duplicate detection.
+
+`Hash` has 64 lowercase hexadecimal characters.
+`Id` is nonempty printable ASCII with ordinal comparison.
+`Count` is an integer from 0 through 2147483647, never a Boolean.
+`Serial` is a canonical decimal string from 1 through 18446744073709551615.
+
+`Fraction` has exactly `numerator` and `denominator`, both canonical decimal strings.
+Both numbers are at most 2147483647.
+The numerator is nonnegative, and the denominator is positive.
+The fraction is reduced. Zero is exactly `0/1`.
+
+Fraction normalization never converts through binary-double arithmetic.
+
+`Stage` is `6x8`, `8x8`, `10x8`, `10x10`, or `12x10`.
+`Family` is `pawn`, `minor`, `major`, `jack`, `queen`, `amazon`, or `royal`.
+`Role` retains C's exact source-role registry and order.
+`Action` uses the twelve names in the [settings matrix](../issues/24-specify-settings-support-and-retirement.md#current-per-key-settings-matrix).
+
+#### Effective policy
+
+Slot data requires `apmw_effective_policy` as a JSON object, not an encoded string.
+It contains recovered instructions, not requested settings or recovery traces.
+It contains no inventory, hypothetical roster, concrete names, coordinates, or mandatory policy ID.
+
+| Policy field | Exact type and constraints |
+| --- | --- |
+| `itemization` | `legacy` or `fundamental` |
+| `ordering` | `stable` or `chaos`. Fundamental requires `stable` |
+| `piece_locations` | `stable` or `chaos`, separate from semantic ordering |
+| `fair_board_guarantee` | `none`, `standard_count`, or `standard_and_pawns` |
+| `fairy_chess_pawn_upgrades` | `off` or `configure` |
+| `fairy_chess_pawns` | `vanilla`, `mixed`, `berolina`, `checkers`, `any_pawn`, `any_fairy`, or `any_classical` |
+| `fairy_chess_army` | `chaos` or `stable` |
+| `enabled_armies` | Nonempty ascending unique integer array, values 0..6 |
+| `upgrade_order` | Every non-hard-disabled action once, descending priority and canonical ties. Soft-zero entries remain represented |
+| `upgrade_actions` | Exact twelve-action map of `ActionSetting` |
+| `limits` | `Limits` |
+| `asymmetric_trades` | `disabled` or `jacks` |
+| `seeds` | `Seeds` |
+| `pocket_order` | Twelve integers 0..2, with four occurrences of each slot |
+
+Human indexes are 0 FIDE, 1 Clobberers, 2 Rookies, 3 Nutty, 4 Cannon, 5 Camel, and 6 Petal.
+C pins their registry meaning. Display text and CPU family IDs cannot redefine it.
+Army eligibility remains a recoverable preference, not a new hard ban.
+
+`ActionSetting` has exactly `hard_disabled:bool`, `priority:int`, and `weight:Fraction`.
+Priority is -1 or 0..2147483647.
+`hard_disabled` is true exactly for -1.
+Hard-disabled actions never occur in `upgrade_order`.
+
+Priority 0 is inactive ordinarily and recoverable only at weights/order phase 2 or later.
+Runtime recovery changes candidate instructions, not the captured policy or its hash.
+Generator recovery publishes its effective positive priorities before world freeze.
+
+`Limits` has exactly these integer fields:
+
+```text
+minor_piece_limit_by_type: 0..15
+major_piece_limit_by_type: 0..11
+queen_piece_limit_by_type: 0..9
+queen_piece_limit: 0..9
+pocket_limit_by_pocket: 0..4
+max_pocket: 0..12
+```
+
+These limits govern ordinary generation.
+Last-resort overflow preserves received inventory under the accepted recovery rules.
+`Seeds` has exactly `pocket_seed`, `pawn_seed`, `minor_seed`, `major_seed`, and `queen_seed`.
+Each seed is an integer 0..2147483647.
+
+The generator creates absent seeds before freeze.
+The client rejects a missing frozen seed instead of substituting zero.
+
+`PolicyHash = SHA256(CanonicalJSON(Policy))`.
+Policy has no manifest field and blanks no nested hashes.
+W requires `effective_policy_sha256` and equal itemization/ordering.
+Its manifest covers the policy hash.
+
+The dependency graph is Policy -> W and C -> S -> W.
+This pre-release amendment does not admit earlier W1.0 bytes without the required field.
+
+#### Immutable prepared setup
+
+Games exposes the public immutable K12 value.
+U1 freezes it before preview generation or `Manager.CreateGame`.
+C1 validates artifact and policy admission.
+Client retains the authenticated K6/K9 association outside Games.
+
+| Capture field | Exact type and constraints |
+| --- | --- |
+| `setup_generation` | Local monotone `Serial`, separate from game/reset epochs |
+| `contract_sha256`, `world_binding_sha256`, `effective_policy_sha256` | `Hash` |
+| `stage_id` | An inventory-unlocked `Stage` present in W |
+| `cpu_family` | `standard`, `rookies`, `clobberers`, or `nutty` |
+| `human_player` | 0 or 1 from the captured Play as White entitlement |
+| `inventory` | Exact complete C input-name map with actual received `Count` values |
+| `policy` | `Policy` |
+| `piece_type_seeds` | `Seeds` with the captured type-choice values |
+| `presentation_seeds` | Exact `pawn`, `minor`, `major`, `queen` map, integer values 0..2147483647 |
+| `pocket_choice_seeds` | Three integers 0..2147483647, indexed by pocket slot |
+| `graduation_seed` | Signed 32-bit integer |
+| `ignore_castlers_received` | Boolean, false outside its Fundamental surface |
+| `pockets` | Exactly three `Pocket` records in canonical final slot order |
+| `pocket_tie_order` | First-occurrence permutation of 0, 1, 2 |
+
+`C.input_inventory` has exactly `common_items`, `mode_items`, `geometry_items`, and `retained_uncapped_counts`.
+The exact capture key set combines common items, the selected mode list, and geometry items.
+Mode-incompatible names and unknown names reject.
+Known raw receipt absence becomes zero before capture.
+
+Missing keys in a complete capture reject.
+
+```text
+common_items:
+  Play as White
+  Progressive AI Intelligence Malus
+  Progressive Pocket
+  Progressive Pocket Range
+  Progressive Pocket Gems
+  Progressive King Promotion
+  Progressive Consul
+legacy:
+  Progressive Pawn
+  Progressive Pawn Forwardness
+  Progressive Minor Piece
+  Progressive Major Piece
+  Progressive Major To Queen
+  Progressive Jack
+fundamental:
+  Chessmen
+  Material
+  Castler
+geometry_items:
+  Board Files
+  Board Ranks
+```
+
+Capture preserves actual receipts beyond effective maxima.
+The allocator derives effective counts separately and reports ignored surplus.
+Progressive Pocket 13 remains received 13 with effective count 12.
+Progressive Pocket Gems is a distinct existing item, not a Pocket-derived count.
+
+Its C descriptor has exactly these literal fields:
+
+```json
+{
+  "item_id": 4901023,
+  "count_type": "nonnegative-int32",
+  "input_source": "recipient-received-items-grouped-by-exact-item-name",
+  "raw_absence_count": 0,
+  "complete_capture_required": true,
+  "consumer": "pocket-gem-account",
+  "account_receipts_rule": "max(received-count,0)",
+  "army_material_credit": 0,
+  "pocket_level_increment": 0,
+  "progression_state_count_is_receipts": false
+}
+```
+
+It belongs under `retained_uncapped_counts["Progressive Pocket Gems"]`.
+No new effective/gameplay maximum applies.
+The Count range is a wire/source representation bound, not a gameplay cap.
+Recipient received-item grouping supplies the count.
+
+AP progression-state/resource-axis counts cannot supply this filler receipt.
+The account reads `capture.inventory["Progressive Pocket Gems"]`, with the existing nonnegative-base rule.
+Spent/gained/turn state belongs to Base's reversible account, not the immutable input.
+There is no `inventory.pocket_gems` alias, new price, gain mechanic, or material grant.
+
+`Pocket` has exactly `slot:0..2`, `level:0..4`, and `family`.
+Its family is `empty`, `pawn`, `minor`, `major`, or `queen`.
+These families correspond exactly to levels 0..4.
+Each slot occurs once. The level sum is `min(actual Pocket receipts,12)`.
+
+For each receipt, allocation scans the full order from the beginning and chooses its first minimum-level slot.
+The first-occurrence permutation preserves this rule exactly.
+It does not prove equivalence to a historical cursor/remaining-occurrence rule.
+
+Stable type seeds equal Policy seeds.
+Chaos type seeds freeze the existing per-setup draws once.
+Stable presentation seeds equal the corresponding world seeds.
+Chaos presentation seeds freeze separate local draws once.
+
+Pocket choice seeds freeze the existing three draws from the captured pocket type seed.
+Graduation is signed32 `unchecked(pocket_seed*397 ^ pawn_seed)` using the captured type seeds.
+The semantic source root uses Policy seeds in canonical five-key order.
+These local seeds do not add new slot fields.
+
+Inventory, settings, stage, CPU family, Ignore Castlers, or seed changes revoke the old generation before replacement.
+Checked generation exhaustion visibly refuses another capture instead of wrapping.
+An active match retains its old capture and gem base.
+Changes affect previews and the next match.
+
+Local AI reduction enters its separate StartMatch snapshot.
+DeathLink, recent details, passwords, and authentication do not enter K11/K12.
+
+#### Projection and concrete admission
+
+Protocol 1 retains its existing request/success envelopes.
+The C/runtime pin selects the amended payload.
+The earlier payload remains incompatible despite the unchanged protocol number.
+Each request uses one stage capture and a one-element `geometries` array.
+
+`input` has exactly `capture` and `input_sha256`.
+The hash covers canonical capture content except `setup_generation`.
+Request ID is `apmw-<setup_generation>-<input_sha256>`.
+`contract_hash` equals the capture contract hash.
+
+Each result has exactly `geometry_stage` and `projection`.
+Projection requires `setup_generation`, `input_sha256`, `contract_sha256`, `world_binding_sha256`,
+`effective_policy_sha256`, `stage_id`, and `status`.
+Every echo equals the pending capture.
+`projected` adds exactly `semantic_plan` and `cost_certificate`.
+
+`exhausted` adds exactly `exhaustion`.
+There is no null variant or empty-success fallback.
+
+```text
+SemanticPlan {
+  units: Unit[]
+  active_ids: Id[]
+  reserve_ids: Id[]
+  board: { nonprimary_count:Count, nonpawn_count:Count, expected_material:Count }
+  pockets: { supported_slots: unique slot array,
+             count:0..3, semantic_material:Count,
+             board_half_bound:Interval, credit_bound:Interval }
+  composition: { total_target:Count, nonpawn_target:Count,
+                 protected_pawn_units:Count,
+                 total_shortage:Count, nonpawn_shortage:Count }
+  source_bundles: SourceBundle[]
+  runtime_actions: exact twelve-Action ActionSetting map
+  recovery_phase:0..4
+  unspent: { semantic_material:Count, forwardness:Count, ignored_pocket_receipts:Count }
+}
+Unit {
+  unit_id:Id, source_role:Role, source_ordinal:Count,
+  source_keys:SourceKey[], current_family:Family, locked_castler:bool,
+  upgrade_path:Action[] with inherited castler transition,
+  promotion_entitlement_families: ascending unique Family[],
+  funding:SourceBoundFunding|FundamentalFunding
+}
+SourceKey { item_name:Id, ordinal:Count }
+SourceBundle {
+  bundle_id:Id, source_keys:SourceKey[], received_credit:Count,
+  owner:active|reserve|conversion|primary|unallocated|nonspendable,
+  entitlement_ids:Id[]
+}
+Interval { minimum: nonnegative integer, maximum: nonnegative integer }
+CostCertificate {
+  domain_sha256:Hash, board_concrete_material:Interval,
+  ledger_debit_domain:legacy-concrete|fundamental-semantic,
+  admission:"client-must-validate-concrete-branch"
+}
+Exhaustion {
+  unmet_total:Count, unmet_nonpawn:Count,
+  blockers: ascending unique Id[], visited_states:canonical nonnegative decimal string
+}
+```
+
+Unit arrays exclude the primary royal.
+Active and reserve IDs partition the units exactly once.
+Canonical IDs derive from sources, not UUIDs.
+Unit serialization follows inherited role order and canonical source tokens.
+
+Current activation/reserve rules remain authoritative.
+Additional royals require unique effective Consul tokens.
+Fundamental units require unique effective Chessmen tokens.
+Material replaces neither token.
+
+`royal` requires the additional-royal role.
+Upgrade paths describe current entitlement derivation, not growing trial/refund history.
+
+Bundles partition credited source keys.
+Shared provenance refers to the same funding, not another grant.
+Unit and SourceBundle source keys explicitly reject Gems before funding/source-maximum lookup.
+The complete received inventory still requires their actual count.
+
+Gems never enter this funding/token domain.
+Entitlement IDs preserve consumed provenance, not reusable availability.
+The client ledger owns final token consumption.
+Runtime actions preserve hard bans.
+
+Phases are 0 ordinary, 1 quantity, 2 weights/order, 3 preferred families, and 4 type overflow.
+A later phase cannot bypass an available permitted earlier alternative.
+
+Interval minimum cannot exceed maximum.
+The certificate's domain hash equals C's human cost-domain digest.
+It bounds all admitted concrete branches but does not replace client ledger admission.
+The plan carries no portable concrete names or coordinates.
+
+Client realization adds local PieceType bindings and concrete debits from the same capture.
+It checks capacity, ledger, reservation, and actual final pocket support before acceptance.
+Rejected branches resume bounded search without replacement global settings.
+
+Search or uniform-draw limits return the existing nonzero-exit `proof_limit` error envelope.
+They never return semantic `exhausted`.
+Exhaustion requires complete hard-domain enumeration.
+Runtime shortages do not certify whole-world generator accessibility.
+
+Content cache keys include C, runtime pin, domain, W, and input hash.
+Admission also requires current generation and pending request ID.
+The final echo check and revocation share one admission owner immediately before adaptation.
+A -> B -> A content equality never admits the first A generation.
+
+A content-cache hit receives a new generation-specific envelope.
+Cache clearing alone does not revoke pending waiters.
+Gem changes invalidate input/captured-account/setup state, not policy hash, pocket levels, or funding.
+Game reset advances its epoch and rebuilds Piece-bound caches without restoring reporting eligibility.
+
+### 6.6. Fundamental paid funding and source-preserving ledger
+
+These literal candidate invariants implement the selected economics.
+They do not extend Legacy approximation into Fundamental.
+Every owned Fundamental unit has exactly this funding variant:
+
+```text
+FundamentalFunding {
+  kind:"fundamental_material"
+  base_value:100
+  current_funded_value:Count
+  ordinary_extra:Count
+  pawn_quality_extra:0|50|100
+  castler_extra:0|100
+  quality_action:none|better-pawn|pool-pawn-upgrade
+}
+SourceBoundFunding { kind:"source_bound" }
+current_funded_value = 100 + ordinary_extra + pawn_quality_extra
+MaterialDebit = ordinary_extra + pawn_quality_extra + castler_extra
+atomic_delta = new MaterialDebit - old MaterialDebit
+```
+
+Ordinary extra and Pawn-quality extra are mutually exclusive.
+Unlocked family bases are Pawn100, Minor300, Major485, Jack700, Queen900, and Amazon1300.
+Locked Castler bases are Major500 and Jack700, with the retained separate100 surcharge.
+This decomposition preserves the source500 initial Material charge and later200 Jack increment.
+
+Its role/domain ceiling remains in force.
+It does not add a free500 grant or quality/refund permission outside that domain.
+
+Paid Pawn edges are 100 -> 150, 100 -> 200, and 150 -> 200.
+The paid concrete choice must match its funded tier.
+Vanilla permits paid200. Other supported selectors permit paid150/200.
+
+Ordinary40/85/100 choices retain funded base100 and cannot refund it.
+Pawn150 -> Minor300 debits150.
+Pawn200 -> Minor300 debits100.
+Minor300 -> Pawn150 refunds150.
+
+Only recorded extra Material returns.
+Ordinary completion witnesses are forward-only and cannot retract the purchase whose admission they justify.
+
+Expected E remains family metadata: every Pawn contributes100.
+Funded value and concrete BOARD B remain separate.
+Neither creates another grant.
+The complete human concrete-cost sets are:
+
+| Family/quality | Distinct MidgameValue values |
+| --- | --- |
+| Ordinary Pawn | 40, 85, 100 |
+| Paid Pawn | 150, 200 |
+| Minor | 250, 275, 300, 315, 325, 365, 400 |
+| Major | 450, 475, 495, 500, 550 |
+| Jack | 700 |
+| Queen | 875, 950, 960, 1025 |
+| Amazon | 1300 |
+| Royal | 325, 700, 1175 |
+
+C pins per-variant selector membership and the cost-domain digest.
+Vanilla ordinary is100, Berolina85, and Checkers40.
+Mixed permits40/85/100, AnyPawn85/100, AnyFairy40/85, and AnyClassical40/100.
+Catalog/domain mismatch rejects before projection.
+
+Preferred-army overapproximation can be conservative, but it does not prove exact type selection.
+
+The client ledger distinguishes received/effective inventory, funding Parts, entitlements, and concrete evaluation.
+Each eligible source has one canonical `(item_name, received_ordinal)` key.
+Supersession preserves all credited sources.
+Parts coalesce by source/owner tuple and omit zero amounts.
+
+Checked64 sums represent credits, debits, residuals, and transfers.
+Transfer audit history and random counters stay outside canonical candidate state.
+Debit IDs derive from current unit/operation, not a growing trial counter.
+
+```text
+Source { key, received_credit, domain, ownership:Part[], entitlement_state }
+Part { part_id, source_key, owner_kind, owner_id, amount }
+Debit { debit_id, unit_id, action, cost_kind, amount,
+        allocations:{ source_part_id, amount }[] }
+SignedResidual { source_key, amount:int64 }
+Transfer { transfer_id, source_key, old_owner, new_owner, amount, reason }
+Historical { allowance_credit:45, allowance_spent, allowance_unspent,
+             emission_overdraw, replacement_overdraw, consumed_operation_masks }
+```
+
+Credits, Parts, debits, and allocations are nonnegative.
+Transfers are positive and atomic.
+Entitlements are exact tagged `none`, `unit`, `upgrade`, or `capability` records.
+Non-none states are `available`, `assigned` with `unit_id`, `consumed` with `by_unit_id`, or `consumed_for_conversion`.
+
+No monetary refund changes consumed token state.
+Reserve locks its funding before another consumer can spend it.
+Preaccept checkpoint restoration can undo a speculative merge completely.
+An accepted funded transform cannot revive its consumed sources while retaining its output.
+
+```text
+q_i = attributed_received_funding_debit_i + signed_received_residual_i
+45 = historical_debit_H + signed_residual_H
+historical_overdraw = max(0,-signed_residual_H)
+allowance_unspent = max(0,signed_residual_H)
+received +45 + nonPawnDeficit + historicalOverdraw =
+  totalFundingDebit + positiveReceivedResidual + allowanceUnspent
+```
+
+The H account exists only for a permitted Legacy conversion episode.
+Historical borrowing is not a received-source residual.
+Signed and unsigned display equations cannot count the same deficit twice.
+Eligible non-Pawn residuals net in canonical source order before zero-flooring.
+
+Only unmatched positive net transfers to conversion.
+Primary, royals, pockets, side entitlement, and reserves are outside that net.
+A remaining deficit cannot consume Pawn-item credit.
+
+For 300 + 485 sources, concrete500 leaves285 and expected Major remains485.
+Residuals285/-300 transfer0. Residuals285/-200 transfer85.
+Replacement refunds the old debit to its exact owners before new admission.
+
+It retains consumed entitlement state.
+Candidate failure restores the complete checkpoint.
+
+Legacy's45 allowance occurs once per conversion episode.
+Weak-to-Best and delayed-Sergeant each have one per-unit consumed mask.
+Their source predicates, positive-remainder guards, and separate overdraw amounts remain explicit.
+Funded200 plus allowance45 and final debit400 records overdraw155.
+
+No universal100 excess cap follows.
+Protected emissions require a full completion witness.
+This includes ordinary Pool draws.
+
+The coupled candidate computes actual K/J/D/P/R and BOARD-only B together.
+D counts assigned original Minor/Major/Jack/Consul unit tokens once.
+Funding provenance and current family cannot substitute.
+Surplus-funded Pawn-to-Minor has D0 but contributes to J.
+
+Merged785 has D1. Reserve and upgrade-only tokens have D0.
+The prepared-stage targets, reservation formula, support ordering, and pocket bound remain in section 6.4.
+Finite adjacency, useful certificates, and full-domain practical acceptance remain AL/PM/LC obligations.
 
 ## 7. Calibration, costs, and world binding
 
@@ -826,8 +1418,13 @@ The three artifact fields contain JSON objects, not JSON-encoded strings.
 The AP envelope can retain unrelated existing fields.
 These three objects still use their exact field sets.
 
-Existing projection seeds, human configuration, and obtainable-count fields retain their versioned projection meanings.
+Existing seed/configuration/count fields must represent the amended effective policy.
+They cannot remain an independent requested-settings authority.
+
+Section 6.5 defines their proposed exact literals and semantic/world bindings.
+Final independent literal/combined acceptance still precedes v4 readiness.
 They must agree with the World binding and shared contract.
+
 If compatibility mirrors remain, they are assertions rather than alternative authorities.
 Examples are `apmw_contract_version`, `material_item_value`, `castling_location_count`, and `geometry_unlock_items`.
 A conflicting mirror fails instead of overriding its authoritative artifact.
@@ -875,7 +1472,7 @@ This direction has no semantic or build cycle.
 
 Canonical hashing retains the current convention:
 
-1. Parse strict JSON without duplicate properties at every depth.
+1. Parse raw inputs strictly, rejecting duplicate properties at every depth. For stock decoded slots, start from the fully validated object under section 3.
 2. Replace only the root `manifest_sha256` value with the empty string.
 3. Sort every object's keys by ordinal ASCII order.
 4. Preserve each array's order.
@@ -889,6 +1486,9 @@ Decoded non-ASCII strings do not enter these canonical runtime artifacts.
 Notation scalars use integers for that reason.
 Object-key order and insignificant input whitespace cannot change a semantic hash.
 Array order and nested content can.
+
+Steps 2-7 apply to both input scopes after validation.
+A canonical hash of a stock decoded object does not attest to its original wire syntax.
 
 Raw hashes do not blank fields, sort keys, or normalize newlines.
 A whitespace-only file rewrite can retain `A` while changing its raw hash.
@@ -1041,7 +1641,11 @@ The release evidence must exercise this real gate, not assume that every older b
 
 The new client then requires all v4 artifacts and matching installed resources.
 Its strict schema, semantic-pin, data-binding, and snapshot gates run before match setup.
-Malformed JSON must fail before a lossy dictionary parser can erase duplicates.
+Our raw file and controlled fixture parsers reject malformed JSON and duplicates before conversion.
+For stock decoded slots, all resulting objects must pass the same exact schema, semantic-pin, binding and effective-policy checks.
+Raw-wire duplicates already replaced upstream are outside ChessV's detection claim.
+No planned generated slot payload needs duplicate keys.
+This stock decode boundary is not an S0 blocker or an allocation/gameplay change.
 Successful application-version comparison alone never permits a match.
 
 | Client/world pair | Required result |
@@ -1124,6 +1728,16 @@ Package and lifecycle fixtures must also exercise the actual released supported 
 | Tactic predicate retained / P8 | Use Legacy with none of the three required item types, even when the material estimate or bypass qualifies | The non-pawn threat or fork path remains unavailable |
 
 ### 10.3. Deployment and cost fixtures
+
+The S0 packet also requires complete F14-F19 inputs from the implementation spec.
+They cover all-disabled normalization, 785/485/500/285 accounting, support and every pocket-credit bound.
+They also cover overflow, finite recovery, immutable setup, final-core/skip_output and local controls.
+These are requirements, not materialized fixtures or passing results.
+
+F07 distinguishes duplicate-property negatives supplied directly to our raw parsers from stock decoded-object fixtures.
+Decoded fixtures independently mutate required fields, types, hashes, bindings and effective policy.
+Both routes must reject invalid input without fallback.
+A decoded-object fixture does not claim raw-wire duplicate detection.
 
 The accepted array/catalog references are complete fixture inputs, not descriptive suggestions.
 A materialized fixture must expand all 20 formations, not one easier representative.

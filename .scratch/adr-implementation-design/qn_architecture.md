@@ -1,8 +1,8 @@
 # ADR implementation question network
 
-Status: Closure review - settled scope mapped, allocation and release closure blocked
+Status: Reconciliation navigation - selected policy mapped, pre-S0 engineering closure blocked
 Authority: Navigation only. Accepted ADRs and their linked contracts own behavior.
-Baseline: `78b604e43f684c8032d1af23955485d1e196954f`
+Baselines: current ChessV `ace9362535652a70c022ef959198055bd4a932fb`; original probes `78b604e43f684c8032d1af23955485d1e196954f`
 
 ## Purpose and boundary
 
@@ -18,9 +18,9 @@ directories already isolate those responsibilities.
 ## Landed baseline
 
 ADRs 0001-0021 and their linked accepted specifications define the main 0.4.0
-contract. ADR 0022 selects several Legacy capabilities, but explicitly leaves
-the reservation equation, composition targets, fallback, and portable contract
-unfinished. Its `accepted` status does not finalize those fields.
+contract. Ticket 24's D22 closure round settles the ADR 0022 modes,
+prepared targets, reservation, recovery, limits and local controls.
+The engineering closure register owns the remaining proof/field gates.
 
 The existing large-board map and question network remain historical decision
 navigation. This assessment does not rewrite their decisions or closure claims.
@@ -29,13 +29,13 @@ navigation. This assessment does not rewrite their decisions or closure claims.
 
 | ID | Question | Why it matters | Cases | Resolver | Edges | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| A01 | Which accepted requirements remain incomplete? | Defines implementable scope without selecting missing policy | All ADRs; ADR 0022 partial acceptance | Parent source analysis | All domains | Settled classification in assessment ADR matrix. D22 remains open |
+| A01 | Which accepted requirements remain incomplete? | Separates selected policy from engineering proof | All ADRs; ticket 24 closure round | Parent source analysis | All domains | Engine core supported; final EP/NM/TX/TR/CS literal rechecks/combined acceptance pending. General AL/PM/LC open. RI remains a nonblocking decode boundary |
 | A02 | Where should transport admission, journals, and compatibility live? | Keeps reporting eligibility independent of connection lifetime | Takeover; reconnect; stale helper replay; incompatible world | Library probe | A03, A06 | Mapped to C1/N1/U1 |
 | A03 | Which handlers own reversible game progress and immutable capture identity? | Prevents speculative or undone moves from corrupting progress | Promotion; multi-capture; failed commit; Undo | Handler probe | A02, A04, A05 | Mapped to S0/E1/H1 |
 | A04 | Which search and rule paths must understand surviving royals? | Search and committed play must classify the same position | Two Kings; last King; extinction; castling actors | Search probe | A03, A05 | Mapped to R1/E1/U1. No core search rewrite |
 | A05 | Which setup and board paths consume exact formation data? | Removes duplicated layouts without changing ordinary games | Twenty formations; reflection; five geometries; reject 12x12 | Board probe | A04, A06 | Mapped to B1/C1/P1/U1 |
 | A06 | What joins both repositories and packaged consumers? | Source parity alone cannot prove release compatibility | Canonical hashes; rational costs; real x86/x64 projector packages | Parent integration probe | A02-A05, A07 | Mapped to G1/G2/P1/I1/I2. Final release waits for D22 |
-| A07 | What can be assigned concurrently without shared-file races? | Makes fanout work executable rather than a topic list | Contract-first work; shared game file; project registration; blocked projection policy | Parent synthesis | All domains | Sixteen packages in spec and manifest, with explicit serial transfers |
+| A07 | What can be assigned concurrently without shared-file races? | Keeps shared files single-writer | Design-first, stable declarations, G2D/A22/G2 split, explicit serial transfers | Parent synthesis | All domains | Seventeen packages. No dispatch without design closure and authorization |
 
 ## Representative cases
 
@@ -65,7 +65,7 @@ the design and file arbitration. No production implementation starts in this pas
 
 ## Deferred and out of scope
 
-- Unselected ADR 0022 algorithms and complete settings retirement decisions.
+- General allocator/certificate/trial proofs and final literal/combined acceptance in the closure register.
 - Tracker UI, a Regions refactor, ordinary-game expansion, balance play-testing,
   durable reconnect journals, FEN-based APMW resume, and legacy 12x12 support.
 - Automatic execution-workflow adapter repair and live implementation assignment.
@@ -99,12 +99,30 @@ All investigated domains have file-level evidence, an implementation owner, and
 acceptance pointers in the development specification.
 Every representative case maps to its full authoritative fixture.
 Cross-domain files have one write owner.
-The only planned duplicate write sets are explicit P1-to-A22 serial handoffs.
+Planned overlapping writes have explicit C1-to-A22, P1-to-A22 and G2D-to-G2 serial handoffs.
 
 This is a partial execution design, not full release closure.
-D22 blocks the allocator and final shared semantic pin.
-The wider settings matrix remains a separate release gate.
-S0 must materialize the selected interfaces before consumer fanout.
+D22's selected-policy consolidation differs from its open engineering gates.
+
+The 74-row ticket 24 matrix and shared data section 6.5 supply normalized source-preserved literals.
+Their final independent acceptance differs from general AL/PM/LC closure.
+Useful bounded certificates and literal retained-choice contracts do not close D22 or S0.
+S0 readiness requires supported closure of the named gates.
+
+S0 implementation then requires authorization and initial PR approval before consumers.
 Real library/runtime and package evidence remains implementation work.
 
 No source change, package publication, or gameplay validation is claimed.
+
+Current source evidence belongs to [assessment.md](assessment.md#current-source-digest-2026-10-01).
+
+Closure-r2 engine characterization belongs to [the engine digest](assessment.md#closure-r2-engine-evidence).
+The corrected checkpoint/bridge, terminal matrix and captured-account/placement design passed bounded independent engine review.
+This support is not native implementation acceptance or execution approval.
+Their explicit ApmwChess sequence is E1 -> B1 -> U1.
+
+Common and generator G1/G2/G3 revisions and combined gate dispositions remain pending.
+Remaining questions, owners, blocking gates and re-entry evidence belong to
+
+[engineering-closure.md](engineering-closure.md).
+This navigation document does not duplicate their authority.
