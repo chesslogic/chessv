@@ -48,13 +48,14 @@ namespace ChessV.Games.Pieces.Apmw
       if (piece.Square < 0 || piece.Square >= Game.Board.NumSquaresExtended) return false;
 
       // Start positions for potential captures
-      GenerateJumpCaptures(piece.Square, piece.Square, piece.Player, moveList, new List<int>(), 0);
+      GenerateJumpCaptures(piece.Square, piece.Square, piece.Player, moveList, new List<int>(), 0,
+        moveList.IsInspection ? new List<int> { piece.Square } : null);
 
       return true;
     }
 
     private void GenerateJumpCaptures(int startSquare, int currentSquare, int player, MoveList moveList, 
-                                    List<int> jumpedSquares, int depth)
+                                    List<int> jumpedSquares, int depth, List<int> inspectedPath)
     {
       // Prevent infinite recursion and excessive move generation
       if (depth >= MAX_CAPTURE_DEPTH || jumpedSquares.Count >= MAX_CAPTURE_DEPTH)
@@ -88,6 +89,8 @@ namespace ChessV.Games.Pieces.Apmw
         if (capturedPiece != null && capturedPiece.Player != player && landingPiece == null)
         {
           var nextJumps = new List<int>(jumpedSquares) { jumpOver };
+          List<int> nextPath = inspectedPath == null ? null :
+            new List<int>(inspectedPath) { jumpOver, landingSquare };
 
           int rank = Game.Board.GetRank(landingSquare);
           MoveType moveType;
@@ -98,19 +101,19 @@ namespace ChessV.Games.Pieces.Apmw
             {
               foreach (PieceType promoteTo in PromotionTypes)
               {
-                ListForSkipCapture(startSquare, moveList, landingSquare, nextJumps, promoteTo, moveType);
+                ListForSkipCapture(startSquare, moveList, landingSquare, nextJumps, promoteTo, moveType, nextPath);
               }
             }
           }
           else
           {
             moveType = MoveType.ExtraCapture;
-            ListForSkipCapture(startSquare, moveList, landingSquare, nextJumps, null, moveType);
+            ListForSkipCapture(startSquare, moveList, landingSquare, nextJumps, null, moveType, nextPath);
 
             // Recursively look for additional captures from the landing square
             int enemyPawnRank = 6 - (player * 5);
             if (nextJumps.Count < MAX_CAPTURE_DEPTH && rank != enemyPawnRank && depth < MAX_CAPTURE_DEPTH - 1)
-              GenerateJumpCaptures(startSquare, landingSquare, player, moveList, nextJumps, depth + 1);
+              GenerateJumpCaptures(startSquare, landingSquare, player, moveList, nextJumps, depth + 1, nextPath);
           }
         }
       }
@@ -155,7 +158,8 @@ namespace ChessV.Games.Pieces.Apmw
       return -1;
     }
 
-    private void ListForSkipCapture(int startSquare, MoveList moveList, int landingSquare, List<int> nextJumps, PieceType promoteTo, MoveType moveType)
+    private void ListForSkipCapture(int startSquare, MoveList moveList, int landingSquare, List<int> nextJumps,
+      PieceType promoteTo, MoveType moveType, List<int> inspectedPath)
     {
       // Validate squares before creating the move
       if (startSquare < 0 || startSquare >= Game.Board.NumSquares ||
@@ -192,7 +196,10 @@ namespace ChessV.Games.Pieces.Apmw
         Piece capturedPiece = Game.Board[sq];
         return capturedPiece?.PieceType?.MidgameValue ?? 0;
       });
+      int moveIndex = moveList.Count;
       moveList.EndMoveAdd(3000 + materialGain + (nextJumps.Count * 500));
+      if (moveList.IsInspection)
+        moveList.RecordCapturePath(moveIndex, new CapturePath(inspectedPath, isLeap: true, wrapsFiles: true));
     }
   }
 }

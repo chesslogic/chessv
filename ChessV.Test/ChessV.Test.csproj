@@ -29,6 +29,7 @@
     <ProjectReference Include="..\ChessV.Games\ChessV.Games.csproj" />
     <ProjectReference Include="..\ChessV.Manager\ChessV.Manager.csproj" />
     <ProjectReference Include="..\ChessV.Compiler\ChessV.Compiler.csproj" />
+    <ProjectReference Include="..\ChessV.GUI\ChessV.GUI.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Moq" Version="4.20.70" />

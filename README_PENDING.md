@@ -6,6 +6,34 @@
 
 ## ChecksMate Client
 
+### King threat hints
+
+Add this subsection after the option reference notes:
+
+```
+### King threat hints
+
+Standard chess and ChecksMate show king threat hints after mate or stalemate.
+The hints focus on the immobile side, including stalemates that award that side a win.
+Other decisive results show hints for a surviving king on the losing side.
+Completed matches remain read-only after Undo or FEN replacement.
+These actions do not reconnect a completed match.
+
+During play, selecting a king shows the same hints and explanations for blocked castling.
+Each attacker has a colored border and a number.
+Threatened squares have matching border segments, so several attackers can share a square.
+A green border identifies a safe king. A dashed maroon border identifies an occupied destination or castling path.
+The hints do not change legal moves, including ChecksMate moves into capture danger.
+Promoted kings use their own movement capabilities on each supported board size.
+
+Hovering over a marked square shows its capture paths.
+Red paths indicate capture danger. Yellow paths explain attacks that prevent castling.
+Cannon paths mark the approach to the screen piece in green.
+Checkers paths include intermediate captures, required landings, and wrapped jumps.
+A question mark indicates incomplete path information.
+A king with incomplete path information does not receive a green border.
+```
+
 ### Supported Options
 
 Add this bullet (after "Piece Limits...", before "Extra Kings..."):

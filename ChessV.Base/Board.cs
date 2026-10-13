@@ -777,6 +777,80 @@ namespace ChessV
     #endregion
 
     #region ClearSquare
+    public T InspectRelocation<T>(Piece piece, int targetSquare, Func<T> inspect)
+    {
+      if (piece == null || piece.Board != this || piece.Square < 0 ||
+        piece.Square >= NumSquares || squares[piece.Square] != piece)
+        throw new ArgumentException("Inspection requires a piece on this board.", nameof(piece));
+      if (targetSquare < 0 || targetSquare >= NumSquares)
+        throw new ArgumentOutOfRangeException(nameof(targetSquare));
+      if (inspect == null)
+        throw new ArgumentNullException(nameof(inspect));
+      int origin = piece.Square;
+      if (origin == targetSquare)
+        return inspect();
+      Piece captured = squares[targetSquare];
+      if (captured != null && captured.Player == piece.Player)
+        throw new ArgumentException("Inspection cannot capture a friendly piece.", nameof(targetSquare));
+
+      bool originCleared = false;
+      bool captureCleared = false;
+      bool placed = false;
+      try
+      {
+        ClearSquare(origin);
+        originCleared = true;
+        if (captured != null)
+        {
+          ClearSquare(targetSquare);
+          captureCleared = true;
+        }
+        SetSquare(piece, targetSquare);
+        placed = true;
+        return inspect();
+      }
+      finally
+      {
+        if (placed)
+          ClearSquare(targetSquare);
+        if (captureCleared)
+          SetSquare(captured, targetSquare);
+        if (originCleared)
+          SetSquare(piece, origin);
+      }
+    }
+
+    public T InspectReplacement<T>(Piece replacement, int square, Func<T> inspect)
+    {
+      if (replacement == null || replacement.Board != this || replacement.Square >= 0)
+        throw new ArgumentException("Inspection requires an off-board replacement piece.", nameof(replacement));
+      if (square < 0 || square >= NumSquares)
+        throw new ArgumentOutOfRangeException(nameof(square));
+      if (inspect == null)
+        throw new ArgumentNullException(nameof(inspect));
+      Piece occupant = squares[square];
+      bool cleared = false;
+      bool placed = false;
+      try
+      {
+        if (occupant != null)
+        {
+          ClearSquare(square);
+          cleared = true;
+        }
+        SetSquare(replacement, square);
+        placed = true;
+        return inspect();
+      }
+      finally
+      {
+        if (placed)
+          ClearSquare(square);
+        if (cleared)
+          SetSquare(occupant, square);
+      }
+    }
+
     public Piece ClearSquare(int square)
     {
       // Validate square bounds

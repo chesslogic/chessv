@@ -22,6 +22,8 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
+using ChessV.Games;
+using System.Linq;
 
 namespace ChessV.GUI
 {
@@ -49,6 +51,10 @@ namespace ChessV.GUI
 
     //	Theme to use for rendering (color schemes, etc.)
     public Theme Theme { get; private set; }
+    public bool IsTerminalInspection { get; private set; }
+    private readonly Dictionary<Piece, KingThreatSnapshot> terminalHints = new Dictionary<Piece, KingThreatSnapshot>();
+    private bool Reviewing => owningForm is GameForm form && form.ReviewMode;
+    private bool SupportsKingHints => game.GetType() == typeof(Chess) || game is ApmwChessGame;
 
 
     //	protected members
@@ -72,6 +78,11 @@ namespace ChessV.GUI
 
     public void Initialize(Game game, Board board, Theme theme, Form owningForm = null)
     {
+      if (Presentation != null)
+        CancelSelection();
+      terminalHints.Clear();
+      if (this.game != game)
+        IsTerminalInspection = false;
       this.game = game;
       this.board = board;
       Theme = theme;
@@ -83,6 +94,69 @@ namespace ChessV.GUI
 
 
     // *** OPERATIONS *** //
+
+    public void RefreshKingHints(bool terminal, int? player)
+    {
+      Piece focused = Presentation.KingHints?.King;
+      CancelSelection();
+      IsTerminalInspection = terminal;
+      terminalHints.Clear();
+      Presentation.KingHints = null;
+      if (terminal && player.HasValue && SupportsKingHints)
+      {
+        foreach (Piece king in KingThreatAnalysis.GetKings(game, player.Value))
+          terminalHints.Add(king, KingThreatAnalysis.Analyze(game, king, includeCastling: false));
+        if (focused != null && terminalHints.TryGetValue(focused, out KingThreatSnapshot hints))
+          Presentation.KingHints = hints;
+        else if (terminalHints.Count > 0)
+          Presentation.KingHints = terminalHints.Values.First();
+      }
+      Presentation.Update();
+      Invalidate();
+    }
+
+    public void ClearKingHints()
+    {
+      CancelSelection();
+      terminalHints.Clear();
+      Presentation.KingHints = null;
+    }
+
+    private void CancelSelection()
+    {
+      timerPieceLiftTimer.Stop();
+      pieceBeingLifted = null;
+      mouseDownEventArg = null;
+      lastMouseDown = null;
+      if (Presentation != null)
+      {
+        Presentation.PieceLifted = null;
+        if (!IsTerminalInspection)
+          Presentation.KingHints = null;
+      }
+      Invalidate();
+    }
+
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+      if (e.KeyCode == Keys.Escape)
+      {
+        CancelSelection();
+        Presentation.MouseCoordinate = new Point(-1, -1);
+        e.Handled = true;
+      }
+      base.OnKeyDown(e);
+    }
+
+    protected override void OnMouseLeave(EventArgs e)
+    {
+      if (Presentation?.KingHints != null && Presentation.PieceLifted == null && pieceBeingLifted == null)
+      {
+        Presentation.MouseCoordinate = new Point(-1, -1);
+        Invalidate();
+      }
+      base.OnMouseLeave(e);
+    }
 
     public Location GetLocationAtCoordinate(Point pt)
     {
@@ -102,8 +176,9 @@ namespace ChessV.GUI
     {
       if (Presentation != null)
       {
-        Bitmap boardPresentation = Presentation.Render(HighlightMove, RotateBoard);
-        e.Graphics.DrawImageUnscaled(boardPresentation, new Point());
+        using Bitmap boardPresentation = Presentation.Render(HighlightMove, RotateBoard);
+        if (boardPresentation != null)
+          e.Graphics.DrawImageUnscaled(boardPresentation, new Point());
         return;
       }
     }
@@ -111,7 +186,14 @@ namespace ChessV.GUI
     //	Mouse Down event handler
     private void BoardControl_MouseDown(object sender, MouseEventArgs e)
     {
-      if (Presentation.PieceLifted == null && !((GameForm)owningForm).ReviewMode)
+      if (Presentation == null)
+        return;
+      if (e.Button == MouseButtons.Right && Presentation.PieceLifted != null)
+      {
+        CancelSelection();
+        return;
+      }
+      if (Presentation.PieceLifted == null && (!Reviewing || IsTerminalInspection))
       {
         Presentation.MouseCoordinate = e.Location;
         Location location = Presentation.GetMouseLocation(RotateBoard);
@@ -131,15 +213,36 @@ namespace ChessV.GUI
               return;
             }
 
+            if (IsTerminalInspection)
+            {
+              if (terminalHints.TryGetValue(piece, out KingThreatSnapshot hints))
+                Presentation.KingHints = hints;
+              Invalidate();
+              return;
+            }
+
             //	if the game is over, just return
             if (!game.Result.IsNone)
               return;
+
+            CancelSelection();
+            Presentation.MouseCoordinate = e.Location;
+            Focus();
+            bool inspectingKing = SupportsKingHints && piece.Player == game.CurrentSide &&
+              KingThreatAnalysis.GetKings(game, piece.Player).Contains(piece);
+            if (inspectingKing)
+              Presentation.KingHints = KingThreatAnalysis.Analyze(game, piece);
 
             //	see if this piece has any legal moves
             MoveInfo[] moves;
             int nMoves = game.GetRootMoves(out moves, piece);
             if (nMoves == 0)
             {
+              if (inspectingKing)
+              {
+                Invalidate();
+                return;
+              }
               //	this piece can't move; determine appropriate explanation
               if (piece.Player != game.CurrentSide)
                 MessageBox.Show("That is not your piece to move");
@@ -162,6 +265,8 @@ namespace ChessV.GUI
             mouseDownEventArg = e;
             timerPieceLiftTimer.Start();
           }
+          else if (!IsTerminalInspection)
+            CancelSelection();
         }
       }
     }
@@ -169,9 +274,17 @@ namespace ChessV.GUI
     //	Mouse Move event handler
     private void BoardControl_MouseMove(object sender, MouseEventArgs e)
     {
-      if (Presentation != null && Presentation.PieceLifted != null)
+      if (Presentation != null && (Presentation.PieceLifted != null || Presentation.KingHints != null))
       {
         Presentation.MouseCoordinate = e.Location;
+        if (IsTerminalInspection)
+        {
+          Location location = Presentation.GetMouseLocation(RotateBoard);
+          Piece piece = location.IsNull ? null : board[board.LocationToSquare(location)];
+          if (piece != null && terminalHints.TryGetValue(piece, out KingThreatSnapshot hints) &&
+            Presentation.KingHints != hints)
+            Presentation.KingHints = hints;
+        }
         Invalidate();
       }
     }
@@ -179,6 +292,7 @@ namespace ChessV.GUI
     //	Mouse Up event handler
     private void BoardControl_MouseUp(object sender, MouseEventArgs e)
     {
+      Presentation.MouseCoordinate = e.Location;
       //	MouseUp is only meaningful if a piece is lifted and being dragged
       if (Presentation.PieceLifted != null && Presentation.LiftedPieceIsDragged)
       {
@@ -186,6 +300,8 @@ namespace ChessV.GUI
         Location location = Presentation.GetMouseLocation(RotateBoard);
         if (!location.IsNull)
           TryMoveToLocation(location);
+        else
+          CancelSelection();
       }
     }
 
@@ -224,6 +340,11 @@ namespace ChessV.GUI
 
     private void TryMoveToLocation(Location location)
     {
+      if (IsTerminalInspection || Reviewing || !game.Result.IsNone)
+      {
+        CancelSelection();
+        return;
+      }
       //	is the current square one to which the lifted piece can move?
       int currentSquare = board.LocationToSquare(location);
       MoveInfo[] moves;
@@ -234,6 +355,9 @@ namespace ChessV.GUI
           applicableMoves.Add(moves[x]);
 
       Presentation.PieceLifted = null;
+      Presentation.KingHints = null;
+      pieceBeingLifted = null;
+      timerPieceLiftTimer.Stop();
       if (applicableMoves.Count > 0)
       {
         MoveInfo selectedMove = applicableMoves[0];
@@ -260,6 +384,9 @@ namespace ChessV.GUI
       //	didn't know for sure if it was a click-drag movement or a 
       //	click-and-click again movement.
       timerPieceLiftTimer.Stop();
+      if (pieceBeingLifted == null || pieceBeingLifted.Square < 0 ||
+        IsTerminalInspection || Reviewing || !game.Result.IsNone)
+        return;
       Presentation.PieceLifted = pieceBeingLifted;
       Presentation.LiftedPieceIsDragged = true;
       lastMouseDown = mouseDownEventArg;

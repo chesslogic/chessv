@@ -177,6 +177,9 @@ namespace ChessV
     #region GenerateMovesForCapability
     public void GenerateMovesForCapability(bool simpleMoveGeneration, ref MoveCapability move, MoveList list, bool capturesOnly)
     {
+      List<int> inspectionPath = list.IsInspection ? new List<int> { Square } : null;
+      bool isLeap = move.PathInfo == null &&
+        Math.Max(Math.Abs(move.Direction.RankOffset), Math.Abs(move.Direction.FileOffset)) > 1;
       if (simpleMoveGeneration)
       {
         #region Handle simple move generation
@@ -184,11 +187,12 @@ namespace ChessV
         int nextSquare = Game.Board.NextSquare(Player, move.NDirection, Square);
         while (nextSquare >= 0 && step <= move.MaxSteps)
         {
+          inspectionPath?.Add(nextSquare);
           Piece pieceOnSquare = Board[nextSquare];
           if (pieceOnSquare != null)
           {
             if (step >= move.MinSteps && move.CanCapture && pieceOnSquare.Player != Player)
-              list.AddCapture(Square, nextSquare);
+              AddInspectedCapture(list, nextSquare, inspectionPath, -1, isLeap);
             nextSquare = -1;
           }
           else
@@ -206,9 +210,11 @@ namespace ChessV
         #region Handle pieces with the more complex moves
         int step = 1;
         bool passedScreen = false;
+        int screenSquare = -1;
         int nextSquare = Game.Board.NextSquare(Player, move.NDirection, Square);
         while (nextSquare >= 0 && step <= move.MaxSteps)
         {
+          inspectionPath?.Add(nextSquare);
           Piece pieceOnSquare = Board[nextSquare];
 
           #region Handle pieces with move paths
@@ -229,11 +235,13 @@ namespace ChessV
             foreach (List<int> path in move.PathInfo.PathNDirections)
             {
               int pathSquare = Square;
+              List<int> inspectedRoute = list.IsInspection ? new List<int> { Square } : null;
               //	iterate through each step in this path to see if it is clear
               bool pathIsClear = true;
               foreach (int nDirection in path)
               {
                 pathSquare = Game.Board.NextSquare(Player, nDirection, pathSquare);
+                inspectedRoute?.Add(pathSquare);
                 if (pathSquare < 0 || (Board[pathSquare] != null && Board[pathSquare] != pieceOnSquare))
                 {
                   //	this path is obstructed
@@ -244,7 +252,7 @@ namespace ChessV
               if (pathIsClear)
               {
                 if (pieceOnSquare != null && move.CanCapture)
-                  list.AddCapture(Square, nextSquare);
+                  AddInspectedCapture(list, nextSquare, inspectedRoute, -1, false);
                 else if (pieceOnSquare == null)
                   list.AddMove(Square, nextSquare);
                 //	we can return now; no need to try other paths
@@ -262,14 +270,13 @@ namespace ChessV
               (move.CanCapture ||
                ((move.SpecialAttacks & SpecialAttacks.CannonCapture) != 0 && passedScreen)))
             {
-              if (move.SpecialAttacks != SpecialAttacks.RifleCapture)
-                list.AddCapture(Square, nextSquare);
-              else
-                list.AddRifleCapture(Square, nextSquare);
+              AddInspectedCapture(list, nextSquare, inspectionPath, screenSquare, isLeap,
+                move.SpecialAttacks == SpecialAttacks.RifleCapture);
             }
             if ((move.SpecialAttacks & SpecialAttacks.CannonCapture) != 0 && !passedScreen)
             {
               passedScreen = true;
+              screenSquare = nextSquare;
               nextSquare = Game.Board.NextSquare(Player, move.NDirection, nextSquare);
             }
             else
@@ -283,10 +290,23 @@ namespace ChessV
             step++;
           }
         }
+
         #endregion
       }
     }
     #endregion
     #endregion
+
+    private void AddInspectedCapture(MoveList list, int toSquare, List<int> path,
+      int screenSquare, bool isLeap, bool rifle = false)
+    {
+      int firstMove = list.Count;
+      if (rifle)
+        list.AddRifleCapture(Square, toSquare);
+      else
+        list.AddCapture(Square, toSquare);
+      if (list.IsInspection)
+        list.RecordCapturePath(firstMove, new CapturePath(path, screenSquare, isLeap));
+    }
   }
 }
