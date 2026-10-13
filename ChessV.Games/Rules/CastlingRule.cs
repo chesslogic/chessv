@@ -29,6 +29,73 @@ namespace ChessV.Games.Rules
   {
     const int MAX_CASTLING_MOVES = 16;
 
+    public sealed class Restriction
+    {
+      public int Square { get; }
+      public bool Occupied { get; }
+      public bool Attacked { get; }
+
+      internal Restriction(int square, bool occupied, bool attacked)
+      {
+        Square = square;
+        Occupied = occupied;
+        Attacked = attacked;
+      }
+    }
+
+    public IReadOnlyList<Restriction> GetRestrictions(Piece king)
+    {
+      if (king == null || king.Game != Game)
+        throw new ArgumentException("Castling inspection requires this game's king.", nameof(king));
+      var restrictions = new Dictionary<int, Restriction>();
+      // Flexible and Alice castling have different transit semantics.
+      if (GetType() != typeof(CastlingRule))
+        return new List<Restriction>().AsReadOnly();
+      int privileges = gameHistoryPrivs[Game.GameMoveNumber];
+      for (int index = 0; index < nCastlingMoves[king.Player]; index++)
+      {
+        CastlingMove move = castlingMoves[king.Player, index];
+        if (move.KingFromSquare != king.Square || (move.RequiredPriv & privileges) == 0)
+          continue;
+        foreach (int square in RequiredEmptySquares(move))
+          if (Board[square] != null)
+            restrictions[square] = new Restriction(square, true, false);
+        if (hasCheckmateRule)
+          foreach (int square in KingPathSquares(move))
+            if (Game.IsSquareAttacked(square, king.Player ^ 1))
+              restrictions[square] = new Restriction(square,
+                restrictions.ContainsKey(square) && restrictions[square].Occupied, true);
+      }
+      return new List<Restriction>(restrictions.Values).AsReadOnly();
+    }
+
+    private IEnumerable<int> RequiredEmptySquares(CastlingMove move)
+    {
+      int minimum = Math.Min(Math.Min(move.KingFromSquare, move.KingToSquare),
+        Math.Min(move.OtherFromSquare, move.OtherToSquare));
+      int maximum = Math.Max(Math.Max(move.KingFromSquare, move.KingToSquare),
+        Math.Max(move.OtherFromSquare, move.OtherToSquare));
+      for (int file = Board.GetFile(minimum); file <= Board.GetFile(maximum); file++)
+      {
+        int square = file * Board.NumRanks + Board.GetRank(minimum);
+        if (square != move.KingFromSquare && square != move.OtherFromSquare)
+          yield return square;
+      }
+    }
+
+    private IEnumerable<int> KingPathSquares(CastlingMove move)
+    {
+      int firstFile = Board.GetFile(move.KingFromSquare);
+      int lastFile = Board.GetFile(move.KingToSquare);
+      int step = firstFile <= lastFile ? 1 : -1;
+      for (int file = firstFile; ; file += step)
+      {
+        yield return file * Board.NumRanks + Board.GetRank(move.KingFromSquare);
+        if (file == lastFile)
+          break;
+      }
+    }
+
     #region CastlingMove helper struct
     protected struct CastlingMove
     {
@@ -230,55 +297,24 @@ namespace ChessV.Games.Rules
         {
           if ((castlingMoves[Game.CurrentSide, x].RequiredPriv & castlingPriv) != 0)
           {
-            //	find the left-most square that needs to be free
-            int minSquare = castlingMoves[Game.CurrentSide, x].KingFromSquare;
-            minSquare = castlingMoves[Game.CurrentSide, x].KingToSquare < minSquare ? castlingMoves[Game.CurrentSide, x].KingToSquare : minSquare;
-            minSquare = castlingMoves[Game.CurrentSide, x].OtherFromSquare < minSquare ? castlingMoves[Game.CurrentSide, x].OtherFromSquare : minSquare;
-            minSquare = castlingMoves[Game.CurrentSide, x].OtherToSquare < minSquare ? castlingMoves[Game.CurrentSide, x].OtherToSquare : minSquare;
-            //	find the right-most square that needs to be free
-            int maxSquare = castlingMoves[Game.CurrentSide, x].KingFromSquare;
-            maxSquare = castlingMoves[Game.CurrentSide, x].KingToSquare > maxSquare ? castlingMoves[Game.CurrentSide, x].KingToSquare : maxSquare;
-            maxSquare = castlingMoves[Game.CurrentSide, x].OtherFromSquare > maxSquare ? castlingMoves[Game.CurrentSide, x].OtherFromSquare : maxSquare;
-            maxSquare = castlingMoves[Game.CurrentSide, x].OtherToSquare > maxSquare ? castlingMoves[Game.CurrentSide, x].OtherToSquare : maxSquare;
-            //	make sure the squares are empty
             bool squaresEmpty = true;
-            for (int file = Board.GetFile(minSquare); squaresEmpty && file <= Board.GetFile(maxSquare); file++)
-            {
-              int sq = file * Board.NumRanks + Board.GetRank(minSquare);
-              if (sq != castlingMoves[Game.CurrentSide, x].KingFromSquare &&
-                sq != castlingMoves[Game.CurrentSide, x].OtherFromSquare &&
-                Board[sq] != null)
-                //	the path is blocked by a piece other than those involved in castling
+            foreach (int square in RequiredEmptySquares(castlingMoves[Game.CurrentSide, x]))
+              if (Board[square] != null)
+              {
                 squaresEmpty = false;
-            }
+                break;
+              }
             if (squaresEmpty)
             {
               //	make sure squares the King is passes through are not attacked
               bool squaresAttacked = false;
-              //	if this game doesn't have check/checkmate, we don't care if the squares are attacked
               if (hasCheckmateRule)
-              {
-                if (castlingMoves[Game.CurrentSide, x].KingFromSquare < castlingMoves[Game.CurrentSide, x].KingToSquare)
-                {
-                  for (int file = Board.GetFile(castlingMoves[Game.CurrentSide, x].KingFromSquare);
-                    !squaresAttacked && file <= Board.GetFile(castlingMoves[Game.CurrentSide, x].KingToSquare); file++)
+                foreach (int square in KingPathSquares(castlingMoves[Game.CurrentSide, x]))
+                  if (Game.IsSquareAttacked(square, Game.CurrentSide ^ 1))
                   {
-                    int sq = file * Board.NumRanks + Board.GetRank(castlingMoves[Game.CurrentSide, x].KingFromSquare);
-                    if (Game.IsSquareAttacked(sq, Game.CurrentSide ^ 1))
-                      squaresAttacked = true;
+                    squaresAttacked = true;
+                    break;
                   }
-                }
-                else
-                {
-                  for (int file = Board.GetFile(castlingMoves[Game.CurrentSide, x].KingFromSquare);
-                    !squaresAttacked && file >= Board.GetFile(castlingMoves[Game.CurrentSide, x].KingToSquare); file--)
-                  {
-                    int sq = file * Board.NumRanks + Board.GetRank(castlingMoves[Game.CurrentSide, x].KingFromSquare);
-                    if (Game.IsSquareAttacked(sq, Game.CurrentSide ^ 1))
-                      squaresAttacked = true;
-                  }
-                }
-              }
 
               if (!squaresAttacked)
               {

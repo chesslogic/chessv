@@ -484,6 +484,7 @@ namespace ChessV
     public MatchMoveEventHandler MoveMade;
     public StartedEventHandler Started;
     public FinishedEventHandler Finished;
+    public event FinishedEventHandler ResultDeclared;
     public DeathedEventHandler Deathed;
     public StartFailedEventHandler StartFailed;
     public PlayersReadyEventHandler PlayersReady;
@@ -630,6 +631,8 @@ namespace ChessV
         Result = result;
 
       Stop();
+      if (!Result.IsNone)
+        ResultDeclared?.Invoke(this);
     }
 
     private void onPlayerReady(Player sender)

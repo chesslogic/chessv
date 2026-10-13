@@ -52,6 +52,9 @@ namespace ChessV
 
     public bool LegalMovesOnly { get; set; }
 
+    public bool IsInspection { get; private set; }
+    private Dictionary<int, CapturePath> inspectionPaths;
+
     public int Count { get { return moveCursor; } }
 
     public int MoveCursor
@@ -99,6 +102,38 @@ namespace ChessV
 
     // *** CONSTRUCTION *** //
 
+    public MoveList(Board board) : this(board, null, null, null, null, null, 1)
+    {
+      IsInspection = true;
+      inspectionPaths = new Dictionary<int, CapturePath>();
+    }
+
+    public void RecordCapturePath(int firstMove, CapturePath path)
+    {
+      if (IsInspection)
+        for (int index = firstMove; index < moveCursor; index++)
+          inspectionPaths[index] = path;
+    }
+
+    public IReadOnlyList<CaptureThreat> GetCapturesOf(int square)
+    {
+      if (!IsInspection)
+        throw new InvalidOperationException("Capture inspection requires an inspection move list.");
+      var threats = new List<CaptureThreat>();
+      for (int index = 0; index < moveCursor; index++)
+      {
+        int firstPickup = index == 0 ? 0 : moves[index - 1].PickupCursor;
+        for (int pickup = firstPickup; pickup < moves[index].PickupCursor; pickup++)
+          if (pickups[pickup].Square == square && square != moves[index].FromSquare)
+          {
+            inspectionPaths.TryGetValue(index, out CapturePath path);
+            threats.Add(new CaptureThreat(moves[index].PieceMoved, square, path));
+            break;
+          }
+      }
+      return threats.AsReadOnly();
+    }
+
     #region Constructor
     public MoveList
       (Board board,
@@ -141,6 +176,7 @@ namespace ChessV
     #region Reset
     public void Reset(UInt64 hashtableMoveHash = 0, UInt64 countermove = 0)
     {
+      inspectionPaths?.Clear();
       // Reset clears generated entries and any currently selected move.
       moveCursor = 0;
       pickupCursor = 0;
@@ -411,7 +447,9 @@ namespace ChessV
       moves[moveCursor].OriginalType = pieceBeingMoved.PieceType.TypeNumber;
 
       //	determine the move evaluation (for move ordering)
-      if (moves[moveCursor].Hash == searchStack[1].PV[ply])
+      if (IsInspection)
+        moves[moveCursor].Evaluation = 0;
+      else if (moves[moveCursor].Hash == searchStack[1].PV[ply])
         moves[moveCursor].Evaluation = 50000;
       else if (moves[moveCursor].Hash == hashtableMoveHash)
         moves[moveCursor].Evaluation = 40000;
@@ -552,10 +590,10 @@ namespace ChessV
       moves[moveCursor].OriginalType = pieceBeingMoved.PieceType.TypeNumber;
 
       //	determine the move evaluation (for move ordering)
-      moves[moveCursor].Evaluation = (pieceBeingCaptured.PieceType.MidgameValue >= pieceBeingMoved.PieceType.MidgameValue ? 3000 :
+      moves[moveCursor].Evaluation = IsInspection ? 0 : (pieceBeingCaptured.PieceType.MidgameValue >= pieceBeingMoved.PieceType.MidgameValue ? 3000 :
         (!Board.Game.SimpleMoveGeneration || Board.Game.SEE_GE(fromSquare, toSquare, 0) ? 3000 : 100)) +
         (pieceBeingCaptured.PieceType.MidgameValue / 2) - (pieceBeingMoved.PieceType.MidgameValue / 32);
-      if (moves[moveCursor].Hash == searchStack[1].PV[ply])
+      if (!IsInspection && moves[moveCursor].Hash == searchStack[1].PV[ply])
         moves[moveCursor].Evaluation = 50000;
       else if (moves[moveCursor].Hash == hashtableMoveHash)
         moves[moveCursor].Evaluation = 40000;
@@ -666,7 +704,7 @@ namespace ChessV
       moves[moveCursor].OriginalType = pieceBeingMoved.PieceType.TypeNumber;
       moves[moveCursor].Evaluation = 6000 +
         pieceBeingCaptured.PieceType.MidgameValue;
-      if (moves[moveCursor].Hash == searchStack[1].PV[ply])
+      if (!IsInspection && moves[moveCursor].Hash == searchStack[1].PV[ply])
         moves[moveCursor].Evaluation = 50000;
       else if (moves[moveCursor].Hash == hashtableMoveHash)
         moves[moveCursor].Evaluation = 40000;
@@ -864,7 +902,7 @@ namespace ChessV
       moves[moveCursor].PickupCursor = pickupCursor;
       moves[moveCursor].DropCursor = dropCursor;
       moves[moveCursor].Evaluation = evaluation;
-      if (moves[moveCursor].Hash == searchStack[1].PV[ply])
+      if (!IsInspection && moves[moveCursor].Hash == searchStack[1].PV[ply])
         moves[moveCursor].Evaluation = 50000;
       else if (moves[moveCursor].Hash == hashtableMoveHash)
         moves[moveCursor].Evaluation = 40000;

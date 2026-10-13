@@ -54,15 +54,21 @@ namespace ChessV.GUI
     protected bool engineThinking;
     protected EngineStatisticsForm engineStatsForm;
     protected Result gameResult;
+    private bool terminalInspection;
+    private int? terminalInspectionPlayer;
 
 
     // *** CONSTRUCTION *** //
 
     #region Constructor
-    public GameForm(Game game)
+    public GameForm(Game game) : this(game, null)
+    {
+    }
+
+    public GameForm(Game game, Theme theme)
     {
       Game = game;
-      Theme = ThemeFactory.CreateTheme(game);
+      Theme = theme ?? ThemeFactory.CreateTheme(game);
       moveDescriptions = new List<string>();
       currentMoveNumber = 0;
       gameStarted = false;
@@ -77,6 +83,9 @@ namespace ChessV.GUI
       menuitem_ComputerPlays1.Text = "Computer Plays " + game.PlayerNames[1];
       updateTheme();
       game.MovePlayed += MovePlayed;
+      game.PositionSettled += PositionSettled;
+      game.Match.ResultDeclared += MatchResultDeclared;
+      game.Match.Finished += MatchResultDeclared;
       game.ThinkingCallback += updateThinking;
 
       if (game.Match != null)
@@ -99,6 +108,7 @@ namespace ChessV.GUI
       debugForm.Visible = false;
 
       game.Match.Deathed += (match, reason) => GameEnded(reason);
+      PositionSettled(PositionChangeKind.Move);
     }
     #endregion
 
@@ -107,6 +117,8 @@ namespace ChessV.GUI
     #region ThinkingStartedPlayer0
     public void ThinkingStartedPlayer0(long timeleft)
     {
+      if (terminalInspection)
+        return;
       sideOnClock = 0;
       engineThinking = Game.ComputerControlled[0];
       if (Game.ComputerControlled[0])
@@ -124,6 +136,8 @@ namespace ChessV.GUI
     #region ThinkingStartedPlayer1
     public void ThinkingStartedPlayer1(long timeleft)
     {
+      if (terminalInspection)
+        return;
       sideOnClock = 1;
       engineThinking = Game.ComputerControlled[1];
       if (Game.ComputerControlled[1])
@@ -148,13 +162,41 @@ namespace ChessV.GUI
     #region GameEnded
     public void GameEnded(string message)
     {
+      EnterTerminalInspection();
       MessageBox.Show(message);
     }
     #endregion
 
+    private void PositionSettled(PositionChangeKind kind)
+    {
+      if (!Game.Result.IsNone && !ReviewMode)
+      {
+        EnterTerminalInspection();
+        return;
+      }
+      boardControl.RefreshKingHints(terminalInspection, terminalInspectionPlayer);
+    }
+
+    private void MatchResultDeclared(Match match)
+    {
+      EnterTerminalInspection();
+    }
+
+    private void EnterTerminalInspection()
+    {
+      if (!terminalInspection || !Game.Result.IsNone)
+        terminalInspectionPlayer = Game.NoMoveSide ??
+          (Game.Result.Winner >= 0 ? (int?)(Game.Result.Winner ^ 1) : null);
+      terminalInspection = true;
+      ThinkingStopped();
+      engineThinking = false;
+      boardControl.RefreshKingHints(true, terminalInspectionPlayer);
+    }
+
     #region MovePlayed
     public void MovePlayed(MoveInfo move)
     {
+      boardControl.ClearKingHints();
       if (!ReviewMode)
       {
         //	update the move list
@@ -476,10 +518,15 @@ namespace ChessV.GUI
         menuitem_ComputerPlays0.Enabled = false;
         menuitem_ComputerPlays1.Enabled = false;
       }
+      if (terminalInspection)
+      {
+        menuitem_ComputerPlays0.Enabled = false;
+        menuitem_ComputerPlays1.Enabled = false;
+      }
 
       //	Stop Thinking is only available if the 
       //	computer is currently thinking
-      menuitem_StopThinking.Enabled = engineThinking;
+      menuitem_StopThinking.Enabled = engineThinking && !terminalInspection;
     }
     #endregion
 
@@ -594,6 +641,9 @@ namespace ChessV.GUI
     #region GameForm_FormClosing
     private void GameForm_FormClosing(object sender, FormClosingEventArgs e)
     {
+      Game.PositionSettled -= PositionSettled;
+      Game.Match.ResultDeclared -= MatchResultDeclared;
+      Game.Match.Finished -= MatchResultDeclared;
       debugForm.Close();
       Game.AbortSearch();
       Game.Match.Finished();
@@ -658,6 +708,7 @@ namespace ChessV.GUI
       if (form.ShowDialog() == DialogResult.OK)
       {
         boardControl.Initialize(Game, Game.Board, Theme, this);
+        PositionSettled(PositionChangeKind.Load);
         boardControl.Invalidate();
         listMoves.Items.Clear();
         mbControl.Invalidate();
@@ -665,12 +716,12 @@ namespace ChessV.GUI
         listThinking1.Items.Clear();
         Game.Match.SetMoves("");
         Player player0 = Game.Match.GetPlayer(0);
-        if (player0 is XBoardEngine)
+        if (!terminalInspection && player0 is XBoardEngine)
           ((XBoardEngine)player0).SetBoard(Game.FEN.ToString());
         Player player1 = Game.Match.GetPlayer(1);
-        if (player1 is XBoardEngine)
+        if (!terminalInspection && player1 is XBoardEngine)
           ((XBoardEngine)player1).SetBoard(Game.FEN.ToString());
-        if (Game.CurrentSide != sideOnClock)
+        if (!terminalInspection && Game.CurrentSide != sideOnClock)
         {
           Game.Match.PlayerToMove.State = PlayerState.Thinking;
           Game.Match.PlayerToWait.State = PlayerState.Observing;

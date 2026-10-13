@@ -36,6 +36,13 @@ namespace ChessV
     Speculative
   }
 
+  public enum PositionChangeKind
+  {
+    Move,
+    Undo,
+    Load
+  }
+
   public partial class Game : ExObject
   {
     // *** CONSTANTS *** //
@@ -158,6 +165,8 @@ namespace ChessV
 
     //	The outcome of the game (Result.IsNone will be true if not yet completed)
     public Result Result { get; set; }
+    public int? NoMoveSide { get; private set; }
+    public event Action<PositionChangeKind> PositionSettled;
 
     //	The time used per player
     public Int64[] TimeUsed { get; private set; }
@@ -1103,6 +1112,7 @@ namespace ChessV
     #region LoadFEN
     public virtual void LoadFEN(string newFEN)
     {
+      NoMoveSide = null;
       //	place pieces as indicated in the 'array' portion
       fen = new FEN(FENFormat, newFEN);
       try
@@ -1121,6 +1131,7 @@ namespace ChessV
       foreach (Rule rule in rules)
         rule.PositionLoaded(fen);
       generateMoves(CurrentSide, 1, 0);
+      PositionSettled?.Invoke(PositionChangeKind.Load);
     }
     #endregion
 
@@ -1144,6 +1155,7 @@ namespace ChessV
         rule.ClearGameState();
       //	Initialize game Result
       Result = new ChessV.Result(ResultType.NoResult);
+      NoMoveSide = null;
       speculativeMoveSnapshots.Clear();
       //	Allocate array of history counters
       historyCounters = new UInt32[NumPlayers, NPieceTypes, Board.NumSquaresExtended];
@@ -1593,6 +1605,9 @@ namespace ChessV
     {
       Result resultBeforeMove =
         executionMode == MoveExecutionMode.Speculative ? Result : null;
+      if (executionMode == MoveExecutionMode.Committed)
+        NoMoveSide = null;
+      bool finishedByNoMoves = false;
       bool notifyApmw =
         executionMode == MoveExecutionMode.Committed &&
         move != lastMove;
@@ -1676,7 +1691,10 @@ namespace ChessV
             Result = new Result(ResultType.Win, CurrentSide ^ 1);
 
           if (executionMode == MoveExecutionMode.Committed)
-            ApmwCore.getInstance().MatchFinished.ForEach((handler) => handler(Match));
+          {
+            NoMoveSide = CurrentSide;
+            finishedByNoMoves = true;
+          }
         }
       }
       else
@@ -1689,6 +1707,18 @@ namespace ChessV
       {
         speculativeMoveSnapshots.Push(
           new SpeculativeMoveSnapshot(gameHistoryCount, resultBeforeMove));
+      }
+      else
+      {
+        try
+        {
+          PositionSettled?.Invoke(PositionChangeKind.Move);
+        }
+        finally
+        {
+          if (finishedByNoMoves)
+            ApmwCore.getInstance().MatchFinished.ForEach((handler) => handler(Match));
+        }
       }
     }
 
@@ -1782,6 +1812,11 @@ namespace ChessV
         Player player = Match.GetPlayer(CurrentSide);
         if (player is HumanPlayer)
           ((HumanPlayer)player).State = PlayerState.Thinking;
+      }
+      if (executionMode == MoveExecutionMode.Committed)
+      {
+        NoMoveSide = null;
+        PositionSettled?.Invoke(PositionChangeKind.Undo);
       }
     }
     #endregion

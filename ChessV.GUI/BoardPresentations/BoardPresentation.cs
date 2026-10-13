@@ -22,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using ChessV.Games;
 
 namespace ChessV.GUI
 {
@@ -36,6 +37,17 @@ namespace ChessV.GUI
     public Piece PieceLifted { get; set; }
     public bool LiftedPieceIsDragged { get; set; }
     public Point MouseCoordinate { get; set; }
+    private KingThreatSnapshot kingHints;
+    private KingThreatRenderer kingThreatRenderer;
+    public KingThreatSnapshot KingHints
+    {
+      get { return kingHints; }
+      set
+      {
+        kingHints = value;
+        kingThreatRenderer = value == null ? null : new KingThreatRenderer(value);
+      }
+    }
 
     public BitmapPieceSetPresentation PieceSetPresentation
     { get { return pieceSetPresentation; } }
@@ -120,7 +132,7 @@ namespace ChessV.GUI
       {
         Size boardSize = NativeSize();
         Bitmap bmp = new Bitmap(boardSize.Width, boardSize.Height, PixelFormat.Format32bppArgb);
-        Graphics g = Graphics.FromImage(bmp);
+        using Graphics g = Graphics.FromImage(bmp);
 
         SolidBrush moveBrush = null;
         SolidBrush captureBrush = null;
@@ -274,6 +286,14 @@ namespace ChessV.GUI
             Rectangle textrect = new Rectangle(squareToTheRightRect.Left - mapping.BorderSize, squareToTheRightRect.Top, mapping.BorderSize, squareToTheRightRect.Height);
             g.DrawString(Board.GetRankNotation(rank), System.Drawing.SystemFonts.CaptionFont, new SolidBrush(Theme.ColorScheme.TextColor), textrect, centered);
           }
+        }
+
+        if (!SmallPreview && piece == null && kingThreatRenderer != null)
+        {
+          Location hoveredLocation = GetMouseLocation(rotateBoard);
+          int? hoveredSquare = hoveredLocation.IsNull ? null : Board.LocationToSquare(hoveredLocation);
+          kingThreatRenderer.Render(g, Board,
+            square => mapping.MapLocation(Board.SquareToLocation(square), rotateBoard), hoveredSquare);
         }
 
         //	draw lifted piece (if any)
