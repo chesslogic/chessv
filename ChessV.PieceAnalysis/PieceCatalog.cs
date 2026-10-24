@@ -17,7 +17,8 @@ namespace ChessV.PieceAnalysis
       string tierSource,
       int midgameValue,
       int endgameValue,
-      string notation)
+      string notation,
+      string materialValueSource = null)
     {
       RequestedName = requestedName;
       PieceType = pieceType;
@@ -27,6 +28,7 @@ namespace ChessV.PieceAnalysis
       MidgameValue = midgameValue;
       EndgameValue = endgameValue;
       Notation = notation;
+      MaterialValueSource = materialValueSource;
     }
 
     public string RequestedName { get; private set; }
@@ -37,6 +39,7 @@ namespace ChessV.PieceAnalysis
     public int MidgameValue { get; private set; }
     public int EndgameValue { get; private set; }
     public string Notation { get; private set; }
+    public string MaterialValueSource { get; private set; }
   }
 
   public sealed class PieceConstructionFailure
@@ -68,6 +71,15 @@ namespace ChessV.PieceAnalysis
     }
 
     public IReadOnlyList<string> GetDefaultRosterPieceNames()
+    {
+      return referenceEntries.Values
+        .Where(entry => entry.Tier.HasValue)
+        .Select(entry => entry.PieceTypeName)
+        .OrderBy(name => name, StringComparer.Ordinal)
+        .ToList();
+    }
+
+    public IReadOnlyList<string> GetApmwRosterPieceNames()
     {
       return referenceEntries.Keys.OrderBy(name => name, StringComparer.Ordinal).ToList();
     }
@@ -101,18 +113,23 @@ namespace ChessV.PieceAnalysis
         midgameValue = entry.MidgameValue;
         endgameValue = entry.EndgameValue;
         notation = entry.Notation;
-        if (explicitTierHint.HasValue)
-          ignoredTierHintMessage = string.Format("Ignoring tier hint '{0}' for known piece '{1}'.", explicitTierHint.Value, pieceType.Name);
       }
-      else if (explicitTierHint.HasValue)
+
+      if (explicitTierHint.HasValue)
       {
-        tier = explicitTierHint.Value;
-        tierSource = "CliHint";
+        if (tier.HasValue)
+          ignoredTierHintMessage = string.Format("Ignoring tier hint '{0}' for known piece '{1}'.", explicitTierHint.Value, pieceType.Name);
+        else
+        {
+          tier = explicitTierHint.Value;
+          tierSource = "CliHint";
+        }
       }
 
       PieceType piece = InstantiatePiece(pieceType, midgameValue, endgameValue, notation);
       string outputNotation = piece.Notation != null && piece.Notation.Length > 0 ? piece.Notation[0] : notation;
-      return new ConstructedPiece(pieceType.Name, pieceType, piece, tier, tierSource, midgameValue, endgameValue, outputNotation);
+      return new ConstructedPiece(pieceType.Name, pieceType, piece, tier, tierSource, midgameValue, endgameValue, outputNotation,
+        hasReferenceEntry ? "ApmwChess" : null);
     }
 
     private IEnumerable<Type> DiscoverConstructiblePieceTypes()

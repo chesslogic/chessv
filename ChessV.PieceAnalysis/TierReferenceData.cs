@@ -19,7 +19,7 @@ namespace ChessV.PieceAnalysis
 
   public sealed class TierReferenceEntry
   {
-    public TierReferenceEntry(string pieceTypeName, string notation, int midgameValue, int endgameValue, PieceTier tier, string tierSource)
+    public TierReferenceEntry(string pieceTypeName, string notation, int midgameValue, int endgameValue, PieceTier? tier, string tierSource)
     {
       PieceTypeName = pieceTypeName;
       Notation = notation;
@@ -33,7 +33,7 @@ namespace ChessV.PieceAnalysis
     public string Notation { get; private set; }
     public int MidgameValue { get; private set; }
     public int EndgameValue { get; private set; }
-    public PieceTier Tier { get; private set; }
+    public PieceTier? Tier { get; private set; }
     public string TierSource { get; private set; }
   }
 
@@ -85,22 +85,24 @@ namespace ChessV.PieceAnalysis
 
     private static IReadOnlyDictionary<string, TierReferenceEntry> BuildEntries()
     {
-      var game = new ApmwChessGame();
-      game.earlyPopulatePieceTypes();
+      var catalog = ApmwPieceCatalog.Create();
 
       var result = new Dictionary<string, TierReferenceEntry>(StringComparer.OrdinalIgnoreCase);
-      AddEntries(result, game.Minors, PieceTier.Minor);
-      AddEntries(result, game.Majors, PieceTier.Major);
-      AddEntries(result, game.Jacks, PieceTier.Jack);
-      AddEntries(result, game.Queens, PieceTier.Queen);
-      AddEntries(result, game.Amazons, PieceTier.Amazon);
+      AddEntries(result, catalog.Minors, PieceTier.Minor);
+      AddEntries(result, catalog.Majors, PieceTier.Major);
+      AddEntries(result, catalog.Jacks, PieceTier.Jack);
+      AddEntries(result, catalog.Queens, PieceTier.Queen);
+      AddEntries(result, catalog.Amazons, PieceTier.Amazon);
+      AddEntries(result, catalog.Pawns, null);
+      AddEntries(result, catalog.Sergeants, null);
+      AddEntries(result, catalog.Kings, null);
       return result;
     }
 
     private static void AddEntries(
       IDictionary<string, TierReferenceEntry> result,
       IEnumerable<PieceType> pieces,
-      PieceTier tier)
+      PieceTier? tier)
     {
       foreach (PieceType piece in pieces)
       {

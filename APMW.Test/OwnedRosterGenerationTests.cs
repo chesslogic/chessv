@@ -27,6 +27,35 @@ namespace ChessV.Test
     }
 
     [TestMethod]
+    public void FundamentalOwnership_UsesFamilyPricesWithoutSpendingConcreteEvaluationAdjustment()
+    {
+      ApmwConfig config = ConfigureFundamental(
+        2,
+        400,
+        JObject.FromObject(new Dictionary<string, int>
+        {
+          [ApmwConstants.PieceUpgradeActions.PawnToMinor] = 10,
+          [ApmwConstants.PieceUpgradeActions.MinorToMajor] = 9,
+        }));
+      ApmwCore core = ApmwCore.getInstance();
+      var knight = core.minors.Single(piece => piece.GetType() == typeof(Knight));
+      core.minors = new HashSet<ChessV.PieceType> { knight };
+
+      PieceGenerationAllocation allocation = FundamentalSlotGraduationPlanner.PlanOwnedRoster(core, config);
+      GeneratedRoster roster = OwnedRosterGeneration.Generate();
+
+      Assert.AreEqual(2, allocation.NonPawnCount(NonPawnPieceFamily.Minor));
+      Assert.AreEqual(0, allocation.NonPawnCount(NonPawnPieceFamily.Major));
+      Assert.AreEqual(0, allocation.InitialSpareMaterial);
+      Assert.AreEqual(2, roster.RosterPieces.Count);
+      Assert.IsTrue(roster.RosterPieces.All(piece => piece.ConcretePieceType == knight));
+      Assert.AreEqual(600, roster.OwnedMaterialLedger.GrantedTotal);
+      Assert.AreEqual(650, roster.RosterPieces.Sum(piece => piece.EvaluatedMidgame));
+      Assert.AreEqual(50, roster.OwnedMaterialLedger.ConcreteEvaluationAdjustment);
+      Assert.AreEqual(0, roster.UnallocatedMaterial);
+    }
+
+    [TestMethod]
     public void FundamentalOwnershipIsUncappedWhileCurrentBoardPlanningRetainsGeometryCaps()
     {
       ApmwConfig config = ConfigureFundamental(107, 321 * 400, PlannedChain());

@@ -28,17 +28,30 @@ namespace ChessV.PieceAnalysis
     public string TierSource { get; set; }
     public int? MidgameValue { get; set; }
     public int? EndgameValue { get; set; }
+    public string MaterialValueSource { get; set; }
     public double? AverageDirectionsAttacked { get; set; }
     public double? AverageSafeChecks { get; set; }
     public IDictionary<string, double> MobilityByDensityPercent { get; set; }
     public PiecePercentiles Percentiles { get; set; }
+    public EmptyBoardTravelStatistics EmptyBoardTravel { get; set; }
+    public IReadOnlyList<string> AnalysisLimitations { get; set; }
+    public PieceComparisonOutput Comparison { get; set; }
     public IList<PieceWarning> Warnings { get; set; }
     public string ConstructionError { get; set; }
+  }
+
+  public sealed class PieceComparisonOutput
+  {
+    public BoardOutput BaselineBoard { get; set; }
+    public IDictionary<string, double> BaselineMobilityByDensityPercent { get; set; }
+    public IDictionary<string, double?> MobilityRatioByDensityPercent { get; set; }
+    public EmptyBoardTravelStatistics BaselineEmptyBoardTravel { get; set; }
   }
 
   public sealed class AnalysisOutput
   {
     public BoardOutput Board { get; set; }
+    public bool EightByEightThresholdsApplied { get; set; }
     public IList<int> DensityPercents { get; set; }
     public DateTime GeneratedAtUtc { get; set; }
     public IList<PieceOutput> Pieces { get; set; }
@@ -56,6 +69,8 @@ namespace ChessV.PieceAnalysis
 
       public List<string> PieceNames { get; private set; }
       public bool AllPieces { get; set; }
+      public bool ApmwRoster { get; set; }
+      public bool CompareEightByEight { get; set; }
       public PieceTier? TierHint { get; set; }
       public int Files { get; set; }
       public int Ranks { get; set; }
@@ -139,7 +154,7 @@ namespace ChessV.PieceAnalysis
           catch (Exception ex)
           {
             TierReferenceEntry referenceEntry;
-            string tier = TierReferenceData.TryGetEntry(pieceType.Name, out referenceEntry) ? referenceEntry.Tier.ToString() : null;
+            string tier = TierReferenceData.TryGetEntry(pieceType.Name, out referenceEntry) ? referenceEntry.Tier?.ToString() : null;
             failedAllPieceOutputs.Add(new PieceOutput
             {
               Name = pieceType.Name,
@@ -148,6 +163,7 @@ namespace ChessV.PieceAnalysis
               TierSource = referenceEntry != null ? referenceEntry.TierSource : null,
               MidgameValue = referenceEntry != null ? referenceEntry.MidgameValue : (int?)null,
               EndgameValue = referenceEntry != null ? referenceEntry.EndgameValue : (int?)null,
+              MaterialValueSource = referenceEntry != null ? "ApmwChess" : null,
               AverageDirectionsAttacked = null,
               AverageSafeChecks = null,
               MobilityByDensityPercent = null,
@@ -163,7 +179,8 @@ namespace ChessV.PieceAnalysis
         throw new ArgumentException("No pieces could be analyzed.");
 
       List<ConstructedPiece> referenceConstructedPieces = new List<ConstructedPiece>();
-      foreach (TierReferenceEntry entry in TierReferenceData.Entries.Values.OrderBy(item => item.PieceTypeName, StringComparer.Ordinal))
+      foreach (TierReferenceEntry entry in TierReferenceData.Entries.Values
+          .Where(item => item.Tier.HasValue).OrderBy(item => item.PieceTypeName, StringComparer.Ordinal))
       {
         Type pieceType;
         if (!catalog.TryResolvePieceType(entry.PieceTypeName, out pieceType))
@@ -174,11 +191,23 @@ namespace ChessV.PieceAnalysis
       }
 
       List<MobilityStatistics> requestedStatistics = new List<MobilityStatistics>();
+      var baselineStatistics = new Dictionary<string, MobilityStatistics>(StringComparer.OrdinalIgnoreCase);
       foreach (ConstructedPiece constructedPiece in requestedConstructedPieces)
       {
         try
         {
-          requestedStatistics.Add(analyzer.Analyze(constructedPiece, options.Files, options.Ranks, densityPercents));
+          MobilityStatistics statistics = analyzer.Analyze(constructedPiece, options.Files, options.Ranks, densityPercents);
+          if (options.CompareEightByEight)
+          {
+            string ignoredTierHintMessage;
+            MobilityStatistics baseline = options.Files == 8 && options.Ranks == 8
+              ? statistics
+              : analyzer.Analyze(
+                  catalog.ConstructPiece(constructedPiece.PieceType, constructedPiece.Tier, out ignoredTierHintMessage),
+                  8, 8, densityPercents);
+            baselineStatistics.Add(constructedPiece.RequestedName, baseline);
+          }
+          requestedStatistics.Add(statistics);
         }
         catch (Exception ex)
         {
@@ -198,7 +227,9 @@ namespace ChessV.PieceAnalysis
       IReadOnlyList<AssessedPiece> assessedPieces = assessment.Assess(requestedStatistics, referenceStatistics);
 
       List<PieceOutput> pieceOutputs = assessedPieces
-        .Select(assessedPiece => ToPieceOutput(assessedPiece))
+        .Select(assessedPiece => ToPieceOutput(
+          assessedPiece,
+          options.CompareEightByEight ? baselineStatistics[assessedPiece.Statistics.SourcePiece.RequestedName] : null))
         .OrderBy(piece => piece.Name, StringComparer.Ordinal)
         .ToList();
       pieceOutputs.AddRange(failedAllPieceOutputs.OrderBy(piece => piece.Name, StringComparer.Ordinal));
@@ -206,6 +237,7 @@ namespace ChessV.PieceAnalysis
       AnalysisOutput output = new AnalysisOutput
       {
         Board = new BoardOutput { Files = options.Files, Ranks = options.Ranks },
+        EightByEightThresholdsApplied = options.Files == 8 && options.Ranks == 8,
         DensityPercents = densityPercents.ToList(),
         GeneratedAtUtc = DateTime.UtcNow,
         Pieces = pieceOutputs,
@@ -249,6 +281,7 @@ namespace ChessV.PieceAnalysis
         TierSource = constructedPiece.TierSource,
         MidgameValue = constructedPiece.MidgameValue,
         EndgameValue = constructedPiece.EndgameValue,
+        MaterialValueSource = constructedPiece.MaterialValueSource,
         AverageDirectionsAttacked = null,
         AverageSafeChecks = null,
         MobilityByDensityPercent = null,
@@ -258,7 +291,7 @@ namespace ChessV.PieceAnalysis
       };
     }
 
-    private static PieceOutput ToPieceOutput(AssessedPiece assessedPiece)
+    private static PieceOutput ToPieceOutput(AssessedPiece assessedPiece, MobilityStatistics baseline)
     {
       MobilityStatistics statistics = assessedPiece.Statistics;
       return new PieceOutput
@@ -271,12 +304,28 @@ namespace ChessV.PieceAnalysis
         TierSource = statistics.SourcePiece.TierSource,
         MidgameValue = statistics.SourcePiece.Piece.MidgameValue,
         EndgameValue = statistics.SourcePiece.Piece.EndgameValue,
+        MaterialValueSource = statistics.SourcePiece.MaterialValueSource,
         AverageDirectionsAttacked = statistics.AverageDirectionsAttacked,
         AverageSafeChecks = statistics.AverageSafeChecks,
         MobilityByDensityPercent = statistics.MobilityByDensityPercent
           .OrderBy(entry => entry.Key)
           .ToDictionary(entry => entry.Key.ToString(), entry => entry.Value),
         Percentiles = assessedPiece.Percentiles,
+        EmptyBoardTravel = statistics.EmptyBoardTravel,
+        AnalysisLimitations = statistics.AnalysisLimitations,
+        Comparison = baseline == null ? null : new PieceComparisonOutput
+        {
+          BaselineBoard = new BoardOutput { Files = baseline.Files, Ranks = baseline.Ranks },
+          BaselineMobilityByDensityPercent = baseline.MobilityByDensityPercent
+            .OrderBy(entry => entry.Key).ToDictionary(entry => entry.Key.ToString(), entry => entry.Value),
+          MobilityRatioByDensityPercent = statistics.MobilityByDensityPercent
+            .OrderBy(entry => entry.Key).ToDictionary(
+              entry => entry.Key.ToString(),
+              entry => baseline.MobilityByDensityPercent[entry.Key] == 0.0
+                ? (double?)null
+                : entry.Value / baseline.MobilityByDensityPercent[entry.Key]),
+          BaselineEmptyBoardTravel = baseline.EmptyBoardTravel
+        },
         Warnings = assessedPiece.Warnings,
         ConstructionError = null
       };
@@ -286,6 +335,9 @@ namespace ChessV.PieceAnalysis
     {
       if (options.AllPieces)
         return catalog.GetAllConstructiblePieceTypes().Select(type => type.Name).ToList();
+
+      if (options.ApmwRoster)
+        return catalog.GetApmwRosterPieceNames().ToList();
 
       if (options.PieceNames.Count > 0)
         return options.PieceNames.ToList();
@@ -311,6 +363,12 @@ namespace ChessV.PieceAnalysis
           case "--all":
             options.AllPieces = true;
             break;
+          case "--apmw":
+            options.ApmwRoster = true;
+            break;
+          case "--compare-8x8":
+            options.CompareEightByEight = true;
+            break;
           case "--tier":
             string rawTier = ReadRequiredValue(args, ref index, "--tier");
             PieceTier parsedTier;
@@ -331,6 +389,9 @@ namespace ChessV.PieceAnalysis
             throw new ArgumentException(string.Format("Unknown argument: {0}", args[index]));
         }
       }
+
+      if (options.ApmwRoster && (options.AllPieces || options.PieceNames.Count > 0))
+        throw new ArgumentException("--apmw cannot be combined with --all or --piece.");
 
       return options;
     }

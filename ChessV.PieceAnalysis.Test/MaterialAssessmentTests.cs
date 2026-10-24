@@ -155,6 +155,32 @@ namespace ChessV.PieceAnalysis.Test
         }
 
         [TestMethod]
+        public void Assess_NonEightByEightDoesNotApplyEightByEightThresholds()
+        {
+            var analyzer = new MobilityAnalyzer();
+            var statistics = analyzer.Analyze(
+                PieceAnalysisTestHelpers.ConstructKnownPiece("Bishop"), 12, 10, MobilityAnalyzer.DefaultDensityPercents);
+
+            var assessed = new MaterialAssessment().Assess(new[] { statistics }, new MobilityStatistics[0]).Single();
+
+            Assert.IsFalse(assessed.Warnings.Any(warning =>
+                warning.Type == "absolute_threshold" || warning.Type == "value_tier_mismatch"));
+        }
+
+        [TestMethod]
+        public void Assess_RejectsPeersFromAnotherGeometry()
+        {
+            var analyzer = new MobilityAnalyzer();
+            var target = analyzer.Analyze(
+                PieceAnalysisTestHelpers.ConstructKnownPiece("Knight"), 12, 10, MobilityAnalyzer.DefaultDensityPercents);
+            var peer = analyzer.Analyze(
+                PieceAnalysisTestHelpers.ConstructKnownPiece("Bishop"), 8, 8, MobilityAnalyzer.DefaultDensityPercents);
+
+            Assert.ThrowsException<System.ArgumentException>(() =>
+                new MaterialAssessment().Assess(new[] { target }, new[] { peer }));
+        }
+
+        [TestMethod]
         public void Assess_RealPiecesFlagKnownSuspiciousAssignmentsWithoutNoisyFalsePositives()
         {
             var catalog = new PieceCatalog(TierReferenceData.Entries);

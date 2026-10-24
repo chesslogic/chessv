@@ -23,6 +23,7 @@ namespace ChessV.PieceAnalysis.Test
             var analyzer = new MobilityAnalyzer();
             return analyzer.Analyze(
                 TierReferenceData.Entries.Values
+                    .Where(entry => entry.Tier.HasValue)
                     .OrderBy(entry => entry.PieceTypeName, StringComparer.Ordinal)
                     .Select(entry => ConstructKnownPiece(entry.PieceTypeName))
                     .ToList(),
@@ -99,7 +100,7 @@ namespace ChessV.PieceAnalysis.Test
                 : new object[] { requestedName, notation, midgameValue, endgameValue, string.Empty };
 
             var piece = (PieceType)constructor.Invoke(arguments);
-            return new ConstructedPiece(requestedName, pieceType, piece, tier, "Test", midgameValue, endgameValue, notation);
+            return new ConstructedPiece(requestedName, pieceType, piece, tier, "Test", midgameValue, endgameValue, notation, "Test");
         }
 
         private static bool MatchesParameterTypes(ConstructorInfo constructor, params Type[] expectedTypes)

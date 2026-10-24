@@ -100,6 +100,9 @@ namespace ChessV.PieceAnalysis
     {
       List<AssessedPiece> assessedPieces = assessedStatistics.Select(statistics => new AssessedPiece(statistics)).ToList();
       List<MobilityStatistics> allReferencePieces = referenceStatistics.ToList();
+      if (assessedStatistics.Concat(referenceStatistics)
+          .Select(statistics => new { statistics.Files, statistics.Ranks }).Distinct().Count() > 1)
+        throw new ArgumentException("Assessed pieces and reference peers must use the same board geometry.");
       Dictionary<PieceTier, List<MobilityStatistics>> referenceByTier = allReferencePieces
         .Where(statistics => statistics.SourcePiece.Tier.HasValue)
         .GroupBy(statistics => statistics.SourcePiece.Tier.Value)
@@ -119,8 +122,11 @@ namespace ChessV.PieceAnalysis
         };
 
         AddTierOutlierWarnings(assessedPiece, tierReferencePieces);
-        AddAbsoluteThresholdWarning(assessedPiece);
-        AddValueTierMismatchWarning(assessedPiece);
+        if (statistics.Files == 8 && statistics.Ranks == 8)
+        {
+          AddAbsoluteThresholdWarning(assessedPiece);
+          AddValueTierMismatchWarning(assessedPiece);
+        }
       }
 
       return assessedPieces;
@@ -223,7 +229,7 @@ namespace ChessV.PieceAnalysis
     private static void AddValueTierMismatchWarning(AssessedPiece assessedPiece)
     {
       PieceTier? tier = assessedPiece.Statistics.SourcePiece.Tier;
-      if (!tier.HasValue)
+      if (!tier.HasValue || assessedPiece.Statistics.SourcePiece.MaterialValueSource == null)
         return;
 
       double averageValue = (assessedPiece.Statistics.SourcePiece.MidgameValue + assessedPiece.Statistics.SourcePiece.EndgameValue) / 2.0;
