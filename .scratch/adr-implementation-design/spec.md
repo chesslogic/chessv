@@ -4,6 +4,13 @@ Status: Design for later execution. No production implementation authorized by t
 Baseline and source evidence: [assessment.md](assessment.md)
 Assignment inventory: [fanout.json](fanout.json)
 
+Current authority, 2026-10-25:
+[ADR0024](../../docs/adr/0024-seeded-hierarchical-allocation.md) records the accepted guarantee-first behavior.
+The [current frontier](engineering-closure.md#current-authority-and-frontier) controls supersession, evidence, and gate status.
+Older scheduler, trial-driver, and PR instructions in this packet retain historical context only where that frontier supersedes them.
+The [local allocation plan](plan/design-seeded-army-allocation-1.md) proposes engineering under that behavior, not an accepted executable algorithm.
+Complete CV02/TX/TR/CS design/reference acceptance remains accepted. Native conformance and D03 acceptance remain separate.
+
 ## 1. Scope and authority
 
 This specification maps finalized ADR requirements to bounded implementation work.
@@ -41,15 +48,15 @@ failure disproves them. The integration owner records the replacement and update
 all consumers before parallel work resumes.
 Product decisions require their original decision owner.
 
-### Execution decisions, 2026-09-28
+### Execution decisions, reconciled 2026-10-25
 
 | Decision | Selection | Consequence |
 | --- | --- | --- |
 | Phase boundary | Close all open design work, including D22 and the settings matrix, before implementation | One orchestrated implementation pass covers every package, including A22 |
 | D22 route | Consolidate the selected ticket 24 policy, then close named engineering gates | No broad new product interview. A narrow incompatibility returns to the coordinator |
-| S0 acceptance | The user approves the initial S0 pull request once | Later declaration changes go through this design owner. Behavior-changing changes return to the user |
+| S0 acceptance | Explicit S0 authorization and accepted declarations remain required. Current instructions prohibit PR creation | Historical initial-PR wording does not mandate a PR. Later declaration changes go through the design owner. Behavior changes return to the user |
 | Contract home | Existing projects: `ChessV.Base` and `ChessV.Games`, then `APMW.Client` | No new contracts project |
-| Integration target | One pull request per package, directly into ChessV `develop` and ChecksMate `checks_mate` | No 0.4.0 integration branch. The dependency order in section 5 controls merge order |
+| Integration target | Ready branch commits, coordinator integration into ChessV `develop`, no PR | Dependency order still controls integration. This wave grants no integration authority in another repository |
 | Capture role vocabulary | The capture role is the one domain identity. `unit_id` is an implementation field | `CONTEXT.md` records the term |
 
 ## 2. Target architecture and state ownership

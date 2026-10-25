@@ -4,6 +4,12 @@ Status: Pre-S0 reconciliation. Engineering gates remain open. No immediate imple
 Date: 2026-10-01
 Scope: ChessV and its ChecksMate integration
 
+Current disposition, 2026-10-25:
+This assessment preserves October 1 source evidence, not the current gate statuses.
+The [current frontier](engineering-closure.md#current-authority-and-frontier) records the accepted guarantee-first successor, retained funding, and complete CV02 design/reference acceptance.
+Allocation/access/integration proof remains open. Older lifecycle holds and recovery/trial mechanisms do not override that disposition.
+This update claims no new production-source review or native conformance.
+
 ## Result
 
 The accepted design needs coordinated changes across five domains.

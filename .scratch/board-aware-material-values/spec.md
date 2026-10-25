@@ -14,6 +14,14 @@ pull request, or release. The ChecksMate (`chesslogic/Archipelago`,
 `checks_mate` `0772bac`). §11 merges both repositories into one iteration
 order; it supersedes the **CM-pending** markers in §6.
 
+Authority reconciliation, 2026-10-25:
+[ADR0024](../../docs/adr/0024-seeded-hierarchical-allocation.md) and the
+[current frontier](../adr-implementation-design/engineering-closure.md#current-authority-and-frontier)
+record the relationship between this plan and the October 21 successor.
+D3/D5/D6 are later author refinements, not discarded proposals.
+The exact tail/completion/funding composition remains open.
+This plan does not silently authorize a replacement of the retained Castler, protected-base, or certified-access obligations.
+
 ## 1. Problem
 
 APMW registers one MG/EG pair per piece in one place
@@ -37,7 +45,7 @@ board.
 | Spending | Concrete MG affordability. 8x8 allocation outputs may change. |
 | Price board | Spend at the prepared board's values. Fund the world against the opposing army on its final board. |
 | Locations | Material expectations use board-specific opposing costs. |
-| Slots | Fixed owned Chessmen slots. Material never creates slots. |
+| Slots | Received Chessmen tokens remain fixed. D3 permits post-prefix derived Pawns from remaining material, not new received tokens. |
 | Consumers | AI evaluation, pocket Gems (existing `MG/100` integer conversion, no new rounding or minimum), True Fork comparison, and Properties all read the prepared game's values. |
 | Mutation | Resolve fresh game-bound values before board accounting. Never mutate initialized shared `PieceType` instances. |
 
@@ -83,9 +91,8 @@ optimal-knapsack claim.
 
 The profile stores absolute engine integers only. Ratios are analysis output.
 No consumer divides by a board's Pawn value or renormalizes values on its own.
-Whether the Pawn stays 100/125 on every geometry is an open product decision
-(D1). The ordinary-variant precedent favors a fixed Pawn, but this plan does
-not assume it.
+D1 resolves the Pawn value to 100/125 on every geometry.
+This fixed unit does not supply the unresolved typed allocation ledger.
 
 ## 5. Storage and registration recommendation
 

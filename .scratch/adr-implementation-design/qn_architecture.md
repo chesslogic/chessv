@@ -4,6 +4,14 @@ Status: Reconciliation navigation - selected policy mapped, pre-S0 engineering c
 Authority: Navigation only. Accepted ADRs and their linked contracts own behavior.
 Baselines: current ChessV `ace9362535652a70c022ef959198055bd4a932fb`; original probes `78b604e43f684c8032d1af23955485d1e196954f`
 
+Current disposition, 2026-10-25:
+[ADR0024](../../docs/adr/0024-seeded-hierarchical-allocation.md) records accepted guarantee-first behavior with retained mode-specific funding.
+The [current frontier](engineering-closure.md#current-authority-and-frontier) owns exact source authority and remaining gates.
+The [local allocation plan](plan/design-seeded-army-allocation-1.md) is the bounded engineering route.
+It does not require the earlier general recovery graph, Historical comparator, or multiworld trial driver.
+Later board-value answers amend Fundamental surplus and selection.
+Their exact composition with the earlier tail/funding rules remains an explicit question.
+
 ## Purpose and boundary
 
 Identify the files, interfaces, dependencies, and acceptance evidence needed to
@@ -29,7 +37,7 @@ navigation. This assessment does not rewrite their decisions or closure claims.
 
 | ID | Question | Why it matters | Cases | Resolver | Edges | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| A01 | Which accepted requirements remain incomplete? | Separates selected policy from engineering proof | All ADRs; ticket 24 closure round | Parent source analysis | All domains | Engine core supported; final EP/NM/TX/TR/CS literal rechecks/combined acceptance pending. General AL/PM/LC open. RI remains a nonblocking decode boundary |
+| A01 | Which accepted requirements remain incomplete? | Separates selected policy from engineering proof | ADR0024 successor and retained ticket 24 rules | Common/D03 | All domains | EP/NM/AL/PM/LC/CV01/D03 open. Complete CV02/TX/TR/CS design/reference accepted, native conformance later. RI is nonblocking |
 | A02 | Where should transport admission, journals, and compatibility live? | Keeps reporting eligibility independent of connection lifetime | Takeover; reconnect; stale helper replay; incompatible world | Library probe | A03, A06 | Mapped to C1/N1/U1 |
 | A03 | Which handlers own reversible game progress and immutable capture identity? | Prevents speculative or undone moves from corrupting progress | Promotion; multi-capture; failed commit; Undo | Handler probe | A02, A04, A05 | Mapped to S0/E1/H1 |
 | A04 | Which search and rule paths must understand surviving royals? | Search and committed play must classify the same position | Two Kings; last King; extinction; castling actors | Search probe | A03, A05 | Mapped to R1/E1/U1. No core search rewrite |
@@ -65,7 +73,7 @@ the design and file arbitration. No production implementation starts in this pas
 
 ## Deferred and out of scope
 
-- General allocator/certificate/trial proofs and final literal/combined acceptance in the closure register.
+- Successor-specific allocation/access proofs and final literal/combined acceptance in the closure register. Old trial/comparator machinery is not a prerequisite.
 - Tracker UI, a Regions refactor, ordinary-game expansion, balance play-testing,
   durable reconnect journals, FEN-based APMW resume, and legacy 12x12 support.
 - Automatic execution-workflow adapter repair and live implementation assignment.
@@ -109,7 +117,8 @@ Their final independent acceptance differs from general AL/PM/LC closure.
 Useful bounded certificates and literal retained-choice contracts do not close D22 or S0.
 S0 readiness requires supported closure of the named gates.
 
-S0 implementation then requires authorization and initial PR approval before consumers.
+S0 implementation then requires explicit authorization and accepted declarations before consumers.
+Current delivery uses commits and coordinator integration, not PRs.
 Real library/runtime and package evidence remains implementation work.
 
 No source change, package publication, or gameplay validation is claimed.

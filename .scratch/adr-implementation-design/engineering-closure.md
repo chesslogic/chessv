@@ -1,10 +1,10 @@
 # Pre-S0 engineering closure register
 
-Status: Open engineering gates. Reconciliation is not S0 readiness or execution approval.
-Date: 2026-10-01
+Status: Allocation/access engineering open. CV02 design/reference accepted. No S0 readiness or production execution approval.
+Reconciliation date: 2026-10-25
 
-Revision: closure-r2-20261001 artifact proposal. Combined review and publication approval remain pending.
-Authority: ADRs 0001-0022 and ticket 24's D22 closure round.
+Revision: current authority projection over the preserved closure-r2-20261001 proposal.
+Authority: ADRs 0001-0024 under the clause-level reconciliation in ADR0024.
 
 This register belongs to the existing implementation-design effort.
 It keeps proof obligations out of the product decision record.
@@ -13,7 +13,133 @@ The [assessment](assessment.md) owns source evidence.
 The [specification](spec.md) owns implementation packages.
 The [contract inventory](contracts.md) owns declarations and visibility.
 
-## 1. Status and re-entry
+## Current authority and frontier
+
+This section controls the current status and applicability of the older sections.
+It records accepted behavior, bounded evidence, and unresolved work separately.
+It does not approve a new algorithm or close integrated engineering acceptance.
+
+### Decision authority
+
+The October 21 user confirmation selects the guarantee-first contract.
+The original Q19 tool result records: "User selected: Confirm this understanding; consolidate the design only".
+The proposal was assistant-authored and explicitly accepted, not an unselected recommendation.
+
+| Source | Stable revision and scope |
+| --- | --- |
+| Original Q19 | Session `83a50a4c-571c-4935-8202-13c0e56c1090`, `events.jsonl`, call `call_L9SRn9gxxIHHqMkifV43CYQx`. Answer event `6b8527a0-2b57-4218-892b-d9234cc41043`, 2026-10-21T07:06:10.882Z |
+| Consolidated successor | Session `25c7b461-3d4d-419f-961a-888fe5699cef`, `files\common-guarantee-first-allocation-successor-v2.md`, sections 2-9. SHA256 `8a10074c2dc46a1752dc27ebb8ef7e2b1a35efb3b9b5934f77f7c55a0e037a9e` |
+| Complete CV02 acceptance | Same session, `files\common-cv02-pres0-composition-acceptance-v1.md`, sections 1-5. SHA256 `a4a59bdd0d6cef943c7eb73fe28edfc87aea04c6854520c548b86866af9f4364` |
+| Later local architecture | [Seeded allocation plan](plan/design-seeded-army-allocation-1.md), commit `12562dc`. Confirmed behavior remains distinct from proposed helper construction |
+| Later Fundamental decisions | [Board-value plan](../board-aware-material-values/spec.md), commit `f3e9f3d`, D3/D5/D6. Original user events in session `2181993b-955f-43a7-b1fb-228e6df19b38` establish the bounded amendments |
+
+Session artifacts resolve under `C:\Users\aaedi\.copilot\session-state`.
+The current decisions and gates are recorded here and in ADR0024.
+The source paths supply provenance, not an obligation to reconstruct history before implementation.
+Original artifacts and their historical permissions remain unchanged.
+Their old PR wording does not override the current no-PR delivery instruction.
+
+### Retained and superseded rules
+
+| Rule | Current disposition | Consumer |
+| --- | --- | --- |
+| Runtime and generator | Both consume the guaranteed final-piece prefix with retained Legacy and Fundamental funding. Later Fundamental surplus can add derived Pawns without receipts | A22/P1/G2 |
+| Affordability | Inclusive `>=`, subject to actual sources, lawful releases, obligations, and placement | AL01/Common |
+| Stable series | Chronology-independent world/player priorities. Material-only changes preserve order under unchanged legal inputs. Ordinary-slot growth extends assignments under unchanged legal choices | AL01-choice-series |
+| Prefix and tail | October 21 selects the longest completable prefix and one finite tail pass. Later Fundamental elimination/upgrades need explicit composition, not silent precedence | AL01-04/P1 |
+| Castlers | Natural selections count. Protect eligible funds and compatible capacity for the feasible shortfall, not a forced Castler-first phase | AL02-04 |
+| Composition and reserves | Retain supported T/N guarantees, Pawn-source protection, dedicated actors, and active/reserve ownership. Ordinary promises must be active | AL02/CV01 |
+| Later changes | Optional pieces can change lawfully between setups. No active-match mutation or loss of certified access | PM/LC/P1 |
+| Old scheduler | Child-tail replacement rounds, general recovery graphs, Historical comparators, and multiworld trial drivers are not successor prerequisites | All allocation owners |
+| Old exact defaults | September namespaces, pooled grant equations, caps, presets, and suffix-envelope implementation are not silently adopted by the successor | EP/NM/Common |
+| Independent safeguards | Strict bindings, frozen costs, source integrity, supported geometry, CPU policy, and reporting boundaries remain | Existing owners |
+
+Grant-backed Fundamental ordinary units require unique effective Chessmen tokens.
+The later surplus decision permits derived Pawns without extra received tokens.
+Additional royals require their distinct Consul tokens.
+Material and a Castler application cannot replace those tokens.
+The retained [shared contract](../large-board-enemy-armies/contracts/shared-data-contract-v4.md#66-fundamental-paid-funding-and-source-preserving-ledger)
+does not grant a free 500-point Castler unit.
+
+Funded base100 remains protected for ordinary concrete Pawn40/85/100 choices.
+The price difference is not spendable surplus.
+Paid quality releases only its funded extra under its real eligibility rules.
+Legacy expected values, concrete debits, signed surplus, and historical allowances remain separate.
+Pocket credit is not spendable allocation funding.
+
+The shared contract labels its exact ledger equations candidate invariants.
+Its locked-Castler decomposition preserves a 500 initial Material charge and a later 200 Jack increment, including the separate 100 surcharge.
+This is not ADR0024's historical `N=S+K` or free 500-total grant model.
+The successor still needs exact slot/application, payer, release, and placement records.
+Natural selection does not waive those liabilities or double-charge an already funded application.
+
+### Current engineering gates
+
+| Gate | Status and remaining result | Owner and consumer |
+| --- | --- | --- |
+| EP/NM and series | Open successor mapping. Exact roots, counters, canonical members/slots, policy fields, defaults, caps, and shared vectors | Common with AL01-choice-series, C1/A22 |
+| AL01 / typed funding | Open. Mode-qualified Sources, Parts, debits, releases, tokens, protected bases, dedicated accounts, and Castler applications | A22/Common, P1 |
+| AL02-04 / coupled completion | Open. Constructive funding, T/N, Castler shortfall, actual active placement, reserves, and supported Pockets in one realization | A22/P1, PM/G2 |
+| PM01/02 | Open. Complete covered domain and useful conservative quantities across permitted extensions. Sampled extras or a zero-only bound do not suffice | A22/P1 with G2 acceptance |
+| LC / LC08 | Open. Inputs bound before the first dependent query, starts/links/plando/copies, freeze, original-world restoration, and actual upstream accessibility acceptance | G2/Common |
+| CV01 | Open successor-specific integration. Independent expected fixtures, coupled realization, strict bindings, and owner handoffs | Common/A22/P1/G2 |
+| CV02 / TX / TR / CS | Accepted at the complete pre-S0 design/reference threshold. Native private-state, reset/history, GUI/library, and separate-assembly conformance remain later | E1/R1/H1/U1/N1/T1 |
+| D03 | Open integrated acceptance. Consume AL04, PM02, LC08, CV01, accepted CV02, and existing D01/D02 results | Common/coordinator |
+| RI | Retained nonblocking boundary. Raw parsers reject duplicate keys. Stock decoded objects receive exact resulting-object validation | C1/N1/I1 |
+| S0 and native/release | Later explicit authorization, declarations, consumer acceptance, actual packages, and release evidence remain separate | Coordinator and existing package owners |
+
+Accepted Intelligence, post-terminal, and CV02 results are not reopened by absent allocation proof.
+The CV02 receipt covers the complete combined criterion, not only six corrections or a count of green methods.
+Its native exclusions remain mandatory later work.
+The October 1 table in section 1 is historical and does not re-block that accepted design gate.
+
+Archipelago retains fill, locality, plando, collection traversal, and core accessibility.
+ChessV/ChecksMate must supply sound local rules and correctly timed immutable inputs.
+An unspecified completion oracle or failed greedy construction does not prove completeness.
+The October 23 helper proposal needs its own bounded completeness argument and independent expected fixtures.
+
+### Later authority and open composition: board-aware prices
+
+The board-value work scopes its redesign to Fundamental, not Legacy.
+Its `needs-triage` status does not erase later direct author answers.
+The following original events are in session `2181993b-955f-43a7-b1fb-228e6df19b38`, `events.jsonl`.
+October 24 UTC timestamps correspond to October 23 local dates in the plan.
+
+| Source | Direct decision | Disposition |
+| --- | --- | --- |
+| Call `call_6HTPBD4EwkKMYlY094OJfbCf`, 2026-10-21T08:04:41.408Z | Keep earned credits fixed and vary piece costs by board | Concrete pricing direction, not permission to pool protected funds |
+| User event `0bfeca7b-9e7e-4957-aa4a-f83392a7e918`, 2026-10-24T00:25:43.726Z | Switch from exhaustive prefix to pool elimination after the first unaffordable concrete draw | Later Fundamental selection direction. Exact completion/counter composition remains open |
+| Calls `call_qzRlcWJoFQuLzIXvFtrk1dkr` and `call_vKM0YNNFao6Mz1IlUCLsVI5b`, 2026-10-24T00:35-00:39Z | Select affordable types and filter families as well as types | Explicit answers, not inferred defaults |
+| User event `6f6b540d-bb3a-4cf4-9bcf-286b2fe36329`, 2026-10-24T06:16:39.912Z | Chessmen are a minimum, not a maximum. Satisfy the prefix, then use remaining material for upgrades or additional Pawns in the player's preference order | Replaces a global Fundamental slot ceiling. Derived Pawns are not received Chessmen |
+| Same event | Spending is mostly one-way, but the user does not understand the proposed refunds | Refund exceptions remain unanswered. No blanket prohibition or new refund right |
+| User event `920a4991-28a1-47eb-96d8-0ade40977d9b`, 2026-10-24T06:05:27.099Z | A prefix acquired on one board need not remain indefinitely | Consistent with geometry-specific reconstruction. Access proof remains required |
+
+The later surplus decision does not change token ownership for grant-backed units.
+It does not authorize ADR0024's old free Castler grant or refundable cheap-base equations.
+The exact use of ordinary versus dedicated funds still needs a typed contract.
+
+The remaining deciding question concerns composition, not whether these answers exist:
+How do Fundamental elimination and preference-ordered upgrades coexist with the earlier finite tail and no-accepted-extra-replacement rule?
+The mandatory-completion guard, exact counter events, and lawful refund exceptions also need explicit treatment.
+The coordinator must resolve observable alternatives through source evidence or the user.
+Neither silent retention of the October 21 tail nor wholesale reuse of September's scheduler settles that boundary.
+Engineering can specify unaffected series/funding interfaces without claiming this composition accepted.
+
+### Re-entry and delivery
+
+Ready engineering proposals can proceed within their bounded design assignments.
+They must distinguish proposed records and algorithms from accepted behavior.
+Complete independent fixtures and owner acceptance precede implementation claims.
+Documentation reconciliation alone closes none of AL/PM/LC/CV01/D03.
+
+Current delivery uses branch commits, no PR creation, and coordinator integration into `develop` when ready.
+Explicit S0 authorization and accepted declarations remain substantive gates.
+Historical initial-PR approval language supplies neither a current PR requirement nor permission to bypass those gates.
+
+## 1. Historical October 1 status and re-entry
+
+Sections 1-6 preserve closure-r2 evidence and proposed mechanisms.
+The current frontier controls their status and applicability.
 
 The latest reviews demonstrate no new general product-policy blocker.
 They reject immediate implementation under the unamended packet.
@@ -793,8 +919,9 @@ The evidence describes the stock boundary; it is not a new blocking dependency c
 ## 7. Completion boundary
 
 Reconciliation can finish with these gates explicitly open.
-S0 readiness requires supported closure of EP/NM/AL/PM/LC/TX/TR/CS.
+S0 readiness requires the current integrated design gates, including EP/NM/AL/PM/LC/CV01/D03.
+CV02/TX/TR/CS design/reference acceptance remains accepted with its separate native obligations.
 S0 implementation also requires explicit execution authorization.
-Consumer implementation requires accepted S0 declarations and initial PR approval.
+Consumer implementation requires accepted S0 declarations under the current no-PR delivery instruction.
 I2 retains final pins, actual packages and publication authorization as separate later gates.
 This document claims no materialized declarations, executed gameplay tests, release hashes or ready status.

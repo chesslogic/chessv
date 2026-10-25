@@ -1,12 +1,32 @@
 # Retain Legacy pawn-material conversion
 
-Status: accepted
+Status: accepted funding and mode boundaries; conflicting selection procedures superseded by ADR0024
 Date: 2026-09-18
-Reconciliation date: 2026-10-01
+Reconciliation date: 2026-10-25
 
 ## Current decision and supersession
 
-Ticket 24's **D22 closure round** settles the policy summarized here.
+Ticket 24's **D22 closure round** settles the retained funding and composition policy summarized here.
+[ADR0024's current decision](0024-seeded-hierarchical-allocation.md#current-decision)
+records the October 21 guarantee-first successor.
+It replaces incompatible selection procedures, not the retained Legacy/Fundamental funding laws.
+Both modes remain supported.
+ADR0024's historical September retirement of Legacy does not control the successor.
+Its later Fundamental amendments permit post-prefix upgrades or additional Pawns from remaining material.
+That is not a new receipt or permission to spend protected funds.
+The exact optional-selection and funding composition remains open.
+
+Under the October 21 baseline, preferred final-slot assignments precede affordability.
+The allocator promises the longest affordable prefix that permits mandatory completion, then makes one finite forward optional pass.
+Exact funding qualifies under the lawful mode-specific charges.
+Castlers arise through normal selection with protected funding and compatible capacity for the remaining feasible shortfall.
+Ordinary promised pieces must be active, not in reserve.
+
+The historical action schedules, repeat-until-affordable stopping rules, and general recovery search are not required successor algorithms.
+Source protections, hard bans, actual tokens, lawful releases, composition minimums, and truthful shortages remain.
+The [current frontier](../../.scratch/adr-implementation-design/engineering-closure.md#current-authority-and-frontier)
+separates these decisions from unresolved engineering and the separate board-value proposal.
+
 Ticket question numbers and ADR question numbers differ.
 The named decision and its document anchor identify the authority.
 Early open statements in this ADR describe the decision history, not the current frontier.
@@ -28,8 +48,9 @@ Early open statements in this ADR describe the decision history, not the current
 Legacy then creates one Pawn per effective Pawn item.
 `standard_count` applies the total-unit minimum.
 `standard_and_pawns` applies both the total-unit and non-Pawn minimums.
-Fundamental preserves fixed Chessmen slots.
-Material never creates additional runtime slots.
+Fundamental preserves its grant-backed Chessmen tokens.
+Material never creates additional received tokens.
+The later Fundamental surplus decision permits derived Pawns after the prefix, subject to funding and placement.
 Its non-Pawn obligation can prioritize permitted Pawn-to-Minor-or-better actions.
 
 The closure-r2 funded-quality decision also applies to existing Fundamental slots.
@@ -44,7 +65,8 @@ The allocation shows a shortage instead of inventing inventory.
 
 Viability uses existing core reachability with frozen, post-cap requirements.
 No second pre-cap strength gate applies.
-Allocation continues spending usable material until no permitted action is affordable.
+The October 21 successor selects one finite optional pass after the guaranteed prefix.
+The later Fundamental pool-elimination and surplus-upgrade direction needs the explicit composition recorded in ADR0024.
 The retained historical approximation rules still apply.
 The transfer ledger must distinguish ordinary affordability from their explicit allowance and overdraw.
 
@@ -65,7 +87,12 @@ Current semantic planning instead creates one pawn per effective Pawn item.
 The later implementation must add the selected behavior rather than
 declare the existing one-unit-per-item path equivalent.
 
-## Historical scope and unresolved rule
+## Historical decision record
+
+The named rounds that follow preserve their original questions, answers, and examples.
+An old open question or scheduling prescription does not override the current decision.
+
+### Historical scope and unresolved rule
 
 This section records the Q44 frontier.
 The current decision section and later named decisions supersede its open policy questions.

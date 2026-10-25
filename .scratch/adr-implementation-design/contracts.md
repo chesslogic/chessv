@@ -1,8 +1,16 @@
 # Shared contract inventory
 
-Status: Reconciled inventory. Literal policy/setup fields and engineering proofs remain open. No declarations exist.
+Status: Historical inventory with current authority overlay. Successor allocation declarations and proof remain open.
 Date: 2026-10-01
 Baselines: current ChessV `ace9362535652a70c022ef959198055bd4a932fb`, historical probe `78b604e43f684c8032d1af23955485d1e196954f`, ChecksMate `0772bac724ff483043b56979f0ef078b9c2d264a`
+
+Authority overlay, 2026-10-25:
+[ADR0024](../../docs/adr/0024-seeded-hierarchical-allocation.md) controls successor selection.
+The [current frontier](engineering-closure.md#current-authority-and-frontier) separates retained funding, candidate equations, accepted CV02 declarations/reference evidence, and open native conformance.
+This inventory's older open lifecycle status does not reopen accepted CV02/TX/TR/CS design.
+Its old policy/recovery shapes do not supply the successor's missing series, typed-funding, or completion records.
+New helper names remain proposed until their exact owner/consumer contracts and independent fixtures receive acceptance.
+No production declaration or compilation claim follows from this documentation update.
 
 This document lists every contract that crosses a work-package boundary in the
 [development specification](spec.md). A contract is shared when one package

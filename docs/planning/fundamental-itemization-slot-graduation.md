@@ -1,12 +1,12 @@
 # Fundamental Itemization: Slot Graduation Planner — Design & Tracking
 
 > **Historical design, superseded for new worlds on 2026-09-20.**
-> [ADR0018](../adr/0018-enabled-material-families.md) replaces this allocation and action-policy contract.
-> It permits stateless roster rebalancing, changes Castler grants, and retires Legacy itemization for new worlds.
+> [ADR0023](../adr/0023-enabled-material-families.md) replaced this allocation and action-policy contract.
+> That historical revision changed Castler grants and retired Legacy itemization for new worlds.
 > The status, open questions, and implementation evidence below describe the earlier design, not the new policy's implementation status.
 
-> **Current contract as of 2026-09-21:** [ADR0019](../adr/0019-seeded-hierarchical-allocation.md) supersedes ADR0018.
-> It specifies seeded hierarchical allocation with concrete prices. Neither earlier document is the current implementation handoff.
+> **Current authority as of 2026-10-25:** [ADR0024](../adr/0024-seeded-hierarchical-allocation.md) records guarantee-first selection with retained mode-specific funding.
+> Both Legacy and Fundamental remain supported. Neither this tracker nor its historical successor supplies the new executable algorithm.
 
 > **Status:** Living tracking document. Persisted from agent session state on **2026-07-05** so
 > this design history, evidence, and the list of open decisions survive independently of any

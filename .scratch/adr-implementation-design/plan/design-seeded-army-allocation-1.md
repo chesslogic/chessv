@@ -12,6 +12,16 @@ tags: [design, architecture, allocation, archipelago]
 
 ![Status: Planned](https://img.shields.io/badge/status-Planned-blue)
 
+Authority update, 2026-10-25:
+[ADR0024](../../../docs/adr/0024-seeded-hierarchical-allocation.md) and the
+[current frontier](../engineering-closure.md#current-authority-and-frontier) record the current clause-level authority.
+Later Fundamental answers permit preference-ordered post-prefix upgrades or additional Pawns and select affordability-filtered pool elimination.
+This plan predates those answers.
+Its exact tail, fixed-slot, and completion proposals need reconciliation before acceptance.
+The original task rows remain planning records, not evidence of implementation.
+Current delivery uses branch commits and coordinator integration, not PRs.
+Historical initial-PR wording retains the substantive S0 authorization/declaration gate but does not require a PR.
+
 Archipelago owns item placement and its accessibility algorithm. ChecksMate supplies truthful items, access rules, and generation inputs. ChessV constructs a legal army from those inputs.
 
 This plan treats coupled completion as a local setup obligation, not a second multiworld solver. The local allocator protects mandatory funding and board capacity. It then consumes the seeded piece order.
@@ -290,3 +300,4 @@ TASK-011 must exercise the actual generation entrypoint in the existing world te
 | `CM:worlds\checksmate\apmw_projection\semantic.py:96-126` | Existing local semantic projection entrypoint |
 
 This document is a planned engineering supplement. It is not a passing result, a production contract, or implementation authorization.
+The current authority links take precedence over conflicting historical task wording.

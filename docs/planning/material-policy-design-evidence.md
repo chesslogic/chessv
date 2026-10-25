@@ -1,16 +1,16 @@
 # Material policy: evidence and alternatives
 
-> **Historical evidence for superseded ADR0018.**
-> [ADR0019](../adr/0019-seeded-hierarchical-allocation.md) is the current implementation contract.
+> **Historical evidence for superseded ADR0023.**
+> [ADR0024](../adr/0024-seeded-hierarchical-allocation.md) records the current behavior and supersession boundaries.
 > The original rationale, normalized prices, W measurements, and phase fixtures below remain historical.
 > They do not validate the successor's concrete-price hierarchical allocator.
 
-This appendix supports [ADR0018](../adr/0018-enabled-material-families.md). It is not a second normative contract.
+This appendix supports [ADR0023](../adr/0023-enabled-material-families.md). It is not a second normative contract.
 The ADR contains the required behavior and exact fixtures without a dependency on local research files.
 Source evidence is pinned. The accepted decisions take precedence over old source behavior.
 
 New worlds require 1, 3, and at least one of 5/7 globally. Queen and Amazon remain optional.
-Reduced palettes in this appendix are historical isolated probes, not valid new-seed acceptance.
+Reduced palettes in this appendix are historical isolated probes, not successor acceptance.
 No automatic-Material omission policy or invalid-world fallback follows from them.
 Modal variety and new overall quantity limits are deferred to a follow-up ADR.
 The current soft per-type preferences remain in scope.
@@ -123,7 +123,7 @@ The ADR's full generation, fill, and reachability gate remains mandatory for all
 ## Historical reduced-palette fixtures
 
 These exact inputs and outputs are preserved without relabeling their palettes.
-`[1]`, `[1,7]`, `[1,9]`, and `[1,5,9]` are invalid world palettes under ADR0018.
+`[1]`, `[1,7]`, `[1,9]`, and `[1,5,9]` are invalid world palettes under historical ADR0023.
 The new contract rejects them. Arithmetic probes do not require a live old-world reader.
 
 | Historical palette | S/K/M | Exact isolated final families | Unspent | Protected P |

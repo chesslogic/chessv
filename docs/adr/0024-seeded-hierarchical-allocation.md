@@ -1,7 +1,109 @@
-# Seeded hierarchical allocation for 0.4.0
+# Guarantee-first seeded allocation for 0.4.0
 
-Status: accepted
-Date: 2026-09-21
+Status: accepted behavior with later Fundamental amendments; composition and engineering gates open
+Original decision: 2026-09-21
+Successor decision: 2026-10-21
+Fundamental refinement: 2026-10-23 (local date)
+Authority reconciliation: 2026-10-25
+
+## Current decision
+
+The October 21 successor selects final pieces for actual owned slots in both runtime allocation and generator access estimates.
+It replaces conflicting selection procedures, not the retained mode-specific funding laws.
+The purpose is a stable guaranteed prefix with lawful optional additions, not an optimal packing or a permanent optional-piece entitlement.
+The later Fundamental amendments that follow qualify its slot ceiling and optional-selection rules.
+Neither revision alone is the complete executable contract.
+
+| Matter | Current rule |
+| --- | --- |
+| Funding | Exact funding qualifies (`>=`). Eligible sources, lawful releases, protected bases, reserves, and dedicated accounts remain distinct. |
+| Priorities | World/player-seeded priorities do not depend on delivery chronology. Material alone does not reorder them under unchanged legal inputs. |
+| Slot extension | Added ordinary slots extend earlier assignments when legal choices remain unchanged. This is not chronological receipt appending. |
+| Preferred prefix | Fix legal preferred assignments before affordability. Select the longest affordable prefix that permits all retained mandatory completion. |
+| Active placement | Ordinary promised pieces must occupy compatible active-board positions. Reserve pieces cannot satisfy that promise. |
+| Castlers | Select normally while protecting eligible funding and compatible capacity for the feasible enabled target. Natural selections count. Complete only the shortfall. |
+| Optional pass | Visit the finite eligible alternatives once in deterministic order. Bind candidates to compatible unfilled slots without changing guaranteed assignments or accepted extras. |
+| Completion | Every accepted candidate preserves mandatory completion. Applicable Pawn baselines, composition minimums, reserves, and dedicated actors remain. |
+| Later setups | Lawful reallocation can change optional pieces. New eligibility or geometry can change final pieces without a reroll. Certified access remains protected. |
+| Match boundary | No active-match mutation. Actual later inventory and plando bonuses retain their separate obligations. |
+
+### Later Fundamental amendments
+
+The board-material interview supplies later direct author decisions, not only a proposed engineering plan.
+Its scope prioritizes Fundamental and does not redesign Legacy.
+
+| Matter | Later author decision | Boundary still to specify |
+| --- | --- | --- |
+| Board prices | Keep earned credits fixed and vary concrete costs by prepared board. Keep the 8x8 values unchanged | Typed funding, protected bases, royal/Castler liabilities, and accepted profile values |
+| Optional selection | After the first unaffordable concrete draw, filter affordable families and types and advance the seed | Exact finite enumeration/counters and composition with the mandatory-completion guard |
+| Surplus | Chessmen are a minimum, not an army-size maximum. After satisfying the prefix, use remaining material for upgrades or additional Pawns in the player's preference order | Source eligibility, derived-unit identity, capacity, and interaction with the earlier no-replacement tail rule |
+| Later boards | A prefix on one board need not survive on another board. Allocate under that board's prices | Conservative access across geometry changes |
+| Refunds | Spending is mostly one-way. The user did not settle refund exceptions | No blanket refund prohibition or new refund right |
+
+These amendments replace the unconditional Fundamental army-size ceiling.
+They do not mint received Chessmen or free funds.
+They do not select ADR0024's old child-tail scheduler, pooled Castler grant, or refundable base model.
+The exact interaction between the two accepted selection descriptions remains an explicit composition gate.
+The [board-value plan](../../.scratch/board-aware-material-values/spec.md#9-open-decisions)
+records D3/D5/D6 and the other bounded refinements.
+
+The exact series, typed funding records, completion algorithm, and useful conservative metrics remain engineering obligations.
+Prefix monotonicity alone does not prove access monotonicity.
+One favorable optional roster does not establish a guarantee.
+The [current engineering frontier](../../.scratch/adr-implementation-design/engineering-closure.md#current-authority-and-frontier)
+owns the evidence, open decisions, acceptance gates, and implementation owners.
+
+## Funding and clause-level supersession
+
+[ADR0022](0022-retain-legacy-pawn-material-conversion.md) retains the Legacy and Fundamental funding boundaries.
+Grant-backed Fundamental units require actual owned Chessmen tokens.
+Later surplus Pawns remain derived units, not additional received tokens.
+A Castler application is not an additional Chessman token or a free 500-point grant.
+Natural Castler selection changes construction order, not source ownership.
+
+Ordinary concrete Pawns valued at 40, 85, or 100 retain their funded base of 100.
+A cheaper concrete Pawn does not release 60 or 15 spendable Material.
+Paid quality can release only its lawfully funded extra.
+The [retained funding contract](../../.scratch/large-board-enemy-armies/contracts/shared-data-contract-v4.md#66-fundamental-paid-funding-and-source-preserving-ledger)
+distinguishes selected economics from candidate ledger equations.
+Exact Castler applications, payers, releases, and compatible slots still need the successor's typed mapping.
+
+| Earlier clause | Disposition for the successor |
+| --- | --- |
+| ADR0023 cumulative W | Remains superseded. Its vectors do not define the successor. |
+| September section 1: Fundamental-only worlds and Legacy retirement | Superseded by the retained two-mode scope. Old-world contract rejection remains separate and retained. |
+| September sections 2/4: `N=S+K`, pooled free Castler credit, and refundable cheap bases | Not the retained funding model. No new grant, token, or refund follows from those equations. |
+| September sections 3-6: child tails, replacement priorities, and accepted-round schedules | Replaced where they conflict with final-slot prefix selection and the finite optional pass. No obligation to reproduce that scheduler. |
+| September section 6: natural Castlers count and only the deficit needs completion | Retained behavior. Its old reserve formula and closure order are not automatically the successor algorithm. |
+| September sections 7-8: concrete-price-only accounting and additive new Pawn slots | No automatic reuse of their equations or mechanism. Later Fundamental surplus permits additional Pawns without new receipts. Funding and placement still need reconciliation. |
+| September section 9: full suffix-envelope implementation default | Historical mechanism, not a mandatory successor prerequisite. Useful conservative access and full-world acceptance remain required. |
+| September sections 10-11: fixtures, namespaces, wire IDs, caps, and defaults | Historical specification of that algorithm. Reuse requires explicit successor mapping and independent acceptance, not an inherited `E` label. |
+| Separate CPU roles/promotion, truthful accounting, strict bindings, and legal placement | Retained safeguards. This reconciliation grants no new behavior in those domains. |
+
+The successor does not ratify every September palette, preset, cap, or grant change.
+Those exact policy and schema mappings remain with the engineering owners.
+The later board-value decisions need an explicit reconciliation of their scheduler and typed funding.
+Neither a newer filename nor a proposed helper resolves that question.
+
+## Consequences and acceptance
+
+Both languages and every projection consumer need one accepted interpretation of the selected behavior.
+The [local allocation plan](../../.scratch/adr-implementation-design/plan/design-seeded-army-allocation-1.md)
+keeps Archipelago fill upstream and proposes a bounded local construction.
+Its helper names and algorithm choices remain proposals until their existing acceptance gates close.
+General recovery graphs, Historical comparators, and multiworld trial drivers are not prerequisites for this successor.
+The October 23 architecture plan predates the later board-material answers and cannot cancel them.
+
+Accepted CV02/TX/TR/CS design/reference results remain accepted.
+Native conformance, complete allocation/access integration, S0 authorization, and release acceptance remain separate.
+Current Git instructions prohibit PR creation and require branch commits for coordinator integration.
+Historical PR-permission text is not a current delivery instruction.
+
+## Historical September contract
+
+The remaining sections preserve the September 21 decision and its fixtures for provenance.
+Their `A` and `E` labels describe that revision only.
+The current decision and clause map control applicability.
 
 The allocator uses seeded child prefixes, concrete material prices, and explicit transition rules.
 A finite search supplies an affordable permitted action or a complete local stopping certificate.
@@ -14,7 +116,7 @@ The coordinator approved these defaults and the policy mapping on 2026-09-21.
 
 ## 1. Lifecycle and retained release scope [A]
 
-This decision supersedes [ADR0018](0018-enabled-material-families.md).
+This historical decision superseded [ADR0023](0023-enabled-material-families.md).
 Its historical body and fixtures remain unchanged.
 This successor restates retained requirements and replaces the incompatible clauses explicitly.
 
@@ -470,7 +572,7 @@ They must not substitute another policy or an empty roster.
 Reject retired action keys, Legacy itemization, incompatible contracts, and unsupported policy/preset IDs.
 Keep offline/preconnection previews separate from connected validation.
 
-Reserve the unshipped v4.0/policy1/protocol2/runtime0.2.0 identifiers from ADR0018 for this reconciled contract.
+Reserve the unshipped v4.0/policy1/protocol2/runtime0.2.0 identifiers from ADR0023 for this reconciled contract.
 If another release consumes an identifier, coordinate the next free identifier without changing policy.
 Canonical hashes, price exports, source pins, and minimum compatible build are implementation outputs, not additional pricing decisions.
 
@@ -492,7 +594,7 @@ No gameplay implementation, runtime dependency, or calibration accompanies this 
 ## Optional evidence
 
 The normative contract and fixtures do not depend on session-local research or prototypes.
-The [ADR0018 evidence appendix](../planning/material-policy-design-evidence.md) retains historical W measurements and superseded phase outputs.
+The [ADR0023 evidence appendix](../planning/material-policy-design-evidence.md) retains historical W measurements and superseded phase outputs.
 They do not validate this successor's distributions.
 
 - [Concrete catalogue](https://github.com/chesslogic/chessv/blob/d14300c0b5e6091fa57dda2cf073ead9b5fc5ad0/ChessV.Games/MiscellaneousGames/ApmwPieceCatalog.cs#L24-L85): declared prices and family membership.
