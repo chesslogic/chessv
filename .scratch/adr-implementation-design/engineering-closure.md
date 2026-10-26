@@ -1,7 +1,7 @@
 # Pre-S0 engineering closure register
 
 Status: Allocation/access engineering open. CV02 design/reference accepted. No S0 readiness or production execution approval.
-Reconciliation date: 2026-10-25
+Reconciliation date: 2026-10-26
 
 Revision: current authority projection over the preserved closure-r2-20261001 proposal.
 Authority: ADRs 0001-0024 under the clause-level reconciliation in ADR0024.
@@ -33,6 +33,7 @@ The proposal was assistant-authored and explicitly accepted, not an unselected r
 | Later local architecture | [Seeded allocation plan](plan/design-seeded-army-allocation-1.md), commit `12562dc`. Confirmed behavior remains distinct from proposed helper construction |
 | Later Fundamental decisions | [Board-value plan](../board-aware-material-values/spec.md), commit `f3e9f3d`, D3/D5/D6. Original user events in session `2181993b-955f-43a7-b1fb-228e6df19b38` establish the bounded amendments |
 | Guarantee preservation | User decision relayed on 2026-10-25 by coordinator session `78444ebb-4f91-4995-acfc-d233bf1fcfb6`, call `call_HaAceB0tYWrxtcDBRmkFu8Qj`. Later behavior retains the promised prefix and feasible mandatory completion |
+| Prefix upgrades | User clarification relayed on 2026-10-26 by the same coordinator, call `call_HKDCNcrr28MGXL0jGEM3QChY`. Permitted surplus-funded prefix upgrades preserve every guarantee, explicitly including Castlers needed for their Location |
 
 Session artifacts resolve under `C:\Users\aaedi\.copilot\session-state`.
 The current decisions and gates are recorded here and in ADR0024.
@@ -48,6 +49,7 @@ Their old PR wording does not override the current no-PR delivery instruction.
 | Affordability | Inclusive `>=`, subject to actual sources, lawful releases, obligations, and placement | AL01/Common |
 | Stable series | Chronology-independent world/player priorities. Material-only changes preserve order under unchanged legal inputs. Ordinary-slot growth extends assignments under unchanged legal choices | AL01-choice-series |
 | Prefix and tail | Later Fundamental elimination, upgrades, and surplus remain permitted. Every purchase preserves the promised prefix and feasible mandatory completion. Standalone affordability is insufficient | AL01-04/P1 |
+| Prefix identity | Permitted surplus-funded upgrades can change a promised actor's concrete type. Required funding, counts, roles, placement, certified access, and Location-required Castlers must survive | AL01-04/P1/PM |
 | Castlers | Natural selections count. Protect eligible funds and compatible capacity for the feasible shortfall, not a forced Castler-first phase | AL02-04 |
 | Composition and reserves | Retain supported T/N guarantees, Pawn-source protection, dedicated actors, and active/reserve ownership. Ordinary promises must be active | AL02/CV01 |
 | Later changes | Optional pieces can change lawfully between setups. No active-match mutation or loss of certified access | PM/LC/P1 |
@@ -130,6 +132,18 @@ Chessmen remain a minimum, not an overall army-size maximum.
 The allocator rejects a purchase that makes mandatory completion impossible, even when its standalone price is affordable.
 The earlier no-replacement wording does not ban the accepted surplus upgrades outright.
 Those upgrades still cannot break the promised prefix or mandatory obligations.
+
+On October 26, the coordinator relayed the user's clarification about a permitted BetterPawn upgrade of a promised prefix actor:
+
+> The only constraint not mentioned in the recommended option is castlers, which are needed for a location. Otherwise yes
+
+The proposed upgrade uses genuine surplus and preserves required funding, counts, roles, placement, and certified access.
+The user explicitly adds Castlers needed for their Location.
+Thus prefix preservation is not an exact concrete-type freeze.
+Permitted prefix-piece upgrades remain subject to all those guarantees.
+Higher price or family rank alone is not evidence of Castler capability or access preservation.
+The clarification creates no new refund right, price rule, family-dominance relation, or active-match mutation permission.
+This records the coordinator's attributed user answer, not an independently retrieved original event.
 
 The behavior-precedence conflict is resolved.
 Exact finite enumeration, counter events, upgrade procedures, typed prices/liabilities, and constructive completion proofs remain engineering work.

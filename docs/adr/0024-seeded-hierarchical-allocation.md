@@ -4,8 +4,9 @@ Status: accepted behavior and preservation rule; exact engineering and funding q
 Original decision: 2026-09-21
 Successor decision: 2026-10-21
 Fundamental refinement: 2026-10-23 (local date)
-Authority reconciliation: 2026-10-25
+Authority reconciliation: 2026-10-26
 Guarantee-preservation decision: 2026-10-25
+Prefix-upgrade clarification: 2026-10-26
 
 ## Current decision
 
@@ -21,6 +22,7 @@ Neither revision alone is the complete executable contract.
 | Priorities | World/player-seeded priorities do not depend on delivery chronology. Material alone does not reorder them under unchanged legal inputs. |
 | Slot extension | Added ordinary slots extend earlier assignments when legal choices remain unchanged. This is not chronological receipt appending. |
 | Preferred prefix | Fix legal preferred assignments before affordability. Select the longest affordable prefix that permits all retained mandatory completion. |
+| Prefix upgrades | A permitted upgrade can change a promised actor's concrete type when genuine surplus pays and every guarantee survives, including Castlers needed for their Location. |
 | Active placement | Ordinary promised pieces must occupy compatible active-board positions. Reserve pieces cannot satisfy that promise. |
 | Castlers | Select normally while protecting eligible funding and compatible capacity for the feasible enabled target. Natural selections count. Complete only the shortfall. |
 | Optional pass | The October 21 baseline uses a finite forward pass. Later Fundamental elimination, upgrades, and surplus Pawns remain permitted under the preservation rule that follows. |
@@ -53,6 +55,17 @@ The allocator rejects a purchase that makes mandatory completion impossible, eve
 This retains the later behavior without restoring an overall Chessmen ceiling.
 The earlier no-replacement wording cannot prohibit those accepted upgrades outright.
 It also cannot authorize an upgrade that breaks the promised prefix.
+
+On October 26, the user clarified the permitted upgrade of a promised prefix actor:
+
+> The only constraint not mentioned in the recommended option is castlers, which are needed for a location. Otherwise yes
+
+The question concerned a permitted BetterPawn upgrade paid from genuine surplus.
+Prefix preservation protects required funding, counts, roles, placement, and certified access, not an exact concrete-type freeze.
+A permitted prefix-piece upgrade must also preserve the Castlers needed for their Location.
+Higher material value or a higher family alone does not prove that capability survives.
+This clarification grants no new refund, price rule, or family-dominance rule.
+It does not permit active-match mutation.
 
 This closes the behavior-precedence question, not the exact algorithm or its proof.
 Refund exceptions, exact prices and liabilities, counter events, and constructive completion remain unresolved.
