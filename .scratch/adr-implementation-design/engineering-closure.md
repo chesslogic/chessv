@@ -101,6 +101,10 @@ ChessV/ChecksMate must supply sound local rules and correctly timed immutable in
 An unspecified completion oracle or failed greedy construction does not prove completeness.
 The October 23 helper proposal needs its own bounded completeness argument and independent expected fixtures.
 
+The [allocation engineering candidate](allocation-engineering-candidate.md) is **PROPOSED engineering**.
+Its exact records, algorithms, and fixtures are not an accepted algorithm or completed proof.
+It consumes the resolved prefix-upgrade authority without closing the remaining metric, extension, or integration gates.
+
 ### Later authority and resolved preservation: board-aware prices
 
 The board-value work scopes its redesign to Fundamental, not Legacy.
