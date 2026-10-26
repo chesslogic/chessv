@@ -554,6 +554,74 @@ Presentation can change coordinates only within an accepted legal equivalence th
 Forwardness and Chaos cannot move a promised Castler off its protected home rank or invalidate a Pocket-support certificate.
 An unavailable presentation refinement leaves the admitted semantic placement intact, not a different piece.
 
+### 6.6 Conservative routes and exact-state caching
+
+The user selected a conservative guarantee across permitted routes and lawful Castler cases.
+The [current authority record](engineering-closure.md#conservative-route-intent-and-open-proof) preserves the exact answer and its limits.
+This selects neither a mutable stepping pointer nor full-domain enumeration.
+The following mechanism and evidence are attributed to the existing allocation and generator children through the coordinator's October 26 handoff.
+They are not a new source investigation or additions to the frozen reports.
+
+**Proposed exact cache:** `A[I,g,z,m,k]` must equal fresh deterministic allocation for that complete normalized capture.
+
+| Key | Meaning |
+| --- | --- |
+| `I` | Mode, algorithm, source law, profile, catalog, seeds, policy, and world identity |
+| `g` | Prepared geometry |
+| `z` | All non-Material effective inputs and actual ordered Pocket choices |
+| `m` | Effective Material count |
+| `k` | A genuinely lawful, feasible Castler case, consistent with the other captured inputs |
+
+Queries use state counts, not a world-global mutable cursor or receipt chronology.
+Raw excess changes that leave effective inputs unchanged must leave projection unchanged.
+Removal and copied-state queries must equal fresh allocation.
+The generator child reports that CollectionState copies share the world projector.
+Direct count helpers and temporary precollection during copy make hook-only cache invalidation unsafe.
+Cache equivalence across these paths remains an engineering obligation.
+
+**Reported stepping counterexample:** synthetic tiny-B has one ordinary funded100 actor and preferred Minor180 with extra cost80.
+Under an illustrative improvement-before-birth order, extra40 gives Pawn100 plus Checker40.
+Extra75 instead gives BetterPawn175 alone.
+Both captures have preferred prefix length0, but retaining the earlier birth blocks the later upgrade.
+Prefix-only stepping therefore cannot establish exact replay.
+Optional tail/elimination must recompute from a canonical checkpoint, or use an exact-key full snapshot.
+Reported DP/oracle checks of separate lawful Castler0/1/2 captures do not cover all feasible cases for one inventory.
+
+**Conservative target specification:**
+
+```text
+F(w) = B + min(S, floor(B/2), 300*C)
+D_I(x,l) = permitted future normalized captures extending x,
+           with lawful protection cases and relevant board/Pocket outcomes for Location l
+L_M(x,l) = min { F(w) : w in D_I(x,l) }
+```
+
+This defines the target, not an instruction to enumerate its whole domain.
+Constructive conservative floors remain permitted.
+Sound domain coverage and nested domains `D_I(y,l) subset D_I(x,l)` under extensions establish the monotonicity argument.
+A Material suffix with a minimum over `k` covers only those axes.
+Other inputs require preservation proof or explicit domain coverage.
+Castler cases are not unconditionally `0..2`.
+Excluding an infeasible case requires complete proof, not a timeout or failed heuristic.
+Castler Locations still require separate actual capability, rights, and compatible placement.
+A material minimum cannot grant them.
+Only boards relevant to the Location enter its domain, not an unconditional minimum across every board.
+
+**Reported current-v3 counterexample, not successor evidence:** ChecksMate `0772bac`, seed7, Fundamental8x8, Chessmen20, Material30:
+
+| Consul count | Family material at Castler0/1/2 | Minimum |
+| ---: | --- | ---: |
+| 0 | `[11840,11425,11425]` | 11425 |
+| 1 | `[11680,11265,10850]` | 10850 |
+
+The minimum drops by 575 with unchanged Material after one Consul.
+This shows why omitting the Consul placement axis needs proof.
+It does not show the same loss for successor concrete `B+H`.
+The existing Fundamental suffix already covers four axes.
+Archipelago explores hypothetical inventories, but does not repair a nonmonotone local allocation rule.
+Receipt-history simulation supplies no substitute for the required domain proof.
+Supported-domain coverage, useful bounds, cache equivalence, and practical costs remain open.
+
 ## 7. Discriminating acceptance cases
 
 These are specified expectations, not executed fixtures.

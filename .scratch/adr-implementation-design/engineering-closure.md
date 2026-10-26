@@ -238,6 +238,34 @@ No numeric price table, new palette, family reclassification, or refund rule fol
 The user's 300/525 examples are illustrative, not selected prices.
 Exact mapping and proof remain engineering obligations.
 
+### Conservative-route intent and open proof
+
+The coordinator relayed this user answer on October 26:
+
+> Use the conservative minimum. The idea is that the player might get items in any order, even if they're theoretically only seeing one actual route. So we might get the worst possible order, with some players skipping ahead and not completing earlier tasks, or vice versa.
+
+Source: coordinator session `78444ebb-4f91-4995-acfc-d233bf1fcfb6`, call `call_T80dguVNJZV6wcChsUECwXDt`.
+The accepted intent is a conservative guarantee across permitted routes and lawful Castler cases.
+It does not accept a collect/remove pointer algorithm or require exhaustive enumeration.
+
+The [candidate's route/cache section](allocation-engineering-candidate.md#66-conservative-routes-and-exact-state-caching)
+records the proposed exact cache, domain specification, and attributed investigation results.
+The evidence comes from existing children `e366c8ca-91b6-44a9-a874-add72ba14de6` and `c2cee554-0e0d-4a73-8425-eced3c4a7225`, as relayed by the coordinator.
+This update performs no new source investigation and changes none of their frozen artifacts.
+
+The proposed cache uses complete normalized inputs and must equal fresh deterministic allocation.
+Prefix-only stepping fails the reported synthetic birth-to-upgrade example despite unchanged preferred prefix length.
+The conservative target minimizes `B+H` over permitted future captures, lawful protection cases, and Location-relevant board/Pocket outcomes.
+Constructive lower bounds remain permitted. Domain coverage and nesting require proof.
+Material and Castler axes alone do not establish coverage of other inputs.
+
+The reported v3 family-material minimum drops from 11425 to 10850 after one Consul at fixed Material30.
+That is an omitted-axis warning, not a demonstrated successor `B+H` loss.
+Castler cases require actual legality and feasibility, not unconditional enumeration of 0/1/2.
+Separate Castler capability/rights/placement checks remain necessary for their Location.
+No material minimum or upstream AP traversal supplies those guarantees.
+Exact cache equivalence, supported-domain coverage, extension proofs, and performance remain open.
+
 ### Next design steps
 
 1. Bind real concrete identities to a shared stage-aware profile and exact mode-qualified liabilities, including royal and Castler accounts.
