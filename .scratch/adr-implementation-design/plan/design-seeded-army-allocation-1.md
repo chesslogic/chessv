@@ -17,7 +17,9 @@ Authority update, 2026-10-25:
 [current frontier](../engineering-closure.md#current-authority-and-frontier) record the current clause-level authority.
 Later Fundamental answers permit preference-ordered post-prefix upgrades or additional Pawns and select affordability-filtered pool elimination.
 This plan predates those answers.
-Its exact tail, fixed-slot, and completion proposals need reconciliation before acceptance.
+The October 25 user decision retains that later behavior subject to the promised prefix and feasible mandatory completion.
+Every purchase must preserve Castler funding and compatible placement. Standalone affordability is insufficient.
+The exact tail, derived-unit, funding, and completion algorithms still need specification and proof.
 The original task rows remain planning records, not evidence of implementation.
 Current delivery uses branch commits and coordinator integration, not PRs.
 Historical initial-PR wording retains the substantive S0 authorization/declaration gate but does not require a PR.

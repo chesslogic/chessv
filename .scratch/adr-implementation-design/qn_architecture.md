@@ -10,7 +10,8 @@ The [current frontier](engineering-closure.md#current-authority-and-frontier) ow
 The [local allocation plan](plan/design-seeded-army-allocation-1.md) is the bounded engineering route.
 It does not require the earlier general recovery graph, Historical comparator, or multiworld trial driver.
 Later board-value answers amend Fundamental surplus and selection.
-Their exact composition with the earlier tail/funding rules remains an explicit question.
+The October 25 user decision requires later purchases to preserve the promised prefix and feasible mandatory completion.
+That behavior-precedence question is closed. Exact algorithms, typed funding, and refund exceptions remain open.
 
 ## Purpose and boundary
 

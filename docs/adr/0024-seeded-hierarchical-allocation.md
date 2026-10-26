@@ -1,10 +1,11 @@
 # Guarantee-first seeded allocation for 0.4.0
 
-Status: accepted behavior with later Fundamental amendments; composition and engineering gates open
+Status: accepted behavior and preservation rule; exact engineering and funding questions remain open
 Original decision: 2026-09-21
 Successor decision: 2026-10-21
 Fundamental refinement: 2026-10-23 (local date)
 Authority reconciliation: 2026-10-25
+Guarantee-preservation decision: 2026-10-25
 
 ## Current decision
 
@@ -22,7 +23,7 @@ Neither revision alone is the complete executable contract.
 | Preferred prefix | Fix legal preferred assignments before affordability. Select the longest affordable prefix that permits all retained mandatory completion. |
 | Active placement | Ordinary promised pieces must occupy compatible active-board positions. Reserve pieces cannot satisfy that promise. |
 | Castlers | Select normally while protecting eligible funding and compatible capacity for the feasible enabled target. Natural selections count. Complete only the shortfall. |
-| Optional pass | Visit the finite eligible alternatives once in deterministic order. Bind candidates to compatible unfilled slots without changing guaranteed assignments or accepted extras. |
+| Optional pass | The October 21 baseline uses a finite forward pass. Later Fundamental elimination, upgrades, and surplus Pawns remain permitted under the preservation rule that follows. |
 | Completion | Every accepted candidate preserves mandatory completion. Applicable Pawn baselines, composition minimums, reserves, and dedicated actors remain. |
 | Later setups | Lawful reallocation can change optional pieces. New eligibility or geometry can change final pieces without a reroll. Certified access remains protected. |
 | Match boundary | No active-match mutation. Actual later inventory and plando bonuses retain their separate obligations. |
@@ -35,15 +36,26 @@ Its scope prioritizes Fundamental and does not redesign Legacy.
 | Matter | Later author decision | Boundary still to specify |
 | --- | --- | --- |
 | Board prices | Keep earned credits fixed and vary concrete costs by prepared board. Keep the 8x8 values unchanged | Typed funding, protected bases, royal/Castler liabilities, and accepted profile values |
-| Optional selection | After the first unaffordable concrete draw, filter affordable families and types and advance the seed | Exact finite enumeration/counters and composition with the mandatory-completion guard |
-| Surplus | Chessmen are a minimum, not an army-size maximum. After satisfying the prefix, use remaining material for upgrades or additional Pawns in the player's preference order | Source eligibility, derived-unit identity, capacity, and interaction with the earlier no-replacement tail rule |
+| Optional selection | After the first unaffordable concrete draw, filter affordable families and types and advance the seed. Every purchase preserves the guarantees | Exact finite enumeration, counters, and constructive completion guard |
+| Surplus | Chessmen are a minimum, not an army-size maximum. After satisfying the prefix, use remaining material for upgrades or additional Pawns in the player's preference order | Source eligibility, derived-unit identity, capacity, and exact upgrade procedure |
 | Later boards | A prefix on one board need not survive on another board. Allocate under that board's prices | Conservative access across geometry changes |
 | Refunds | Spending is mostly one-way. The user did not settle refund exceptions | No blanket refund prohibition or new refund right |
 
 These amendments replace the unconditional Fundamental army-size ceiling.
 They do not mint received Chessmen or free funds.
 They do not select ADR0024's old child-tail scheduler, pooled Castler grant, or refundable base model.
-The exact interaction between the two accepted selection descriptions remains an explicit composition gate.
+On October 25, the user resolved the preservation question:
+
+> Yes—later allocation behavior must preserve those guarantees (Recommended)
+
+Later elimination, upgrades, and surplus purchases must preserve the promised prefix and feasible mandatory completion, including Castler funding and compatible placement.
+The allocator rejects a purchase that makes mandatory completion impossible, even when its standalone price is affordable.
+This retains the later behavior without restoring an overall Chessmen ceiling.
+The earlier no-replacement wording cannot prohibit those accepted upgrades outright.
+It also cannot authorize an upgrade that breaks the promised prefix.
+
+This closes the behavior-precedence question, not the exact algorithm or its proof.
+Refund exceptions, exact prices and liabilities, counter events, and constructive completion remain unresolved.
 The [board-value plan](../../.scratch/board-aware-material-values/spec.md#9-open-decisions)
 records D3/D5/D6 and the other bounded refinements.
 
@@ -82,8 +94,8 @@ Exact Castler applications, payers, releases, and compatible slots still need th
 
 The successor does not ratify every September palette, preset, cap, or grant change.
 Those exact policy and schema mappings remain with the engineering owners.
-The later board-value decisions need an explicit reconciliation of their scheduler and typed funding.
-Neither a newer filename nor a proposed helper resolves that question.
+The later board-value decisions require an exact scheduler and typed funding under the accepted preservation rule.
+Neither a newer filename nor a proposed helper supplies that engineering result.
 
 ## Consequences and acceptance
 

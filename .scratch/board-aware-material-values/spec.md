@@ -19,7 +19,10 @@ Authority reconciliation, 2026-10-25:
 [current frontier](../adr-implementation-design/engineering-closure.md#current-authority-and-frontier)
 record the relationship between this plan and the October 21 successor.
 D3/D5/D6 are later author refinements, not discarded proposals.
-The exact tail/completion/funding composition remains open.
+The October 25 user decision retains later elimination, upgrades, and surplus behavior under the guarantee-preservation rule.
+Every purchase must preserve the promised prefix and feasible mandatory completion, including Castler funding and compatible placement.
+A standalone affordable purchase is rejected if it makes mandatory completion impossible.
+Exact algorithms, typed funding/prices, and refund exceptions remain open.
 This plan does not silently authorize a replacement of the retained Castler, protected-base, or certified-access obligations.
 
 ## 1. Problem

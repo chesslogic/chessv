@@ -32,6 +32,7 @@ The proposal was assistant-authored and explicitly accepted, not an unselected r
 | Complete CV02 acceptance | Same session, `files\common-cv02-pres0-composition-acceptance-v1.md`, sections 1-5. SHA256 `a4a59bdd0d6cef943c7eb73fe28edfc87aea04c6854520c548b86866af9f4364` |
 | Later local architecture | [Seeded allocation plan](plan/design-seeded-army-allocation-1.md), commit `12562dc`. Confirmed behavior remains distinct from proposed helper construction |
 | Later Fundamental decisions | [Board-value plan](../board-aware-material-values/spec.md), commit `f3e9f3d`, D3/D5/D6. Original user events in session `2181993b-955f-43a7-b1fb-228e6df19b38` establish the bounded amendments |
+| Guarantee preservation | User decision relayed on 2026-10-25 by coordinator session `78444ebb-4f91-4995-acfc-d233bf1fcfb6`, call `call_HaAceB0tYWrxtcDBRmkFu8Qj`. Later behavior retains the promised prefix and feasible mandatory completion |
 
 Session artifacts resolve under `C:\Users\aaedi\.copilot\session-state`.
 The current decisions and gates are recorded here and in ADR0024.
@@ -46,7 +47,7 @@ Their old PR wording does not override the current no-PR delivery instruction.
 | Runtime and generator | Both consume the guaranteed final-piece prefix with retained Legacy and Fundamental funding. Later Fundamental surplus can add derived Pawns without receipts | A22/P1/G2 |
 | Affordability | Inclusive `>=`, subject to actual sources, lawful releases, obligations, and placement | AL01/Common |
 | Stable series | Chronology-independent world/player priorities. Material-only changes preserve order under unchanged legal inputs. Ordinary-slot growth extends assignments under unchanged legal choices | AL01-choice-series |
-| Prefix and tail | October 21 selects the longest completable prefix and one finite tail pass. Later Fundamental elimination/upgrades need explicit composition, not silent precedence | AL01-04/P1 |
+| Prefix and tail | Later Fundamental elimination, upgrades, and surplus remain permitted. Every purchase preserves the promised prefix and feasible mandatory completion. Standalone affordability is insufficient | AL01-04/P1 |
 | Castlers | Natural selections count. Protect eligible funds and compatible capacity for the feasible shortfall, not a forced Castler-first phase | AL02-04 |
 | Composition and reserves | Retain supported T/N guarantees, Pawn-source protection, dedicated actors, and active/reserve ownership. Ordinary promises must be active | AL02/CV01 |
 | Later changes | Optional pieces can change lawfully between setups. No active-match mutation or loss of certified access | PM/LC/P1 |
@@ -98,7 +99,7 @@ ChessV/ChecksMate must supply sound local rules and correctly timed immutable in
 An unspecified completion oracle or failed greedy construction does not prove completeness.
 The October 23 helper proposal needs its own bounded completeness argument and independent expected fixtures.
 
-### Later authority and open composition: board-aware prices
+### Later authority and resolved preservation: board-aware prices
 
 The board-value work scopes its redesign to Fundamental, not Legacy.
 Its `needs-triage` status does not erase later direct author answers.
@@ -118,12 +119,23 @@ The later surplus decision does not change token ownership for grant-backed unit
 It does not authorize ADR0024's old free Castler grant or refundable cheap-base equations.
 The exact use of ordinary versus dedicated funds still needs a typed contract.
 
-The remaining deciding question concerns composition, not whether these answers exist:
-How do Fundamental elimination and preference-ordered upgrades coexist with the earlier finite tail and no-accepted-extra-replacement rule?
-The mandatory-completion guard, exact counter events, and lawful refund exceptions also need explicit treatment.
-The coordinator must resolve observable alternatives through source evidence or the user.
-Neither silent retention of the October 21 tail nor wholesale reuse of September's scheduler settles that boundary.
-Engineering can specify unaffected series/funding interfaces without claiming this composition accepted.
+The coordinator relayed the user's October 25 answer to the guarantee-preservation question:
+
+> Yes—later allocation behavior must preserve those guarantees (Recommended)
+
+This is a user decision reported by the coordinator, not an independently retrieved original event in this reconciliation.
+The question covered every purchase, the promised prefix, and feasible mandatory completion, including Castler funding and placement.
+Later Fundamental elimination, upgrades, and surplus Pawns remain permitted.
+Chessmen remain a minimum, not an overall army-size maximum.
+The allocator rejects a purchase that makes mandatory completion impossible, even when its standalone price is affordable.
+The earlier no-replacement wording does not ban the accepted surplus upgrades outright.
+Those upgrades still cannot break the promised prefix or mandatory obligations.
+
+The behavior-precedence conflict is resolved.
+Exact finite enumeration, counter events, upgrade procedures, typed prices/liabilities, and constructive completion proofs remain engineering work.
+Lawful refund exceptions remain unanswered.
+This answer selects no blanket refund prohibition, new release right, price table, or Castler funding equation.
+AL/PM/LC/CV01/D03 remain open, and accepted CV02 design/reference results remain accepted.
 
 ### Re-entry and delivery
 

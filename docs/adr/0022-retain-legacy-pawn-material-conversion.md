@@ -14,7 +14,10 @@ Both modes remain supported.
 ADR0024's historical September retirement of Legacy does not control the successor.
 Its later Fundamental amendments permit post-prefix upgrades or additional Pawns from remaining material.
 That is not a new receipt or permission to spend protected funds.
-The exact optional-selection and funding composition remains open.
+The October 25 decision requires every later purchase to preserve the promised prefix and feasible mandatory completion.
+This includes Castler funding and compatible placement.
+Standalone affordability is insufficient.
+Exact selection, funding, and refund details remain open.
 
 Under the October 21 baseline, preferred final-slot assignments precede affordability.
 The allocator promises the longest affordable prefix that permits mandatory completion, then makes one finite forward optional pass.
@@ -66,7 +69,7 @@ The allocation shows a shortage instead of inventing inventory.
 Viability uses existing core reachability with frozen, post-cap requirements.
 No second pre-cap strength gate applies.
 The October 21 successor selects one finite optional pass after the guaranteed prefix.
-The later Fundamental pool-elimination and surplus-upgrade direction needs the explicit composition recorded in ADR0024.
+The later Fundamental pool-elimination and surplus-upgrade direction obeys ADR0024's accepted guarantee-preservation rule.
 The retained historical approximation rules still apply.
 The transfer ledger must distinguish ordinary affordability from their explicit allowance and overdraw.
 
