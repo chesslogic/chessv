@@ -3,6 +3,7 @@
 Status: Proposed engineering specification under reconciled purchase guarantees. Pricing and exact mechanics remain open. No implementation authorization.
 Date: 2026-10-25
 Reconciliation: 2026-10-25, coordinator relay `call_FMqPTlTVzppQi3hbAotueDGW`.
+Prefix-upgrade decision: 2026-10-26, coordinator relay `call_lqd1YtSNa0r8nAs3wbi6dbA2`.
 Scope: E-SERIES, E-FUNDING, E-PREFIX, E-CASTLER, E-TAIL, and E-PLACEMENT.
 Consumers: Existing A22/P1, PM/G2, CV01, and Common/D03 owners.
 
@@ -26,9 +27,11 @@ Sections 3-7 propose engineering under this resolved rule.
 Inclusive lawful funding, stable underlying priorities, actual placement, and the protected prefix remain.
 Natural Castlers reduce the shortfall. Optional actors create no received inventory or permanent entitlement.
 Exact refund, counter, and pricing details remain open.
-**Open preservation interpretation:** The coordinator is asking whether a funded improvement of a promised actor can still satisfy its promise.
-The accepted preservation rule does not itself require exact-piece immutability.
-This candidate must neither prohibit every such upgrade nor admit it through an invented family-dominance rule.
+**Resolved prefix upgrades:** The user permits an otherwise permitted funded improvement of a promised actor while preserving the promised guarantees.
+The answer explicitly adds Castlers needed for a Location to funding, counts, roles, legal placement, and certified-access preservation.
+The exact answer was: "The only constraint not mentioned in the recommended option is castlers, which are needed for a location. Otherwise yes".
+There is no exact-piece freeze, blanket family/price dominance, or new refund right.
+The authority writer owns the durable decision record. Exact predicate encoding and upgrade enumeration remain engineering work.
 
 **Candidate defaults:** Everything in sections 3-7 is proposed engineering, including names, ordering, witness selection, and the completion algorithm.
 Retained requirements apply through the reconciliation just stated.
@@ -241,7 +244,7 @@ Its existence does not increase direct-entitlement count D or restore a consumed
 The admitted birth catalog and exact charging rule await the pricing/source-law specification.
 
 An optional upgrade identifies one eligible source actor and its proposed final entry.
-Eligibility for a promised actor depends on the pending preservation interpretation.
+Promised actors are eligible for otherwise permitted improvements that preserve their promises, including required Castler support for its Location.
 The proposed transaction preserves its birth affiliation and records the old debit, authorized releases, and new payer allocations.
 The release cannot double-count the old value or unlock protected base/reserve funding.
 Concrete price differences alone do not establish a lawful refund.
@@ -260,7 +263,9 @@ A scalar total cannot hide duplicated Parts, lost custody, or the same reserve f
 A transaction first replaces its permitted upgrade source with the proposed final entry.
 Every other already accepted entry remains fixed during that completion call.
 If the source actor has a promise, admission must establish that the proposed result still satisfies that promise.
-The exact predicate is unresolved. A higher price, family label, or evaluated strength is not a substitute.
+Admission preserves funding, counts, credited roles, legal placement, certified access, and required Castler support for its Location.
+A higher price, family label, or evaluated strength is not a substitute for those predicates.
+The exact machine-readable predicates remain to specify, not the permission to improve a promised actor.
 The completion helper cannot refund or retract the new purchase to justify its admission.
 A successful result includes actual active squares, reserve ownership, and all funding allocations.
 The result also includes actual composition counts, Castler applications, and Pocket support.
@@ -461,16 +466,18 @@ Legitimate retained shortages need an explicit valid shortage witness.
 The operation pool contains permitted existing-slot assignments, eligible actor upgrades, and funded Pawn births.
 A filled received-slot table does not stop the latter two operations.
 Upgrades can replace accepted optional pieces when the retained operation law permits that replacement.
-Whether they can improve promised actors while preserving their promises is an open user interpretation.
+Otherwise permitted improvements can also replace promised actors' concrete members while preserving their promises.
 Do not treat prefix membership as an inherited hard ban.
 Do not treat a larger family or price as inherited permission.
 
 Candidate representation: retain the original promise separately from the current actor entry.
-The promise records its beneficiary and every credited role, composition, placement, and resource predicate.
-This representation does not select whether exact concrete identity is also a required predicate.
-An accepted upgrade would preserve that original promise rather than weaken or recreate it.
-Until the user decides, the upgrade-source domain and its whole-domain acceptance remain incomplete.
-The unknown domain cannot silently become a runtime exclusion or an affordability failure.
+The promise records its beneficiary and every credited role, composition, placement, resource, and certified-access predicate.
+It explicitly carries required Castler support and the Location predicate that consumes that support.
+Concrete-member identity is not an unconditional preservation predicate.
+An accepted upgrade preserves the original promise rather than weakening or recreating it.
+The witness must satisfy all credited predicates in the same realized setup.
+Ordinary material or a higher family cannot compensate for lost required Castler support.
+Exact upgrade-source enumeration and predicate encoding remain incomplete engineering, not another user-permission question.
 
 For each destination member, enumerate allowed operation kinds, canonical source-actor IDs, and compatible squares.
 Candidate operation-kind tie order is existing-slot assignment, optional upgrade, then Pawn birth.
@@ -521,7 +528,7 @@ The saved witness is data in the pure module, not mutations to a live Game.
 
 Let `b` bound lawful births and `u` bound permitted upgrades per eligible actor.
 Let `a` count initial eligible actors, including `s` actors that still need their one initial assignment.
-Whether promised actors enter this domain depends on the pending preservation interpretation.
+Promised actors enter this domain when the permitted improvement preserves every required predicate, including Castler support.
 With no actor deletion and an acyclic upgrade relation, at most `s+b+(a+b)*u` optional purchases occur.
 This is a conditional proof, not permission to invent an upgrade relation.
 Paid improvements must have an accepted strict progress measure or an exact nonrenewable right.
@@ -572,7 +579,8 @@ They do not settle its mapping to the later concrete-MG price profile.
 | BIRTH | All received slots are filled. Lawful surplus80 remains. Two compatible squares and permitted birth debit40. | A minimum-not-maximum allocator can fund two additional Pawns if completion stays valid. No received-token count increases. A slot-bound tail cannot satisfy this case. |
 | BIRTH-GUARD | The same birth opportunities, but funds120 must preserve a mandatory debit80. | Admit one Pawn40 and retain80. Reject a second Pawn40 despite standalone affordability. If a birth consumes mandatory placement, reject it even before this monetary limit. |
 | UPGRADE | An unpromised actor has recorded refundable debit100. A lawful replacement needs150. Funds80 include a mandatory40 obligation. | Atomic net debit50 is standalone affordable but fails completion. A permitted alternative with net debit40 can pass equality. These are synthetic charges, not a new refund rule. |
-| PREFIX-UPGRADE | Every received actor belongs to the prefix. A funded BetterPawn or other permitted improvement preserves all currently identified credited predicates. | Pending user interpretation: establish whether the original promise permits this improvement. Do not ban it solely for prefix membership or accept it solely for higher price/family. Include a negative case that loses a credited role or placement predicate. |
+| PREFIX-UPGRADE | Every received actor belongs to the prefix. A permitted BetterPawn improvement uses genuine free Material. Funding, counts, credited roles, placement, certified access, and required Castler support remain satisfied. | Admit the improvement with its coupled witness. Preserve the original promise and actor affiliation while changing its concrete member. Do not require an unpromised actor or exact-piece identity. |
+| PREFIX-CASTLER | A promised actor supplies the only required Castler support for a Location. A proposed higher-value upgrade loses that role or compatible placement without a lawful replacement witness. | Reject despite standalone affordability or increased material. Preserve the Location's Castler requirement explicitly. A companion positive fixture must show every required predicate and actual compatible support, not only a family label. |
 | CASTLER-UPGRADE | A naturally selected optional Castler fulfills target1. A proposed upgrade removes its qualifying role or home placement. | Accept only if the same post-purchase witness lawfully restores the target elsewhere. Otherwise reject, even with sufficient ordinary funds. Do not retract the upgrade inside its witness. |
 | COUNTER | An actual preferred draw at ordinal k fails. Completion binding probes run before the next optional draw. | The optional draw uses k+1. Probes consume no ordinal. Failed purchase rollback restores resources, not k. Exact family/type stream alignment still needs vectors. |
 | SLOT | Same legal choices, sources, geometry, and mandatory occupancy. Append one exchangeable ordinary token. | Existing preferred entries, priorities, and squares are identical. The new entry follows them. A changed source-role restriction does not satisfy this case's premise. |
@@ -614,16 +622,25 @@ The case authors must freeze expected vectors independently before either implem
 | CV01/fixture owners | Section7 plus exact candidate namespaces and source revision | Supply independent full captures, pins, PRF vectors, custody traces, active squares, and negative/restoration pairs in both languages. |
 | Conservative-access/PM | Exact witness resources, covered assumptions, and no optional entitlement | Prove useful universal lower bounds over covered receipts, eligibility, geometry, and actual Pocket choices. Prefix length is insufficient. |
 | Generation lifecycle/G2 | Immutable input/result binding and classified non-success | Bind before the earliest dependent query. Preserve starts, links, copies, retained plando, frozen prices, and real upstream accessibility acceptance. |
-| Later ChecksMate child | Exact namespace/encoding proposal, row semantics, and required fixture outputs | Investigate cross-repository implementations and lifecycle hooks. No such source investigation occurred here. |
+| ChecksMate consumer | Exact namespace/encoding proposal, row semantics, and required fixture outputs | Join the bounded generator report with accepted allocator predicates. This child did not investigate cross-repository source. |
 | Coordinator/D03 | This candidate and the explicit remaining proof gates | Integrate accepted results only. Do not infer implementation, native, package, or release readiness. |
 
 The user-level guarantee reconciliation is resolved.
 It is not a remaining scheduler-versus-guarantees interview.
-The narrower meaning of preservation for an improvement to a promised actor remains with the coordinator's current user question.
-That decision is necessary before the exact upgrade-source domain can receive acceptance.
+Permission for improvements to promised actors is also resolved, with explicit Castler protection for its Location.
+No further user decision is required on exact-piece freezing.
+The exact upgrade-source domain and predicate encoding still need engineering acceptance.
 The coordinator must obtain acceptance for observable engineering defaults before freezing them.
 Those defaults include variety-count scope, completion ties, preferred squares, guard-failure phase transition, state-local elimination, and exact draw alignment.
 If the local completion probe fails practical bounds, the next decision concerns a narrower exact mechanism, not weaker guarantees.
+
+The generator consumer report is `C:\Users\aaedi\.copilot\session-state\c2cee554-0e0d-4a73-8425-eced3c4a7225\files\generator-guarantee-closure.md`.
+Its bounded metric and lifecycle seams remain inputs, not duplicated proof here.
+PM must quantify over all permitted promise-preserving upgrades, not only the original concrete members.
+It must keep semantic E, concrete BOARD B, and supported-Pocket credit distinct.
+The report's pending prefix-upgrade question is superseded by the decision recorded here.
+Its separate threshold-domain and extension-closure gaps remain open.
+G2 must bind the access contract before its first dependent query, separately from the later final supply census.
 
 ### Concrete refund disposition
 
