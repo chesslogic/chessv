@@ -26,6 +26,9 @@ Sections 3-7 propose engineering under this resolved rule.
 Inclusive lawful funding, stable underlying priorities, actual placement, and the protected prefix remain.
 Natural Castlers reduce the shortfall. Optional actors create no received inventory or permanent entitlement.
 Exact refund, counter, and pricing details remain open.
+**Open preservation interpretation:** The coordinator is asking whether a funded improvement of a promised actor can still satisfy its promise.
+The accepted preservation rule does not itself require exact-piece immutability.
+This candidate must neither prohibit every such upgrade nor admit it through an invented family-dominance rule.
 
 **Candidate defaults:** Everything in sections 3-7 is proposed engineering, including names, ordering, witness selection, and the completion algorithm.
 Retained requirements apply through the reconciliation just stated.
@@ -106,7 +109,7 @@ Catalog, policy, and price hashes belong in result binding, not in a count-depen
 | Ordinary slot | `(ordinary, ordinal)`, ordinal `0..s-1`, for genuinely exchangeable owned slots. Special roles retain their own source-bound IDs. |
 | Concrete member | Pinned catalog `type_id`, family ID, and funded-quality tag. A display name, notation, or runtime object hash is not identity. |
 | Preferred entry | `(slot_id, member_id)`, visited by numeric ordinary ordinal after fixed dedicated obligations. |
-| Optional proposal | `(proposal_ordinal, member_id, operation_kind)`. Operations distinguish final assignment, upgrade of an unpromised actor, and funded Pawn birth. Source-actor identity distinguishes upgrade bindings. |
+| Optional proposal | `(proposal_ordinal, member_id, operation_kind)`. Operations distinguish final assignment, a permitted actor upgrade, and funded Pawn birth. Source-actor identity distinguishes upgrade bindings. |
 | Placement | `(relative_rank, file)` in the captured human formation. The primary square and actual mandatory occupants are unavailable. |
 
 Material sources never increase the received-slot count `s`.
@@ -237,7 +240,8 @@ The actor's `FinalEntry` records its member and square.
 Its existence does not increase direct-entitlement count D or restore a consumed token.
 The admitted birth catalog and exact charging rule await the pricing/source-law specification.
 
-An optional upgrade identifies one unpromised source actor and its proposed final entry.
+An optional upgrade identifies one eligible source actor and its proposed final entry.
+Eligibility for a promised actor depends on the pending preservation interpretation.
 The proposed transaction preserves its birth affiliation and records the old debit, authorized releases, and new payer allocations.
 The release cannot double-count the old value or unlock protected base/reserve funding.
 Concrete price differences alone do not establish a lawful refund.
@@ -253,8 +257,10 @@ A scalar total cannot hide duplicated Parts, lost custody, or the same reserve f
 ### 5.1 Obligations and result
 
 `RequiredCompletion(capture, postPurchaseEntries, target)` constructs the remaining entries without undoing the proposed purchase.
-A transaction first replaces its permitted unpromised upgrade source with the proposed final entry.
-Every promised entry and every other already accepted entry remains fixed during that completion call.
+A transaction first replaces its permitted upgrade source with the proposed final entry.
+Every other already accepted entry remains fixed during that completion call.
+If the source actor has a promise, admission must establish that the proposed result still satisfies that promise.
+The exact predicate is unresolved. A higher price, family label, or evaluated strength is not a substitute.
 The completion helper cannot refund or retract the new purchase to justify its admission.
 A successful result includes actual active squares, reserve ownership, and all funding allocations.
 The result also includes actual composition counts, Castler applications, and Pocket support.
@@ -318,7 +324,8 @@ The bounded birth extension described next is a proposed correction, not a prove
 
 The row compiler enumerates each slot's finite permitted final members, baseline/reserve alternatives, and legal placement classes.
 Each row carries its typed debit, role contributions, Castler predicate, and token effects.
-No row retracts a promised entry, another accepted actor, or the proposed purchase.
+No row retracts another accepted actor or the proposed purchase.
+Every row must preserve the accepted promises under the eventual explicit interpretation.
 Rows include retained fallback obligations rather than omitting inconvenient slots.
 
 For a positive-debit birth profile, append at most `b` virtual birth positions after the real-slot layers.
@@ -451,11 +458,19 @@ Legitimate retained shortages need an explicit valid shortage witness.
 
 ### 6.2 Candidate elimination and binding defaults
 
-The operation pool contains permitted existing-slot assignments, upgrades of unpromised actors, and funded Pawn births.
+The operation pool contains permitted existing-slot assignments, eligible actor upgrades, and funded Pawn births.
 A filled received-slot table does not stop the latter two operations.
-The promised prefix is never an optional upgrade source.
 Upgrades can replace accepted optional pieces when the retained operation law permits that replacement.
-They cannot move or replace promised entries.
+Whether they can improve promised actors while preserving their promises is an open user interpretation.
+Do not treat prefix membership as an inherited hard ban.
+Do not treat a larger family or price as inherited permission.
+
+Candidate representation: retain the original promise separately from the current actor entry.
+The promise records its beneficiary and every credited role, composition, placement, and resource predicate.
+This representation does not select whether exact concrete identity is also a required predicate.
+An accepted upgrade would preserve that original promise rather than weaken or recreate it.
+Until the user decides, the upgrade-source domain and its whole-domain acceptance remain incomplete.
+The unknown domain cannot silently become a runtime exclusion or an affordability failure.
 
 For each destination member, enumerate allowed operation kinds, canonical source-actor IDs, and compatible squares.
 Candidate operation-kind tie order is existing-slot assignment, optional upgrade, then Pawn birth.
@@ -504,8 +519,9 @@ The saved witness is data in the pure module, not mutations to a live Game.
 
 ### 6.4 Finite stopping and unresolved operation law
 
-Let `b` bound lawful births and `u` bound permitted upgrades per unpromised actor.
-Let `a` count initial unpromised actors, including `s` actors that still need their one initial assignment.
+Let `b` bound lawful births and `u` bound permitted upgrades per eligible actor.
+Let `a` count initial eligible actors, including `s` actors that still need their one initial assignment.
+Whether promised actors enter this domain depends on the pending preservation interpretation.
 With no actor deletion and an acyclic upgrade relation, at most `s+b+(a+b)*u` optional purchases occur.
 This is a conditional proof, not permission to invent an upgrade relation.
 Paid improvements must have an accepted strict progress measure or an exact nonrenewable right.
@@ -555,7 +571,8 @@ They do not settle its mapping to the later concrete-MG price profile.
 | ELIMINATE | Surplus7. Family A has only member X:9. Family B has Y:3 and Z:5. Both B members have a guarded binding. | Remove X and A. Remap the next seeded family/type draw to B and its surviving members. Do not assert the old fixed-tail order or redraw the failed position. |
 | BIRTH | All received slots are filled. Lawful surplus80 remains. Two compatible squares and permitted birth debit40. | A minimum-not-maximum allocator can fund two additional Pawns if completion stays valid. No received-token count increases. A slot-bound tail cannot satisfy this case. |
 | BIRTH-GUARD | The same birth opportunities, but funds120 must preserve a mandatory debit80. | Admit one Pawn40 and retain80. Reject a second Pawn40 despite standalone affordability. If a birth consumes mandatory placement, reject it even before this monetary limit. |
-| UPGRADE | An unpromised actor has recorded refundable debit100. A lawful replacement needs150. Funds80 include a mandatory40 obligation. | Atomic net debit50 is standalone affordable but fails completion. A permitted alternative with net debit40 can pass equality. Neither operation can target a promised actor. These are synthetic charges, not a new refund rule. |
+| UPGRADE | An unpromised actor has recorded refundable debit100. A lawful replacement needs150. Funds80 include a mandatory40 obligation. | Atomic net debit50 is standalone affordable but fails completion. A permitted alternative with net debit40 can pass equality. These are synthetic charges, not a new refund rule. |
+| PREFIX-UPGRADE | Every received actor belongs to the prefix. A funded BetterPawn or other permitted improvement preserves all currently identified credited predicates. | Pending user interpretation: establish whether the original promise permits this improvement. Do not ban it solely for prefix membership or accept it solely for higher price/family. Include a negative case that loses a credited role or placement predicate. |
 | CASTLER-UPGRADE | A naturally selected optional Castler fulfills target1. A proposed upgrade removes its qualifying role or home placement. | Accept only if the same post-purchase witness lawfully restores the target elsewhere. Otherwise reject, even with sufficient ordinary funds. Do not retract the upgrade inside its witness. |
 | COUNTER | An actual preferred draw at ordinal k fails. Completion binding probes run before the next optional draw. | The optional draw uses k+1. Probes consume no ordinal. Failed purchase rollback restores resources, not k. Exact family/type stream alignment still needs vectors. |
 | SLOT | Same legal choices, sources, geometry, and mandatory occupancy. Append one exchangeable ordinary token. | Existing preferred entries, priorities, and squares are identical. The new entry follows them. A changed source-role restriction does not satisfy this case's premise. |
@@ -602,6 +619,8 @@ The case authors must freeze expected vectors independently before either implem
 
 The user-level guarantee reconciliation is resolved.
 It is not a remaining scheduler-versus-guarantees interview.
+The narrower meaning of preservation for an improvement to a promised actor remains with the coordinator's current user question.
+That decision is necessary before the exact upgrade-source domain can receive acceptance.
 The coordinator must obtain acceptance for observable engineering defaults before freezing them.
 Those defaults include variety-count scope, completion ties, preferred squares, guard-failure phase transition, state-local elimination, and exact draw alignment.
 If the local completion probe fails practical bounds, the next decision concerns a narrower exact mechanism, not weaker guarantees.
