@@ -1,7 +1,8 @@
 # Guarantee-first allocation: candidate engineering contract
 
-Status: Proposed engineering specification. Scheduler and pricing admission await authority resolution. No implementation authorization.
+Status: Proposed engineering specification under reconciled purchase guarantees. Pricing and exact mechanics remain open. No implementation authorization.
 Date: 2026-10-25
+Reconciliation: 2026-10-25, coordinator relay `call_FMqPTlTVzppQi3hbAotueDGW`.
 Scope: E-SERIES, E-FUNDING, E-PREFIX, E-CASTLER, E-TAIL, and E-PLACEMENT.
 Consumers: Existing A22/P1, PM/G2, CV01, and Common/D03 owners.
 
@@ -11,43 +12,36 @@ This document supplies candidate defaults for the [local allocation plan](plan/d
 It supplements the [contracts](contracts.md) and [engineering closure register](engineering-closure.md).
 It does not change their acceptance statuses.
 
-This candidate develops the October 21 successor, sections 2, 3, and 5-7.
-Its exact source is `C:\Users\aaedi\.copilot\session-state\25c7b461-3d4d-419f-961a-888fe5699cef\files\common-guarantee-first-allocation-successor-v2.md`.
-The inspected SHA256 is `8a10074c2dc46a1752dc27ebb8ef7e2b1a35efb3b9b5934f77f7c55a0e037a9e`.
-The October 23 plan narrows construction to a local allocator, not an Archipelago solver or a general recovery graph.
+The authority baseline is commit `6158507a0b8f0095fb69ff3d0d85779f3b1ee153`.
+Its [ADR0024](../../docs/adr/0024-seeded-hierarchical-allocation.md#current-decision) and [current frontier](engineering-closure.md#current-authority-and-frontier) record the user decisions and original evidence.
+This child read those documents from the commit objects without changing their files.
+The October 23 plan keeps construction local, not an Archipelago solver or a general recovery graph.
 
-**Authority hold:** [Board-material section 2](../board-aware-material-values/spec.md#2-confirmed-scope) also labels a different allocation scheduler accepted.
-It stops the prefix at the first unaffordable draw, then remaps affordability-filtered choices and advances counters.
-It also selects concrete MG spending, unlike the retained Fundamental funded-value branch.
-The coordinator also reports recovered October 23 user authority from session `2181993b-955f-43a7-b1fb-228e6df19b38`.
-That authority makes received Chessmen a minimum, not a total-unit maximum.
-Post-prefix surplus can fund upgrades or additional Pawns by preference.
-The coordinator is obtaining the user's decision about these rules' interaction with protected completion.
-This child did not independently retrieve those original events.
-The authority reconciliation owns their durable citation.
+**Resolved guarantee reconciliation:** Every later purchase preserves the promised prefix and feasible mandatory completion, including Castler funding and placement.
+The later elimination, surplus-upgrade, and additional-Pawn behavior remains selected.
+Standalone affordability cannot consume funding or capacity necessary for mandatory completion.
+For Fundamental, this candidate does not reinstate the old fixed tail, descending-prefix scan, or total-slot ceiling.
 
-Sections 3-7 specify shared mechanisms and explicitly bounded alternatives.
-They do not freeze the old slot-bound tail, a total-slot ceiling, or a first-failure policy.
-
-**Successor-confirmed behavior:** Inclusive funding uses retained source laws. Preferred assignments precede affordability. The allocator promises the longest completable prefix.
-It protects funding and capacity for mandatory completion, then makes one finite optional pass.
-Natural Castlers count before shortfall completion. Optional pieces create no permanent entitlement.
-The exact optional scheduler and surplus-birth integration now require reconciliation with the later authority.
+Sections 3-7 propose engineering under this resolved rule.
+Inclusive lawful funding, stable underlying priorities, actual placement, and the protected prefix remain.
+Natural Castlers reduce the shortfall. Optional actors create no received inventory or permanent entitlement.
+Exact refund, counter, and pricing details remain open.
 
 **Candidate defaults:** Everything in sections 3-7 is proposed engineering, including names, ordering, witness selection, and the completion algorithm.
-Requirements quoted from the successor retain their authority. Candidate defaults do not obtain authority through that quotation.
+Retained requirements apply through the reconciliation just stated.
+Candidate defaults do not obtain authority through that reconciliation.
 
 | Authority seam | Disposition for this candidate |
 | --- | --- |
-| ADR0022 retains Legacy, while ADR0024 retires it | Draft both mode-qualified paths. The coordinator's preliminary reconciliation retains both. Final authority mapping remains external to this document. |
-| ADR0024 pools concrete base differences, while the successor protects bases | Do not release a funded100 base merely because its concrete Pawn costs40 or85. Do not import ADR0024's pooled equation. |
-| Castler receipts, slots, and charges differ between records | Use the selected mode's actual token and source law. Do not adopt ADR0024's extra-unit grant or current code's preconstruction implicitly. |
+| Retained modes | Both Legacy and Fundamental remain. Later board-material amendments apply to Fundamental, not a new Legacy redesign. |
+| Historical ADR0024 pooled concrete base differences | Current authority preserves funded100 for ordinary Pawn40/85/100. Do not import the superseded pooled equation. |
+| Castler receipts, slots, and charges differ between historical records | Use the selected mode's actual token and source law. Do not adopt the superseded extra-unit grant or current code's preconstruction implicitly. |
 | Board-material work can change prices | Require pinned pricing, selector, geometry, and source-law data. Illustrative amounts here do not freeze the next contract. |
 | Later received-Chessmen minimum | A funded surplus Pawn has a new local actor identity, not another received Chessman token. The actual total can exceed received Chessmen. |
 | Existing hierarchy namespaces and transition schedule | Retain the SHA256 primitive, not the old allocator schedule or suffix-search acceptance claims. |
 
 The accepted CV02 design/reference gate stays closed.
-Its receipt is `common-cv02-pres0-composition-acceptance-v1.md` beside the controlling successor.
+The current frontier links its exact accepted receipt and pin.
 Native conformance, useful access bounds, generation lifecycle, and D03 integration remain separate obligations.
 No new public feature, mode, inventory grant, or old-world compatibility path follows.
 
@@ -112,7 +106,7 @@ Catalog, policy, and price hashes belong in result binding, not in a count-depen
 | Ordinary slot | `(ordinary, ordinal)`, ordinal `0..s-1`, for genuinely exchangeable owned slots. Special roles retain their own source-bound IDs. |
 | Concrete member | Pinned catalog `type_id`, family ID, and funded-quality tag. A display name, notation, or runtime object hash is not identity. |
 | Preferred entry | `(slot_id, member_id)`, visited by numeric ordinary ordinal after fixed dedicated obligations. |
-| Optional proposal | `(proposal_ordinal, member_id, operation_kind)`. Operation kinds distinguish assignment to an existing slot from a permitted funded birth. The scheduler supplies the ordinal. |
+| Optional proposal | `(proposal_ordinal, member_id, operation_kind)`. Operations distinguish final assignment, upgrade of an unpromised actor, and funded Pawn birth. Source-actor identity distinguishes upgrade bindings. |
 | Placement | `(relative_rank, file)` in the captured human formation. The primary square and actual mandatory occupants are unavailable. |
 
 Material sources never increase the received-slot count `s`.
@@ -133,10 +127,11 @@ Rational weights require an agreed exact integer normalization before capture.
 Within each family, construct the same permutation over ascending member IDs with unit weights.
 The preferred namespace suffixes are `.preferred.<slot-id>.family` and `.preferred.<slot-id>.member.<family-id>`.
 Reserve `.optional.<proposal-ordinal>.family` and `.optional.<proposal-ordinal>.member.<family-id>` for optional ordering.
-Their counter-advancement and candidate-remapping rules remain pending, not implied by those names.
+Section 6 proposes their counter-advancement and candidate-remapping rules.
 Each separate permutation starts its counter at zero.
 Preferred-table construction does not depend on rejected affordability probes.
-Optional failed-draw counter advancement remains part of the pending scheduler decision.
+An actual failed draw consumes its position under the later authority.
+That does not authorize completion probes to consume draw positions.
 
 Hard-disabled choices never enter the candidate set.
 Soft-zero and recovery eligibility come from the effective instruction contract, not an invented weight.
@@ -146,7 +141,7 @@ The exact action-to-final-family weight compiler remains a fixture prerequisite,
 
 Candidate type-variety default: stable-partition each member permutation into below-limit members, then remaining members.
 Counts use earlier structurally preferred entries, never affordable-prefix results.
-Optional variety counts remain pending with the scheduler.
+Optional variety-count scope remains an engineering choice.
 The preferred-table default preserves budget-independent ordering but can differ from historical variety distributions.
 It is an observable proposed default that needs acceptance.
 
@@ -240,7 +235,13 @@ It cannot also leave those Parts available for an upgrade or protected completio
 The birth ordinal is local construction identity, not a permanent inventory entitlement.
 The actor's `FinalEntry` records its member and square.
 Its existence does not increase direct-entitlement count D or restore a consumed token.
-The admitted birth catalog and exact charging rule await the scheduler/pricing resolution.
+The admitted birth catalog and exact charging rule await the pricing/source-law specification.
+
+An optional upgrade identifies one unpromised source actor and its proposed final entry.
+The proposed transaction preserves its birth affiliation and records the old debit, authorized releases, and new payer allocations.
+The release cannot double-count the old value or unlock protected base/reserve funding.
+Concrete price differences alone do not establish a lawful refund.
+The guarantee reconciliation authorizes guarded purchases, not a new downgrade or refund rule.
 
 Funding validation precedes optional spending and follows every accepted trial.
 For each source, final ownership and lawful spending reconcile to its original credit.
@@ -251,7 +252,10 @@ A scalar total cannot hide duplicated Parts, lost custody, or the same reserve f
 
 ### 5.1 Obligations and result
 
-`RequiredCompletion(capture, fixedEntries, target)` constructs the remaining entries without changing `fixedEntries`.
+`RequiredCompletion(capture, postPurchaseEntries, target)` constructs the remaining entries without undoing the proposed purchase.
+A transaction first replaces its permitted unpromised upgrade source with the proposed final entry.
+Every promised entry and every other already accepted entry remains fixed during that completion call.
+The completion helper cannot refund or retract the new purchase to justify its admission.
 A successful result includes actual active squares, reserve ownership, and all funding allocations.
 The result also includes actual composition counts, Castler applications, and Pocket support.
 It is not a collection of independent minima.
@@ -307,13 +311,24 @@ The proposed implementation uses a local dynamic program over remaining real slo
 It does not search move histories, Archipelago items, recovery cycles, or alternate worlds.
 The first reference profile uses independently owned slots and exact final-state liabilities.
 Its proposed proof covers only this subproblem, not a total-unit ceiling or the complete later surplus domain.
-Already accepted surplus actors enter as fixed entries with their actual funding and square occupancy.
-If mandatory completion itself requires new births, this initial profile is insufficient.
+Already accepted surplus actors enter with their actual funding and square occupancy.
+The selected upgrade target enters in its post-purchase form, not its old form.
+If mandatory completion itself requires new births, the independent-slot profile alone is insufficient.
+The bounded birth extension described next is a proposed correction, not a proved full-domain implementation.
 
 The row compiler enumerates each slot's finite permitted final members, baseline/reserve alternatives, and legal placement classes.
 Each row carries its typed debit, role contributions, Castler predicate, and token effects.
-No row retracts a fixed preferred entry or accepted extra.
+No row retracts a promised entry, another accepted actor, or the proposed purchase.
 Rows include retained fallback obligations rather than omitting inconvenient slots.
+
+For a positive-debit birth profile, append at most `b` virtual birth positions after the real-slot layers.
+Here `b` is the lawful birth bound from section 5.4, not a received-token count.
+Each position offers one row per permitted Pawn member and an explicit no-birth row.
+Real birth rows pay their exact source-qualified charge and consume actual placement capacity.
+A no-birth row grants nothing and changes neither actor count nor funding.
+Reconstruction assigns consecutive local birth ordinals to the real rows.
+These positions enumerate possible funded actors, not fictitious owned slots.
+Reserved completion births remain uncommitted until the final witness becomes the roster.
 
 Placement classes group squares only when every remaining row has identical compatibility with those squares.
 Primary occupancy, home-rank side restrictions, fixed assignments, and locked actors split classes where necessary.
@@ -360,25 +375,26 @@ These are obligations for a reference probe, not executed proof results.
 ### 5.4 Finite bounds and practical limits
 
 Let `s` be the remaining slots, `v` the largest per-slot row count, and `L` the maximum retained labels per layer.
-The dynamic program examines at most `s*v*L` transitions per completion call.
+For the birth extension, let `b` be its bounded birth positions and include their rows in `v`.
+The dynamic program examines at most `(s+b)*v*L` transitions per completion call.
 Two live layers require `O(L)` state storage, with predecessor storage for witness reconstruction.
-Retained predecessor storage is at most `O(s*L)` records.
+Retained predecessor storage is at most `O((s+b)*L)` records.
 Class occupancies range from zero through their captured capacities.
-Count coordinates range from zero through the real slot count.
+Count coordinates include fixed actors, remaining real slots, and at most `b` new actors.
 The Castler coordinate has at most three values.
 
-Let `t` be the global number of eligible final members and `q` the captured free-square count.
-There are at most three initial Castler-target trials and `preferred_count+1` prefix trials in the successor alternative.
-For the old slot-bound optional alternative, `s*t` occurrences with at most `s*q` bindings each give a finite bound.
-That bound does not cover later surplus births or prove the newly clarified scheduler.
-The final optional bound must include legal birth and replacement operations separately.
+There are at most three initial Castler-target trials.
+The Fundamental preferred walk examines each entry once until the first inadmissible draw.
+Section 6 bounds the optional loop by actual purchases and finite state-local candidates.
+No bound assumes that total actors equal received Chessmen.
 
 For shared fungible Material and a few rank classes, dominance can keep L small.
 That is an engineering expectation, not a measured performance claim.
 Independent restricted accounts, distinct square predicates, or shared Legacy source bundles can make L exponential.
 This candidate does not authorize an unbounded exhaustive oracle as the production fallback.
 
-The first reference probe must cover ordinary Fundamental funding and the smallest counterexamples for restricted funding and Legacy conversion.
+The first reference probe must cover ordinary Fundamental funding, funded births, and a guarded upgrade of an optional actor.
+Restricted funding and Legacy conversion need their smallest discriminating counterexamples.
 Legacy signed releases, coupled source consumption, and historical masks require exact row-compiler and dominance proofs.
 The candidate does not yet establish their practical complete profile.
 If those proofs require broad source-subset enumeration, isolate the exact case and propose a narrower construction before implementation.
@@ -387,57 +403,126 @@ Birth finiteness needs a separate argument, not an assumed received-slot maximum
 With positive minimum lawful birth debit `d`, finite spendable funds `F`, and free active capacity `q`, at most `min(q,floor(F/d))` births fit.
 This bound applies only when births cannot release more funds and no exception bypasses that debit.
 Approximation rights require their explicit finite allowance and consumed-mask bounds.
-The source compiler must reject an unproved zero-cost or repeatable-credit cycle, not impose an arbitrary sampling cutoff.
+An unproved zero-cost or repeatable-credit cycle blocks acceptance of that compiler profile.
+It is not permission for a normal runtime refusal or an arbitrary sampling cutoff.
 
 No arbitrary label cap turns a search failure into "unaffordable" or "exhausted."
 Malformed inputs return a field-specific contract error.
-Unproved profiles return a design/proof limitation, not a shorter claimed longest prefix.
+Unproved profiles return a design/proof limitation, not a false prefix-stop or affordability result.
 An operational timeout or memory limit returns an explicit resource error with no admitted setup.
 Normal supported runtime inputs cannot rely on these refusals as a substitute for the missing engineering proof.
 
 ## 6. Protected selection and final admission
 
-The following is the October 21 successor candidate, not a decision against the later scheduler.
-Steps 4-5 and 7-10 remain conditional.
+The phase algorithm in this section is the Fundamental candidate under the later amendment.
+Typed custody, placement, and completion interfaces remain shared.
+It does not export Fundamental surplus-Pawn or elimination rules into Legacy.
+Legacy retains the October 21 mode-qualified prefix and finite-pass requirements until its own exact compiler and scheduler receive acceptance.
+Its signed-release domain cannot use Fundamental's first-failure shortcut as proof of a longest affordable prefix.
+This document does not claim one executable schedule for both modes.
+
+### 6.1 Reconciled construction
 
 1. Validate the immutable capture and the mode-qualified row compiler.
 2. Establish dedicated obligations and construct the preferred table without affordability.
 3. Derive the retained attainable composition requirement and feasible Castler target before optional spending.
-4. Try preferred prefix lengths from longest through zero, each against the original captured ledger.
-5. Select the first length with a complete coupled witness.
-6. Freeze that prefix's member, slot, role, square, and debit associations.
-7. Visit the old slot-bound alternative's finite family/member occurrences.
-8. Try compatible unfilled slots in canonical order, then compatible free squares in the candidate square order.
-9. Accept the first binding with an inclusive lawful debit and a replacement completion witness.
-10. If every binding fails, skip the occurrence permanently.
-11. Finalize the last saved witness after the optional pass.
+4. Visit preferred entries in order, with inclusive source-qualified affordability and a coupled completion guard.
+5. Accept an entry only with a valid post-purchase witness.
+6. At the first inadmissible draw, consume its position and freeze the already accepted prefix.
+7. Construct the optional operation pool for the current state.
+8. Filter and draw through the later elimination/remapping scheduler.
+9. Accept a purchase only with a valid post-purchase witness that preserves the promised prefix.
+10. Repeat while the finite state-local pool contains an admissible purchase.
+11. Finalize the last saved completion witness.
 12. Validate the capture binding and the complete roster before admission.
 
-A tentative binding can change only uncommitted completion entries.
-A rejected trial leaves the prior local state unchanged.
-It cannot leave a debit, consume a historical right, advance a random counter, or free a reserve lock.
-The saved witness is data in the pure module, not mutations to a live Game.
+Step 6 treats a completion-blocked preferred draw like an unaffordable draw.
+This is a candidate phase-transition default, not another user selection.
+It preserves the prefix without spending mandatory resources.
+It does not skip that entry and call later preferred entries a longer prefix.
 
-Descending prefix trials avoid an unproved first-failure assumption with typed releases.
-If all trials fail because the declared attainable obligations contradict the actual capture, report the inconsistent obligation and its sources.
+The algorithm does not search longer prefixes for a later release that repairs the first failure.
+Signed release remains legal only inside an admitted atomic transaction under its actual source law.
+The former descending-prefix scan is historical, not this candidate's executable rule.
+
+If the initial declared attainable obligations contradict the capture, report the inconsistent obligation and its sources.
 Do not silently replace the requirement with zero.
 Legitimate retained shortages need an explicit valid shortage witness.
 
-The old slot-bound candidate uses `s` occurrences per eligible final member.
-That is sufficient for remaining owned slots but not the later funded-birth domain.
-No unfilled received slot does not imply that optional allocation stops.
-A permitted birth must still pay its actual charge, preserve the coupled witness, and occupy an actual compatible square.
+### 6.2 Candidate elimination and binding defaults
 
-| Scheduler seam | October 21 candidate | Later October 23 authority reported by coordinator |
-| --- | --- | --- |
-| Prefix stop | Longest fixed preferred prefix with a valid completion | First unaffordable concrete draw |
-| Later order | One fixed finite candidate order, permanent skips | Affordable family/type filtering and remapping, advancing counters |
-| Actors | Entries for existing owned slots | Existing slots plus lawfully funded additional Pawns |
-| Replacement | No replacement of accepted extras in the pass | Surplus upgrades require exact replacement and funding semantics |
+The operation pool contains permitted existing-slot assignments, upgrades of unpromised actors, and funded Pawn births.
+A filled received-slot table does not stop the latter two operations.
+The promised prefix is never an optional upgrade source.
+Upgrades can replace accepted optional pieces when the retained operation law permits that replacement.
+They cannot move or replace promised entries.
 
-The coordinator must reconcile these rows before a single executable optional algorithm is frozen.
-Both alternatives retain explicit source custody, real placement, and no invented receipts.
-Neither supplies an optimal-packing promise.
+For each destination member, enumerate allowed operation kinds, canonical source-actor IDs, and compatible squares.
+Candidate operation-kind tie order is existing-slot assignment, optional upgrade, then Pawn birth.
+This tie order resolves multiple bindings for the same member, not family preference weights.
+Try the bindings in that order.
+Retain the first binding with lawful funding and a successful coupled completion witness.
+This ordering needs fixture acceptance, especially when an upgrade competes with a birth.
+
+Remove a concrete member from the current state's draw pool only after every permitted binding fails.
+Remove its family only when no eligible member has a valid binding.
+Thus a role-blocked Rook cannot remove a family that still contains a feasible alternative.
+Standalone affordability is necessary but not sufficient for a surviving member.
+A proof/resource limitation aborts construction explicitly. It is not a failed binding or an elimination.
+
+Draw the family and member from the surviving pools in canonical order with their retained preferences.
+Use the exact integer weighted-choice primitive from section 3, remapped to those pools.
+Do not consume old fixed-tail occurrences or keep their permanent-skip set.
+Uncommitted completion entries can change to a different witness after each purchase.
+They cannot become funds for the same purchase twice.
+
+Candidate pruning scope is one accepted-state epoch.
+After a purchase, rebuild eligibility because actual funds, actor roles, and available capacity changed.
+A previously blocked alternative can then become eligible.
+Without a purchase or another admitted state change, do not rebuild or retry the same empty pool.
+This is deterministic reevaluation after progress, not a retry loop or a seed reset.
+Permanent elimination versus state-local elimination remains an unaccepted engineering default.
+
+### 6.3 Counters and atomicity
+
+The later authority requires failed draws to consume their positions and counters never to reset.
+Candidate implementation: one monotonically increasing `proposal_ordinal` spans preferred and optional actual draws.
+Each optional ordinal owns separate family/member namespaces.
+Each actual draw increments the ordinal once, including a guard-rejected draw and a sole choice.
+Optional remapping uses the next ordinal, not zero.
+Deterministic pool enumeration, completion trials, binding alternatives, and witness reconstruction consume no draw ordinal.
+
+The precise family/type draw alignment is still proposed.
+The primitive's local counter zero inside a fresh ordinal namespace is not a restart of the global draw sequence.
+There is no random retry to obtain a different result for an unchanged state.
+
+A rejected purchase restores all funding Parts, actors, squares, and historical rights.
+Its actual draw ordinal remains consumed.
+A rejected feasibility probe consumes neither the ordinal nor those resources.
+Admission records distinguish these events so rollback cannot accidentally redraw a failed choice.
+The saved witness is data in the pure module, not mutations to a live Game.
+
+### 6.4 Finite stopping and unresolved operation law
+
+Let `b` bound lawful births and `u` bound permitted upgrades per unpromised actor.
+Let `a` count initial unpromised actors, including `s` actors that still need their one initial assignment.
+With no actor deletion and an acyclic upgrade relation, at most `s+b+(a+b)*u` optional purchases occur.
+This is a conditional proof, not permission to invent an upgrade relation.
+Paid improvements must have an accepted strict progress measure or an exact nonrenewable right.
+Equal-price substitutions and downgrade/refund cycles cannot enter that proof silently.
+
+For one accepted-state epoch, let `r` be its finite operation/member/source/square bindings.
+The candidate enumerates at most `r` guarded bindings before a draw or a terminal empty pool.
+The total is bounded by the purchase bound plus one terminal epoch, each with its own finite `r`.
+The bound includes actual square capacity and funded-birth bounds, not just received-slot count.
+
+Stop normally only when the complete supported state-local pool is empty.
+Publish its reason classes: source restriction, price, incompatible square, protected prefix, or failed mandatory completion.
+Do not claim an optimal roster, maximum material use, or longest jointly affordable prefix.
+Legacy historical exceptions and any permitted cyclic replacement relation still need their own finite argument.
+Missing proofs remain engineering gaps, not additional refusal policy.
+
+### 6.5 Final admission
 
 Final activation consumes the witness's active/reserve partition.
 It cannot rerun the old material-first activation selector.
@@ -450,7 +535,10 @@ An unavailable presentation refinement leaves the admitted semantic placement in
 These are specified expectations, not executed fixtures.
 Synthetic amounts and tiny residual-board cells isolate mechanisms.
 They do not replace the full paired ContractV4/ProjectionV4 capture fixtures.
-Unless stated otherwise, dedicated obligations are already satisfied and no historical exception applies.
+Unless stated otherwise, cases use the Fundamental candidate with dedicated obligations already satisfied and no historical exception.
+LEDGER is a Legacy funding case. POCKET and GEOMETRY express shared resource laws.
+EQ, BASE, and QUALITY use the retained funded-value profile explicitly.
+They do not settle its mapping to the later concrete-MG price profile.
 
 | ID | Input or construction | Required observation |
 | --- | --- | --- |
@@ -464,12 +552,16 @@ Unless stated otherwise, dedicated obligations are already satisfied and no hist
 | POCKET | Four active non-primary units, j1, actual pockets `[Pawn,Minor,Queen]`. Synthetic residual targets T6/N3. | Support Minor and Queen first. Counts6/3 pass. With only three active units, support only Minor and counts4/2 fail. Reserve units cannot repair support. |
 | MATERIAL | Three supported Minor pockets give S900/C3. Six active Pawns change from five Checker40 plus Pawn100 to six Checker40. | B changes300 to240 and H changes150 to120. Expected Pawn material remains600. Primary value and reserves cannot preserve the old150 claim. This is a proposed eligibility-change fixture, not an executed roster. |
 | ELIGIBILITY | Same seeds and slots. A newly eligible earlier-ranked member replaces an old preferred member at the next setup. | Root stays unchanged. The change is lawful selection, not a reroll. Access acceptance remains blocked until every credited predicate survives the covered extension. |
-| TAIL | October 21 alternative only: after the prefix, free7. Fixed optional order X:9, Y:3, Z:5, W:4. Two compatible slots. | Skip X, accept Y, skip Z, accept W. Remaining0. This expectation cannot validate the later remapping scheduler. |
+| ELIMINATE | Surplus7. Family A has only member X:9. Family B has Y:3 and Z:5. Both B members have a guarded binding. | Remove X and A. Remap the next seeded family/type draw to B and its surviving members. Do not assert the old fixed-tail order or redraw the failed position. |
 | BIRTH | All received slots are filled. Lawful surplus80 remains. Two compatible squares and permitted birth debit40. | A minimum-not-maximum allocator can fund two additional Pawns if completion stays valid. No received-token count increases. A slot-bound tail cannot satisfy this case. |
+| BIRTH-GUARD | The same birth opportunities, but funds120 must preserve a mandatory debit80. | Admit one Pawn40 and retain80. Reject a second Pawn40 despite standalone affordability. If a birth consumes mandatory placement, reject it even before this monetary limit. |
+| UPGRADE | An unpromised actor has recorded refundable debit100. A lawful replacement needs150. Funds80 include a mandatory40 obligation. | Atomic net debit50 is standalone affordable but fails completion. A permitted alternative with net debit40 can pass equality. Neither operation can target a promised actor. These are synthetic charges, not a new refund rule. |
+| CASTLER-UPGRADE | A naturally selected optional Castler fulfills target1. A proposed upgrade removes its qualifying role or home placement. | Accept only if the same post-purchase witness lawfully restores the target elsewhere. Otherwise reject, even with sufficient ordinary funds. Do not retract the upgrade inside its witness. |
+| COUNTER | An actual preferred draw at ordinal k fails. Completion binding probes run before the next optional draw. | The optional draw uses k+1. Probes consume no ordinal. Failed purchase rollback restores resources, not k. Exact family/type stream alignment still needs vectors. |
 | SLOT | Same legal choices, sources, geometry, and mandatory occupancy. Append one exchangeable ordinary token. | Existing preferred entries, priorities, and squares are identical. The new entry follows them. A changed source-role restriction does not satisfy this case's premise. |
-| SIGN | Prefix1 requires unavailable eligible credit. Prefix2 includes a specifically lawful release that makes the combined final assignment fundable. | A complete typed transaction can accept prefix2. An illegal release cannot. Do not implement scalar first-failure or an unconditional zero clamp. |
+| SIGN | The next preferred entry fails. A later entry could release credit through an independently lawful operation. | Stop the prefix at the failed draw. Do not accept a longer prefix by searching the future release. Optional operations still use lawful signed transactions, not a universal zero clamp. |
 | LEDGER | Legacy sources300 and485 fund concrete500. Another eligible residual is-200. | Preserve source identity and one beneficiary. Residual285 nets to85, not285. No reserve or dedicated account enters the net. |
-| LIMIT | A completion profile lacks a valid interchangeability/source proof, or requires uncovered surplus births. | Return a proof limitation. Do not claim maximum prefix, impossible target, zero access, or semantic exhaustion. |
+| LIMIT | A completion profile lacks a valid interchangeability/source proof, or requires uncovered surplus births. | Return a proof limitation. Do not prune a family or claim an impossible target, zero access, or semantic exhaustion. |
 | GEOMETRY | One geometry meets material only. Another meets the required role only. | Neither passes the full access predicate. No cross-geometry witness joins their favorable coordinates. |
 
 ### Primitive reference vectors
@@ -500,19 +592,33 @@ The case authors must freeze expected vectors independently before either implem
 
 | Consumer | Required input from this work | Obligation that remains |
 | --- | --- | --- |
-| Authority/Common | Explicit candidate defaults and the section1 conflicts | Final mode, price, slot, seed, and old-clause mapping. This document does not edit the ADRs or closure register. |
-| A22/P1 | Typed final rows, funded-birth separation, stable preferred order, and one witness | Reconcile the scheduler. Specify complete source/row compilers and surplus bounds. Prove practical completion for every admitted profile. |
+| Authority/Common | The relayed purchase-guarantee decision and explicit candidate defaults | Integrate the durable authority receipt. Keep price/refund mapping and unaccepted engineering defaults distinct. This document does not edit the ADRs or closure register. |
+| A22/P1 | Typed final rows, funded births/upgrades, stable preferred order, and one witness | Specify exact remapping/counters and complete source/row compilers. Prove practical completion and finite operation bounds for every admitted profile. |
 | CV01/fixture owners | Section7 plus exact candidate namespaces and source revision | Supply independent full captures, pins, PRF vectors, custody traces, active squares, and negative/restoration pairs in both languages. |
 | Conservative-access/PM | Exact witness resources, covered assumptions, and no optional entitlement | Prove useful universal lower bounds over covered receipts, eligibility, geometry, and actual Pocket choices. Prefix length is insufficient. |
 | Generation lifecycle/G2 | Immutable input/result binding and classified non-success | Bind before the earliest dependent query. Preserve starts, links, copies, retained plando, frozen prices, and real upstream accessibility acceptance. |
 | Later ChecksMate child | Exact namespace/encoding proposal, row semantics, and required fixture outputs | Investigate cross-repository implementations and lifecycle hooks. No such source investigation occurred here. |
 | Coordinator/D03 | This candidate and the explicit remaining proof gates | Integrate accepted results only. Do not infer implementation, native, package, or release readiness. |
 
-The scheduler/spending conflict in section1 requires the coordinator's pending user decision.
-No additional product decision is proposed here.
+The user-level guarantee reconciliation is resolved.
+It is not a remaining scheduler-versus-guarantees interview.
 The coordinator must obtain acceptance for observable engineering defaults before freezing them.
-Those defaults include variety-count scope, cheapest-completion ties, and exact preferred-square selection.
+Those defaults include variety-count scope, completion ties, preferred squares, guard-failure phase transition, state-local elimination, and exact draw alignment.
 If the local completion probe fails practical bounds, the next decision concerns a narrower exact mechanism, not weaker guarantees.
+
+### Concrete refund disposition
+
+This candidate requires no new refund exception.
+Its default is to retain existing source-qualified release rules and refuse unselected releases.
+For example, a funded100 Checker40 does not expose60 for a surplus Pawn purchase.
+An optional actor with a recorded refundable extra50 can release only that50 under an already authorized operation.
+Neither its protected base nor a dedicated Castler account becomes ordinary funds.
+
+If later concrete pricing requires the first behavior, the deciding case is explicit:
+"Can the protected60 difference from funded100/Checker40 fund a new Pawn40?"
+The current recommendation is no, unless the user explicitly changes the base-protection law.
+This is a potential policy exception, not a prerequisite for guarded surplus births from genuine free Material.
+Do not ask for a generic refund policy when no concrete operation requires an exception.
 
 The source compiler still needs special attention for Legacy shared bundles and signed release cases.
 The qualified extension proof must identify which source groups are genuinely exchangeable.
