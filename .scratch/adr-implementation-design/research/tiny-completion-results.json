@@ -1,0 +1,909 @@
+{
+  "status": "pass",
+  "scope": "synthetic-tiny-fundamental-v1; not native, scheduler, full compiler, monotonicity, or performance closure",
+  "profile": {
+    "a-checker": [
+      0,
+      0,
+      [
+        "M",
+        "P"
+      ]
+    ],
+    "b-pawn": [
+      0,
+      0,
+      [
+        "M",
+        "P"
+      ]
+    ],
+    "c-better": [
+      0,
+      0,
+      [
+        "M",
+        "P"
+      ]
+    ],
+    "d-minor": [
+      1,
+      0,
+      [
+        "H",
+        "M"
+      ]
+    ],
+    "e-castler": [
+      1,
+      1,
+      [
+        "H"
+      ]
+    ]
+  },
+  "board_profiles": {
+    "tiny-A": {
+      "a-checker": 40,
+      "b-pawn": 100,
+      "c-better": 150,
+      "d-minor": 120,
+      "e-castler": 160
+    },
+    "tiny-B": {
+      "a-checker": 40,
+      "b-pawn": 100,
+      "c-better": 175,
+      "d-minor": 180,
+      "e-castler": 210
+    }
+  },
+  "frozen_expectations_sha256": "fd37a204f3c2f53231c5eb63e59b8020ac305f7eb241b000bcfaf1507f7c2254",
+  "board_expectations_sha256": "c5722373008548292a209b9ba1c5912a247bd46134ac1b1eda49ea6aae279a6e",
+  "probe_sha256": "c65538cd638650bb551787127577449f76659ba5a75fdd7ea31e6476992e6538",
+  "explicit_edge_cases": 28,
+  "grid_cases": 6804,
+  "totals": {
+    "comparisons": 6840,
+    "oracle_combinations": 2572023,
+    "dp_transitions": 250045,
+    "max_labels": 33
+  },
+  "edge_results": [
+    {
+      "id": "equality-below",
+      "expected": {
+        "feasible": false
+      },
+      "witness": null
+    },
+    {
+      "id": "equality-at",
+      "expected": {
+        "feasible": true,
+        "spend": 60,
+        "B": 160,
+        "H": 0
+      },
+      "witness": {
+        "spend": 60,
+        "B": 160,
+        "H": 0,
+        "access": 160,
+        "n": 1,
+        "nonpawn": 1,
+        "castler_count": 1,
+        "supported": [],
+        "birth_count": 0,
+        "protected_base": 100,
+        "base_refund": 0,
+        "extra_remaining": 0,
+        "stage": "tiny-A",
+        "entries": [
+          [
+            0,
+            "e-castler",
+            "H0"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "equality-above",
+      "expected": {
+        "feasible": true,
+        "spend": 60
+      },
+      "witness": {
+        "spend": 60,
+        "B": 160,
+        "H": 0,
+        "access": 160,
+        "n": 1,
+        "nonpawn": 1,
+        "castler_count": 1,
+        "supported": [],
+        "birth_count": 0,
+        "protected_base": 100,
+        "base_refund": 0,
+        "extra_remaining": 1,
+        "stage": "tiny-A",
+        "entries": [
+          [
+            0,
+            "e-castler",
+            "H0"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "cheap-base-no-refund",
+      "expected": {
+        "feasible": false
+      },
+      "witness": null
+    },
+    {
+      "id": "castler-funds-before",
+      "expected": {
+        "feasible": true,
+        "spend": 60
+      },
+      "witness": {
+        "spend": 60,
+        "B": 260,
+        "H": 0,
+        "access": 260,
+        "n": 2,
+        "nonpawn": 1,
+        "castler_count": 1,
+        "supported": [],
+        "birth_count": 0,
+        "protected_base": 200,
+        "base_refund": 0,
+        "extra_remaining": 0,
+        "stage": "tiny-A",
+        "entries": [
+          [
+            0,
+            "b-pawn",
+            "P0"
+          ],
+          [
+            1,
+            "e-castler",
+            "H0"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "castler-funds-after",
+      "expected": {
+        "feasible": false
+      },
+      "witness": null
+    },
+    {
+      "id": "castler-placement-before",
+      "expected": {
+        "feasible": true,
+        "spend": 60
+      },
+      "witness": {
+        "spend": 60,
+        "B": 260,
+        "H": 0,
+        "access": 260,
+        "n": 2,
+        "nonpawn": 1,
+        "castler_count": 1,
+        "supported": [],
+        "birth_count": 0,
+        "protected_base": 200,
+        "base_refund": 0,
+        "extra_remaining": 20,
+        "stage": "tiny-A",
+        "entries": [
+          [
+            0,
+            "b-pawn",
+            "M0"
+          ],
+          [
+            1,
+            "e-castler",
+            "H0"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "castler-placement-after",
+      "expected": {
+        "feasible": false
+      },
+      "witness": null
+    },
+    {
+      "id": "castler-placement-compatible",
+      "expected": {
+        "feasible": true,
+        "spend": 80
+      },
+      "witness": {
+        "spend": 80,
+        "B": 280,
+        "H": 0,
+        "access": 280,
+        "n": 2,
+        "nonpawn": 2,
+        "castler_count": 1,
+        "supported": [],
+        "birth_count": 0,
+        "protected_base": 200,
+        "base_refund": 0,
+        "extra_remaining": 0,
+        "stage": "tiny-A",
+        "entries": [
+          [
+            0,
+            "d-minor",
+            "M0"
+          ],
+          [
+            1,
+            "e-castler",
+            "H0"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "all-prefix-improvement",
+      "expected": {
+        "feasible": true,
+        "spend": 50,
+        "B": 150
+      },
+      "witness": {
+        "spend": 50,
+        "B": 150,
+        "H": 0,
+        "access": 150,
+        "n": 1,
+        "nonpawn": 0,
+        "castler_count": 0,
+        "supported": [],
+        "birth_count": 0,
+        "protected_base": 100,
+        "base_refund": 0,
+        "extra_remaining": 0,
+        "stage": "tiny-A",
+        "entries": [
+          [
+            0,
+            "c-better",
+            "P0"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "all-prefix-improvement-below",
+      "expected": {
+        "feasible": false
+      },
+      "witness": null
+    },
+    {
+      "id": "prefix-castler-preserved",
+      "expected": {
+        "feasible": true,
+        "spend": 60
+      },
+      "witness": {
+        "spend": 60,
+        "B": 160,
+        "H": 0,
+        "access": 160,
+        "n": 1,
+        "nonpawn": 1,
+        "castler_count": 1,
+        "supported": [],
+        "birth_count": 0,
+        "protected_base": 100,
+        "base_refund": 0,
+        "extra_remaining": 0,
+        "stage": "tiny-A",
+        "entries": [
+          [
+            0,
+            "e-castler",
+            "H0"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "prefix-castler-lost",
+      "expected": {
+        "feasible": false
+      },
+      "witness": null
+    },
+    {
+      "id": "funded-birth",
+      "expected": {
+        "feasible": true,
+        "spend": 40,
+        "B": 140,
+        "birth_count": 1
+      },
+      "witness": {
+        "spend": 40,
+        "B": 140,
+        "H": 0,
+        "access": 140,
+        "n": 2,
+        "nonpawn": 0,
+        "castler_count": 0,
+        "supported": [],
+        "birth_count": 1,
+        "protected_base": 100,
+        "base_refund": 0,
+        "extra_remaining": 0,
+        "stage": "tiny-A",
+        "entries": [
+          [
+            0,
+            "b-pawn",
+            "P0"
+          ],
+          [
+            1,
+            "a-checker",
+            "P1"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "birth-no-base-spend",
+      "expected": {
+        "feasible": false
+      },
+      "witness": null
+    },
+    {
+      "id": "supported-actual-pocket",
+      "expected": {
+        "feasible": true,
+        "spend": 20,
+        "B": 220,
+        "H": 110,
+        "supported": [
+          "minor"
+        ]
+      },
+      "witness": {
+        "spend": 20,
+        "B": 220,
+        "H": 110,
+        "access": 330,
+        "n": 2,
+        "nonpawn": 1,
+        "castler_count": 0,
+        "supported": [
+          "minor"
+        ],
+        "birth_count": 0,
+        "protected_base": 200,
+        "base_refund": 0,
+        "extra_remaining": 0,
+        "stage": "tiny-A",
+        "entries": [
+          [
+            0,
+            "b-pawn",
+            "M0"
+          ],
+          [
+            1,
+            "d-minor",
+            "H0"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "unsupported-pocket",
+      "expected": {
+        "feasible": false
+      },
+      "witness": null
+    },
+    {
+      "id": "concrete-access-equality",
+      "expected": {
+        "feasible": true,
+        "spend": 0,
+        "B": 200,
+        "H": 100
+      },
+      "witness": {
+        "spend": 0,
+        "B": 200,
+        "H": 100,
+        "access": 300,
+        "n": 2,
+        "nonpawn": 0,
+        "castler_count": 0,
+        "supported": [
+          "minor"
+        ],
+        "birth_count": 0,
+        "protected_base": 200,
+        "base_refund": 0,
+        "extra_remaining": 0,
+        "stage": "tiny-A",
+        "entries": [
+          [
+            0,
+            "b-pawn",
+            "P0"
+          ],
+          [
+            1,
+            "b-pawn",
+            "P1"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "concrete-access-below",
+      "expected": {
+        "feasible": false
+      },
+      "witness": null
+    },
+    {
+      "id": "natural-castler-once",
+      "expected": {
+        "feasible": true,
+        "spend": 60,
+        "castler_count": 1
+      },
+      "witness": {
+        "spend": 60,
+        "B": 160,
+        "H": 0,
+        "access": 160,
+        "n": 1,
+        "nonpawn": 1,
+        "castler_count": 1,
+        "supported": [],
+        "birth_count": 0,
+        "protected_base": 100,
+        "base_refund": 0,
+        "extra_remaining": 0,
+        "stage": "tiny-A",
+        "entries": [
+          [
+            0,
+            "e-castler",
+            "H0"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "B-key-discriminator",
+      "expected": {
+        "feasible": true,
+        "spend": 0,
+        "B": 100
+      },
+      "witness": {
+        "spend": 0,
+        "B": 100,
+        "H": 0,
+        "access": 100,
+        "n": 1,
+        "nonpawn": 0,
+        "castler_count": 0,
+        "supported": [],
+        "birth_count": 0,
+        "protected_base": 100,
+        "base_refund": 0,
+        "extra_remaining": 0,
+        "stage": "tiny-A",
+        "entries": [
+          [
+            0,
+            "b-pawn",
+            "P0"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "same-minor-A",
+      "expected": {
+        "feasible": true,
+        "spend": 20,
+        "B": 120,
+        "nonpawn": 1
+      },
+      "witness": {
+        "spend": 20,
+        "B": 120,
+        "H": 0,
+        "access": 120,
+        "n": 1,
+        "nonpawn": 1,
+        "castler_count": 0,
+        "supported": [],
+        "birth_count": 0,
+        "protected_base": 100,
+        "base_refund": 0,
+        "extra_remaining": 0,
+        "stage": "tiny-A",
+        "entries": [
+          [
+            0,
+            "d-minor",
+            "H0"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "same-minor-B-short",
+      "expected": {
+        "feasible": false
+      },
+      "witness": null
+    },
+    {
+      "id": "same-minor-B-exact",
+      "expected": {
+        "feasible": true,
+        "spend": 80,
+        "B": 180,
+        "nonpawn": 1
+      },
+      "witness": {
+        "spend": 80,
+        "B": 180,
+        "H": 0,
+        "access": 180,
+        "n": 1,
+        "nonpawn": 1,
+        "castler_count": 0,
+        "supported": [],
+        "birth_count": 0,
+        "protected_base": 100,
+        "base_refund": 0,
+        "extra_remaining": 0,
+        "stage": "tiny-B",
+        "entries": [
+          [
+            0,
+            "d-minor",
+            "H0"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "same-castler-A",
+      "expected": {
+        "feasible": true,
+        "spend": 60,
+        "B": 160,
+        "castler_count": 1
+      },
+      "witness": {
+        "spend": 60,
+        "B": 160,
+        "H": 0,
+        "access": 160,
+        "n": 1,
+        "nonpawn": 1,
+        "castler_count": 1,
+        "supported": [],
+        "birth_count": 0,
+        "protected_base": 100,
+        "base_refund": 0,
+        "extra_remaining": 0,
+        "stage": "tiny-A",
+        "entries": [
+          [
+            0,
+            "e-castler",
+            "H0"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "same-castler-B-short",
+      "expected": {
+        "feasible": false
+      },
+      "witness": null
+    },
+    {
+      "id": "same-castler-B-exact",
+      "expected": {
+        "feasible": true,
+        "spend": 110,
+        "B": 210,
+        "castler_count": 1
+      },
+      "witness": {
+        "spend": 110,
+        "B": 210,
+        "H": 0,
+        "access": 210,
+        "n": 1,
+        "nonpawn": 1,
+        "castler_count": 1,
+        "supported": [],
+        "birth_count": 0,
+        "protected_base": 100,
+        "base_refund": 0,
+        "extra_remaining": 0,
+        "stage": "tiny-B",
+        "entries": [
+          [
+            0,
+            "e-castler",
+            "H0"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "expensive-minor-is-not-castler",
+      "expected": {
+        "feasible": false
+      },
+      "witness": null
+    }
+  ],
+  "transaction_results": [
+    {
+      "id": "castler-funding-guard",
+      "standalone_affordable": true,
+      "post_purchase_admitted": false,
+      "before": {
+        "spend": 60,
+        "B": 260,
+        "H": 0,
+        "access": 260,
+        "n": 2,
+        "nonpawn": 1,
+        "castler_count": 1,
+        "supported": [],
+        "birth_count": 0,
+        "protected_base": 200,
+        "base_refund": 0,
+        "extra_remaining": 0,
+        "stage": "tiny-A",
+        "entries": [
+          [
+            0,
+            "b-pawn",
+            "P0"
+          ],
+          [
+            1,
+            "e-castler",
+            "H0"
+          ]
+        ]
+      },
+      "after": null
+    },
+    {
+      "id": "castler-placement-guard",
+      "standalone_affordable": true,
+      "post_purchase_admitted": false,
+      "before": {
+        "spend": 60,
+        "B": 260,
+        "H": 0,
+        "access": 260,
+        "n": 2,
+        "nonpawn": 1,
+        "castler_count": 1,
+        "supported": [],
+        "birth_count": 0,
+        "protected_base": 200,
+        "base_refund": 0,
+        "extra_remaining": 20,
+        "stage": "tiny-A",
+        "entries": [
+          [
+            0,
+            "b-pawn",
+            "M0"
+          ],
+          [
+            1,
+            "e-castler",
+            "H0"
+          ]
+        ]
+      },
+      "after": null
+    },
+    {
+      "id": "castler-compatible-purchase",
+      "standalone_affordable": true,
+      "post_purchase_admitted": true,
+      "before": {
+        "spend": 60,
+        "B": 260,
+        "H": 0,
+        "access": 260,
+        "n": 2,
+        "nonpawn": 1,
+        "castler_count": 1,
+        "supported": [],
+        "birth_count": 0,
+        "protected_base": 200,
+        "base_refund": 0,
+        "extra_remaining": 20,
+        "stage": "tiny-A",
+        "entries": [
+          [
+            0,
+            "b-pawn",
+            "M0"
+          ],
+          [
+            1,
+            "e-castler",
+            "H0"
+          ]
+        ]
+      },
+      "after": {
+        "spend": 80,
+        "B": 280,
+        "H": 0,
+        "access": 280,
+        "n": 2,
+        "nonpawn": 2,
+        "castler_count": 1,
+        "supported": [],
+        "birth_count": 0,
+        "protected_base": 200,
+        "base_refund": 0,
+        "extra_remaining": 0,
+        "stage": "tiny-A",
+        "entries": [
+          [
+            0,
+            "d-minor",
+            "M0"
+          ],
+          [
+            1,
+            "e-castler",
+            "H0"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "all-prefix-improvement",
+      "standalone_affordable": true,
+      "post_purchase_admitted": true,
+      "before": {
+        "spend": 0,
+        "B": 100,
+        "H": 0,
+        "access": 100,
+        "n": 1,
+        "nonpawn": 0,
+        "castler_count": 0,
+        "supported": [],
+        "birth_count": 0,
+        "protected_base": 100,
+        "base_refund": 0,
+        "extra_remaining": 50,
+        "stage": "tiny-A",
+        "entries": [
+          [
+            0,
+            "b-pawn",
+            "P0"
+          ]
+        ]
+      },
+      "after": {
+        "spend": 50,
+        "B": 150,
+        "H": 0,
+        "access": 150,
+        "n": 1,
+        "nonpawn": 0,
+        "castler_count": 0,
+        "supported": [],
+        "birth_count": 0,
+        "protected_base": 100,
+        "base_refund": 0,
+        "extra_remaining": 0,
+        "stage": "tiny-A",
+        "entries": [
+          [
+            0,
+            "c-better",
+            "P0"
+          ]
+        ]
+      },
+      "preserved": [
+        "actor0",
+        "P0",
+        "count1",
+        "Pawn role",
+        "funded100 base",
+        "access floor100"
+      ],
+      "castler_requirement": 0
+    }
+  ],
+  "B_omission_mutant_counterexample": {
+    "case": {
+      "squares": [
+        "P0"
+      ],
+      "slots": [
+        [
+          "a-checker",
+          "b-pawn"
+        ]
+      ],
+      "pins": {},
+      "births": 0,
+      "funds": 0,
+      "total_min": 0,
+      "nonpawn_min": 0,
+      "castlers": 0,
+      "pockets": [],
+      "access_min": 41
+    },
+    "defective": null,
+    "corrected": {
+      "spend": 0,
+      "B": 100,
+      "H": 0,
+      "access": 100,
+      "n": 1,
+      "nonpawn": 0,
+      "castler_count": 0,
+      "supported": [],
+      "birth_count": 0,
+      "protected_base": 100,
+      "base_refund": 0,
+      "extra_remaining": 0,
+      "stage": "tiny-A",
+      "entries": [
+        [
+          0,
+          "b-pawn",
+          "P0"
+        ]
+      ]
+    },
+    "exhaustive_min_spend": 0,
+    "minimality_scope": "0..1 owned actors, no births, funds0, one P square, thresholds1..100, two base members"
+  }
+}

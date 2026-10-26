@@ -128,6 +128,33 @@ The later concrete-selection clarification is recorded separately, without modif
 | `generator-guarantee-probe.py` | 3782 | `6d2420ee3566e6f8acaf4c31e07e0e6d2f27fe383efa1469eb5c2553cdc42d65` |
 | `generator-guarantee-probe-results.json` | 827 | `e1b1297f7f382203ea28afd2666dad01b5ad4af860a7ace3b3f0ff800dc7047a` |
 
+### Durable tiny-profile completion evidence
+
+The [tiny completion report](research/tiny-completion-evidence.md) records 6,840 comparisons between the corrected slot-layer DP and an independent exhaustive oracle.
+They agree on feasibility, minimum extra spend, and returned concrete-witness membership within the declared tiny profile.
+The result includes synthetic stage pricing, promise-preserving upgrades, and funded births.
+It is not full-domain performance, PM, LC, or native acceptance.
+
+The deliberate B-key mutation fails with one actor, Checker40/Pawn100 alternatives, zero extra debit, and access threshold41.
+Without B, the merged state retains Checker40 and loses the feasible Pawn100 witness.
+Thus B+H preservation requires concrete BOARD B in state equivalence or a proved equivalent dominance reduction.
+Counts, Castlers, and spending alone do not suffice.
+The [proposed candidate](allocation-engineering-candidate.md) records this requirement without claiming its complete compiler or proof accepted.
+
+The [probe](research/tiny_completion_probe.py), [initial expectations](research/tiny-completion-expectations.json),
+[stage expectations](research/tiny-board-price-expectations.json), and [results](research/tiny-completion-results.json) remain exact source artifacts.
+They came from session `e366c8ca-91b6-44a9-a874-add72ba14de6`, under `files`.
+Source, destination, and staged Git bytes retain these pins. Scoped attributes prevent line-ending conversion.
+Persistence does not rerun the probe or enlarge its evidence scope.
+
+| Artifact | Bytes | SHA256 |
+| --- | ---: | --- |
+| `tiny-completion-evidence.md` | 12963 | `60132b6c1d620781a37df5eea365563bb8651d32d543acde71892ce16e82c920` |
+| `tiny_completion_probe.py` | 15972 | `c65538cd638650bb551787127577449f76659ba5a75fdd7ea31e6476992e6538` |
+| `tiny-completion-expectations.json` | 3501 | `fd37a204f3c2f53231c5eb63e59b8020ac305f7eb241b000bcfaf1507f7c2254` |
+| `tiny-board-price-expectations.json` | 1338 | `c5722373008548292a209b9ba1c5912a247bd46134ac1b1eda49ea6aae279a6e` |
+| `tiny-completion-results.json` | 18576 | `93f31f62669b711b2baa6fbdd4b5da9eb4f8af8b9dae7b88184abbb1b6f8ea18` |
+
 ### Later authority and resolved preservation: board-aware prices
 
 The board-value work scopes its redesign to Fundamental, not Legacy.
@@ -210,6 +237,17 @@ Roles and Castler capability remain identity-backed, not numeric.
 No numeric price table, new palette, family reclassification, or refund rule follows.
 The user's 300/525 examples are illustrative, not selected prices.
 Exact mapping and proof remain engineering obligations.
+
+### Next design steps
+
+1. Bind real concrete identities to a shared stage-aware profile and exact mode-qualified liabilities, including royal and Castler accounts.
+2. Complete the supported source/row compilers and prove class equivalence, state reduction, and practical completion bounds beyond the tiny profile.
+3. Supply a useful extension certificate for the selected Fundamental B+H domain and retained mode-specific access obligations.
+4. Integrate lifecycle timing and independent cross-consumer fixtures, then obtain the existing combined design acceptance.
+
+This order creates no production tickets or implementation authorization.
+Profile numeric acceptance, unaccepted engineering defaults, and concrete refund exceptions retain their existing decision owners.
+The bounded positive result closes none of the remaining full-domain AL/PM/LC/CV01/D03 gates.
 
 ### Re-entry and delivery
 

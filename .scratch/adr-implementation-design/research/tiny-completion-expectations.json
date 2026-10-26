@@ -1,0 +1,38 @@
+{
+  "status": "Frozen before probe implementation; synthetic mechanism cases, not production prices.",
+  "defaults": {
+    "squares": ["H0", "M0", "P0"],
+    "slots": [],
+    "pins": {},
+    "births": 0,
+    "funds": 0,
+    "total_min": 0,
+    "nonpawn_min": 0,
+    "castlers": 0,
+    "pockets": [],
+    "access_min": 0
+  },
+  "cases": [
+    {"id":"equality-below","slots":[["e-castler"]],"funds":59,"castlers":1,"expected":{"feasible":false}},
+    {"id":"equality-at","slots":[["e-castler"]],"funds":60,"castlers":1,"expected":{"feasible":true,"spend":60,"B":160,"H":0}},
+    {"id":"equality-above","slots":[["e-castler"]],"funds":61,"castlers":1,"expected":{"feasible":true,"spend":60}},
+    {"id":"cheap-base-no-refund","slots":[["a-checker"],["e-castler"]],"funds":0,"castlers":1,"expected":{"feasible":false}},
+    {"id":"castler-funds-before","slots":[["b-pawn"],["e-castler"]],"pins":{"0":"P0"},"funds":60,"castlers":1,"expected":{"feasible":true,"spend":60}},
+    {"id":"castler-funds-after","slots":[["c-better"],["e-castler"]],"pins":{"0":"P0"},"funds":60,"castlers":1,"expected":{"feasible":false}},
+    {"id":"castler-placement-before","slots":[["b-pawn"],["e-castler"]],"pins":{"0":"M0"},"funds":80,"castlers":1,"expected":{"feasible":true,"spend":60}},
+    {"id":"castler-placement-after","slots":[["d-minor"],["e-castler"]],"pins":{"0":"H0"},"funds":80,"castlers":1,"expected":{"feasible":false}},
+    {"id":"castler-placement-compatible","slots":[["d-minor"],["e-castler"]],"pins":{"0":"M0"},"funds":80,"castlers":1,"expected":{"feasible":true,"spend":80}},
+    {"id":"all-prefix-improvement","slots":[["c-better"]],"pins":{"0":"P0"},"funds":50,"total_min":1,"expected":{"feasible":true,"spend":50,"B":150}},
+    {"id":"all-prefix-improvement-below","slots":[["c-better"]],"pins":{"0":"P0"},"funds":49,"expected":{"feasible":false}},
+    {"id":"prefix-castler-preserved","slots":[["e-castler"]],"pins":{"0":"H0"},"funds":60,"castlers":1,"expected":{"feasible":true,"spend":60}},
+    {"id":"prefix-castler-lost","slots":[["d-minor"]],"pins":{"0":"H0"},"funds":60,"castlers":1,"expected":{"feasible":false}},
+    {"id":"funded-birth","squares":["P0","P1"],"slots":[["b-pawn"]],"pins":{"0":"P0"},"births":1,"funds":40,"total_min":2,"expected":{"feasible":true,"spend":40,"B":140,"birth_count":1}},
+    {"id":"birth-no-base-spend","squares":["P0","P1"],"slots":[["a-checker"]],"pins":{"0":"P0"},"births":1,"funds":0,"total_min":2,"expected":{"feasible":false}},
+    {"id":"supported-actual-pocket","slots":[["b-pawn"],["d-minor"]],"funds":20,"pockets":["pawn","minor"],"total_min":3,"nonpawn_min":2,"expected":{"feasible":true,"spend":20,"B":220,"H":110,"supported":["minor"]}},
+    {"id":"unsupported-pocket","slots":[["b-pawn"]],"pockets":["minor"],"total_min":2,"expected":{"feasible":false}},
+    {"id":"concrete-access-equality","squares":["P0","P1"],"slots":[["b-pawn"],["b-pawn"]],"pockets":["minor"],"access_min":300,"expected":{"feasible":true,"spend":0,"B":200,"H":100}},
+    {"id":"concrete-access-below","squares":["P0","P1"],"slots":[["b-pawn"],["b-pawn"]],"pockets":["minor"],"access_min":301,"expected":{"feasible":false}},
+    {"id":"natural-castler-once","slots":[["e-castler"]],"pins":{"0":"H0"},"funds":60,"castlers":1,"expected":{"feasible":true,"spend":60,"castler_count":1}},
+    {"id":"B-key-discriminator","squares":["P0"],"slots":[["a-checker","b-pawn"]],"access_min":100,"expected":{"feasible":true,"spend":0,"B":100}}
+  ]
+}

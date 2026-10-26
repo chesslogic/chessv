@@ -1,3 +1,8 @@
 generator-guarantee-closure.md -text whitespace=cr-at-eol
 generator-guarantee-probe.py -text whitespace=cr-at-eol
 generator-guarantee-probe-results.json -text whitespace=cr-at-eol
+tiny-completion-evidence.md -text whitespace=cr-at-eol
+tiny_completion_probe.py -text whitespace=cr-at-eol
+tiny-completion-expectations.json -text whitespace=cr-at-eol
+tiny-board-price-expectations.json -text whitespace=cr-at-eol
+tiny-completion-results.json -text whitespace=cr-at-eol

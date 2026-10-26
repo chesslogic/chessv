@@ -1,0 +1,16 @@
+{
+  "status": "Frozen before stage-aware probe extension. Invented stages and prices, not accepted calibration.",
+  "profiles": {
+    "tiny-A": {"a-checker":40,"b-pawn":100,"c-better":150,"d-minor":120,"e-castler":160},
+    "tiny-B": {"a-checker":40,"b-pawn":100,"c-better":175,"d-minor":180,"e-castler":210}
+  },
+  "cases": [
+    {"id":"same-minor-A","stage":"tiny-A","slots":[["d-minor"]],"funds":20,"expected":{"feasible":true,"spend":20,"B":120,"nonpawn":1}},
+    {"id":"same-minor-B-short","stage":"tiny-B","slots":[["d-minor"]],"funds":20,"expected":{"feasible":false}},
+    {"id":"same-minor-B-exact","stage":"tiny-B","slots":[["d-minor"]],"funds":80,"expected":{"feasible":true,"spend":80,"B":180,"nonpawn":1}},
+    {"id":"same-castler-A","stage":"tiny-A","slots":[["e-castler"]],"funds":60,"castlers":1,"expected":{"feasible":true,"spend":60,"B":160,"castler_count":1}},
+    {"id":"same-castler-B-short","stage":"tiny-B","slots":[["e-castler"]],"funds":60,"castlers":1,"expected":{"feasible":false}},
+    {"id":"same-castler-B-exact","stage":"tiny-B","slots":[["e-castler"]],"funds":110,"castlers":1,"expected":{"feasible":true,"spend":110,"B":210,"castler_count":1}},
+    {"id":"expensive-minor-is-not-castler","stage":"tiny-B","slots":[["d-minor"]],"funds":200,"castlers":1,"expected":{"feasible":false}}
+  ]
+}

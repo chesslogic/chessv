@@ -359,6 +359,7 @@ Coalesce states only when all future legality predicates have identical inputs.
 | Actual n, non-Pawn contribution, and D | Actual n controls Pocket support. D controls Legacy reservation. Target-saturated counters are allowed only after equivalent future behavior is proved. |
 | Castler count, saturated at the fixed target | Natural selection and remaining shortfall share one target. |
 | Source-domain spending and remaining entitlement/mask state | Restricted sources, reserve locks, and nonrenewable rights constrain future rows. |
+| Concrete BOARD material B | B+H obligations require B in state equivalence, or a proved equivalent dominance reduction. Counts, Castlers, and spend alone are insufficient. |
 | Additional certified predicates | A future material or role guarantee can require extra state. It cannot enter after state coalescing. |
 
 For one fungible extra-Material account, retain the least-spend predecessor for an otherwise identical state.
@@ -641,6 +642,13 @@ It must keep semantic E, concrete BOARD B, and supported-Pocket credit distinct.
 The report records resolved prefix-upgrade permission and the selected Fundamental `B + H` material domain.
 Useful conservative bounds and extension-closure proofs remain open.
 G2 must bind the access contract before its first dependent query, separately from the later final supply census.
+
+The [tiny completion evidence](research/tiny-completion-evidence.md) records 6,840 DP/oracle comparisons with no discrepancy in its corrected tiny profile.
+It covers synthetic stage prices, prefix upgrades, and funded births, not the complete supported compiler or a production allocator.
+Omitting B from state equivalence fails with one actor, Checker40/Pawn100 alternatives, and access threshold41.
+The corrected key retains B. A replacement dominance rule requires its own future-equivalence proof.
+Full-domain practicality, PM extension certification, and LC/integration acceptance remain open.
+The [current frontier](engineering-closure.md#next-design-steps) gives the remaining design order without creating production tickets.
 
 ### Concrete refund disposition
 
