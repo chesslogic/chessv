@@ -14,7 +14,7 @@ pull request, or release. The ChecksMate (`chesslogic/Archipelago`,
 `checks_mate` `0772bac`). §11 merges both repositories into one iteration
 order; it supersedes the **CM-pending** markers in §6.
 
-Authority reconciliation, 2026-10-25:
+Authority reconciliation, 2026-10-26:
 [ADR0024](../../docs/adr/0024-seeded-hierarchical-allocation.md) and the
 [current frontier](../adr-implementation-design/engineering-closure.md#current-authority-and-frontier)
 record the relationship between this plan and the October 21 successor.
@@ -48,6 +48,7 @@ board.
 | Spending | Concrete MG affordability. 8x8 allocation outputs may change. |
 | Price board | Spend at the prepared board's values. Fund the world against the opposing army on its final board. |
 | Locations | Material expectations use board-specific opposing costs. |
+| Player Location access | New Fundamental worlds use concrete board-specific active BOARD material plus unchanged supported-Pocket credit. A conservative guarantee remains required. |
 | Slots | Received Chessmen tokens remain fixed. D3 permits post-prefix derived Pawns from remaining material, not new received tokens. |
 | Consumers | AI evaluation, pocket Gems (existing `MG/100` integer conversion, no new rounding or minimum), True Fork comparison, and Properties all read the prepared game's values. |
 | Mutation | Resolve fresh game-bound values before board accounting. Never mutate initialized shared `PieceType` instances. |
@@ -90,12 +91,21 @@ optimal-knapsack claim.
 | Evaluation value | Absolute engine integer MG and EG | Material profile (§5) | Yes | Search, SEE, ordering, Properties, True Fork |
 | Gem value | `MG / 100`, integer division | `CardDropRule` (unchanged formula) | Through MG only | Pocket drops |
 | Opposing-army cost | Absolute engine integer MG of CPU types on the final board | Material profile export -> ChecksMate | Yes | Location material expectations |
+| Fundamental player access material | Concrete active non-primary BOARD material `B` plus supported-Pocket credit `H` | Prepared profile and conservative projection | Through `B` | Sound Location bound `L_M` for new Fundamental worlds |
 | Pawn-relative ratio | Derived `value / Pawn MG` | Reporting and calibration only | n/a | Never stored, never normalized per consumer |
 
 The profile stores absolute engine integers only. Ratios are analysis output.
 No consumer divides by a board's Pawn value or renormalizes values on its own.
 D1 resolves the Pawn value to 100/125 on every geometry.
 This fixed unit does not supply the unresolved typed allocation ledger.
+
+On October 26, the user selected concrete board-specific player values for Fundamental Location access.
+Thus `L_M` must be sound against `B + H`, not nominal family `E + H`.
+Pocket credit remains `H = min(S, floor(B/2), 300*C)`.
+`S` is supported semantic Pocket material, and `C` is the supported Pocket count.
+Pocket support/credit rules, protected funding, and Legacy remain unchanged.
+This choice does not prove actual `B + H` monotone or accept numeric profile values.
+Conservative bounds and extension coverage remain PM proof obligations.
 
 ## 5. Storage and registration recommendation
 

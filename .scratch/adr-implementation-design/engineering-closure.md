@@ -34,6 +34,7 @@ The proposal was assistant-authored and explicitly accepted, not an unselected r
 | Later Fundamental decisions | [Board-value plan](../board-aware-material-values/spec.md), commit `f3e9f3d`, D3/D5/D6. Original user events in session `2181993b-955f-43a7-b1fb-228e6df19b38` establish the bounded amendments |
 | Guarantee preservation | User decision relayed on 2026-10-25 by coordinator session `78444ebb-4f91-4995-acfc-d233bf1fcfb6`, call `call_HaAceB0tYWrxtcDBRmkFu8Qj`. Later behavior retains the promised prefix and feasible mandatory completion |
 | Prefix upgrades | User clarification relayed on 2026-10-26 by the same coordinator, call `call_HKDCNcrr28MGXL0jGEM3QChY`. Permitted surplus-funded prefix upgrades preserve every guarantee, explicitly including Castlers needed for their Location |
+| Fundamental access valuation | User decision relayed on 2026-10-26 by the same coordinator, call `call_eVkiWLKJDtMiWP3zuBjWVAhD`. New Fundamental Location access uses concrete board-specific player values |
 
 Session artifacts resolve under `C:\Users\aaedi\.copilot\session-state`.
 The current decisions and gates are recorded here and in ADR0024.
@@ -50,6 +51,7 @@ Their old PR wording does not override the current no-PR delivery instruction.
 | Stable series | Chronology-independent world/player priorities. Material-only changes preserve order under unchanged legal inputs. Ordinary-slot growth extends assignments under unchanged legal choices | AL01-choice-series |
 | Prefix and tail | Later Fundamental elimination, upgrades, and surplus remain permitted. Every purchase preserves the promised prefix and feasible mandatory completion. Standalone affordability is insufficient | AL01-04/P1 |
 | Prefix identity | Permitted surplus-funded upgrades can change a promised actor's concrete type. Required funding, counts, roles, placement, certified access, and Location-required Castlers must survive | AL01-04/P1/PM |
+| Fundamental material metric | For new worlds, `L_M` must be sound against concrete `B + H`, not nominal `E + H`. Pocket support/credit, protected funding, and Legacy are unchanged | PM/G2/P1 |
 | Castlers | Natural selections count. Protect eligible funds and compatible capacity for the feasible shortfall, not a forced Castler-first phase | AL02-04 |
 | Composition and reserves | Retain supported T/N guarantees, Pawn-source protection, dedicated actors, and active/reserve ownership. Ordinary promises must be active | AL02/CV01 |
 | Later changes | Optional pieces can change lawfully between setups. No active-match mutation or loss of certified access | PM/LC/P1 |
@@ -154,6 +156,24 @@ Exact finite enumeration, counter events, upgrade procedures, typed prices/liabi
 Lawful refund exceptions remain unanswered.
 This answer selects no blanket refund prohibition, new release right, price table, or Castler funding equation.
 AL/PM/LC/CV01/D03 remain open, and accepted CV02 design/reference results remain accepted.
+
+### Resolved Fundamental material domain
+
+On October 26, the coordinator relayed this explicit user selection:
+
+> Use concrete board-specific player values for Fundamental Location access (Recommended)
+
+For new Fundamental worlds, the player material domain is `B + H`, not nominal family `E + H`.
+`B` is actual active non-primary BOARD material at the prepared board's concrete values.
+`H = min(S, floor(B/2), 300*C)` remains unchanged.
+`S` remains supported semantic Pocket material, and `C` remains the supported Pocket count.
+Pocket support/credit rules, protected funding, and Legacy remain unchanged.
+
+The conservative bound `L_M` must be sound against `B + H` over the covered realization and extension domain.
+Actual current `B + H` is not thereby proved monotone.
+The decision closes metric-domain policy only.
+Useful conservative bounds, extension coverage, profile numeric acceptance, and PM integration remain open.
+This records the coordinator's attributed user selection, not an independently retrieved original event.
 
 ### Re-entry and delivery
 

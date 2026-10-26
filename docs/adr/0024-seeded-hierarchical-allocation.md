@@ -7,6 +7,7 @@ Fundamental refinement: 2026-10-23 (local date)
 Authority reconciliation: 2026-10-26
 Guarantee-preservation decision: 2026-10-25
 Prefix-upgrade clarification: 2026-10-26
+Fundamental access valuation: 2026-10-26
 
 ## Current decision
 
@@ -75,6 +76,23 @@ records D3/D5/D6 and the other bounded refinements.
 The exact series, typed funding records, completion algorithm, and useful conservative metrics remain engineering obligations.
 Prefix monotonicity alone does not prove access monotonicity.
 One favorable optional roster does not establish a guarantee.
+
+### Fundamental Location-access material
+
+On October 26, the user selected:
+
+> Use concrete board-specific player values for Fundamental Location access (Recommended)
+
+For new Fundamental worlds, the material contribution is `B + H`, not nominal family material `E + H`.
+`B` is actual active non-primary BOARD material at the prepared board's concrete values.
+Pocket credit remains `H = min(S, floor(B/2), 300*C)`.
+`S` remains supported semantic Pocket material, and `C` remains the supported Pocket count.
+Pocket support and credit rules, protected funding, and Legacy remain unchanged.
+
+The conservative Location material bound `L_M` must be sound against `B + H` throughout its covered domain.
+This decision does not prove that actual `B + H` is monotone across receipts, upgrades, or geometry changes.
+It selects neither numeric profile values nor a completed PM proof.
+
 The [current engineering frontier](../../.scratch/adr-implementation-design/engineering-closure.md#current-authority-and-frontier)
 owns the evidence, open decisions, acceptance gates, and implementation owners.
 
