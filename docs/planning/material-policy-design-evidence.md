@@ -3,7 +3,7 @@
 > **Historical evidence for superseded ADR0023.**
 > [ADR0024](../adr/0024-seeded-hierarchical-allocation.md) records the current behavior and supersession boundaries.
 > The original rationale, normalized prices, W measurements, and phase fixtures below remain historical.
-> They do not validate the successor's concrete-price hierarchical allocator.
+> They do not validate the current successor allocator.
 
 This appendix supports [ADR0023](../adr/0023-enabled-material-families.md). It is not a second normative contract.
 The ADR contains the required behavior and exact fixtures without a dependency on local research files.
