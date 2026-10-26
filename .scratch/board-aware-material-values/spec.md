@@ -46,6 +46,7 @@ board.
 | 8x8 | Every existing 8x8 MG/EG value stays identical. |
 | Item credits | Fixed denominations (`ItemGenerationValues`, contract `ExpectedMaterial`). Pool quantity/total can grow. |
 | Spending | Concrete MG affordability. 8x8 allocation outputs may change. |
+| Selection | Resolve concrete identities before looking up prepared-board prices. Families express selection preferences, not per-entry spending budgets. |
 | Price board | Spend at the prepared board's values. Fund the world against the opposing army on its final board. |
 | Locations | Material expectations use board-specific opposing costs. |
 | Player Location access | New Fundamental worlds use concrete board-specific active BOARD material plus unchanged supported-Pocket credit. A conservative guarantee remains required. |
@@ -60,6 +61,13 @@ A failed draw consumes its position. Later family draws remap into surviving
 families. A family is pruned only when no eligible type fits. Existing
 priorities and proportions remain where they apply. No retry loop and no
 optimal-knapsack claim.
+
+The October 26 concrete-selection clarification requires one shared `(profile identity, stage_id, type_id) -> MG/EG` lookup.
+The allocator and game consume the same versioned profile.
+Affordability uses concrete MG, not labels such as 3/5.
+Families retain existing classification, semantic Pocket, and accounting roles outside this selection question.
+Roles and Castler capability remain identity-backed.
+The user's 300/525 examples do not select numeric prices, a new palette, or family reclassification.
 
 ## 3. Current state (rev 03bf26b)
 

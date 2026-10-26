@@ -8,6 +8,7 @@ Authority reconciliation: 2026-10-26
 Guarantee-preservation decision: 2026-10-25
 Prefix-upgrade clarification: 2026-10-26
 Fundamental access valuation: 2026-10-26
+Concrete-selection clarification: 2026-10-26
 
 ## Current decision
 
@@ -20,6 +21,7 @@ Neither revision alone is the complete executable contract.
 | Matter | Current rule |
 | --- | --- |
 | Funding | Exact funding qualifies (`>=`). Eligible sources, lawful releases, protected bases, reserves, and dedicated accounts remain distinct. |
+| Concrete selection | Resolve concrete piece identities first, then use the prepared board's prescribed prices from the same versioned profile as the game. |
 | Priorities | World/player-seeded priorities do not depend on delivery chronology. Material alone does not reorder them under unchanged legal inputs. |
 | Slot extension | Added ordinary slots extend earlier assignments when legal choices remain unchanged. This is not chronological receipt appending. |
 | Preferred prefix | Fix legal preferred assignments before affordability. Select the longest affordable prefix that permits all retained mandatory completion. |
@@ -92,6 +94,20 @@ Pocket support and credit rules, protected funding, and Legacy remain unchanged.
 The conservative Location material bound `L_M` must be sound against `B + H` throughout its covered domain.
 This decision does not prove that actual `B + H` is monotone across receipts, upgrades, or geometry changes.
 It selects neither numeric profile values nor a completed PM proof.
+
+### Concrete-piece selection and price lookup
+
+The user subsequently selected:
+
+> Yes—concrete pieces with board-specific prices, retaining families only for selection preferences (Recommended)
+
+The seeded sequence resolves concrete identities before price lookup, rather than prescribing spending budgets for entries.
+One shared `(profile identity, stage_id, type_id) -> MG/EG` lookup supplies the prepared board's prices and the game's values.
+Affordability uses concrete MG. Family labels such as 3 and 5 are not spending prices.
+Families still serve existing classification, semantic Pocket, and accounting roles outside this selection question.
+Roles and Castler capability depend on concrete identity, not numeric price or family dominance.
+The user's 300/525 examples select no numeric table, palette, or family reclassification.
+Retained source protections and unresolved refund details remain unchanged.
 
 The [current engineering frontier](../../.scratch/adr-implementation-design/engineering-closure.md#current-authority-and-frontier)
 owns the evidence, open decisions, acceptance gates, and implementation owners.

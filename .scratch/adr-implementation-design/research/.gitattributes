@@ -1,0 +1,3 @@
+generator-guarantee-closure.md -text whitespace=cr-at-eol
+generator-guarantee-probe.py -text whitespace=cr-at-eol
+generator-guarantee-probe-results.json -text whitespace=cr-at-eol

@@ -1,0 +1,32 @@
+{
+  "legacy_stale_queen_bound": {
+    "frozen_obtainable_queens": 0,
+    "actual_counts": {
+      "Progressive Major Piece": 2,
+      "Progressive Major To Queen": 1
+    },
+    "logic_castlers": 2,
+    "semantic_castling_eligible": 1
+  },
+  "unsupported_pocket_current_metrics": {
+    "board_nonprimary": 0,
+    "pocket_items": 1,
+    "logic_chessmen": 1,
+    "logic_material": 0,
+    "successor_supported_pockets": 0
+  },
+  "late_pool_addition_refreshes_export": false,
+  "synthetic_witness_floor": {
+    "board": 1175,
+    "pocket": 587,
+    "combined": 1762,
+    "semantic_board": 1400,
+    "semantic_plus_pocket": 1987,
+    "composition": [
+      11,
+      5
+    ],
+    "finite_witnesses_checked": 9,
+    "scope": "arithmetic only; funding, placement, and future preservation assumed"
+  }
+}

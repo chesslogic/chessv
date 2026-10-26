@@ -35,6 +35,7 @@ The proposal was assistant-authored and explicitly accepted, not an unselected r
 | Guarantee preservation | User decision relayed on 2026-10-25 by coordinator session `78444ebb-4f91-4995-acfc-d233bf1fcfb6`, call `call_HaAceB0tYWrxtcDBRmkFu8Qj`. Later behavior retains the promised prefix and feasible mandatory completion |
 | Prefix upgrades | User clarification relayed on 2026-10-26 by the same coordinator, call `call_HKDCNcrr28MGXL0jGEM3QChY`. Permitted surplus-funded prefix upgrades preserve every guarantee, explicitly including Castlers needed for their Location |
 | Fundamental access valuation | User decision relayed on 2026-10-26 by the same coordinator, call `call_eVkiWLKJDtMiWP3zuBjWVAhD`. New Fundamental Location access uses concrete board-specific player values |
+| Concrete selection and pricing | User decision relayed on 2026-10-26 by the same coordinator, call `call_5fTtHRu8gB18gUxfcRxGvWzC`. Resolve concrete identities before prepared-board price lookup. Family labels are selection preferences, not spending prices |
 
 Session artifacts resolve under `C:\Users\aaedi\.copilot\session-state`.
 The current decisions and gates are recorded here and in ADR0024.
@@ -107,6 +108,26 @@ The [allocation engineering candidate](allocation-engineering-candidate.md) is *
 Its exact records, algorithms, and fixtures are not an accepted algorithm or completed proof.
 It consumes the resolved prefix-upgrade authority without closing the remaining metric, extension, or integration gates.
 
+### Durable generator evidence
+
+The [generator report](research/generator-guarantee-closure.md) is research and proposed engineering acceptance, not production conformance or a full proof.
+Its [probe](research/generator-guarantee-probe.py) and [recorded results](research/generator-guarantee-probe-results.json) retain their original evidence scope.
+The report records resolved prefix-upgrade permission and the selected Fundamental `B + H` domain.
+The finite arithmetic example gives 1762 for `B + H`, versus the semantic comparison 1987.
+Its nine witnesses assume funding, placement, and future preservation. They do not prove those obligations or useful general bounds.
+Extension coverage, metric proof, and lifecycle acceptance remain open.
+
+These files are exact copies from session `c2cee554-0e0d-4a73-8425-eced3c4a7225`, under `files`.
+Source and destination byte counts and SHA256 values matched at persistence.
+Scoped Git attributes preserve the three artifacts' exact bytes, including their original line endings.
+The later concrete-selection clarification is recorded separately, without modifying this frozen report.
+
+| Artifact | Bytes | SHA256 |
+| --- | ---: | --- |
+| `generator-guarantee-closure.md` | 43673 | `047a607780d20a5c5fb45195159f6a12f1d1c608e5c29391695cb04a8b43885a` |
+| `generator-guarantee-probe.py` | 3782 | `6d2420ee3566e6f8acaf4c31e07e0e6d2f27fe383efa1469eb5c2553cdc42d65` |
+| `generator-guarantee-probe-results.json` | 827 | `e1b1297f7f382203ea28afd2666dad01b5ad4af860a7ace3b3f0ff800dc7047a` |
+
 ### Later authority and resolved preservation: board-aware prices
 
 The board-value work scopes its redesign to Fundamental, not Legacy.
@@ -174,6 +195,21 @@ Actual current `B + H` is not thereby proved monotone.
 The decision closes metric-domain policy only.
 Useful conservative bounds, extension coverage, profile numeric acceptance, and PM integration remain open.
 This records the coordinator's attributed user selection, not an independently retrieved original event.
+
+### Concrete selection and prepared-board prices
+
+The coordinator later relayed this user selection:
+
+> Yes—concrete pieces with board-specific prices, retaining families only for selection preferences (Recommended)
+
+The seeded sequence resolves concrete piece identities before price lookup for the prepared board.
+One shared `(profile identity, stage_id, type_id) -> MG/EG` lookup uses the same versioned profile as the game.
+Affordability uses concrete MG, not family labels such as 3 or 5 or prescribed per-entry budgets.
+Families retain existing classification, semantic Pocket, and accounting roles outside this selection question.
+Roles and Castler capability remain identity-backed, not numeric.
+No numeric price table, new palette, family reclassification, or refund rule follows.
+The user's 300/525 examples are illustrative, not selected prices.
+Exact mapping and proof remain engineering obligations.
 
 ### Re-entry and delivery
 

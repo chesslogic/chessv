@@ -634,12 +634,12 @@ The coordinator must obtain acceptance for observable engineering defaults befor
 Those defaults include variety-count scope, completion ties, preferred squares, guard-failure phase transition, state-local elimination, and exact draw alignment.
 If the local completion probe fails practical bounds, the next decision concerns a narrower exact mechanism, not weaker guarantees.
 
-The generator consumer report is `C:\Users\aaedi\.copilot\session-state\c2cee554-0e0d-4a73-8425-eced3c4a7225\files\generator-guarantee-closure.md`.
+The [generator consumer report](research/generator-guarantee-closure.md) preserves its source revisions and bounded evidence.
 Its bounded metric and lifecycle seams remain inputs, not duplicated proof here.
 PM must quantify over all permitted promise-preserving upgrades, not only the original concrete members.
 It must keep semantic E, concrete BOARD B, and supported-Pocket credit distinct.
-The report's pending prefix-upgrade question is superseded by the decision recorded here.
-Its separate threshold-domain and extension-closure gaps remain open.
+The report records resolved prefix-upgrade permission and the selected Fundamental `B + H` material domain.
+Useful conservative bounds and extension-closure proofs remain open.
 G2 must bind the access contract before its first dependent query, separately from the later final supply census.
 
 ### Concrete refund disposition
